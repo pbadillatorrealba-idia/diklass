@@ -118,7 +118,8 @@ profesional.
 - **FR-009**: El sistema MUST poder presentar hipótesis clínicas con antecedentes a favor, en
   contra, información faltante para evaluarlas y evidencia documental asociada.
 - **FR-029**: El sistema MUST permitir al veterinario aceptar, descartar o agregar hipótesis propias
-  y registrar su diagnóstico clínico final, quedando este atribuido al profesional.
+  y registrar su diagnóstico clínico final, quedando este atribuido a su identidad autenticada
+  (FR-063, spec 007).
 - **FR-010**: El sistema MUST NOT convertir automáticamente ninguna sugerencia propia en decisión
   clínica, y MUST NOT declarar un diagnóstico definitivo.
 - **FR-049**: Las hipótesis y su estado (propuesta, aceptada, descartada) MUST quedar disponibles
@@ -198,4 +199,6 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Spec 002 (base de conocimiento trazable)**: aporta la evidencia documental que fundamenta
   sugerencias e hipótesis, incluida la declaración de límite de alcance ante casos fuera de dominio.
   Sin ella, esta spec opera sin respaldo citable y SC-030 no es evaluable.
+- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye el
+  diagnóstico registrado por el veterinario.
 - **Externa — panel de especialistas**: necesario para SC-017 y SC-018.

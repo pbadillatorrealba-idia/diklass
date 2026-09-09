@@ -62,6 +62,9 @@ de los requisitos compuestos ni las prohibiciones. Hallazgos:
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
+**Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
+(spec 007): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
 ### Advertencia metodológica
 
 La afirmación "los 16 criterios pasan" de la iteración 1 fue falsa y solo se detectó por revisión

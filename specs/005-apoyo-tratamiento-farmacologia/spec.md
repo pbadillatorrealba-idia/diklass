@@ -124,7 +124,8 @@ dosis se presenta como prescripción ni se registra sin aprobación explícita.
   señalarse cuando quede fuera del rango documentado.
 - **FR-036**: El sistema MUST NOT registrar ninguna sugerencia farmacológica como medicamento
   prescrito sin aprobación explícita e individual del veterinario sobre ese fármaco; la aprobación
-  MUST registrarse junto con las advertencias que estaban visibles al momento de aprobar.
+  MUST quedar atribuida a la identidad autenticada de quien aprueba (FR-063, spec 007) y MUST
+  registrarse junto con las advertencias que estaban visibles al momento de aprobar.
 - **FR-058**: El borrador de epicrisis MUST NOT incluir como medicamento prescrito ninguna
   sugerencia farmacológica que el veterinario no haya aprobado individualmente, y aprobar la
   epicrisis MUST NOT constituir aprobación de los fármacos que contenga: las sugerencias no
@@ -225,3 +226,6 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   sugerencia terapéutica.
 - **Spec 001 (registro clínico longitudinal)**: aporta los datos del paciente contra los que se
   evalúa la seguridad, y la epicrisis que recibe los medicamentos aprobados.
+- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye la
+  aprobación de cada fármaco. Es el eslabón que convierte la responsabilidad profesional sobre una
+  prescripción en algo verificable.

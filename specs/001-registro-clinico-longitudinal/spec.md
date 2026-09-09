@@ -169,7 +169,7 @@ permanece sin cambios al cerrar la nueva.
 - **FR-027**: El sistema MUST registrar datos básicos de contacto del tutor (nombre y al menos un
   medio de contacto) asociados al paciente, permitiendo que un tutor tenga varios pacientes.
 - **FR-003**: El sistema MUST permitir registrar una nueva sesión clínica asociada a un paciente,
-  una fecha y un profesional responsable.
+  una fecha y el profesional autenticado que la abre (FR-063, spec 007).
 - **FR-004**: El sistema MUST almacenar antecedentes de anamnesis mediante campos estructurados y
   texto libre, permitiendo ambos en una misma consulta.
 - **FR-021**: El sistema MUST registrar y mostrar, para cada antecedente clínico, si fue reportado
@@ -181,8 +181,8 @@ permanece sin cambios al cerrar la nueva.
   seguimiento y observaciones. Las hipótesis las aporta la spec 004 y los medicamentos la 005; en
   ausencia de ellas los campos quedan vacíos sin impedir la generación del borrador.
 - **FR-012**: La epicrisis MUST ser confirmada explícitamente por el veterinario antes de
-  almacenarse como registro definitivo, quedando registrada la identidad de quien aprueba y el
-  momento de aprobación.
+  almacenarse como registro definitivo, quedando registrada la identidad autenticada de quien
+  aprueba (FR-063, spec 007) y el momento de aprobación.
 - **FR-010**: El sistema MUST NOT incorporar automáticamente ninguna salida propia al historial
   clínico como registro definitivo; toda incorporación MUST requerir validación explícita del
   veterinario.
@@ -254,9 +254,9 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ## Assumptions
 
-- **Usuario único sin autenticación**: el PoC opera con un solo veterinario y sin autenticación,
-  autorización ni aislamiento entre usuarios. Estos controles corresponden a la Fase 2 según el
-  brief.
+- **Identidad provista por la spec 007**: el profesional responsable de una consulta y quien
+  aprueba una epicrisis son identidades autenticadas, no texto libre. Los veterinarios comparten los
+  pacientes de la clínica; el aislamiento por profesional y el multi-tenancy siguen fuera del PoC.
 - **Datos sintéticos**: se ejercita con pacientes y tutores ficticios; no se procesan datos
   personales reales.
 - **Una sola especie**: el modelo de datos contempla el campo especie para permitir extensión
@@ -271,7 +271,9 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-Ninguna. Esta funcionalidad es construible y verificable por sí sola.
+- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada del profesional responsable de
+  la consulta (FR-003) y de quien aprueba la epicrisis (FR-012). Sin ella esas atribuciones son
+  texto que nadie respalda.
 
 FR-011 y FR-013 reservan campos —hipótesis consideradas, medicamentos aprobados— que las specs 004 y
 005 pueblan cuando existen. Eso **no** es una dependencia: la 001 se construye y se verifica con

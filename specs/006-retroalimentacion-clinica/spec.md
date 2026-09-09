@@ -156,8 +156,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   brief.
 - **Sin análisis agregado en el PoC**: se garantiza que los datos queden en forma analizable, pero
   la analítica en sí corresponde a fases posteriores.
-- **Registro por el mismo profesional**: en el PoC la retroalimentación la registra el mismo
-  veterinario que atendió, dado que no hay múltiples usuarios.
+- **Registro por cualquier profesional de la clínica**: la retroalimentación puede registrarla un
+  veterinario distinto del que atendió, y queda atribuida a su identidad autenticada.
 - **Sin captura desde el tutor**: la evolución la reporta el veterinario; no se implementa un canal
   para que el tutor reporte directamente.
 - **Categorías definidas por el equipo clínico**: se asume que el equipo define el conjunto de
@@ -168,3 +168,5 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Spec 001 (registro clínico longitudinal)**: aporta la consulta cerrada, la epicrisis aprobada y
   el diagnóstico a los que la retroalimentación se asocia, y el mecanismo de presentación de
   antecedentes en consultas posteriores.
+- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye cada
+  entrada de retroalimentación.

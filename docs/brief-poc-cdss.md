@@ -62,7 +62,8 @@ administradores de centros veterinarios, docentes y estudiantes de medicina vete
 
 ## 5. Alcance del PoC
 
-Especie perro; usuario médico veterinario; contexto consulta clínica de etología; idioma español;
+Especie perro; usuarios médicos veterinarios de una misma clínica, con acceso autenticado; contexto
+consulta clínica de etología; idioma español;
 conjunto acotado de fuentes clínicas previamente seleccionadas; registro longitudinal de pacientes;
 asistencia por texto, con captura por voz de la conversación clínica; aplicación accesible desde computador y, de ser viable, móvil.
 
@@ -88,22 +89,27 @@ verificable; ninguna depende de que las posteriores existan.
 
 | Spec | Alcance | Depende de |
 |---|---|---|
-| [001 — Registro clínico longitudinal](../specs/001-registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | — |
+| [007 — Identidad y acceso](../specs/007-identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
+| [001 — Registro clínico longitudinal](../specs/001-registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 007 |
 | [002 — Base de conocimiento trazable](../specs/002-base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001 |
 | [003 — Captura de voz hacia anamnesis](../specs/003-captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001 |
-| [004 — Asistencia clínica proactiva](../specs/004-asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002 |
-| [005 — Apoyo al tratamiento y farmacología](../specs/005-apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 004 |
-| [006 — Retroalimentación clínica](../specs/006-retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001 |
+| [004 — Asistencia clínica proactiva](../specs/004-asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 007 |
+| [005 — Apoyo al tratamiento y farmacología](../specs/005-apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 004, 007 |
+| [006 — Retroalimentación clínica](../specs/006-retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 007 |
 
 **Aristas de dependencia** (origen → destino significa "el destino necesita al origen"):
 
 ```text
-001 → 002      001 → 003      001 → 006      001 → 005
-               002 → 004      002 → 005      004 → 005
+007 → 001      007 → 004      007 → 005      007 → 006
+001 → 002      001 → 003      001 → 004      001 → 005      001 → 006
+002 → 004      002 → 005      004 → 005
 ```
 
-**Orden de construcción**: 001 primero. Después 002, 003 y 006 en cualquier orden, incluso en
-paralelo. Luego 004, que necesita 002. Por último 005, que necesita 001, 002 y 004.
+**Orden de construcción**: 007 primero, luego 001. Después 002, 003 y 006 en cualquier orden,
+incluso en paralelo. Luego 004, que necesita 002. Por último 005, que necesita 001, 002, 004 y 007.
+
+Los números identifican specs, no ordenan su construcción: la 007 se añadió después de las demás y
+se construye antes que todas.
 
 002 y 003 pueden construirse en paralelo tras 001. El riesgo de calendario se concentra en 002: es
 el único que depende de conseguir documentos clínicos legalmente utilizables, y de él cuelgan 004 y
@@ -138,7 +144,7 @@ escenarios de aceptación que lo verifican.
 Transversales a todas las specs. Los criterios propios de cada funcionalidad viven en su spec.
 
 - **SC-001**: Un veterinario completa el escenario demostrador de extremo a extremo sin intervención
-  de un desarrollador: registrar un perro, abrir consulta, activar captura de voz, sostener una
+  de un desarrollador: acceder con su cuenta, registrar un perro, abrir consulta, activar captura de voz, sostener una
   conversación simulada con el tutor, obtener antecedentes estructurados, identificar información
   faltante, consultar conocimiento especializado, recibir evidencia citada, revisar hipótesis
   clínicas, registrar su decisión, registrar un tratamiento, corregir y aprobar la epicrisis, cerrar
@@ -186,7 +192,8 @@ funciona de extremo a extremo.
 Estos ocho principios atraviesan todas las specs y están traducidos a requisitos verificables en
 cada una de ellas.
 
-1. **Human-in-the-loop**: el veterinario toma siempre la decisión clínica final. → FR-010
+1. **Human-in-the-loop**: el veterinario toma siempre la decisión clínica final, y esa decisión
+   queda atribuida a su identidad autenticada. → FR-010, FR-063
 2. **Trazabilidad**: las recomendaciones relevantes deben poder explicarse y asociarse a evidencia.
    → FR-007, FR-020
 3. **Separación entre dato e inferencia**: debe ser evidente qué información entregó el usuario y
@@ -204,9 +211,14 @@ cada una de ellas.
 El sistema manejará información potencialmente sensible de profesionales, tutores, animales,
 registros clínicos y conversaciones de consulta.
 
-Una implementación posterior al PoC deberá considerar autenticación, autorización, aislamiento entre
-usuarios, cifrado, políticas de retención, eliminación de datos, consentimiento para grabación,
-trazabilidad de accesos, respaldo, y anonimización o seudonimización para investigación.
+El PoC incorpora **autenticación y autorización** (spec 007): las cuentas se provisionan, el acceso
+es autenticado y toda acción clínica queda atribuida a su autor. No incorpora trazabilidad de
+accesos —se registra quién escribe, no quién lee— ni aislamiento de información entre profesionales,
+por ser una clínica compartida.
+
+Una implementación posterior deberá considerar además cifrado, políticas de retención, eliminación
+de datos, consentimiento para grabación, trazabilidad de accesos, respaldo, y anonimización o
+seudonimización para investigación.
 
 Durante el PoC se minimiza el uso de datos personales reales y se privilegian casos sintéticos o
 debidamente autorizados.
@@ -219,6 +231,10 @@ del SAG, laboratorios clínicos u otras instituciones; análisis automático de 
 médicas; interpretación automática de exámenes; OCR clínico avanzado; facturación; pagos; agenda
 veterinaria; plataforma educacional; comunidad de especialistas; investigación sobre datos
 agregados; aplicación completa de producción; soporte multi-clínica; y multi-tenancy empresarial.
+
+Del sistema de usuarios quedan fuera el autoregistro, la recuperación de contraseña, los roles
+diferenciados y la trazabilidad de accesos; el PoC provisiona las cuentas y registra quién escribe,
+no quién lee.
 
 También queda fuera del alcance **preguntar al asistente por voz y recibir respuesta hablada**. La
 voz entra al PoC únicamente como captura de la conversación entre veterinario y tutor (spec 003);
@@ -246,9 +262,12 @@ que hablaba de "interacción conversacional mediante texto y voz".
 
 El PoC se concentra en las dos capas inferiores.
 
-**Fase 2 — MVP**: autenticación, múltiples veterinarios, gestión robusta de pacientes, base de
-conocimiento ampliada, integración con fuentes externas, controles de privacidad, analítica básica y
-experiencia móvil consolidada.
+**Fase 2 — MVP**: autoregistro y gestión de cuentas, roles diferenciados, trazabilidad de accesos,
+gestión robusta de pacientes, base de conocimiento ampliada, integración con fuentes externas,
+controles de privacidad, analítica básica y experiencia móvil consolidada.
+
+La autenticación y el soporte de múltiples veterinarios se adelantaron a la Fase 1: sin identidad
+verificada, la atribución de responsabilidad clínica que el PoC debe validar no es demostrable.
 
 **Fase 3 — Producto**: multi-clínica, múltiples especies, regulaciones por país, integración con SAG
 y otras instituciones, lectura estructurada de exámenes, OCR, análisis multimodal, investigación
