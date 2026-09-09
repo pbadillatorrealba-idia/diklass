@@ -1,8 +1,10 @@
 <!--
 REPORTE DE IMPACTO DE SINCRONIZACIÓN
-Cambio de versión: 1.0.0 → 1.0.1
-Justificación del incremento: PATCH — traducción íntegra al español. No se agrega, elimina ni
-redefine ninguna obligación; el contenido normativo es idéntico al de la versión 1.0.0.
+Cambio de versión: 1.1.0 → 1.2.0
+Justificación del incremento: MINOR — se reemplaza la decisión provisional de aplicación web por
+un stack móvil universal Expo/React Native con destino web, y se fijan herramientas de calidad,
+pruebas y CI. Los principios existentes no cambian, pero la selección agrega restricciones
+operativas verificables para aplicaciones móviles y web.
 
 Principios modificados: ninguno en sustancia. Títulos traducidos:
 - I. Spec-Driven Development → I. Desarrollo Dirigido por Especificación
@@ -18,10 +20,7 @@ Secciones renombradas:
 
 Secciones eliminadas: ninguna
 
-Elementos diferidos / TODO pendientes:
-- TODO(TECH_STACK): el stack concreto, el destino de despliegue y la matriz de navegadores
-  soportados siguen sin definirse. Se completan en el primer /speckit-plan y luego se amenda esta
-  constitución con un incremento PATCH o MINOR según si se introducen restricciones nuevas.
+Elementos diferidos / TODO pendientes: ninguno.
 -->
 
 # Constitución de diklass
@@ -115,9 +114,19 @@ utilizables sin saltos de maquetación dependientes de JavaScript en el primer p
 presupuestos de rendimiento se fijan por funcionalidad en su plan y se verifican antes de integrar;
 una funcionalidad que degrada un presupuesto acordado no se publica.
 
-TODO(TECH_STACK): el lenguaje, framework, almacenamiento, destino de despliegue y matriz de
-navegadores soportados aún no se han seleccionado. DEBEN registrarse aquí en el primer
-`/speckit-plan` y esta constitución DEBE amendarse en consecuencia.
+El stack del PoC queda fijado en TypeScript con Bun 1.4.0 como runtime y package manager, Expo
+SDK 56 sobre React Native con Expo Router para iOS, Android y web, gluestack-ui v3 para la UI,
+Supabase Auth/PostgreSQL con Row Level Security, TanStack Query, Zustand, TanStack Form y Zod.
+Biome se usa para formato/lint/imports y `tsc --noEmit` para verificación estática de tipos. Bun
+test cubre pruebas rápidas, Playwright 1.61.0 cubre la aplicación web y Maestro cubre los flujos
+e2e nativos. GitHub Actions ejecuta las compuertas de calidad, tipos, pruebas, base de datos local
+y e2e web; los builds móviles y Maestro Cloud se gestionan en ejecuciones seleccionadas.
+
+La matriz mínima es iOS 16 o posterior, Android API 26 o posterior, Chrome y Edge actuales más las
+dos versiones mayores anteriores, Firefox actual más las dos versiones mayores anteriores, y Safari
+17 o posterior en macOS/iOS. Los flujos protegidos y los controles interactivos DEBEN verificarse
+como mínimo en Chromium, Firefox y WebKit mediante la suite web; la app no puede depender de una
+comprobación exclusivamente del cliente para garantizar seguridad en ninguna plataforma.
 
 ## Flujo de Trabajo de Desarrollo
 
@@ -155,4 +164,4 @@ periódica. Toda complejidad admitida bajo el Principio III DEBE conservar su ju
 registrada mientras permanezca en la base de código; cuando la justificación deje de ser cierta, la
 complejidad se elimina.
 
-**Versión**: 1.0.1 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-09-09
+**Versión**: 1.2.0 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-09-09
