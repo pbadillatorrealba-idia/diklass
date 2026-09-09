@@ -1,4 +1,4 @@
-# Checklist de Calidad de Especificación: Apoyo al tratamiento y farmacología
+# Checklist de Calidad de Especificación: Registro clínico longitudinal
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 19 escenarios · 12 requisitos funcionales · 7 criterios de éxito
+4 historia(s) · 20 escenarios · 13 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -47,33 +47,34 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-Es la spec de mayor riesgo clínico y la que llegó peor. Tres huecos de seguridad, todos cerrados:
-
-- **Dosis sin rótulo de validación**: FR-035 obligaba a rotular solo la dosis "calculada por el
-  sistema"; una dosis citada literalmente de una fuente escapaba a la obligación, y con ella se caía
-  SC-006. Ampliado a toda dosis presentada, con escenario US9/19.
-- **Prescripción por la puerta trasera**: nada impedía que el borrador automático de epicrisis
-  arrastrara sugerencias farmacológicas nunca aprobadas individualmente, y que la aprobación global
-  de la epicrisis las convirtiera en registro definitivo. Agregado FR-058, escenarios US9/16 y
-  US9/17, y SC-038 que mide esa vía en 0.
-- **Evaluación de seguridad verificada a un sexto**: FR-037 obliga a evaluar seis dimensiones y
-  advertir contraindicaciones e interacciones; un único escenario lo verificaba, y solo para
-  alergias, pese a que SC-020 lo mide al 100%. Agregados US9/11 y US9/12.
-- **Reglas de seguridad que vivían en Supuestos**: la prohibición de mostrar dosis fuera de rango
-  documentado y de sugerir fármacos sin cobertura no era un requisito. Promovida a FR-046.
-- **Lenguaje normativo invertido** en FR-036 y FR-010, los dos requisitos ancla del human-in-the-loop.
-  Reescritos como MUST NOT, y FR-036 explicita que la aprobación es individual por fármaco.
-- **Frontera indefinida** entre FR-019 (toda sugerencia farmacológica cita fuente) y FR-023
-  (alternativa sin respaldo declarándolo): se acotó FR-023 a lo no farmacológico.
-- **Colisión de identificador**: el requisito de la epicrisis se numeró FR-045, ya usado por otro
-  requisito distinto en la spec 001. Renumerado a FR-058.
+- **Escenario sin requisito**: US2/3 afirmaba que el sistema deduce antecedentes del texto libre;
+  ningún FR lo exigía y habría duplicado el extractor de la spec 004. Reescrito: la procedencia la
+  asigna el veterinario, y esta spec no infiere nada.
+- **Dependencia hacia adelante**: FR-013 exigía presentar "tratamiento indicado, medicamentos,
+  evolución registrada", que solo producen las specs 007 y 005, mientras la 002 declaraba no
+  depender de nada. Acotado a lo que la 002 sí produce.
+- **Requisito no verificable**: FR-044 hablaba de "información clínica relevante", conjunto que el
+  brief tiene como pregunta abierta. Reformulado sobre los campos concretos de FR-001.
+- **Lenguaje normativo invertido**: FR-010 decía "Ninguna salida ... MUST incorporarse", que bajo
+  RFC-2119 es permisivo. Reescrito como MUST NOT.
+- **Casos límite sin requisito**: se agregó FR-045 (retomar consulta interrumpida) y se eliminaron
+  dos casos especulativos que ningún requisito respaldaba.
+- **Cobertura incompleta**: FR-001 no tenía escenario para consultar una ficha ni para medicamentos
+  actuales y antecedentes conductuales. Agregado US1/5.
+- **Criterio no medible**: SC-011 era el `Then` de un escenario reetiquetado. SC-013 no definía
+  muestra. Ambos reformulados con umbral.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
-(spec 007): FR-036 atribuye la aprobación de cada fármaco a la identidad autenticada de la spec 007. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+(spec 001): FR-003 y FR-012 pasan a apoyarse en la identidad autenticada de la spec 001; se eliminó el supuesto de usuario único. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
+entidad Observación clínica no llevaba autor, de modo que en una clínica compartida el contenido de
+la anamnesis heredaba la identidad de quien abrió la consulta en vez de la de quien lo escribió.
+FR-004 ahora atribuye cada antecedente, con escenario US2/6.
 
 ### Advertencia metodológica
 
@@ -83,4 +84,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Specs 001, 002 y 004. Es la funcionalidad de mayor riesgo clínico del PoC.
+Ninguna. Construible y verificable por sí sola.

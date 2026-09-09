@@ -72,7 +72,7 @@ conocimiento veterinario.
 
 **Decisión de producto sobre la captura por voz**: el procesamiento del audio puede ser incremental,
 en ventanas de aproximadamente 30 segundos, sin exigir transcripción completamente en tiempo real.
-Proviene de la descripción original del producto y acota la expectativa de latencia de la spec 003.
+Proviene de la descripción original del producto y acota la expectativa de latencia de la spec 004.
 
 ## 6. Flujo clínico principal
 
@@ -85,38 +85,39 @@ Paciente → Antecedentes clínicos → Anamnesis → Identificación de informa
 ## 7. Mapa de especificaciones
 
 El PoC se especifica en siete funcionalidades. Cada una es independientemente construible, y todas
-salvo la 007 son también verificables por sí solas. Los números identifican specs y no ordenan su
-construcción: la 007 se añadió después de las demás y se construye antes que todas.
+salvo la 001 son también verificables por sí solas. La numeración sigue el orden de construcción
+del PoC.
 
 | Spec | Alcance | Depende de |
 |---|---|---|
-| [007 — Identidad y acceso](../specs/007-identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
-| [001 — Registro clínico longitudinal](../specs/001-registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 007 |
-| [002 — Base de conocimiento trazable](../specs/002-base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001 |
-| [003 — Captura de voz hacia anamnesis](../specs/003-captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001 |
-| [004 — Asistencia clínica proactiva](../specs/004-asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 007 |
-| [005 — Apoyo al tratamiento y farmacología](../specs/005-apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 004, 007 |
-| [006 — Retroalimentación clínica](../specs/006-retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 007 |
+| [001 — Identidad y acceso](../specs/001-identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
+| [002 — Registro clínico longitudinal](../specs/002-registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
+| [003 — Base de conocimiento trazable](../specs/003-base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
+| [004 — Captura de voz hacia anamnesis](../specs/004-captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001, 002 |
+| [005 — Retroalimentación clínica](../specs/005-retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
+| [006 — Asistencia clínica proactiva](../specs/006-asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 003 |
+| [007 — Apoyo al tratamiento y farmacología](../specs/007-apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 003, 006 |
 
 **Aristas de dependencia** (origen → destino significa "el destino necesita al origen"):
 
 ```text
-007 → 001      007 → 002      007 → 003      007 → 004      007 → 005      007 → 006
-001 → 002      001 → 003      001 → 004      001 → 005      001 → 006
-002 → 004      002 → 005      004 → 005
+001 → 002
+002 → 003      002 → 004      002 → 005      002 → 006      002 → 007
+003 → 006      003 → 007
+006 → 007
 ```
 
-**Orden de construcción**: 007 primero, luego 001. Después 002, 003 y 006 en cualquier orden,
-incluso en paralelo. Luego 004, que necesita 002. Por último 005, que necesita 001, 002, 004 y 007.
+**Orden de construcción**: 001 primero, luego 002. Después 003, 004 y 005 en cualquier orden,
+incluso en paralelo. Luego 006, que necesita 003. Por último 007, que necesita 001, 002, 003 y 006.
 
-La 007 es la única cuya verificación no se cierra sola: su historia de acceso (US11) sí, pero la de
-atribución (US12) se expresa sobre pacientes y consultas que define la 001, de modo que se verifica
+La 001 es la única cuya verificación no se cierra sola: su historia de acceso (US11) sí, pero la de
+atribución (US12) se expresa sobre pacientes y consultas que define la 002, de modo que se verifica
 junto con ella. No es una arista de dependencia —invertirla crearía un ciclo— sino un punto de
 verificación conjunta.
 
-002 y 003 pueden construirse en paralelo tras 001. El riesgo de calendario se concentra en 002: es
-el único que depende de conseguir documentos clínicos legalmente utilizables, y de él cuelgan 004 y
-005.
+003 y 004 pueden construirse en paralelo tras 002. El riesgo de calendario se concentra en 003: es
+el único que depende de conseguir documentos clínicos legalmente utilizables, y de él cuelgan 006 y
+007.
 
 ### Convención de identificadores
 
@@ -125,22 +126,22 @@ cada archivo: un número designa siempre el mismo requisito, en cualquier spec d
 
 Un requisito transversal aparece en varias specs. En cada una se enuncia **aplicado a esa
 funcionalidad**, no copiado palabra por palabra: FR-021 (separación entre dato e inferencia) habla
-de la procedencia de los antecedentes escritos a mano en la spec 001 y de los extraídos del audio en
-la 003, pero es la misma obligación. El enunciado canónico de cada requisito transversal es el de
+de la procedencia de los antecedentes escritos a mano en la spec 002 y de los extraídos del audio en
+la 004, pero es la misma obligación. El enunciado canónico de cada requisito transversal es el de
 esta tabla; las specs lo especializan sin poder contradecirlo.
 
 | Requisito | Enunciado canónico | Specs |
 |---|---|---|
-| FR-007 | Toda afirmación clínica basada en conocimiento documental muestra el documento fuente y el fragmento utilizado | 002, 004, 005 |
-| FR-010 | Ninguna salida del sistema se convierte automáticamente en decisión clínica ni en registro definitivo sin validación del veterinario | 001, 003, 004, 005 |
-| FR-020 | Es posible reconstruir qué información del paciente y qué fuentes documentales produjeron una recomendación clínica relevante | 002, 004, 005 |
-| FR-021 | Toda información clínica indica su procedencia: reportada, inferida, recuperada de una fuente, o desconocida | 001, 002, 003 |
-| FR-022 | El sistema comunica explícitamente cuándo la información disponible es insuficiente | 002, 004 |
-| FR-023 | El sistema declara explícitamente la ausencia de respaldo documental y nunca presenta como respaldada una afirmación sin cita | 002, 004, 005 |
-| FR-024 | Los registros clínicos aprobados se preservan sin modificación; toda corrección genera un registro adicional | 001, 006 |
+| FR-007 | Toda afirmación clínica basada en conocimiento documental muestra el documento fuente y el fragmento utilizado | 003, 006, 007 |
+| FR-010 | Ninguna salida del sistema se convierte automáticamente en decisión clínica ni en registro definitivo sin validación del veterinario | 002, 004, 006, 007 |
+| FR-020 | Es posible reconstruir qué información del paciente y qué fuentes documentales produjeron una recomendación clínica relevante | 003, 006, 007 |
+| FR-021 | Toda información clínica indica su procedencia: reportada, inferida, recuperada de una fuente, o desconocida | 002, 003, 004 |
+| FR-022 | El sistema comunica explícitamente cuándo la información disponible es insuficiente | 003, 006 |
+| FR-023 | El sistema declara explícitamente la ausencia de respaldo documental y nunca presenta como respaldada una afirmación sin cita | 003, 006, 007 |
+| FR-024 | Los registros clínicos aprobados se preservan sin modificación; toda corrección genera un registro adicional | 002, 005 |
 
 **FR-063** (toda acción que cree o modifique un registro clínico queda atribuida a la identidad
-autenticada que la realizó, con su momento) se define íntegro en la spec 007 y las demás lo **citan
+autenticada que la realizó, con su momento) se define íntegro en la spec 001 y las demás lo **citan
 por referencia** en vez de reenunciarlo, porque su enumeración taxativa de acciones abarca las siete
 funcionalidades y repetirla completa en cada una la haría divergir. Es la única excepción a la regla
 de reenunciado.
@@ -165,9 +166,9 @@ Transversales a todas las specs. Los criterios propios de cada funcionalidad viv
   de una consulta sin el sistema, con un aumento no superior al 20%.
 
 > **Nota sobre SC-007**: el criterio original de evaluación por especialistas se descompuso en cuatro
-> criterios ubicados en la spec que cada uno evalúa: SC-013 (utilidad de la epicrisis, spec 001),
-> SC-015 (utilidad de la información recuperada, spec 002), SC-017 (pertinencia de las preguntas
-> sugeridas, spec 004) y SC-018 (utilidad de los diagnósticos diferenciales, spec 004). El
+> criterios ubicados en la spec que cada uno evalúa: SC-013 (utilidad de la epicrisis, spec 002),
+> SC-015 (utilidad de la información recuperada, spec 003), SC-017 (pertinencia de las preguntas
+> sugeridas, spec 006) y SC-018 (utilidad de los diagnósticos diferenciales, spec 006). El
 > identificador SC-007 queda retirado para evitar ambigüedad.
 
 ## 9. Métricas iniciales de validación
@@ -227,7 +228,7 @@ cada una de ellas.
 El sistema manejará información potencialmente sensible de profesionales, tutores, animales,
 registros clínicos y conversaciones de consulta.
 
-El PoC incorpora **autenticación y autorización** (spec 007): las cuentas se provisionan, el acceso
+El PoC incorpora **autenticación y autorización** (spec 001): las cuentas se provisionan, el acceso
 es autenticado y toda acción clínica queda atribuida a su autor. No incorpora trazabilidad de
 accesos —se registra quién escribe, no quién lee— ni aislamiento de información entre profesionales,
 por ser una clínica compartida.
@@ -254,8 +255,8 @@ la desactivación y la eliminación—. El PoC provisiona un conjunto fijo de cu
 escribe, no quién lee.
 
 También queda fuera del alcance **preguntar al asistente por voz y recibir respuesta hablada**. La
-voz entra al PoC únicamente como captura de la conversación entre veterinario y tutor (spec 003);
-la interacción con el asistente es por texto (spec 002). El escenario demostrador SC-001 no requiere
+voz entra al PoC únicamente como captura de la conversación entre veterinario y tutor (spec 004);
+la interacción con el asistente es por texto (spec 003). El escenario demostrador SC-001 no requiere
 la modalidad hablada. Es una reducción deliberada de alcance respecto de la descripción original,
 que hablaba de "interacción conversacional mediante texto y voz".
 
@@ -293,20 +294,20 @@ sobre datos agregados y herramientas educativas.
 ## 15. Riesgos a validar
 
 - **R1 — Calidad de la evidencia**: si las fuentes disponibles contienen información suficientemente
-  estructurada y actualizada para sustentar el sistema. Afecta spec 002.
+  estructurada y actualizada para sustentar el sistema. Afecta spec 003.
 - **R2 — Calidad de la recuperación**: si es posible recuperar fragmentos clínicamente relevantes
-  con precisión suficiente. Afecta spec 002.
+  con precisión suficiente. Afecta spec 003.
 - **R3 — Alucinaciones**: con qué frecuencia el sistema genera información clínica no respaldada.
   Afecta specs 002, 004, 005.
 - **R4 — Captura mediante voz**: si la transcripción de conversaciones reales tiene calidad
-  suficiente en ambientes clínicos. Afecta spec 003.
+  suficiente en ambientes clínicos. Afecta spec 004.
 - **R5 — Extracción estructurada**: si el sistema distingue correctamente antecedentes expresados,
-  inferidos y faltantes. Afecta specs 001, 003.
+  inferidos y faltantes. Afecta specs 002, 004.
 - **R6 — Experiencia clínica**: si usar el sistema durante una consulta reduce o aumenta la carga
   del veterinario. Afecta a todas.
 - **R7 — Responsabilidad clínica**: qué mecanismos son necesarios para que recomendaciones,
-  diagnósticos y tratamientos permanezcan bajo responsabilidad profesional. Afecta specs 004 y 005,
-  y sobre todo la 007, que es el mecanismo por el cual esa responsabilidad se vuelve verificable.
+  diagnósticos y tratamientos permanezcan bajo responsabilidad profesional. Afecta specs 006 y 007,
+  y sobre todo la 001, que es el mecanismo por el cual esa responsabilidad se vuelve verificable.
 - **R8 — Propiedad intelectual**: qué componentes del sistema, metodología, proceso clínico o
   arquitectura podrían constituir propiedad intelectual protegible. Transversal.
 
@@ -332,10 +333,10 @@ Estas decisiones se resuelven durante discovery y **no bloquean** la construcci�
 ## 17. Dependencias externas
 
 - **Fuentes clínicas**: conjunto acotado de documentos de etología veterinaria legalmente
-  utilizables. Sin ellos, las specs 002, 004 y 005 no son evaluables aunque estén construidas.
+  utilizables. Sin ellos, las specs 003, 006 y 007 no son evaluables aunque estén construidas.
 - **Participación de especialistas**: necesaria para los criterios de utilidad clínica.
 - **Conversación clínica simulada**: material de audio representativo del ambiente de consulta,
-  necesario para la spec 003.
+  necesario para la spec 004.
 
 ## 18. Principio rector
 

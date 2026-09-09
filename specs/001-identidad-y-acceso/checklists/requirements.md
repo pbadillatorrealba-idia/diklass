@@ -41,7 +41,7 @@
 
 **Origen**: esta spec no existía en la partición original. Se añadió al decidir que el PoC incorpora
 sistema de usuarios, decisión que también elimina el conflicto entre el Principio V de la
-constitución y el supuesto de usuario único que tenía la spec 001.
+constitución y el supuesto de usuario único que tenía la spec 002.
 
 **Iteración 1 — verificación programática**: cada FR con trazabilidad a escenarios existentes, sin
 identificadores colisionantes, aristas de dependencia coincidentes entre spec, tabla del brief y
@@ -54,7 +54,7 @@ de la iteración 1: fallaban 6 de los 16 criterios. Hallazgos corregidos:
   desactivación o eliminación de una cuenta, y de él colgaban SC-045, un escenario, dos casos límite
   y el atributo `estado` de la entidad Veterinario — sin que ningún requisito permitiera desactivar
   cuentas ni ningún supuesto lo declarara. Peor: FR-059 era incondicional, de modo que una cuenta
-  desactivada podía seguir autenticándose. Es el mismo defecto que la spec 002 ya había corregido en
+  desactivada podía seguir autenticándose. Es el mismo defecto que la spec 003 ya había corregido en
   FR-030 y que el Principio III prohíbe. El ciclo de vida de cuentas salió del alcance, como el
   brief ya lo situaba en Fase 2.
 - **Prohibiciones sin verificación real.** FR-060 trazaba su cláusula de indistinguibilidad a un
@@ -68,7 +68,7 @@ de la iteración 1: fallaban 6 de los 16 criterios. Hallazgos corregidos:
 - **FR-061** no cuantificaba el periodo de inactividad y su escenario verificaba caducidad por
   vigencia, no por inactividad.
 - **Verificabilidad.** La spec declaraba no depender de nada y usaba entidades de las specs 001 y
-  005. Se separó la dependencia de construcción (ninguna) de la de verificación (la 001), sin crear
+  007. Se separó la dependencia de construcción (ninguna) de la de verificación (la 002), sin crear
   el ciclo que una arista habría introducido.
 
 ### Advertencia metodológica

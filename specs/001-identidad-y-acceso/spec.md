@@ -1,6 +1,6 @@
 # Feature Specification: Identidad y acceso
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/007-identidad-y-acceso`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/001-identidad-y-acceso`)
 
 **Created**: 2026-09-09
 
@@ -156,13 +156,13 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Veterinario**: profesional con cuenta provisionada en la clínica, con identificador y
   credenciales. Es la identidad a la que se atribuyen las acciones clínicas.
 - **Sesión de acceso**: periodo de acceso autenticado de un Veterinario, con inicio, término y
-  validez. No debe confundirse con la *sesión clínica* de la spec 001 (que es una Consulta) ni con
-  la *sesión de escucha* de la spec 003.
+  validez. No debe confundirse con la *sesión clínica* de la spec 002 (que es una Consulta) ni con
+  la *sesión de escucha* de la spec 004.
 - **Atribución**: vínculo inmutable entre un registro clínico y la identidad del Veterinario que lo
   produjo, junto con el momento en que lo hizo.
-- **Consulta**, **Epicrisis**, **Diagnóstico**, **Anamnesis**: definidos en la spec 001. Reciben la
+- **Consulta**, **Epicrisis**, **Diagnóstico**, **Anamnesis**: definidos en la spec 002. Reciben la
   Atribución. Su existencia condiciona la verificación de US12, no la construcción de esta spec.
-- **Medicamento**, **Tratamiento**: definidos en la spec 005. Su adopción recibe la Atribución.
+- **Medicamento**, **Tratamiento**: definidos en la spec 007. Su adopción recibe la Atribución.
 
 ## Success Criteria *(mandatory)*
 
@@ -204,14 +204,14 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-**De construcción: ninguna.** La 007 se construye primero y no necesita que exista ninguna otra spec
+**De construcción: ninguna.** La 001 se construye primero y no necesita que exista ninguna otra spec
 para hacerlo.
 
-**De verificación: la spec 001.** La historia US11 (acceso autenticado) es verificable por sí sola.
+**De verificación: la spec 002.** La historia US11 (acceso autenticado) es verificable por sí sola.
 La US12 (atribución) no lo es: se expresa sobre pacientes, consultas y epicrisis que define la spec
 001, igual que SC-040, SC-041, SC-042 y SC-044. Esto **no** es una arista de dependencia —invertirla
-crearía el ciclo `001 ↔ 007`— sino un punto de verificación conjunta: la 007 se declara terminada
-cuando US11 pasa y US12 queda verificada junto con la 001, no antes.
+crearía el ciclo `002 ↔ 001`— sino un punto de verificación conjunta: la 001 se declara terminada
+cuando US11 pasa y US12 queda verificada junto con la 002, no antes.
 
 Las specs 001, 002, 003, 004, 005 y 006 dependen de esta para que su atribución de responsabilidad
 profesional sea verificable.

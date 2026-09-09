@@ -1,6 +1,6 @@
 # Feature Specification: Retroalimentación clínica
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/006-retroalimentacion-clinica`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/005-retroalimentacion-clinica`)
 
 **Created**: 2026-09-09
 
@@ -102,7 +102,7 @@ estructurada, recuperable, y que la epicrisis original permanece sin cambios.
 - **FR-057**: El sistema MUST permitir registrar retroalimentación sobre una consulta sin
   tratamiento indicado, dejando ese campo vacío sin impedir el registro de la evolución observada.
 - **FR-070**: Cada entrada de retroalimentación MUST quedar atribuida a la identidad autenticada de
-  quien la registró (FR-063, spec 007), que puede ser distinta de la del veterinario que atendió la
+  quien la registró (FR-063, spec 001), que puede ser distinta de la del veterinario que atendió la
   consulta.
 - **FR-042**: La retroalimentación registrada MUST incorporarse a los antecedentes que el sistema
   presenta al iniciar una consulta posterior del mismo paciente.
@@ -134,10 +134,10 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   tratamiento, más su fecha de registro.
 - **Evento adverso**: incidencia negativa registrada dentro de la retroalimentación, recuperable de
   forma diferenciada.
-- **Consulta**, **Epicrisis**, **Diagnóstico**: definidos en la spec 001. La retroalimentación los
+- **Consulta**, **Epicrisis**, **Diagnóstico**: definidos en la spec 002. La retroalimentación los
   referencia sin modificarlos.
 - **Tratamiento aplicado**: descripción de la intervención efectivamente realizada, registrada aquí
-  como parte de la retroalimentación. Es independiente de la entidad Tratamiento de la spec 005:
+  como parte de la retroalimentación. Es independiente de la entidad Tratamiento de la spec 007:
   esta spec no la requiere ni la referencia para ser construible.
 
 ## Success Criteria *(mandatory)*
@@ -173,8 +173,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-- **Spec 001 (registro clínico longitudinal)**: aporta la consulta cerrada, la epicrisis aprobada y
+- **Spec 002 (registro clínico longitudinal)**: aporta la consulta cerrada, la epicrisis aprobada y
   el diagnóstico a los que la retroalimentación se asocia, y el mecanismo de presentación de
   antecedentes en consultas posteriores.
-- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye cada
+- **Spec 001 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye cada
   entrada de retroalimentación.

@@ -1,4 +1,4 @@
-# Checklist de Calidad de Especificación: Base de conocimiento trazable
+# Checklist de Calidad de Especificación: Captura de voz hacia anamnesis
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 13 escenarios · 14 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 15 escenarios · 12 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -47,24 +47,30 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Casos límite sin requisito**: cuatro casos prometían comportamiento que ningún FR exigía. Se
-  agregaron FR-051 (pregunta sin paciente seleccionado, el de mayor riesgo clínico), FR-052 (fuentes
-  contradictorias entre sí) y FR-053 (citas hacia fuentes retiradas); se eliminó el caso de consulta
-  ambigua por especulativo.
-- **Generalidad especulativa**: la cláusula de jurisdicción de FR-030 era un MUST que su propio
-  supuesto desactivaba. Eliminada por contradecir el Principio III de la constitución.
-- **Criterios no medibles**: SC-026 era FR-028 reetiquetado; SC-010 y SC-015 no definían conjunto de
-  evaluación ni muestra. Los tres reformulados.
+- **Trazabilidad falsa**: FR-014 prohíbe iniciar captura sin consulta abierta, y el escenario que lo
+  trazaba empezaba asumiendo una consulta abierta, siendo estructuralmente incapaz de verificar la
+  prohibición; además su `Then` verificaba FR-025. Agregado US6/14.
+- **Contradicción del enunciado canónico**: FR-021 redefinía la procedencia como función del estado
+  de confirmación, contradiciendo a la spec 002 y dejando indefinido qué procedencia queda tras
+  confirmar. Reescrito separando ambos ejes, con escenario US6/9.
+- **Detalle de implementación en un MUST**: FR-015 prescribía ventanas de 30 segundos, que es el
+  CÓMO. Reescrito sobre la necesidad real —revisabilidad durante la consulta— dejando la ventana
+  como cota de latencia del brief.
+- **Atribución falsa**: los supuestos citaban el brief como fuente de la ventana de 30 segundos y el
+  brief no la contenía. Se incorporó al brief como decisión de producto y se corrigió la cita.
+- **Casos límite sin requisito**: se agregaron FR-054 (captura no disponible, con registro manual
+  como alternativa) y FR-055 (persistencia del borrador e interrupción a mitad de tramo).
+- **Caso límite duplicado**: eliminado.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
-**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que
-incorporar o retirar una fuente clínica altera el corpus del que dependen todas las afirmaciones del
-sistema, y que esas operaciones no tenían autorización ni atribución en ninguna spec — una tensión
-viva con el Principio V. Agregado FR-069, escenario US5/13 y la dependencia de la spec 007. Las
-preguntas al asistente siguen siendo lectura y no requieren atribución.
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que esta
+spec no se había modificado al incorporar identidad, pese a que su comportamiento cambió: activar la
+captura de audio y confirmar antecedentes son escrituras sobre la ficha clínica. Agregado FR-068
+(sesión activa y atribución, que puede ser de un veterinario distinto del que abrió la consulta),
+escenario US6/15, SC-048 y la dependencia de la spec 001.
 
 ### Advertencia metodológica
 
@@ -74,4 +80,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Spec 001. Dependencia externa crítica: fuentes clínicas legalmente utilizables.
+Spec 002. Dependencia externa: conversación clínica simulada.

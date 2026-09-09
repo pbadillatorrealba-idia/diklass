@@ -1,6 +1,6 @@
 # Feature Specification: Apoyo al tratamiento y farmacología
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/005-apoyo-tratamiento-farmacologia`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/007-apoyo-tratamiento-farmacologia`)
 
 **Created**: 2026-09-09
 
@@ -106,7 +106,7 @@ dosis se presenta como prescripción ni se registra sin aprobación explícita.
   junto con la advertencia que estaba visible al momento de aprobar.
 - **Retiro de una fuente farmacológica**: las prescripciones ya aprobadas deben conservar la
   referencia a la evidencia con la que se decidieron. Este comportamiento lo provee FR-053 de la
-  spec 002.
+  spec 003.
 - **Dosis fuera de rango documentado**: debe señalarse como fuera de rango en lugar de presentarse
   sin observación.
 
@@ -124,7 +124,7 @@ dosis se presenta como prescripción ni se registra sin aprobación explícita.
   señalarse cuando quede fuera del rango documentado.
 - **FR-036**: El sistema MUST NOT registrar ninguna sugerencia farmacológica como medicamento
   prescrito sin aprobación explícita e individual del veterinario sobre ese fármaco; la aprobación
-  MUST quedar atribuida a la identidad autenticada de quien aprueba (FR-063, spec 007) y MUST
+  MUST quedar atribuida a la identidad autenticada de quien aprueba (FR-063, spec 001) y MUST
   registrarse junto con las advertencias que estaban visibles al momento de aprobar.
 - **FR-058**: El borrador de epicrisis MUST NOT incluir como medicamento prescrito ninguna
   sugerencia farmacológica que el veterinario no haya aprobado individualmente, y aprobar la
@@ -180,11 +180,11 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Advertencia clínica**: contraindicación, interacción o información faltante señalada respecto de
   una sugerencia farmacológica, conservada junto con la decisión que el veterinario tomó frente a
   ella.
-- **Paciente**: definido en la spec 001. Aporta alergias, enfermedades preexistentes, medicamentos
+- **Paciente**: definido en la spec 002. Aporta alergias, enfermedades preexistentes, medicamentos
   actuales, peso, edad y estado reproductivo.
-- **Hipótesis clínica**: definida en la spec 004. Contexto de la sugerencia terapéutica.
-- **Evidencia**, **Fuente clínica**: definidas en la spec 002. Respaldan toda sugerencia.
-- **Epicrisis**: definida en la spec 001. Recibe únicamente los medicamentos aprobados
+- **Hipótesis clínica**: definida en la spec 006. Contexto de la sugerencia terapéutica.
+- **Evidencia**, **Fuente clínica**: definidas en la spec 003. Respaldan toda sugerencia.
+- **Epicrisis**: definida en la spec 002. Recibe únicamente los medicamentos aprobados
   individualmente por el veterinario; las sugerencias no aprobadas no figuran como prescritas.
 
 ## Success Criteria *(mandatory)*
@@ -220,12 +220,12 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-- **Spec 002 (base de conocimiento trazable)**: aporta el vademécum y la citación obligatoria. Sin
+- **Spec 003 (base de conocimiento trazable)**: aporta el vademécum y la citación obligatoria. Sin
   ella esta spec no puede cumplir FR-019 ni FR-007.
-- **Spec 004 (asistencia clínica proactiva)**: aporta las hipótesis clínicas que dan contexto a la
+- **Spec 006 (asistencia clínica proactiva)**: aporta las hipótesis clínicas que dan contexto a la
   sugerencia terapéutica.
-- **Spec 001 (registro clínico longitudinal)**: aporta los datos del paciente contra los que se
+- **Spec 002 (registro clínico longitudinal)**: aporta los datos del paciente contra los que se
   evalúa la seguridad, y la epicrisis que recibe los medicamentos aprobados.
-- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye la
+- **Spec 001 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye la
   aprobación de cada fármaco. Es el eslabón que convierte la responsabilidad profesional sobre una
   prescripción en algo verificable.

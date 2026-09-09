@@ -1,6 +1,6 @@
 # Feature Specification: Captura de voz hacia anamnesis
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/003-captura-voz-anamnesis`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/004-captura-voz-anamnesis`)
 
 **Created**: 2026-09-09
 
@@ -126,7 +126,7 @@ explícita.
   en un estado definido, sin tramos a medio procesar.
 - **FR-068**: Activar la escucha clínica y confirmar un antecedente extraído MUST requerir una
   sesión de acceso activa, y ambas acciones MUST quedar atribuidas a la identidad autenticada que
-  las realizó (FR-063, spec 007), que puede ser distinta de la que abrió la consulta.
+  las realizó (FR-063, spec 001), que puede ser distinta de la que abrió la consulta.
 - **FR-010**: El sistema MUST NOT incorporar automáticamente ninguna salida propia al historial
   clínico como registro definitivo; toda incorporación MUST requerir validación explícita del
   veterinario.
@@ -154,12 +154,12 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 - **Transcripción**: texto derivado del audio capturado en una consulta, segmentado por tramos, con
   una marca de confiabilidad por tramo.
-- **Observación clínica**: definida en la spec 001. Aquí se origina en estado borrador a partir de
+- **Observación clínica**: definida en la spec 002. Aquí se origina en estado borrador a partir de
   la Transcripción, y lleva la referencia al fragmento que la produjo.
 - **Sesión de escucha**: periodo de captura dentro de una consulta, con inicio, término y estado. No
-  debe confundirse con la *sesión de acceso* de la spec 007.
-- **Anamnesis**: definida en la spec 001. Esta spec la puebla en estado borrador.
-- **Consulta**: definida en la spec 001. Contenedor obligatorio de toda sesión de escucha.
+  debe confundirse con la *sesión de acceso* de la spec 001.
+- **Anamnesis**: definida en la spec 002. Esta spec la puebla en estado borrador.
+- **Consulta**: definida en la spec 002. Contenedor obligatorio de toda sesión de escucha.
 
 ## Success Criteria *(mandatory)*
 
@@ -198,9 +198,9 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-- **Spec 001 (registro clínico longitudinal)**: se requiere una consulta abierta y una anamnesis
+- **Spec 002 (registro clínico longitudinal)**: se requiere una consulta abierta y una anamnesis
   estructurada donde volcar el borrador.
-- **Spec 007 (identidad y acceso)**: la activación de la captura y la confirmación de antecedentes
+- **Spec 001 (identidad y acceso)**: la activación de la captura y la confirmación de antecedentes
   son operaciones clínicas que escriben en la ficha; exigen sesión activa y quedan atribuidas.
 - **Externa — conversación clínica simulada**: material de audio representativo del ambiente de
   consulta, necesario para medir SC-004 y SC-016.

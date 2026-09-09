@@ -1,6 +1,6 @@
 # Feature Specification: Asistencia clínica proactiva
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/004-asistencia-clinica-proactiva`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/006-asistencia-clinica-proactiva`)
 
 **Created**: 2026-09-09
 
@@ -104,7 +104,7 @@ profesional.
 - **Diagnóstico del veterinario que ninguna hipótesis anticipó**: debe poder registrarse sin
   fricción y quedar como diagnóstico válido.
 - **Caso fuera del dominio de etología**: el sistema debe declarar el límite de su alcance. Este
-  comportamiento lo provee FR-023 junto con la spec 002.
+  comportamiento lo provee FR-023 junto con la spec 003.
 
 ## Requirements *(mandatory)*
 
@@ -119,11 +119,11 @@ profesional.
   contra, información faltante para evaluarlas y evidencia documental asociada.
 - **FR-029**: El sistema MUST permitir al veterinario aceptar, descartar o agregar hipótesis propias
   y registrar su diagnóstico clínico final, quedando este atribuido a su identidad autenticada
-  (FR-063, spec 007).
+  (FR-063, spec 001).
 - **FR-010**: El sistema MUST NOT convertir automáticamente ninguna sugerencia propia en decisión
   clínica, y MUST NOT declarar un diagnóstico definitivo.
 - **FR-049**: Las hipótesis y su estado (propuesta, aceptada, descartada) MUST quedar disponibles
-  para el campo "hipótesis consideradas" de la epicrisis que define FR-011 de la spec 001.
+  para el campo "hipótesis consideradas" de la epicrisis que define FR-011 de la spec 002.
 - **FR-022**: El sistema MUST comunicar de forma explícita cuándo la información disponible es
   insuficiente para proponer hipótesis fundadas.
 - **FR-007**: Toda hipótesis o sugerencia basada en conocimiento documental MUST mostrar el
@@ -157,9 +157,9 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   el sistema o por el veterinario) y estado (propuesta, aceptada, descartada).
 - **Sugerencia de información faltante**: pregunta propuesta al veterinario, con su fundamento
   (fuente documental o criterio general) y su estado (pendiente, formulada, ignorada, no aplicable).
-- **Diagnóstico**: definido en la spec 001. Registrado explícitamente por el veterinario.
-- **Anamnesis**, **Consulta**, **Paciente**: definidos en la spec 001. Entradas de esta spec.
-- **Evidencia**, **Fuente clínica**: definidas en la spec 002. Fundamentan hipótesis y sugerencias.
+- **Diagnóstico**: definido en la spec 002. Registrado explícitamente por el veterinario.
+- **Anamnesis**, **Consulta**, **Paciente**: definidos en la spec 002. Entradas de esta spec.
+- **Evidencia**, **Fuente clínica**: definidas en la spec 003. Fundamentan hipótesis y sugerencias.
 
 ## Success Criteria *(mandatory)*
 
@@ -194,11 +194,11 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-- **Spec 001 (registro clínico longitudinal)**: aporta anamnesis, historial, el registro del
+- **Spec 002 (registro clínico longitudinal)**: aporta anamnesis, historial, el registro del
   diagnóstico del veterinario y el campo "hipótesis consideradas" de la epicrisis (FR-011).
-- **Spec 002 (base de conocimiento trazable)**: aporta la evidencia documental que fundamenta
+- **Spec 003 (base de conocimiento trazable)**: aporta la evidencia documental que fundamenta
   sugerencias e hipótesis, incluida la declaración de límite de alcance ante casos fuera de dominio.
   Sin ella, esta spec opera sin respaldo citable y SC-030 no es evaluable.
-- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye el
+- **Spec 001 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye el
   diagnóstico registrado por el veterinario.
 - **Externa — panel de especialistas**: necesario para SC-017 y SC-018.

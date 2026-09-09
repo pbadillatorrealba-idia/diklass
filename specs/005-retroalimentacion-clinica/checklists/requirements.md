@@ -1,4 +1,4 @@
-# Checklist de Calidad de Especificación: Captura de voz hacia anamnesis
+# Checklist de Calidad de Especificación: Retroalimentación clínica
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 15 escenarios · 12 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 13 escenarios · 10 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -47,30 +47,28 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Trazabilidad falsa**: FR-014 prohíbe iniciar captura sin consulta abierta, y el escenario que lo
-  trazaba empezaba asumiendo una consulta abierta, siendo estructuralmente incapaz de verificar la
-  prohibición; además su `Then` verificaba FR-025. Agregado US6/14.
-- **Contradicción del enunciado canónico**: FR-021 redefinía la procedencia como función del estado
-  de confirmación, contradiciendo a la spec 001 y dejando indefinido qué procedencia queda tras
-  confirmar. Reescrito separando ambos ejes, con escenario US6/9.
-- **Detalle de implementación en un MUST**: FR-015 prescribía ventanas de 30 segundos, que es el
-  CÓMO. Reescrito sobre la necesidad real —revisabilidad durante la consulta— dejando la ventana
-  como cota de latencia del brief.
-- **Atribución falsa**: los supuestos citaban el brief como fuente de la ventana de 30 segundos y el
-  brief no la contenía. Se incorporó al brief como decisión de producto y se corrigió la cita.
-- **Casos límite sin requisito**: se agregaron FR-054 (captura no disponible, con registro manual
-  como alternativa) y FR-055 (persistencia del borrador e interrupción a mitad de tramo).
-- **Caso límite duplicado**: eliminado.
+- **Dependencia no declarada**: la entidad Tratamiento se describía como "definida en la spec 007"
+  mientras la sección Dependencias declaraba solo la 002. Redefinida como entidad propia e
+  independiente, de modo que la spec es construible con la 002 sola, como declara el brief.
+- **Requisito verificado a medias**: FR-018 enumera siete contenidos y la trazabilidad lo asignaba a
+  un escenario que solo verificaba la asociación a la consulta. "Tratamiento aplicado" y
+  "modificación del tratamiento" no tenían escenario alguno. Agregado US10/10.
+- **Casos límite sin requisito**: agregados FR-056 (varias entradas en orden cronológico) y FR-057
+  (consulta sin tratamiento indicado), con escenarios US10/11 y US10/12.
+- **Criterio sin sustento**: SC-037 medía tiempo sin que nada lo hiciera alcanzable. Vinculado a los
+  campos categóricos de FR-043.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
-**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que esta
-spec no se había modificado al incorporar identidad, pese a que su comportamiento cambió: activar la
-captura de audio y confirmar antecedentes son escrituras sobre la ficha clínica. Agregado FR-068
-(sesión activa y atribución, que puede ser de un veterinario distinto del que abrió la consulta),
-escenario US6/15, SC-048 y la dependencia de la spec 007.
+**Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
+(spec 001): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
+atribución de la retroalimentación se afirmaba solo en Supuestos y Dependencias, sin ningún
+requisito, escenario ni criterio que la verificara — a diferencia de las specs 001, 004 y 005, que
+sí enmendaron un requisito. Agregado FR-070, escenario US10/13 y SC-049.
 
 ### Advertencia metodológica
 
@@ -80,4 +78,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Spec 001. Dependencia externa: conversación clínica simulada.
+Spec 002.

@@ -1,4 +1,4 @@
-# Checklist de Calidad de Especificación: Retroalimentación clínica
+# Checklist de Calidad de Especificación: Asistencia clínica proactiva
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 13 escenarios · 10 requisitos funcionales · 6 criterios de éxito
+2 historia(s) · 16 escenarios · 10 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -47,28 +47,25 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Dependencia no declarada**: la entidad Tratamiento se describía como "definida en la spec 005"
-  mientras la sección Dependencias declaraba solo la 001. Redefinida como entidad propia e
-  independiente, de modo que la spec es construible con la 001 sola, como declara el brief.
-- **Requisito verificado a medias**: FR-018 enumera siete contenidos y la trazabilidad lo asignaba a
-  un escenario que solo verificaba la asociación a la consulta. "Tratamiento aplicado" y
-  "modificación del tratamiento" no tenían escenario alguno. Agregado US10/10.
-- **Casos límite sin requisito**: agregados FR-056 (varias entradas en orden cronológico) y FR-057
-  (consulta sin tratamiento indicado), con escenarios US10/11 y US10/12.
-- **Criterio sin sustento**: SC-037 medía tiempo sin que nada lo hiciera alcanzable. Vinculado a los
-  campos categóricos de FR-043.
+- **Escenario sin requisito y trazabilidad falsa**: US8/6 prometía que las hipótesis figuran en la
+  epicrisis, campo que la spec 002 no contemplaba, y la fila `FR-009 | US8/1, 6` atribuía a FR-009
+  un escenario que no lo verifica. Se agregó FR-049, se amplió la epicrisis en FR-011 de la 002 y se
+  corrigió la trazabilidad.
+- **Lenguaje normativo invertido**: FR-010 reescrito como MUST NOT.
+- **Obligaciones no verificadas**: FR-008 exige permitir "formular" una pregunta y FR-029 "agregar
+  hipótesis propias", sin escenario. Agregados US7/6 y US8/9. FR-007 exige mostrar el fragmento y
+  los escenarios solo verificaban la fuente: agregado US8/10.
+- **Dependencia no declarada**: SC-017 y SC-018 dependen del panel de especialistas, que el brief
+  clasifica como dependencia externa. Declarado.
+- **Casos límite sin requisito**: el de dominio fuera de etología se delegó explícitamente a FR-023
+  y la spec 003; los otros dos se eliminaron o se remitieron a FR-022.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
-(spec 007): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
-
-**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
-atribución de la retroalimentación se afirmaba solo en Supuestos y Dependencias, sin ningún
-requisito, escenario ni criterio que la verificara — a diferencia de las specs 001, 004 y 005, que
-sí enmendaron un requisito. Agregado FR-070, escenario US10/13 y SC-049.
+(spec 001): FR-029 atribuye el diagnóstico a la identidad autenticada de la spec 001. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
 
 ### Advertencia metodológica
 
@@ -78,4 +75,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Spec 001.
+Specs 001 y 002. Dependencia externa: panel de especialistas.

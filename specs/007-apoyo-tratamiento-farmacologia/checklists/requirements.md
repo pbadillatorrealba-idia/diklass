@@ -1,4 +1,4 @@
-# Checklist de Calidad de Especificación: Asistencia clínica proactiva
+# Checklist de Calidad de Especificación: Apoyo al tratamiento y farmacología
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
@@ -35,7 +35,7 @@
 
 ### Recuento
 
-2 historia(s) · 16 escenarios · 10 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 19 escenarios · 12 requisitos funcionales · 7 criterios de éxito
 
 ### Historial de validación
 
@@ -47,25 +47,33 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Escenario sin requisito y trazabilidad falsa**: US8/6 prometía que las hipótesis figuran en la
-  epicrisis, campo que la spec 001 no contemplaba, y la fila `FR-009 | US8/1, 6` atribuía a FR-009
-  un escenario que no lo verifica. Se agregó FR-049, se amplió la epicrisis en FR-011 de la 001 y se
-  corrigió la trazabilidad.
-- **Lenguaje normativo invertido**: FR-010 reescrito como MUST NOT.
-- **Obligaciones no verificadas**: FR-008 exige permitir "formular" una pregunta y FR-029 "agregar
-  hipótesis propias", sin escenario. Agregados US7/6 y US8/9. FR-007 exige mostrar el fragmento y
-  los escenarios solo verificaban la fuente: agregado US8/10.
-- **Dependencia no declarada**: SC-017 y SC-018 dependen del panel de especialistas, que el brief
-  clasifica como dependencia externa. Declarado.
-- **Casos límite sin requisito**: el de dominio fuera de etología se delegó explícitamente a FR-023
-  y la spec 002; los otros dos se eliminaron o se remitieron a FR-022.
+Es la spec de mayor riesgo clínico y la que llegó peor. Tres huecos de seguridad, todos cerrados:
+
+- **Dosis sin rótulo de validación**: FR-035 obligaba a rotular solo la dosis "calculada por el
+  sistema"; una dosis citada literalmente de una fuente escapaba a la obligación, y con ella se caía
+  SC-006. Ampliado a toda dosis presentada, con escenario US9/19.
+- **Prescripción por la puerta trasera**: nada impedía que el borrador automático de epicrisis
+  arrastrara sugerencias farmacológicas nunca aprobadas individualmente, y que la aprobación global
+  de la epicrisis las convirtiera en registro definitivo. Agregado FR-058, escenarios US9/16 y
+  US9/17, y SC-038 que mide esa vía en 0.
+- **Evaluación de seguridad verificada a un sexto**: FR-037 obliga a evaluar seis dimensiones y
+  advertir contraindicaciones e interacciones; un único escenario lo verificaba, y solo para
+  alergias, pese a que SC-020 lo mide al 100%. Agregados US9/11 y US9/12.
+- **Reglas de seguridad que vivían en Supuestos**: la prohibición de mostrar dosis fuera de rango
+  documentado y de sugerir fármacos sin cobertura no era un requisito. Promovida a FR-046.
+- **Lenguaje normativo invertido** en FR-036 y FR-010, los dos requisitos ancla del human-in-the-loop.
+  Reescritos como MUST NOT, y FR-036 explicita que la aprobación es individual por fármaco.
+- **Frontera indefinida** entre FR-019 (toda sugerencia farmacológica cita fuente) y FR-023
+  (alternativa sin respaldo declarándolo): se acotó FR-023 a lo no farmacológico.
+- **Colisión de identificador**: el requisito de la epicrisis se numeró FR-045, ya usado por otro
+  requisito distinto en la spec 002. Renumerado a FR-058.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
-(spec 007): FR-029 atribuye el diagnóstico a la identidad autenticada de la spec 007. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+(spec 001): FR-036 atribuye la aprobación de cada fármaco a la identidad autenticada de la spec 001. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
 
 ### Advertencia metodológica
 
@@ -75,4 +83,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Specs 001 y 002. Dependencia externa: panel de especialistas.
+Specs 001, 002 y 004. Es la funcionalidad de mayor riesgo clínico del PoC.

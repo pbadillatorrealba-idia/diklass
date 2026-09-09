@@ -1,6 +1,6 @@
 # Feature Specification: Base de conocimiento trazable
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/002-base-conocimiento-trazable`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/003-base-conocimiento-trazable`)
 
 **Created**: 2026-09-09
 
@@ -119,7 +119,7 @@ sin cobertura documental producen una declaración explícita de ausencia de evi
   fuente deje de estar disponible para consultas nuevas.
 - **FR-069**: Incorporar una fuente clínica a la colección o retirarla de ella MUST requerir una
   sesión de acceso activa y MUST quedar atribuido a la identidad autenticada que lo hizo (FR-063,
-  spec 007), por alterar el corpus del que dependen todas las afirmaciones clínicas del sistema.
+  spec 001), por alterar el corpus del que dependen todas las afirmaciones clínicas del sistema.
 - **FR-030**: Cada fuente clínica MUST registrar su información bibliográfica disponible, y el
   sistema MUST mostrarla junto a la referencia cuando la cite.
 
@@ -152,7 +152,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   referenciable desde la afirmación que sustenta y localizable dentro de su documento.
 - **Consulta de conocimiento**: pregunta formulada por el veterinario, con el contexto de paciente
   aplicable y las Evidencias que la respondieron.
-- **Paciente**: definido en la spec 001. Aquí se usa solo como contexto de la conversación.
+- **Paciente**: definido en la spec 002. Aquí se usa solo como contexto de la conversación.
 
 ## Success Criteria *(mandatory)*
 
@@ -188,9 +188,9 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-- **Spec 001 (registro clínico longitudinal)**: se requiere un paciente seleccionable para dar
+- **Spec 002 (registro clínico longitudinal)**: se requiere un paciente seleccionable para dar
   contexto a la conversación y para distinguir datos de ficha de evidencia documental.
-- **Spec 007 (identidad y acceso)**: la consulta al asistente exige sesión activa, y la
+- **Spec 001 (identidad y acceso)**: la consulta al asistente exige sesión activa, y la
   incorporación o retiro de fuentes clínicas queda atribuida a quien la realiza.
 - **Externa — fuentes clínicas**: depende de disponer de documentos de etología veterinaria
   legalmente utilizables. Sin ellos esta spec no es evaluable aunque esté construida. Es la

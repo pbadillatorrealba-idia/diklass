@@ -1,6 +1,6 @@
 # Feature Specification: Registro clínico longitudinal
 
-**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/001-registro-clinico-longitudinal`)
+**Feature Branch**: `docs/project-constitution` (rama activa; directorio: `specs/002-registro-clinico-longitudinal`)
 
 **Created**: 2026-09-09
 
@@ -171,10 +171,10 @@ permanece sin cambios al cerrar la nueva.
 - **FR-027**: El sistema MUST registrar datos básicos de contacto del tutor (nombre y al menos un
   medio de contacto) asociados al paciente, permitiendo que un tutor tenga varios pacientes.
 - **FR-003**: El sistema MUST permitir registrar una nueva sesión clínica asociada a un paciente,
-  una fecha y el profesional autenticado que la abre (FR-063, spec 007).
+  una fecha y el profesional autenticado que la abre (FR-063, spec 001).
 - **FR-004**: El sistema MUST almacenar antecedentes de anamnesis mediante campos estructurados y
   texto libre, permitiendo ambos en una misma consulta, y MUST atribuir cada antecedente a la
-  identidad autenticada de quien lo registró (FR-063, spec 007), que puede no ser la de quien abrió
+  identidad autenticada de quien lo registró (FR-063, spec 001), que puede no ser la de quien abrió
   la consulta.
 - **FR-021**: El sistema MUST registrar y mostrar, para cada antecedente clínico, si fue reportado
   explícitamente, inferido por el sistema o es desconocido, y MUST permitir al veterinario corregir
@@ -182,11 +182,11 @@ permanece sin cambios al cerrar la nueva.
 - **FR-011**: El sistema MUST generar un borrador editable de epicrisis a partir de la sesión, con
   motivo de consulta, antecedentes, hallazgos, hipótesis consideradas con su estado, diagnóstico
   registrado, exámenes, intervenciones propuestas, medicamentos aprobados, recomendaciones, plan de
-  seguimiento y observaciones. Las hipótesis las aporta la spec 004 y los medicamentos la 005; en
+  seguimiento y observaciones. Las hipótesis las aporta la spec 006 y los medicamentos la 007; en
   ausencia de ellas los campos quedan vacíos sin impedir la generación del borrador.
 - **FR-012**: La epicrisis MUST ser confirmada explícitamente por el veterinario antes de
   almacenarse como registro definitivo, quedando registrada la identidad autenticada de quien
-  aprueba (FR-063, spec 007) y el momento de aprobación.
+  aprueba (FR-063, spec 001) y el momento de aprobación.
 - **FR-010**: El sistema MUST NOT incorporar automáticamente ninguna salida propia al historial
   clínico como registro definitivo; toda incorporación MUST requerir validación explícita del
   veterinario.
@@ -196,8 +196,8 @@ permanece sin cambios al cerrar la nueva.
 - **FR-013**: El sistema MUST recuperar y presentar, al iniciar una nueva consulta del mismo
   paciente, el contenido de las epicrisis aprobadas anteriores: diagnóstico previo, intervenciones
   propuestas, recomendaciones al tutor, exámenes solicitados y pendientes del plan de seguimiento.
-  Los medicamentos efectivamente prescritos los aporta FR-036 (spec 005) y la evolución posterior
-  FR-042 (spec 006); FR-013 no los produce ni los exige para ser verificable.
+  Los medicamentos efectivamente prescritos los aporta FR-036 (spec 007) y la evolución posterior
+  FR-042 (spec 005); FR-013 no los produce ni los exige para ser verificable.
 - **FR-024**: El sistema MUST preservar los registros clínicos de consultas anteriores sin
   modificarlos al registrar información nueva; toda corrección posterior MUST generar un registro
   adicional que conserve el original.
@@ -233,8 +233,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   texto libre, donde cada antecedente lleva su procedencia.
 - **Observación clínica**: unidad mínima de información registrada durante la consulta, con su
   procedencia (reportada, inferida, desconocida) y la identidad autenticada de quien la registró,
-  que puede no ser la de quien abrió la consulta. El estado de confirmación que usa la spec 003 se
-  añade allí; en la 001 toda observación se registra ya confirmada por el veterinario.
+  que puede no ser la de quien abrió la consulta. El estado de confirmación que usa la spec 004 se
+  añade allí; en la 002 toda observación se registra ya confirmada por el veterinario.
 - **Epicrisis**: resumen clínico de una consulta, con estado borrador o aprobado, y registro de
   quién aprobó y cuándo. Inmutable una vez aprobada.
 - **Diagnóstico**: diagnóstico registrado explícitamente por el veterinario, atribuido a él.
@@ -259,7 +259,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ## Assumptions
 
-- **Identidad provista por la spec 007**: el profesional responsable de una consulta y quien
+- **Identidad provista por la spec 001**: el profesional responsable de una consulta y quien
   aprueba una epicrisis son identidades autenticadas, no texto libre. Los veterinarios comparten los
   pacientes de la clínica; el aislamiento por profesional y el multi-tenancy siguen fuera del PoC.
 - **Datos sintéticos**: se ejercita con pacientes y tutores ficticios; no se procesan datos
@@ -268,18 +268,18 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   futura, pero solo se valida con perros.
 - **Idioma único**: interfaz y registros en español.
 - **Sin extracción automática**: esta spec no infiere antecedentes por su cuenta. La procedencia la
-  asigna el veterinario. El valor "inferido" existe porque la spec 003 produce antecedentes
-  derivados del audio que aterrizan en esta misma anamnesis, pero construir la 001 sola no requiere
+  asigna el veterinario. El valor "inferido" existe porque la spec 004 produce antecedentes
+  derivados del audio que aterrizan en esta misma anamnesis, pero construir la 002 sola no requiere
   ninguna capacidad de extracción.
 - **Alcance de plataforma**: se prioriza el uso desde computador; el uso móvil condiciona el diseño
   pero no es criterio de éxito.
 
 ### Dependencias
 
-- **Spec 007 (identidad y acceso)**: aporta la identidad autenticada del profesional responsable de
+- **Spec 001 (identidad y acceso)**: aporta la identidad autenticada del profesional responsable de
   la consulta (FR-003) y de quien aprueba la epicrisis (FR-012). Sin ella esas atribuciones son
   texto que nadie respalda.
 
-FR-011 y FR-013 reservan campos —hipótesis consideradas, medicamentos aprobados— que las specs 004 y
-005 pueblan cuando existen. Eso **no** es una dependencia: la 001 se construye y se verifica con
-esos campos vacíos. La evolución posterior es de la spec 006 (FR-042) y la 001 no la exige.
+FR-011 y FR-013 reservan campos —hipótesis consideradas, medicamentos aprobados— que las specs 006 y
+007 pueblan cuando existen. Eso **no** es una dependencia: la 002 se construye y se verifica con
+esos campos vacíos. La evolución posterior es de la spec 005 (FR-042) y la 002 no la exige.
