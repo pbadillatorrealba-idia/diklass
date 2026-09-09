@@ -39,14 +39,23 @@ profesional durante la sesión, cerrar sesión y comprobar que ya no permite ope
 
 1. **Given** una cuenta de veterinario provisionada, **When** el profesional se autentica con sus
    credenciales, **Then** el sistema inicia su sesión y lo identifica en las operaciones que realice.
-2. **Given** credenciales incorrectas, **When** se intenta acceder, **Then** el sistema deniega el
-   acceso sin revelar si el fallo fue en el identificador o en la contraseña.
-3. **Given** una sesión activa, **When** el veterinario la cierra, **Then** el sistema deja de
+2. **Given** una cuenta existente y una contraseña incorrecta, **When** se intenta acceder,
+   **Then** el sistema deniega el acceso sin revelar si el fallo fue en el identificador o en la
+   contraseña.
+3. **Given** un identificador que no corresponde a ninguna cuenta, **When** se intenta acceder,
+   **Then** el sistema deniega el acceso con una respuesta indistinguible de la del escenario
+   anterior.
+4. **Given** una sesión activa, **When** el veterinario la cierra, **Then** el sistema deja de
    permitir operaciones clínicas hasta un nuevo acceso.
-4. **Given** una sesión que superó su tiempo de validez, **When** el veterinario intenta operar,
-   **Then** el sistema exige autenticarse nuevamente y no pierde el trabajo no guardado.
-5. **Given** que no hay sesión activa, **When** se intenta acceder directamente a una operación
+5. **Given** una sesión sin actividad durante más tiempo del permitido, **When** el veterinario
+   intenta operar, **Then** el sistema exige autenticarse nuevamente y conserva el contenido que el
+   veterinario había introducido y no guardado.
+6. **Given** que no hay sesión activa, **When** se intenta acceder directamente a una operación
    clínica, **Then** el sistema la deniega.
+7. **Given** la aplicación en cualquier estado, **When** se busca una forma de registrar información
+   clínica sin autenticarse, **Then** no existe ninguna: no hay modo anónimo ni invitado.
+8. **Given** una operación denegada por falta de sesión, **When** se intenta repetirla eludiendo la
+   interfaz de usuario, **Then** el sistema la deniega igualmente.
 
 ---
 
@@ -77,8 +86,15 @@ las dos puede alterar la atribución de la otra.
    otro profesional, **Then** el sistema lo impide.
 5. **Given** un paciente atendido por dos veterinarios en consultas distintas, **When** se revisa el
    historial, **Then** cada consulta conserva la atribución de su propio autor.
-6. **Given** una acción clínica registrada, **When** se elimina o desactiva la cuenta que la
-   realizó, **Then** la atribución del registro sigue siendo identificable.
+6. **Given** un antecedente extraído del audio que un veterinario distinto del que abrió la consulta
+   confirma, **When** se revisa la anamnesis, **Then** consta quién lo confirmó y cuándo.
+7. **Given** una epicrisis aprobada que otro veterinario corrige después, **When** se revisa el
+   historial, **Then** el registro correctivo consta atribuido a quien lo hizo, sin alterar la
+   atribución del original.
+8. **Given** un tratamiento no farmacológico adoptado durante la consulta, **When** se revisa la
+   epicrisis, **Then** consta quién lo adoptó.
+9. **Given** una acción clínica registrada por un veterinario, **When** otro profesional consulta
+   ese registro, **Then** no puede alterar la identidad a la que está atribuido.
 
 ---
 
@@ -86,16 +102,10 @@ las dos puede alterar la atribución de la otra.
 
 - **Sesión expirada a mitad de una consulta**: el trabajo en curso no debe perderse ni entrar al
   historial sin una identidad válida que lo respalde.
-- **Dos sesiones simultáneas de la misma cuenta**: las acciones deben atribuirse igualmente a esa
-  identidad, sin ambigüedad sobre cuál sesión las produjo.
-- **Cuenta desactivada con trabajo en curso**: las sesiones activas de esa cuenta deben dejar de
-  permitir operaciones clínicas.
 - **Intento de operar sin sesión**: toda operación clínica debe denegarse, no degradarse a un modo
   anónimo.
 - **Credenciales de una cuenta inexistente**: el mensaje de error no debe permitir distinguir una
   cuenta que existe de una que no.
-- **Registro clínico cuya cuenta autora fue eliminada**: la atribución histórica debe sobrevivir a
-  la eliminación de la cuenta.
 
 ## Requirements *(mandatory)*
 
@@ -107,20 +117,24 @@ las dos puede alterar la atribución de la otra.
   estuvo en el identificador o en la contraseña, y MUST NOT permitir distinguir una cuenta existente
   de una inexistente a partir del mensaje de error.
 - **FR-061**: El sistema MUST permitir cerrar la sesión, y MUST expirarla tras un periodo de
-  inactividad, exigiendo autenticarse nuevamente sin descartar el trabajo no guardado.
+  inactividad no superior a 8 horas, exigiendo autenticarse nuevamente. Al expirar, el contenido
+  clínico que el veterinario había introducido y no guardado MUST conservarse.
 - **FR-062**: El sistema MUST denegar toda operación clínica que no provenga de una sesión activa, y
   MUST NOT ofrecer un modo de operación anónimo.
-- **FR-063**: Toda acción clínica —crear o actualizar una ficha, abrir una consulta, registrar un
-  diagnóstico, aprobar una epicrisis, aprobar un fármaco, registrar retroalimentación— MUST quedar
-  atribuida a la identidad autenticada que la realizó.
+- **FR-063**: Toda acción que cree o modifique un registro clínico MUST quedar atribuida a la
+  identidad autenticada que la realizó, junto con el momento en que ocurrió. La enumeración es
+  taxativa: crear o actualizar una ficha de paciente o tutor; abrir una consulta; registrar o
+  corregir un antecedente de anamnesis; confirmar un antecedente extraído del audio; decidir sobre
+  una sugerencia de información faltante; aceptar, descartar o agregar una hipótesis; registrar un
+  diagnóstico; adoptar un tratamiento farmacológico o no farmacológico; aprobar una epicrisis;
+  registrar retroalimentación; y generar cualquier registro correctivo sobre un registro aprobado.
 - **FR-064**: El sistema MUST NOT permitir que un profesional registre una acción clínica a nombre
   de otro, ni que se modifique la atribución de un registro ya creado.
-- **FR-065**: La atribución de un registro clínico MUST seguir siendo identificable aunque la cuenta
-  que lo produjo sea posteriormente desactivada o eliminada.
 - **FR-066**: Todos los veterinarios de la clínica MUST poder ver y atender a todos los pacientes
   registrados; el PoC MUST NOT aislar la información clínica por profesional.
-- **FR-067**: La autenticación y la autorización MUST aplicarse del lado del servidor en cada
-  operación protegida; las verificaciones en el cliente MUST NOT considerarse un control.
+- **FR-067**: Toda operación protegida MUST denegarse aunque se invoque eludiendo la interfaz de
+  usuario: la comprobación de identidad y permisos MUST realizarse donde el usuario no pueda
+  alterarla, y una comprobación que solo exista en el cliente MUST NOT considerarse un control.
 
 ### Trazabilidad de requisitos
 
@@ -129,24 +143,26 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 | Requisito | Verificado por |
 |---|---|
 | FR-059 | US11 / 1 |
-| FR-060 | US11 / 2 |
-| FR-061 | US11 / 3, 4 |
-| FR-062 | US11 / 5 |
-| FR-063 | US12 / 2, 3, 5 |
-| FR-064 | US12 / 3, 4 |
-| FR-065 | US12 / 6 |
+| FR-060 | US11 / 2, 3 |
+| FR-061 | US11 / 4, 5 |
+| FR-062 | US11 / 6, 7 |
+| FR-063 | US12 / 2, 3, 5, 6, 7, 8 |
+| FR-064 | US12 / 3, 4, 7 |
 | FR-066 | US12 / 1 |
-| FR-067 | US11 / 5 |
+| FR-067 | US11 / 8 |
 
 ### Key Entities *(include if feature involves data)*
 
-- **Veterinario**: profesional con cuenta en la clínica, con identificador, credenciales y estado
-  (activa, desactivada). Es la identidad a la que se atribuyen las acciones clínicas.
-- **Sesión**: periodo de acceso autenticado de un Veterinario, con inicio, término y validez.
+- **Veterinario**: profesional con cuenta provisionada en la clínica, con identificador y
+  credenciales. Es la identidad a la que se atribuyen las acciones clínicas.
+- **Sesión de acceso**: periodo de acceso autenticado de un Veterinario, con inicio, término y
+  validez. No debe confundirse con la *sesión clínica* de la spec 001 (que es una Consulta) ni con
+  la *sesión de escucha* de la spec 003.
 - **Atribución**: vínculo inmutable entre un registro clínico y la identidad del Veterinario que lo
   produjo, junto con el momento en que lo hizo.
-- **Consulta**, **Epicrisis**, **Diagnóstico**: definidos en la spec 001. Reciben la Atribución.
-- **Medicamento**: definido en la spec 005. Su aprobación recibe la Atribución.
+- **Consulta**, **Epicrisis**, **Diagnóstico**, **Anamnesis**: definidos en la spec 001. Reciben la
+  Atribución. Su existencia condiciona la verificación de US12, no la construcción de esta spec.
+- **Medicamento**, **Tratamiento**: definidos en la spec 005. Su adopción recibe la Atribución.
 
 ## Success Criteria *(mandatory)*
 
@@ -158,18 +174,23 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **SC-041**: El número de registros cuya atribución pudo modificarse después de creados es 0.
 - **SC-042**: El número de acciones clínicas registrables a nombre de un profesional distinto del
   autenticado es 0.
+- **SC-045**: El número de operaciones protegidas que pueden completarse eludiendo la interfaz de
+  usuario sin sesión válida es 0.
+- **SC-046**: El 100% de los intentos de acceso fallidos produce una respuesta indistinguible entre
+  cuenta existente y cuenta inexistente.
+- **SC-047**: Al expirar una sesión por inactividad, el contenido clínico introducido y no guardado
+  se conserva en el 100% de los casos.
 - **SC-043**: Un veterinario accede al sistema y queda en condiciones de operar en menos de 30
   segundos.
 - **SC-044**: Cualquier veterinario de la clínica puede abrir una consulta sobre el 100% de los
   pacientes registrados, con independencia de quién los registró.
-- **SC-045**: La atribución de los registros clínicos sobrevive a la desactivación de la cuenta
-  autora en el 100% de los casos.
 
 ## Assumptions
 
-- **Cuentas provisionadas**: las cuentas de veterinario se cargan al preparar el entorno. El PoC no
-  implementa autoregistro, verificación de correo ni recuperación de contraseña; ninguno de esos
-  flujos valida la hipótesis del producto.
+- **Cuentas provisionadas, sin ciclo de vida**: las cuentas se cargan al preparar el entorno. El PoC
+  no implementa autoregistro, verificación de correo, recuperación de contraseña, ni desactivación o
+  eliminación de cuentas. Toda la gestión de cuentas corresponde a la Fase 2 según el brief; el
+  conjunto de cuentas es fijo durante el PoC.
 - **Clínica única compartida**: todos los veterinarios pertenecen a la misma clínica y comparten los
   pacientes. El soporte multi-clínica y el multi-tenancy siguen fuera del alcance del PoC, según el
   brief.
@@ -183,6 +204,14 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 ### Dependencias
 
-Ninguna. Esta funcionalidad es construible y verificable por sí sola, y es la primera del orden de
-construcción: las specs 001 a 006 dependen de ella para que su atribución de responsabilidad
+**De construcción: ninguna.** La 007 se construye primero y no necesita que exista ninguna otra spec
+para hacerlo.
+
+**De verificación: la spec 001.** La historia US11 (acceso autenticado) es verificable por sí sola.
+La US12 (atribución) no lo es: se expresa sobre pacientes, consultas y epicrisis que define la spec
+001, igual que SC-040, SC-041, SC-042 y SC-044. Esto **no** es una arista de dependencia —invertirla
+crearía el ciclo `001 ↔ 007`— sino un punto de verificación conjunta: la 007 se declara terminada
+cuando US11 pasa y US12 queda verificada junto con la 001, no antes.
+
+Las specs 001, 002, 003, 004, 005 y 006 dependen de esta para que su atribución de responsabilidad
 profesional sea verificable.

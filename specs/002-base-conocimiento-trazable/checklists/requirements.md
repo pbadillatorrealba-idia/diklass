@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 12 escenarios · 13 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 13 escenarios · 14 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -59,6 +59,12 @@ de los requisitos compuestos ni las prohibiciones. Hallazgos:
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que
+incorporar o retirar una fuente clínica altera el corpus del que dependen todas las afirmaciones del
+sistema, y que esas operaciones no tenían autorización ni atribución en ninguna spec — una tensión
+viva con el Principio V. Agregado FR-069, escenario US5/13 y la dependencia de la spec 007. Las
+preguntas al asistente siguen siendo lectura y no requieren atribución.
 
 ### Advertencia metodológica
 

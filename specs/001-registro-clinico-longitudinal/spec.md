@@ -79,6 +79,8 @@ queda asociada al paciente con fecha, profesional y marcas de procedencia por ca
 5. **Given** una anamnesis en curso, **When** el veterinario corrige la procedencia de un
    antecedente marcado como inferido, **Then** queda registrado como reportado y la corrección es
    recuperable.
+6. **Given** una consulta abierta por un veterinario, **When** otro registra un antecedente en su
+   anamnesis, **Then** consta que ese antecedente lo registró el segundo, no el primero.
 
 ---
 
@@ -171,7 +173,9 @@ permanece sin cambios al cerrar la nueva.
 - **FR-003**: El sistema MUST permitir registrar una nueva sesión clínica asociada a un paciente,
   una fecha y el profesional autenticado que la abre (FR-063, spec 007).
 - **FR-004**: El sistema MUST almacenar antecedentes de anamnesis mediante campos estructurados y
-  texto libre, permitiendo ambos en una misma consulta.
+  texto libre, permitiendo ambos en una misma consulta, y MUST atribuir cada antecedente a la
+  identidad autenticada de quien lo registró (FR-063, spec 007), que puede no ser la de quien abrió
+  la consulta.
 - **FR-021**: El sistema MUST registrar y mostrar, para cada antecedente clínico, si fue reportado
   explícitamente, inferido por el sistema o es desconocido, y MUST permitir al veterinario corregir
   esa procedencia.
@@ -208,7 +212,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 | FR-044 | US1 / 3 |
 | FR-027 | US1 / 1, 4 |
 | FR-003 | US2 / 1 |
-| FR-004 | US2 / 2 |
+| FR-004 | US2 / 2, 6 |
 | FR-021 | US2 / 3, 4, 5 |
 | FR-011 | US3 / 1 |
 | FR-012 | US3 / 2 |
@@ -228,7 +232,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Anamnesis**: información clínica recopilada durante una consulta, en campos estructurados y
   texto libre, donde cada antecedente lleva su procedencia.
 - **Observación clínica**: unidad mínima de información registrada durante la consulta, con su
-  procedencia (reportada, inferida, desconocida). El estado de confirmación que usa la spec 003 se
+  procedencia (reportada, inferida, desconocida) y la identidad autenticada de quien la registró,
+  que puede no ser la de quien abrió la consulta. El estado de confirmación que usa la spec 003 se
   añade allí; en la 001 toda observación se registra ya confirmada por el veterinario.
 - **Epicrisis**: resumen clínico de una consulta, con estado borrador o aprobado, y registro de
   quién aprobó y cuándo. Inmutable una vez aprobada.

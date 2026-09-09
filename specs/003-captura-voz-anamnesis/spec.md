@@ -68,6 +68,8 @@ explícita.
     puede revisar lo transcrito mientras la consulta ocurre, sin esperar a que termine.
 14. **Given** que no hay ninguna consulta abierta, **When** el veterinario intenta activar la
     escucha clínica, **Then** el sistema no inicia la captura.
+15. **Given** un antecedente extraído del audio, **When** lo confirma un veterinario distinto del
+    que abrió la consulta, **Then** queda registrado quién lo confirmó y cuándo.
 
 ---
 
@@ -122,6 +124,9 @@ explícita.
 - **FR-055**: El borrador de anamnesis MUST conservar todos los antecedentes extraídos durante la
   sesión, con independencia de su duración, y una interrupción de la captura MUST dejar el borrador
   en un estado definido, sin tramos a medio procesar.
+- **FR-068**: Activar la escucha clínica y confirmar un antecedente extraído MUST requerir una
+  sesión de acceso activa, y ambas acciones MUST quedar atribuidas a la identidad autenticada que
+  las realizó (FR-063, spec 007), que puede ser distinta de la que abrió la consulta.
 - **FR-010**: El sistema MUST NOT incorporar automáticamente ninguna salida propia al historial
   clínico como registro definitivo; toda incorporación MUST requerir validación explícita del
   veterinario.
@@ -142,6 +147,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 | FR-032 | US6 / 8 |
 | FR-054 | US6 / 10 |
 | FR-055 | US6 / 11, 12 |
+| FR-068 | US6 / 15 |
 | FR-010 | US6 / 4 |
 
 ### Key Entities *(include if feature involves data)*
@@ -150,7 +156,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   una marca de confiabilidad por tramo.
 - **Observación clínica**: definida en la spec 001. Aquí se origina en estado borrador a partir de
   la Transcripción, y lleva la referencia al fragmento que la produjo.
-- **Sesión de escucha**: periodo de captura dentro de una consulta, con inicio, término y estado.
+- **Sesión de escucha**: periodo de captura dentro de una consulta, con inicio, término y estado. No
+  debe confundirse con la *sesión de acceso* de la spec 007.
 - **Anamnesis**: definida en la spec 001. Esta spec la puebla en estado borrador.
 - **Consulta**: definida en la spec 001. Contenedor obligatorio de toda sesión de escucha.
 
@@ -164,6 +171,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   antes de incorporarse a la ficha; ninguna entra de forma silenciosa.
 - **SC-016**: La cantidad de antecedentes incorrectamente extraídos que el veterinario debe corregir
   o descartar no supera el 30% de los antecedentes propuestos en la conversación de referencia.
+- **SC-048**: El 100% de las confirmaciones de antecedentes extraídos del audio queda atribuido a la
+  identidad autenticada de quien confirmó.
 - **SC-027**: El 100% de los antecedentes extraídos del audio es trazable hasta el fragmento de
   transcripción que lo originó.
 - **SC-028**: El borrador de anamnesis refleja la información de un tramo de captura antes de que
@@ -191,5 +200,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 
 - **Spec 001 (registro clínico longitudinal)**: se requiere una consulta abierta y una anamnesis
   estructurada donde volcar el borrador.
+- **Spec 007 (identidad y acceso)**: la activación de la captura y la confirmación de antecedentes
+  son operaciones clínicas que escriben en la ficha; exigen sesión activa y quedan atribuidas.
 - **Externa — conversación clínica simulada**: material de audio representativo del ambiente de
   consulta, necesario para medir SC-004 y SC-016.

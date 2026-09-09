@@ -65,6 +65,8 @@ sin cobertura documental producen una declaración explícita de ausencia de evi
     sistema responde, **Then** presenta ambas con su cita respectiva.
 12. **Given** una fuente retirada de la colección, **When** se revisa una respuesta que la citaba,
     **Then** la cita sigue siendo identificable.
+13. **Given** una fuente clínica incorporada o retirada, **When** se revisa la colección, **Then**
+    consta qué identidad autenticada realizó ese cambio y cuándo.
 
 ---
 
@@ -92,7 +94,7 @@ sin cobertura documental producen una declaración explícita de ausencia de evi
   etología veterinaria.
 - **FR-005**: El veterinario MUST poder consultar al asistente mediante lenguaje natural en español.
 - **FR-026**: La conversación con el asistente MUST preservar el contexto del paciente seleccionado
-  a lo largo de la sesión.
+  a lo largo de la sesión de acceso.
 - **FR-007**: Toda respuesta clínica basada en conocimiento documental MUST mostrar el documento
   fuente y el fragmento utilizado, y MUST permitir ver ese fragmento en su contexto.
 - **FR-023**: El sistema MUST declarar explícitamente cuándo no dispone de respaldo documental para
@@ -115,6 +117,9 @@ sin cobertura documental producen una declaración explícita de ausencia de evi
   el sistema MUST presentar ambas con su cita respectiva y MUST NOT elegir una sin declararlo.
 - **FR-053**: Las citas ya emitidas hacia una fuente MUST seguir siendo identificables aunque esa
   fuente deje de estar disponible para consultas nuevas.
+- **FR-069**: Incorporar una fuente clínica a la colección o retirarla de ella MUST requerir una
+  sesión de acceso activa y MUST quedar atribuido a la identidad autenticada que lo hizo (FR-063,
+  spec 007), por alterar el corpus del que dependen todas las afirmaciones clínicas del sistema.
 - **FR-030**: Cada fuente clínica MUST registrar su información bibliográfica disponible, y el
   sistema MUST mostrarla junto a la referencia cuando la cite.
 
@@ -137,6 +142,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 | FR-051 | US5 / 10 |
 | FR-052 | US5 / 11 |
 | FR-053 | US5 / 12 |
+| FR-069 | US5 / 13 |
 
 ### Key Entities *(include if feature involves data)*
 
@@ -176,12 +182,16 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Sin jurisdicciones**: el PoC no modela la jurisdicción de las fuentes. El brief la contempla
   como necesidad de fases posteriores; introducirla ahora sería generalidad especulativa, que el
   Principio III de la constitución prohíbe.
-- **Consulta de solo lectura**: esta spec no modifica la ficha clínica; solo la lee como contexto.
+- **Consulta de solo lectura sobre la ficha**: esta spec no modifica la ficha clínica; solo la lee
+  como contexto, por lo que las preguntas al asistente no requieren atribución. La gestión de la
+  colección documental sí la requiere: es escritura sobre el corpus (FR-069).
 
 ### Dependencias
 
 - **Spec 001 (registro clínico longitudinal)**: se requiere un paciente seleccionable para dar
   contexto a la conversación y para distinguir datos de ficha de evidencia documental.
+- **Spec 007 (identidad y acceso)**: la consulta al asistente exige sesión activa, y la
+  incorporación o retiro de fuentes clínicas queda atribuida a quien la realiza.
 - **Externa — fuentes clínicas**: depende de disponer de documentos de etología veterinaria
   legalmente utilizables. Sin ellos esta spec no es evaluable aunque esté construida. Es la
   dependencia crítica del PoC según el brief.

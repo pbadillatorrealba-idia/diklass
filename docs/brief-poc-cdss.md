@@ -84,8 +84,9 @@ Paciente → Antecedentes clínicos → Anamnesis → Identificación de informa
 
 ## 7. Mapa de especificaciones
 
-El PoC se especifica en seis funcionalidades. Cada una es independientemente construible y
-verificable; ninguna depende de que las posteriores existan.
+El PoC se especifica en siete funcionalidades. Cada una es independientemente construible, y todas
+salvo la 007 son también verificables por sí solas. Los números identifican specs y no ordenan su
+construcción: la 007 se añadió después de las demás y se construye antes que todas.
 
 | Spec | Alcance | Depende de |
 |---|---|---|
@@ -100,7 +101,7 @@ verificable; ninguna depende de que las posteriores existan.
 **Aristas de dependencia** (origen → destino significa "el destino necesita al origen"):
 
 ```text
-007 → 001      007 → 004      007 → 005      007 → 006
+007 → 001      007 → 002      007 → 003      007 → 004      007 → 005      007 → 006
 001 → 002      001 → 003      001 → 004      001 → 005      001 → 006
 002 → 004      002 → 005      004 → 005
 ```
@@ -108,8 +109,10 @@ verificable; ninguna depende de que las posteriores existan.
 **Orden de construcción**: 007 primero, luego 001. Después 002, 003 y 006 en cualquier orden,
 incluso en paralelo. Luego 004, que necesita 002. Por último 005, que necesita 001, 002, 004 y 007.
 
-Los números identifican specs, no ordenan su construcción: la 007 se añadió después de las demás y
-se construye antes que todas.
+La 007 es la única cuya verificación no se cierra sola: su historia de acceso (US11) sí, pero la de
+atribución (US12) se expresa sobre pacientes y consultas que define la 001, de modo que se verifica
+junto con ella. No es una arista de dependencia —invertirla crearía un ciclo— sino un punto de
+verificación conjunta.
 
 002 y 003 pueden construirse en paralelo tras 001. El riesgo de calendario se concentra en 002: es
 el único que depende de conseguir documentos clínicos legalmente utilizables, y de él cuelgan 004 y
@@ -136,8 +139,17 @@ esta tabla; las specs lo especializan sin poder contradecirlo.
 | FR-023 | El sistema declara explícitamente la ausencia de respaldo documental y nunca presenta como respaldada una afirmación sin cita | 002, 004, 005 |
 | FR-024 | Los registros clínicos aprobados se preservan sin modificación; toda corrección genera un registro adicional | 001, 006 |
 
+**FR-063** (toda acción que cree o modifique un registro clínico queda atribuida a la identidad
+autenticada que la realizó, con su momento) se define íntegro en la spec 007 y las demás lo **citan
+por referencia** en vez de reenunciarlo, porque su enumeración taxativa de acciones abarca las siete
+funcionalidades y repetirla completa en cada una la haría divergir. Es la única excepción a la regla
+de reenunciado.
+
 Cada spec incluye además una tabla de **trazabilidad de requisitos** que asocia cada `FR` a los
 escenarios de aceptación que lo verifican.
+
+**Números no asignados**: FR-047, FR-048 y FR-050 nunca se usaron; quedaron libres al repartir los
+requisitos entre las specs. SC-007 fue retirado tras descomponerse (ver §8). Ninguno se reutilizará.
 
 ## 8. Criterios de éxito del PoC
 
@@ -170,6 +182,10 @@ SC-004, SC-005 y SC-016.
 **Utilidad clínica**: evaluación por especialistas de la pertinencia de las preguntas sugeridas, la
 utilidad de la información recuperada, de los diagnósticos diferenciales y de la epicrisis generada.
 Medido por SC-013, SC-015, SC-017 y SC-018.
+
+**Atribución de responsabilidad**: proporción de registros clínicos con autor autenticado
+identificable; intentos de operar sin sesión denegados; acciones registrables a nombre de otro
+profesional. Medido por SC-039 a SC-049.
 
 **Experiencia de uso**: tiempo requerido para completar una consulta, cantidad de interacciones
 manuales, percepción de carga cognitiva y satisfacción del veterinario. Medido por SC-008.
@@ -233,8 +249,9 @@ veterinaria; plataforma educacional; comunidad de especialistas; investigación 
 agregados; aplicación completa de producción; soporte multi-clínica; y multi-tenancy empresarial.
 
 Del sistema de usuarios quedan fuera el autoregistro, la recuperación de contraseña, los roles
-diferenciados y la trazabilidad de accesos; el PoC provisiona las cuentas y registra quién escribe,
-no quién lee.
+diferenciados, la trazabilidad de accesos y toda la gestión del ciclo de vida de cuentas —incluidas
+la desactivación y la eliminación—. El PoC provisiona un conjunto fijo de cuentas y registra quién
+escribe, no quién lee.
 
 También queda fuera del alcance **preguntar al asistente por voz y recibir respuesta hablada**. La
 voz entra al PoC únicamente como captura de la conversación entre veterinario y tutor (spec 003);
@@ -288,7 +305,8 @@ sobre datos agregados y herramientas educativas.
 - **R6 — Experiencia clínica**: si usar el sistema durante una consulta reduce o aumenta la carga
   del veterinario. Afecta a todas.
 - **R7 — Responsabilidad clínica**: qué mecanismos son necesarios para que recomendaciones,
-  diagnósticos y tratamientos permanezcan bajo responsabilidad profesional. Afecta specs 004, 005.
+  diagnósticos y tratamientos permanezcan bajo responsabilidad profesional. Afecta specs 004 y 005,
+  y sobre todo la 007, que es el mecanismo por el cual esa responsabilidad se vuelve verificable.
 - **R8 — Propiedad intelectual**: qué componentes del sistema, metodología, proceso clínico o
   arquitectura podrían constituir propiedad intelectual protegible. Transversal.
 

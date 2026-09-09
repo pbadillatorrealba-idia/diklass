@@ -35,7 +35,7 @@
 
 ### Recuento
 
-4 historia(s) · 19 escenarios · 13 requisitos funcionales · 6 criterios de éxito
+4 historia(s) · 20 escenarios · 13 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -70,6 +70,11 @@ existente, sin identificadores colisionantes, tabla canónica del brief coincide
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
 (spec 007): FR-003 y FR-012 pasan a apoyarse en la identidad autenticada de la spec 007; se eliminó el supuesto de usuario único. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
+entidad Observación clínica no llevaba autor, de modo que en una clínica compartida el contenido de
+la anamnesis heredaba la identidad de quien abrió la consulta en vez de la de quien lo escribió.
+FR-004 ahora atribuye cada antecedente, con escenario US2/6.
 
 ### Advertencia metodológica
 

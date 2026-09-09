@@ -35,7 +35,7 @@
 
 ### Recuento
 
-2 historias · 11 escenarios · 9 requisitos funcionales · 7 criterios de éxito
+2 historia(s) · 17 escenarios · 8 requisitos funcionales · 9 criterios de éxito
 
 ### Historial de validación
 
@@ -47,14 +47,36 @@ constitución y el supuesto de usuario único que tenía la spec 001.
 identificadores colisionantes, aristas de dependencia coincidentes entre spec, tabla del brief y
 lista de aristas. Sin hallazgos.
 
+**Iteración 2 — revisión independiente.** Dos revisores sin contexto previo refutaron la afirmación
+de la iteración 1: fallaban 6 de los 16 criterios. Hallazgos corregidos:
+
+- **Generalidad especulativa (el más grave).** FR-065 obligaba a que la atribución sobreviviera a la
+  desactivación o eliminación de una cuenta, y de él colgaban SC-045, un escenario, dos casos límite
+  y el atributo `estado` de la entidad Veterinario — sin que ningún requisito permitiera desactivar
+  cuentas ni ningún supuesto lo declarara. Peor: FR-059 era incondicional, de modo que una cuenta
+  desactivada podía seguir autenticándose. Es el mismo defecto que la spec 002 ya había corregido en
+  FR-030 y que el Principio III prohíbe. El ciclo de vida de cuentas salió del alcance, como el
+  brief ya lo situaba en Fase 2.
+- **Prohibiciones sin verificación real.** FR-060 trazaba su cláusula de indistinguibilidad a un
+  escenario cuyo `Given` presupone una cuenta existente, y la indistinguibilidad es comparativa:
+  ahora hay dos escenarios. FR-062 y FR-067 compartían escenario, y ese escenario lo satisfaría una
+  denegación implementada solo en el cliente, justo lo que FR-067 prohíbe: se reformuló en términos
+  observables y tiene escenario propio.
+- **FR-063 enumeraba seis acciones y verificaba dos**, sin declarar si la lista era taxativa. Ahora
+  es taxativa, cubre las once acciones de escritura reales de las siete specs, e incluye el momento
+  que SC-040 ya medía sin respaldo.
+- **FR-061** no cuantificaba el periodo de inactividad y su escenario verificaba caducidad por
+  vigencia, no por inactividad.
+- **Verificabilidad.** La spec declaraba no depender de nada y usaba entidades de las specs 001 y
+  005. Se separó la dependencia de construcción (ninguna) de la de verificación (la 001), sin crear
+  el ciclo que una arista habría introducido.
+
 ### Advertencia metodológica
 
-Esta spec **no ha pasado por revisión independiente**, a diferencia de las specs 001 a 006, cuyas
-afirmaciones de calidad fueron refutadas por revisores externos en su momento. Las marcas `[x]` son
-autovalidación del autor, que en esta misma familia ya demostró ser insuficiente. Conviene someterla
-a revisión antes de `/speckit-plan`, con atención particular a los requisitos compuestos y a las
-prohibiciones (FR-060, FR-062, FR-064, FR-067), que fue exactamente donde falló la autovalidación
-anterior.
+La autovalidación de la iteración 1 afirmó 16/16 y era falsa. La advertencia que llevaba entonces
+acertó al señalar que el riesgo estaba en los requisitos compuestos y las prohibiciones —FR-060,
+FR-062 y FR-067 fallaron exactamente ahí— pero no anticipó el defecto más grave, que fue el ciclo de
+vida de cuentas. Las marcas `[x]` reflejan la iteración 2 y valen lo que valga la próxima revisión.
 
 ### Dependencias
 

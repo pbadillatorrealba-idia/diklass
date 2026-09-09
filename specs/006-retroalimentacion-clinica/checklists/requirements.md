@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 12 escenarios · 9 requisitos funcionales · 5 criterios de éxito
+1 historia(s) · 13 escenarios · 10 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -64,6 +64,11 @@ existente, sin identificadores colisionantes, tabla canónica del brief coincide
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
 (spec 007): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
+atribución de la retroalimentación se afirmaba solo en Supuestos y Dependencias, sin ningún
+requisito, escenario ni criterio que la verificara — a diferencia de las specs 001, 004 y 005, que
+sí enmendaron un requisito. Agregado FR-070, escenario US10/13 y SC-049.
 
 ### Advertencia metodológica
 

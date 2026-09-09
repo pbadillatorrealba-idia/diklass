@@ -35,7 +35,7 @@
 
 ### Recuento
 
-1 historia(s) · 14 escenarios · 11 requisitos funcionales · 5 criterios de éxito
+1 historia(s) · 15 escenarios · 12 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -65,6 +65,12 @@ de los requisitos compuestos ni las prohibiciones. Hallazgos:
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que esta
+spec no se había modificado al incorporar identidad, pese a que su comportamiento cambió: activar la
+captura de audio y confirmar antecedentes son escrituras sobre la ficha clínica. Agregado FR-068
+(sesión activa y atribución, que puede ser de un veterinario distinto del que abrió la consulta),
+escenario US6/15, SC-048 y la dependencia de la spec 007.
 
 ### Advertencia metodológica
 

@@ -61,6 +61,8 @@ estructurada, recuperable, y que la epicrisis original permanece sin cambios.
     una segunda entrada, **Then** ambas se conservan en orden cronológico sin sobrescribirse.
 12. **Given** una consulta cerrada sin tratamiento indicado, **When** el veterinario registra la
     evolución observada, **Then** el sistema lo acepta con el campo de tratamiento vacío.
+13. **Given** una consulta atendida por un veterinario, **When** otro registra la evolución
+    posterior, **Then** consta que la retroalimentación la registró el segundo.
 
 ---
 
@@ -99,6 +101,9 @@ estructurada, recuperable, y que la epicrisis original permanece sin cambios.
   consulta, conservándolas todas en orden cronológico sin que una sobrescriba a otra.
 - **FR-057**: El sistema MUST permitir registrar retroalimentación sobre una consulta sin
   tratamiento indicado, dejando ese campo vacío sin impedir el registro de la evolución observada.
+- **FR-070**: Cada entrada de retroalimentación MUST quedar atribuida a la identidad autenticada de
+  quien la registró (FR-063, spec 007), que puede ser distinta de la del veterinario que atendió la
+  consulta.
 - **FR-042**: La retroalimentación registrada MUST incorporarse a los antecedentes que el sistema
   presenta al iniciar una consulta posterior del mismo paciente.
 - **FR-043**: La retroalimentación MUST quedar almacenada en una estructura que permita su
@@ -116,6 +121,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 | FR-040 | US10 / 8 |
 | FR-041 | US10 / 2 |
 | FR-024 | US10 / 3, 4, 5 |
+| FR-070 | US10 / 13 |
 | FR-056 | US10 / 11 |
 | FR-057 | US10 / 12 |
 | FR-042 | US10 / 6 |
@@ -144,6 +150,8 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   adversos— es recuperable de forma agregada sin interpretar texto libre.
 - **SC-035**: Los eventos adversos registrados son recuperables de forma diferenciada del resto de
   la evolución en el 100% de los casos.
+- **SC-049**: El 100% de las entradas de retroalimentación queda atribuido a la identidad
+  autenticada de quien las registró.
 - **SC-036**: Al iniciar una consulta posterior, la retroalimentación previamente registrada aparece
   entre los antecedentes presentados al veterinario.
 - **SC-037**: Un veterinario registra la retroalimentación de una consulta en menos de 2 minutos,
