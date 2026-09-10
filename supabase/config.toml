@@ -24,3 +24,6 @@ enable_confirmations = false
 
 [storage]
 enabled = false
+
+[local_smtp]
+enabled = false
