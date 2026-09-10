@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Diklass",
+    "slug": "diklass",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "diklass",
+    "userInterfaceStyle": "automatic",
+    "web": {
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-status-bar"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

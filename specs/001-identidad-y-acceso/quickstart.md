@@ -24,6 +24,9 @@ bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
 bun run start:web
 ```
 
+Completa en `.env` la `SUPABASE_SERVICE_ROLE_KEY` que muestra `supabase status` antes de ejecutar
+el provisioning. Esa clave es administrativa y no debe exponerse bajo un nombre `EXPO_PUBLIC_*`.
+
 Para abrir el target nativo:
 
 ```bash
@@ -38,7 +41,7 @@ development build. Los secretos administrativos solo viven en `.env` local o Git
 ```bash
 bun run typecheck       # tsc --noEmit
 bunx biome ci .
-bun test
+bun run test
 bun run test:integration
 bun run test:e2e:web
 maestro test tests/e2e/native
@@ -117,3 +120,12 @@ registro adicional.
 Las reglas de sesión están en [`contracts/auth-session.md`](contracts/auth-session.md), la
 atribución en [`contracts/clinical-attribution.md`](contracts/clinical-attribution.md) y las
 entidades en [`data-model.md`](data-model.md).
+
+## Estado de implementación de la PoC
+
+La rama de implementación contiene el shell universal Expo, login provisionado, sesión de acceso
+con TTL de ocho horas, borradores aislados por veterinario/consulta, RLS/triggers de atribución,
+componentes gluestack, pruebas Bun y E2E web en Chromium. La matriz Firefox/WebKit, los escenarios
+nativos y las pruebas SQL deben repetirse en un entorno con sus browsers, Docker y un development
+build; este entorno no pudo dejar Supabase activo por permisos sobre `/var/run/docker.sock` y no
+dispone de emulador nativo.

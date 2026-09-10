@@ -27,7 +27,7 @@ implementa todavía las entidades completas de la spec 002 ni el ciclo de vida d
 **Language/Version**: TypeScript en modo `strict`; Bun 1.4.0 como runtime, package manager y task
 runner; `tsc --noEmit` como typecheck.
 
-**Primary Dependencies**: Expo SDK 56, React Native, Expo Router, gluestack-ui v3,
+**Primary Dependencies**: Expo SDK 57, React Native, Expo Router, gluestack-ui v3,
 `@supabase/supabase-js`, `@tanstack/react-query` v5, Zustand v5, `@tanstack/react-form` v1, Zod
 v4, Biome 2.2.4, Bun test y `@playwright/test`. `expo-secure-store` se usará para credenciales y
 sesión nativa. Supabase CLI y Docker son herramientas de desarrollo local.
@@ -98,7 +98,7 @@ specs/001-identidad-y-acceso/
 ### Source Code (repository root)
 
 ```text
-app/
+src/app/
 ├── _layout.tsx
 ├── (auth)/login.tsx
 ├── (protected)/_layout.tsx
@@ -134,7 +134,7 @@ tsconfig.json
 playwright.config.ts
 ```
 
-**Structure Decision**: Se elige una app Expo universal. `app/` define navegación con Expo Router;
+**Structure Decision**: Se elige una app Expo universal. `src/app/` define navegación con Expo Router;
 `src/` separa features, UI y estado; `supabase/` contiene migraciones, seed y pruebas de base;
 `tests/` separa lógica, integración y web e2e. Los componentes visuales se construyen con
 gluestack-ui y pueden incorporar variantes `.web`, `.ios` o `.android` cuando no exista una
@@ -158,7 +158,7 @@ interacción universal adecuada.
 
 ## Enfoque de implementación
 
-1. **Fundación móvil universal**: inicializar Expo SDK 56 con Bun, Expo Router, TypeScript strict,
+1. **Fundación móvil universal**: inicializar Expo SDK 57 con Bun, Expo Router, TypeScript strict,
    gluestack-ui y target web; configurar Biome, `tsc --noEmit` y Bun test.
 2. **Identidad provisionada**: crear Supabase Auth, perfiles de veterinario, cliente universal de
    Supabase y adaptadores de SecureStore/web. No habrá endpoint de signup.
