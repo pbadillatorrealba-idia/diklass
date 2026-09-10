@@ -125,7 +125,19 @@ entidades en [`data-model.md`](data-model.md).
 
 La rama de implementación contiene el shell universal Expo, login provisionado, sesión de acceso
 con TTL de ocho horas, borradores aislados por veterinario/consulta, RLS/triggers de atribución,
-componentes gluestack, pruebas Bun y E2E web en Chromium. La matriz Firefox/WebKit, los escenarios
-nativos y las pruebas SQL deben repetirse en un entorno con sus browsers, Docker y un development
-build; este entorno no pudo dejar Supabase activo por permisos sobre `/var/run/docker.sock` y no
-dispone de emulador nativo.
+componentes gluestack, pruebas Bun y E2E web en la matriz completa.
+
+- **Matriz web (Chromium, Firefox, WebKit)**: verificada localmente el 2026-09-10 sin Docker
+  (`bunx playwright install` + `bun run test:e2e:web -- --project=chromium --project=firefox
+  --project=webkit`): 12 pasan, 3 omitidos (el escenario de dos contextos de US12 requiere un
+  backend Supabase real y se omite igual en los tres motores). CI ahora ejecuta Chromium en cada
+  PR y Firefox/WebKit en cada push a `main` (`web-e2e-full-matrix` en `.github/workflows/ci.yml`).
+- **Pruebas SQL (Supabase local)**: no pudieron ejecutarse en este entorno de desarrollo por
+  permisos sobre `/var/run/docker.sock`, pero sí corren y pasan en GitHub Actions (`Supabase
+  database tests` en `.github/workflows/ci.yml`), verificado en el run
+  `34475556811` del PR #2.
+- **Flows Maestro nativos**: siguen bloqueados en este entorno (sin emulador/dispositivo ni
+  development build). Se agregó el job `native-e2e` (`.github/workflows/native-e2e.yml`,
+  Maestro Cloud en push a `main`/nightly/manual), pero permanece inactivo hasta configurar los
+  secrets `EXPO_TOKEN` y `MAESTRO_CLOUD_API_KEY` y enlazar un proyecto EAS con un perfil de build
+  `e2e` en `eas.json` — ninguno de los dos existe todavía en este repositorio.

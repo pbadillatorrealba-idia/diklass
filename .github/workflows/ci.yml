@@ -60,6 +60,26 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       - run: bun run test:e2e:web -- --project=chromium
 
+  # Firefox and WebKit run only on push to main to keep pull-request feedback fast, per
+  # plan.md's CI design; Chromium above still covers every pull request.
+  web-e2e-full-matrix:
+    name: Web E2E (Firefox/WebKit)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps ${{ matrix.project }}
+      - run: bun run test:e2e:web -- --project=${{ matrix.project }}
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest

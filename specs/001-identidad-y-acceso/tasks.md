@@ -170,3 +170,14 @@ sequential even when its phase is otherwise parallelizable.
 - TanStack DB is intentionally absent from implementation tasks; it remains a future persistence
   decision until offline synchronization is specified.
 - Every completed task must be marked `[X]` before moving to the next checkpoint.
+
+---
+
+## Phase 6: Convergence
+
+**Purpose**: Close gaps found by `/speckit-converge` between the current code and what `spec.md`,
+`plan.md` and the constitution require.
+
+- [X] T047 CRITICAL: Reconcile the constitution's pinned Expo SDK 56 in `.specify/memory/constitution.md` (Restricciones de Aplicación Web) with the Expo SDK 57 actually shipped in `package.json`, `plan.md` and `research.md` — either amend the constitution with a recorded migration note or revert the code to SDK 56 per Constitution: Restricciones de Aplicación Web (contradicts)
+- [X] T048 CRITICAL: Extend `.github/workflows/ci.yml` so the `web-e2e` job (or a new job) also runs the Firefox and WebKit Playwright projects already defined in `playwright.config.ts`, at minimum on push to `main`, so protected flows are verified in all three engines per Constitution: Restricciones de Aplicación Web (contradicts)
+- [X] T049 Add the `native-e2e` CI job designed in `plan.md` ("CI de GitHub", job 5) to `.github/workflows/ci.yml`, running the Maestro flows in `tests/e2e/native/auth.yaml` and `tests/e2e/native/attribution.yaml` against Maestro Cloud on `main`, nightly or manual dispatch per plan: CI de GitHub (missing)

@@ -1,22 +1,16 @@
 <!--
 REPORTE DE IMPACTO DE SINCRONIZACIÓN
-Cambio de versión: 1.1.0 → 1.2.0
-Justificación del incremento: MINOR — se reemplaza la decisión provisional de aplicación web por
-un stack móvil universal Expo/React Native con destino web, y se fijan herramientas de calidad,
-pruebas y CI. Los principios existentes no cambian, pero la selección agrega restricciones
-operativas verificables para aplicaciones móviles y web.
+Cambio de versión: 1.2.0 → 1.3.0
+Justificación del incremento: MINOR — se actualiza el stack fijado del PoC de Expo SDK 56 a Expo
+SDK 57. El código de la spec 001 (identidad y acceso) ya se implementó sobre SDK 57 para evitar
+una regresión conocida de memoria de Hermes V1 presente en SDK 56; esta enmienda formaliza esa
+decisión ya adoptada, que había quedado documentada en `research.md`/`plan.md` de la spec 001 pero
+no reflejada en la constitución. Ningún principio cambia de sustancia.
 
-Principios modificados: ninguno en sustancia. Títulos traducidos:
-- I. Spec-Driven Development → I. Desarrollo Dirigido por Especificación
-- II. Test-First → II. Pruebas Primero
-- III. Simplicity and YAGNI → III. Simplicidad y YAGNI
-- IV. Observability and Debuggability → IV. Observabilidad y Depurabilidad
-- V. Security and Data Protection → V. Seguridad y Protección de Datos
+Principios modificados: ninguno.
 
-Secciones renombradas:
-- Web Application Constraints → Restricciones de Aplicación Web
-- Development Workflow → Flujo de Trabajo de Desarrollo
-- Governance → Gobernanza
+Secciones modificadas:
+- Restricciones de Aplicación Web: "Expo SDK 56" → "Expo SDK 57".
 
 Secciones eliminadas: ninguna
 
@@ -115,7 +109,7 @@ presupuestos de rendimiento se fijan por funcionalidad en su plan y se verifican
 una funcionalidad que degrada un presupuesto acordado no se publica.
 
 El stack del PoC queda fijado en TypeScript con Bun 1.4.0 como runtime y package manager, Expo
-SDK 56 sobre React Native con Expo Router para iOS, Android y web, gluestack-ui v3 para la UI,
+SDK 57 sobre React Native con Expo Router para iOS, Android y web, gluestack-ui v3 para la UI,
 Supabase Auth/PostgreSQL con Row Level Security, TanStack Query, Zustand, TanStack Form y Zod.
 Biome se usa para formato/lint/imports y `tsc --noEmit` para verificación estática de tipos. Bun
 test cubre pruebas rápidas, Playwright 1.61.0 cubre la aplicación web y Maestro cubre los flujos
@@ -164,4 +158,4 @@ periódica. Toda complejidad admitida bajo el Principio III DEBE conservar su ju
 registrada mientras permanezca en la base de código; cuando la justificación deje de ser cierta, la
 complejidad se elimina.
 
-**Versión**: 1.2.0 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-09-09
+**Versión**: 1.3.0 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-09-10
