@@ -1,3 +1,6 @@
+begin;
+select plan(0);
+
 insert into public.clinical_records (
   clinic_id, record_type, content, status, created_by
 )
@@ -6,3 +9,6 @@ select
 from public.veterinarians
 where identifier = 'vet.ana@example.test'
 limit 1;
+
+select * from finish();
+rollback;
