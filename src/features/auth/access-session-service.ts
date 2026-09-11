@@ -64,3 +64,24 @@ export async function revokeAccessSession(client: AccessSessionRpcClient, sessio
   }
   return data === true;
 }
+
+export type CurrentAccessSession = { id: string; expiresAt: string };
+
+/**
+ * The access session bound to the Auth session of the current JWT, or null. A restored
+ * Supabase session must resume only this one: the newest non-revoked row of the
+ * veterinarian could belong to another device.
+ */
+export async function getCurrentAccessSession(
+  client: AccessSessionRpcClient,
+): Promise<CurrentAccessSession | null> {
+  const { data, error } = await client.rpc<unknown>("current_access_session");
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+  const { id, expiresAt } = data as { id?: unknown; expiresAt?: unknown };
+  return typeof id === "string" && typeof expiresAt === "string" ? { id, expiresAt } : null;
+}

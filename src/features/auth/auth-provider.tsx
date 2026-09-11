@@ -8,6 +8,10 @@ import {
   useState,
 } from "react";
 import {
+  type AccessSessionRpcClient,
+  getCurrentAccessSession,
+} from "@/features/auth/access-session-service";
+import {
   type AuthClient,
   AuthenticationError,
   signInWithPassword,
@@ -31,6 +35,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const accessSessionClient = supabase as unknown as AccessSessionRpcClient;
+
 async function loadIdentity(
   userId: string,
   accessSessionId?: string,
@@ -47,20 +53,9 @@ async function loadIdentity(
     return null;
   }
 
-  let sessionId = accessSessionId;
-  if (!sessionId) {
-    const { data: accessSession, error: sessionError } = await supabase
-      .from("access_sessions")
-      .select("id")
-      .is("revoked_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (sessionError) {
-      throw sessionError;
-    }
-    sessionId = accessSession?.id;
-  }
+  // Only the access session bound to *this* Auth session may be resumed: the newest
+  // non-revoked row could belong to another device (review #4, finding 5).
+  const sessionId = accessSessionId ?? (await getCurrentAccessSession(accessSessionClient))?.id;
   if (!sessionId) {
     return null;
   }
@@ -104,7 +99,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
             restored = data.session;
           } else {
             // No live access session: the server would deny every clinical operation.
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: "local" });
           }
         }
         if (mounted) {
@@ -149,7 +144,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           );
           const identity = await loadIdentity(result.user.id, result.accessSessionId);
           if (!identity) {
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: "local" });
             // Same public error as a wrong password: FR-060 forbids telling an existing but
             // unprovisioned account apart from any other failure.
             throw new AuthenticationError({

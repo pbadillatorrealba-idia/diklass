@@ -39,8 +39,8 @@ describe.skipIf(!isLiveSupabase)("access session lifecycle against local Supabas
   test("after logout the previous token is denied clinical access (FR-061, SC-039)", async () => {
     const ana = await signedInVeterinarian(ANA);
 
-    await ana.client.rpc("revoke_access_sessions");
-    await ana.client.auth.signOut();
+    await ana.client.rpc("revoke_current_access_session");
+    await ana.client.auth.signOut({ scope: "local" });
 
     // The JWT is still cryptographically valid; only the revoked access session stops it.
     await expectClinicalAccessDenied(ana, clientWithToken(ana.accessToken));
