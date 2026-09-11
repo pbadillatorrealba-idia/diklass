@@ -21,10 +21,17 @@ alter default privileges in schema public revoke execute on functions from anon,
 -- (confirmed empirically: a function created after the statements above still shows EXECUTE
 -- for anon/authenticated, with or without an explicit `for role postgres` clause). The only
 -- reliable way to close EXECUTE on functions created from now on is to strip it right after
--- creation via an event trigger. Every later migration that needs a caller to run a new
--- function must still grant EXECUTE to it explicitly (Task 5's current_access_session and
--- revoke_current_access_session do this); a `create or replace` of an existing function also
--- re-triggers this revoke, so any migration that redefines a granted function must re-grant it.
+-- creation via an event trigger.
+--
+-- The trigger revokes from PUBLIC only, not from anon/authenticated directly: those roles
+-- never hold EXECUTE in their own right, they only inherit it by being members of PUBLIC, so
+-- revoking PUBLIC closes a brand-new function just as tightly for both of them. Scoping the
+-- revoke this way also means a later `create or replace` of a function that already has an
+-- explicit `grant execute ... to authenticated` does not lose that grant: the trigger strips
+-- PUBLIC again (a no-op, PUBLIC never had it back), and the direct grant to authenticated,
+-- being a separate ACL entry, survives untouched. Every later migration that needs a caller to
+-- run a genuinely new function must still grant EXECUTE to it explicitly (Task 5's
+-- current_access_session and revoke_current_access_session do this).
 create or replace function public.revoke_new_function_execute()
 returns event_trigger
 language plpgsql
@@ -39,7 +46,7 @@ begin
     where object_type in ('function', 'procedure')
       and schema_name = 'public'
   loop
-    execute format('revoke execute on function %s from public, anon, authenticated', obj.object_identity);
+    execute format('revoke execute on function %s from public', obj.object_identity);
   end loop;
 end;
 $$;

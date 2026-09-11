@@ -1,5 +1,5 @@
 begin;
-select plan(24);
+select plan(26);
 
 -- ---------------------------------------------------------------------------
 -- RLS helpers and app RPCs: authenticated only, never anon.
@@ -84,6 +84,18 @@ select function_privs_are('public', 'review_privileges_probe', array[]::text[], 
   'a new public function is not executable by authenticated by default');
 select function_privs_are('public', 'review_privileges_probe', array[]::text[], 'anon', array[]::text[],
   'a new public function is not executable by anon by default');
+
+-- ---------------------------------------------------------------------------
+-- A `create or replace` of an already-granted function must not lose its grant:
+-- the closing trigger revokes from PUBLIC only, never from a role granted directly.
+-- ---------------------------------------------------------------------------
+
+grant execute on function public.review_privileges_probe() to authenticated;
+create or replace function public.review_privileges_probe() returns integer language sql as 'select 1';
+select function_privs_are('public', 'review_privileges_probe', array[]::text[], 'authenticated', array['EXECUTE'],
+  'a direct grant to authenticated survives a later create or replace of the same function');
+select function_privs_are('public', 'review_privileges_probe', array[]::text[], 'anon', array[]::text[],
+  'anon still cannot call the replaced function');
 
 select * from finish();
 rollback;
