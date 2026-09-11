@@ -11,15 +11,19 @@ export type ClinicalMutationResult<T> = {
   attribution: Attribution;
 };
 
+/**
+ * Attribution columns of `clinical_records`, named as PostgREST receives them. The database
+ * enforces them too (column grants and triggers); this guard fails earlier, with a clearer
+ * error. `clinic_id` is not here: a client must send it.
+ */
 export const ATTRIBUTION_CONTROL_FIELDS = [
-  "actorId",
-  "createdBy",
-  "createdAt",
-  "updatedBy",
-  "updatedAt",
-  "approvedBy",
-  "approvedAt",
-  "clinicId",
+  "actor_id",
+  "created_by",
+  "created_at",
+  "updated_by",
+  "updated_at",
+  "approved_by",
+  "approved_at",
 ] as const;
 
 export type AttributionControlField = (typeof ATTRIBUTION_CONTROL_FIELDS)[number];
