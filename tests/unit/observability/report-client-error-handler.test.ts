@@ -73,13 +73,14 @@ describe("report-client-error handler (review #4, finding 13)", () => {
   });
 
   test("rejects methods other than POST", async () => {
-    const { deps, lines } = harness();
+    const { deps, lines, keys } = harness();
     const response = await handleClientErrorReport(
       new Request(FUNCTION_URL, { method: "GET" }),
       deps,
     );
     expect(response.status).toBe(405);
     expect(lines).toEqual([]);
+    expect(keys).toEqual([]);
   });
 
   test("rejects malformed JSON and payloads outside the schema", async () => {

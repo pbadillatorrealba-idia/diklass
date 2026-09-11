@@ -49,6 +49,12 @@ async function withinQuota(deps: ReportDependencies, bucketKey: string): Promise
   }
 }
 
+// `x-forwarded-for` is a client-supplied header that the gateway in front of this function
+// does not currently overwrite or append to, so the leftmost hop used here is spoofable by
+// the caller. This bounds an accidental or buggy client retry loop -- the realistic trigger
+// for this endpoint -- but does not stop a deliberate flooder, who can rotate the header per
+// request to land in a fresh bucket each time. Closing that gap needs the gateway (or edge
+// network) to set the true peer address; that is infrastructure work, not a handler change.
 const callerBucketKey = (request: Request) =>
   `ip:${request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"}`;
 
