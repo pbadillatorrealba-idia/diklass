@@ -24,7 +24,7 @@ PoC móvil universal, con iOS, Android y un target web app-like.
 
 ### 2. Expo universal sobre React Native
 
-- **Decisión**: Expo SDK 56, React Native y Expo Router para iOS, Android y web. Expo es el
+- **Decisión**: Expo SDK 57, React Native y Expo Router para iOS, Android y web. Expo es el
   framework/toolchain; React Native es la capa de UI nativa; Expo Router es navegación y deep links.
 - **Rationale**: Permite desarrollar una app móvil nativa y compartir lógica/componentes con una web
   app-like mediante React Native Web. Expo Router soporta rutas universales y builds web estáticas.
@@ -119,7 +119,7 @@ PoC móvil universal, con iOS, Android y un target web app-like.
 | Runtime/tooling | Bun 1.4.0 |
 | Lenguaje/typecheck | TypeScript strict + `tsc --noEmit` |
 | Formato/lint | Biome 2.2.4 |
-| App móvil/web | Expo SDK 56 + React Native + Expo Router |
+| App móvil/web | Expo SDK 57 + React Native + Expo Router |
 | UI | gluestack-ui v3, en evaluación práctica |
 | Datos remotos/locales | TanStack Query v5 + Zustand v5 |
 | Formularios | TanStack Form v1 + Zod v4 |
