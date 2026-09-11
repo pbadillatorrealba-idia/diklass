@@ -229,7 +229,7 @@ still open in Phase 7.
 **Purpose**: Close the findings of the PR #4 code review that PR #3 leaves open
 (https://github.com/pbadillatorrealba-idia/diklass/pull/4#pullrequestreview-5180031684).
 
-- [ ] T073 Pin `oven-sh/setup-bun` and `supabase/setup-cli` by commit SHA, and the Supabase CLI to `2.117.0`, in `.github/workflows/ci.yml` and `.github/workflows/native-e2e.yml`, guarded by `tests/unit/ci/pinned-actions.test.ts` per plan.md: CI de GitHub (contradicts)
+- [X] T073 Pin `oven-sh/setup-bun` and `supabase/setup-cli` by commit SHA, and the Supabase CLI to `2.117.0`, in `.github/workflows/ci.yml` and `.github/workflows/native-e2e.yml`, guarded by `tests/unit/ci/pinned-actions.test.ts` per plan.md: CI de GitHub (contradicts)
 - [ ] T074 Generate `src/lib/supabase/database.types.ts` with `bun run db:types` instead of maintaining it by hand, and fail the `database` CI job when it drifts from the migrations (partial)
 - [ ] T075 Stamp `created_at` on INSERT, reject `status` changes outside `approve_clinical_record`, reject clinical-record updates without an authenticated veterinarian, and restrict `authenticated` to column-level INSERT/UPDATE grants on `public.clinical_records` in `supabase/migrations/004_attribution_columns.sql` per FR-064, SC-042, data-model.md (contradicts)
 - [ ] T076 Revoke `EXECUTE` on every `public` function from `PUBLIC`, `anon` and `authenticated` (now and by default), grant back only the RLS helpers and app RPCs, and fix `search_path` on the remaining invoker functions in `supabase/migrations/005_function_privileges.sql` per Supabase lints 0011/0028 (partial)
