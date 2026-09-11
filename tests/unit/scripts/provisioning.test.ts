@@ -3,6 +3,7 @@ import {
   findUserIdByEmail,
   isLocalSupabaseUrl,
   normalizeEmail,
+  parseArgs,
 } from "../../../scripts/lib/provisioning";
 
 describe("isLocalSupabaseUrl", () => {
@@ -72,5 +73,47 @@ describe("findUserIdByEmail", () => {
     );
     expect(id).toBeUndefined();
     expect(requested).toEqual([1, 2]);
+  });
+});
+
+describe("parseArgs", () => {
+  test("reads --fixture's value", () => {
+    expect(parseArgs(["--fixture", "path.json"])).toEqual({
+      fixturePath: "path.json",
+      allowRemote: false,
+    });
+  });
+
+  test("reads --fixture and --allow-remote together", () => {
+    expect(parseArgs(["--fixture", "path.json", "--allow-remote"])).toEqual({
+      fixturePath: "path.json",
+      allowRemote: true,
+    });
+  });
+
+  test("is order-independent", () => {
+    expect(parseArgs(["--allow-remote", "--fixture", "path.json"])).toEqual({
+      fixturePath: "path.json",
+      allowRemote: true,
+    });
+  });
+
+  test("throws when --fixture's value looks like another flag, and does not set allowRemote", () => {
+    expect(() => parseArgs(["--fixture", "--allow-remote"])).toThrow();
+  });
+
+  test("throws when --fixture has no value at all", () => {
+    expect(() => parseArgs(["--fixture"])).toThrow();
+  });
+
+  test("defaults to the fixture path with no flags", () => {
+    expect(parseArgs([])).toEqual({
+      fixturePath: "tests/fixtures/veterinarians.json",
+      allowRemote: false,
+    });
+  });
+
+  test("rejects an unknown argument", () => {
+    expect(() => parseArgs(["--bogus"])).toThrow();
   });
 });

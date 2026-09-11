@@ -33,3 +33,35 @@ export async function findUserIdByEmail(
     }
   }
 }
+
+export type ProvisionArgs = { fixturePath: string; allowRemote: boolean };
+
+const DEFAULT_FIXTURE_PATH = "tests/fixtures/veterinarians.json";
+
+/**
+ * Single, cursor-based pass over argv. A value consumed as --fixture's argument is
+ * advanced past and never re-inspected as a flag, so `--fixture --allow-remote` cannot
+ * silently swallow --allow-remote as a filename while still counting it as the flag
+ * (the previous two-independent-scans bug: `args.includes("--allow-remote")` matched
+ * anywhere in argv regardless of position).
+ */
+export function parseArgs(args: string[]): ProvisionArgs {
+  let fixturePath: string | undefined;
+  let allowRemote = false;
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--fixture") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("Falta la ruta de --fixture (o su valor es otro flag).");
+      }
+      fixturePath = value;
+      index += 1; // consume the value so it can never be re-read as a flag
+    } else if (arg === "--allow-remote") {
+      allowRemote = true;
+    } else {
+      throw new Error(`Argumento desconocido: ${arg}`);
+    }
+  }
+  return { fixturePath: fixturePath ?? DEFAULT_FIXTURE_PATH, allowRemote };
+}
