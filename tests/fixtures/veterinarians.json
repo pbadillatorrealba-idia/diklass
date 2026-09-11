@@ -1,0 +1,12 @@
+[
+  {
+    "email": "vet.ana@example.test",
+    "password": "synthetic-password-ana",
+    "displayName": "Dra. Ana Torres"
+  },
+  {
+    "email": "vet.bruno@example.test",
+    "password": "synthetic-password-bruno",
+    "displayName": "Dr. Bruno Silva"
+  }
+]

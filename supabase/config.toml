@@ -1,0 +1,36 @@
+project_id = "diklass"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:8081"
+additional_redirect_urls = ["diklass://auth/callback"]
+
+[auth.email]
+# NOTE: this Supabase CLI version maps `enable_signup` to GOTRUE_EXTERNAL_EMAIL_ENABLED as well as
+# GOTRUE_DISABLE_SIGNUP — setting it to `false` disables password sign-in entirely, not just
+# self-registration. FR-059/FR-060 require password login for provisioned accounts, so this stays
+# `true`. The "no autoregistro" requirement (spec Assumptions) is enforced at the application layer
+# instead: the client never exposes a signup screen/call, and a self-registered `auth.users` row has
+# no matching `public.veterinarians` row, so `start_access_session()` and every RLS policy reject it
+# — a raw signup produces an authenticated account with zero clinical capability.
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[storage]
+enabled = false
+
+[local_smtp]
+enabled = false

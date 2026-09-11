@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Diklass",
+    "slug": "diklass",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "diklass",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.diklass.app"
+    },
+    "android": {
+      "package": "com.diklass.app"
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-status-bar"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9b79c86f-0c0e-405e-a5e5-2a6b4741561f"
+      }
+    },
+    "owner": "idia"
+  }
+}
