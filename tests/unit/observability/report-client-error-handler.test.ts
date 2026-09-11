@@ -126,7 +126,10 @@ describe("report-client-error handler (review #4, finding 13)", () => {
 
   test("refuses a caller over the quota with 429 and CORS headers", async () => {
     const { deps, lines } = harness(async () => false);
-    const response = await handleClientErrorReport(post(validReport), deps);
+    const response = await handleClientErrorReport(
+      post(validReport, { "x-forwarded-for": "198.51.100.7" }),
+      deps,
+    );
     expect(response.status).toBe(429);
     expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(lines).toEqual([]);
@@ -141,11 +144,22 @@ describe("report-client-error handler (review #4, finding 13)", () => {
     expect(keys).toEqual(["ip:198.51.100.7"]);
   });
 
+  test("skips the quota entirely -- rather than sharing one bucket -- when no IP is forwarded", async () => {
+    const { deps, keys } = harness();
+    const response = await handleClientErrorReport(post(validReport), deps);
+    expect(response.status).toBe(200);
+    expect(keys).toEqual([]);
+  });
+
   test("fails open when the quota store is unavailable", async () => {
     const { deps } = harness(async () => {
       throw new Error("database unavailable");
     });
-    expect((await handleClientErrorReport(post(validReport), deps)).status).toBe(200);
+    const response = await handleClientErrorReport(
+      post(validReport, { "x-forwarded-for": "198.51.100.7" }),
+      deps,
+    );
+    expect(response.status).toBe(200);
   });
 
   test("a preflight never consumes quota", async () => {

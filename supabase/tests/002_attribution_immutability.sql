@@ -1,5 +1,5 @@
 begin;
-select plan(15);
+select plan(17);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: two veterinarians of one clinic, both with a live access session.
@@ -169,6 +169,40 @@ select throws_ok(
   'only an epicrisis is approvable, keeping the audit action truthful'
 );
 
+-- ---------------------------------------------------------------------------
+-- Whole-branch review: the diklass.approving flag alone must not disable the guard.
+-- `select set_config('diklass.approving','on',true)` succeeds for role authenticated, but
+-- only approve_clinical_record (security definer, owned by postgres) may actually flip the
+-- flag and have it count: the trigger also requires current_user = postgres.
+-- ---------------------------------------------------------------------------
+
+select set_config('diklass.approving', 'on', true);
+select throws_ok(
+  $$update public.clinical_records set status = 'approved'
+    where id = 'd2d2d2d2-0000-0000-0000-0000000000d1'$$,
+  '42501',
+  'permission denied for table clinical_records',
+  'setting diklass.approving as authenticated does not bypass the status/approval guard'
+    || ' (column grants still refuse the write)'
+);
+select set_config('diklass.approving', 'off', true);
+
+reset role;
+
+-- The column grants above are one layer; the trigger's current_user check is the other.
+-- A role with full column privileges (service_role, granted by default) proves the trigger
+-- alone -- not just the grants -- refuses a client-set flag: before 008 this update would
+-- have succeeded, since the old trigger trusted the flag with no regard for who set it.
+set local role service_role;
+select set_config('diklass.approving', 'on', true);
+select throws_ok(
+  $$update public.clinical_records set status = 'approved'
+    where id = 'd2d2d2d2-0000-0000-0000-0000000000d1'$$,
+  '23514',
+  'ATTRIBUTION_IMMUTABLE',
+  'the trigger itself refuses the flag for a non-owner role even when column grants would allow the write'
+);
+select set_config('diklass.approving', 'off', true);
 reset role;
 
 -- ---------------------------------------------------------------------------

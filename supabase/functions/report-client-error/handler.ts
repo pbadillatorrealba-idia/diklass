@@ -55,8 +55,17 @@ async function withinQuota(deps: ReportDependencies, bucketKey: string): Promise
 // for this endpoint -- but does not stop a deliberate flooder, who can rotate the header per
 // request to land in a fresh bucket each time. Closing that gap needs the gateway (or edge
 // network) to set the true peer address; that is infrastructure work, not a handler change.
-const callerBucketKey = (request: Request) =>
-  `ip:${request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"}`;
+//
+// When the header is absent, there is no per-caller key to bucket on: lumping every such
+// caller into one "unknown" bucket would let one misbehaving client behind a
+// non-forwarding gateway suppress error reporting for everyone else behind it. Returning
+// null here means the caller skips the quota entirely instead -- a deliberate decision, not
+// an accident, since this endpoint only ever logs bounded, identifier-only reports
+// (MAX_BODY_BYTES) and a quota outage already fails open (withinQuota below).
+const callerBucketKey = (request: Request): string | null => {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwardedFor ? `ip:${forwardedFor}` : null;
+};
 
 const respond = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
@@ -80,8 +89,11 @@ export async function handleClientErrorReport(
     );
   }
 
-  // Counted before parsing, so a flood of invalid payloads is limited too.
-  if (!(await withinQuota(deps, callerBucketKey(request)))) {
+  // Counted before parsing, so a flood of invalid payloads is limited too. No key means no
+  // forwarded IP was present: skip the quota rather than lump every such caller into one
+  // shared bucket (see callerBucketKey).
+  const bucketKey = callerBucketKey(request);
+  if (bucketKey && !(await withinQuota(deps, bucketKey))) {
     return respond({ code: "RATE_LIMITED", requestId: headerRequestId ?? deps.randomId() }, 429);
   }
 

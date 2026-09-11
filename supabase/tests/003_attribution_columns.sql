@@ -81,25 +81,59 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
--- Review #4 follow-up: TRUNCATE bypasses RLS and fires no row triggers, so it must be
--- revoked wherever the Data API role can reach it, alongside the unneeded DELETE.
+-- Review #4 / whole-branch follow-up: TRUNCATE bypasses RLS and fires no row triggers, so
+-- it must be revoked wherever the Data API role can reach it, alongside the unneeded
+-- DELETE. A by-name list here previously covered only clinical_records and
+-- clinical_audit_events and missed access_sessions, veterinarians and clinics (008) --
+-- enumerating every table in schema public is the point: it catches the table nobody
+-- listed.
 -- ---------------------------------------------------------------------------
 
-select ok(
-  not has_table_privilege('authenticated', 'public.clinical_records', 'TRUNCATE'),
-  'authenticated cannot truncate clinical_records'
+-- The `offset 0` optimization fence is load-bearing, not decoration: Postgres does not
+-- guarantee left-to-right evaluation of WHERE clause conjuncts, so without it
+-- has_table_privilege() can run on rows from every schema (not just public) before the
+-- table_schema filter applies, erroring on relations like "public.<a vault view's name>"
+-- that only exist under a different schema. The fence forces the filtered CTE to
+-- materialize first.
+select is_empty(
+  $$with public_tables as (
+      select table_name from information_schema.tables
+      where table_schema = 'public' and table_type = 'BASE TABLE'
+      offset 0
+    )
+    select table_name from public_tables
+    where has_table_privilege('authenticated', format('public.%I', table_name), 'TRUNCATE')$$,
+  'authenticated cannot truncate any table in public'
 );
-select ok(
-  not has_table_privilege('authenticated', 'public.clinical_records', 'DELETE'),
-  'authenticated cannot delete clinical_records'
+select is_empty(
+  $$with public_tables as (
+      select table_name from information_schema.tables
+      where table_schema = 'public' and table_type = 'BASE TABLE'
+      offset 0
+    )
+    select table_name from public_tables
+    where has_table_privilege('authenticated', format('public.%I', table_name), 'DELETE')$$,
+  'authenticated cannot delete from any table in public'
 );
-select ok(
-  not has_table_privilege('authenticated', 'public.clinical_audit_events', 'TRUNCATE'),
-  'authenticated cannot truncate clinical_audit_events'
+select is_empty(
+  $$with public_tables as (
+      select table_name from information_schema.tables
+      where table_schema = 'public' and table_type = 'BASE TABLE'
+      offset 0
+    )
+    select table_name from public_tables
+    where has_table_privilege('anon', format('public.%I', table_name), 'TRUNCATE')$$,
+  'anon cannot truncate any table in public'
 );
-select ok(
-  not has_table_privilege('authenticated', 'public.clinical_audit_events', 'DELETE'),
-  'authenticated cannot delete clinical_audit_events'
+select is_empty(
+  $$with public_tables as (
+      select table_name from information_schema.tables
+      where table_schema = 'public' and table_type = 'BASE TABLE'
+      offset 0
+    )
+    select table_name from public_tables
+    where has_table_privilege('anon', format('public.%I', table_name), 'DELETE')$$,
+  'anon cannot delete from any table in public'
 );
 select ok(
   not has_table_privilege('anon', 'public.clinical_records', 'INSERT'),

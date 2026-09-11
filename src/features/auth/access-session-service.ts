@@ -1,31 +1,10 @@
 export const ACCESS_SESSION_INACTIVITY_MS = 8 * 60 * 60 * 1000;
 
+// Client-side session-store state (src/stores/session-store.ts), not a column on
+// access_sessions -- the deleted getAccessSessionState/AccessSessionSnapshot pair modeled a
+// status column the table does not have, but this type itself is live: it gates clinical UI
+// in src/app/(protected)/consultations/[id].tsx via useSessionStore.
 export type AccessSessionState = "active" | "expired" | "revoked";
-
-export type AccessSessionSnapshot = {
-  status: AccessSessionState;
-  lastActivityAt: Date | string;
-};
-
-export function getAccessSessionState(
-  session: AccessSessionSnapshot,
-  now = new Date(),
-): AccessSessionState {
-  if (session.status !== "active") {
-    return session.status;
-  }
-
-  const lastActivity = new Date(session.lastActivityAt).getTime();
-  const currentTime = now.getTime();
-  if (
-    !Number.isFinite(lastActivity) ||
-    currentTime - lastActivity >= ACCESS_SESSION_INACTIVITY_MS
-  ) {
-    return "expired";
-  }
-
-  return "active";
-}
 
 export type AccessSessionRpcClient = {
   rpc: <T>(
@@ -47,16 +26,6 @@ export async function startAccessSession(client: AccessSessionRpcClient) {
 
 export async function touchAccessSession(client: AccessSessionRpcClient, sessionId: string) {
   const { data, error } = await client.rpc<boolean>("touch_access_session", {
-    p_session_id: sessionId,
-  });
-  if (error) {
-    throw new Error(error.message);
-  }
-  return data === true;
-}
-
-export async function revokeAccessSession(client: AccessSessionRpcClient, sessionId: string) {
-  const { data, error } = await client.rpc<boolean>("revoke_access_session", {
     p_session_id: sessionId,
   });
   if (error) {

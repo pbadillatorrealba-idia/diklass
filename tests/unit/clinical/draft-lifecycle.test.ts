@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { AuthStorage } from "@/lib/storage/auth-storage";
 import { createMemoryStorage } from "@/lib/storage/auth-storage";
-import { createDraftSession } from "@/lib/storage/drafts";
+import { createDraftSession, draftStorageKey } from "@/lib/storage/drafts";
 
 const draft = (notes: string) => ({ notes, updatedAt: "2026-09-11T12:00:00.000Z" });
 
@@ -97,14 +97,22 @@ describe("draft lifecycle (FR-061, SC-047, data-model borrador)", () => {
     expect(await session.restore()).toEqual(draft("versión más reciente"));
   });
 
-  test("a successful write still clears the pending draft as before", async () => {
+  test("a successful write clears the pending draft, not just returns its content", async () => {
     const storage = createMemoryStorage();
     const session = createDraftSession(storage, "vet-ana", "consultation-1");
     session.edit(draft("contenido"));
     await session.flush();
 
-    // A second flush with nothing pending must not re-save the already-flushed draft.
+    // Simulate the stored draft changing after the flush (e.g. another device saved over
+    // it, or markSaved ran). If `pending` were not actually cleared -- the bug this test
+    // must catch -- the next flush() would resurrect the stale "contenido" draft and
+    // clobber this, instead of being the no-op a cleared pending draft implies.
+    await storage.setItem(
+      draftStorageKey("vet-ana", "consultation-1"),
+      JSON.stringify(draft("otro dispositivo")),
+    );
+
     await session.flush();
-    expect(await session.restore()).toEqual(draft("contenido"));
+    expect(await session.restore()).toEqual(draft("otro dispositivo"));
   });
 });

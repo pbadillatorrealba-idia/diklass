@@ -60,6 +60,9 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       created_by: ana.userId,
     });
     expect(asAna.error?.code).toBe("42501");
+    // 42501 is also raised by RLS, AUTHENTICATION_REQUIRED and RECORD_NOT_FOUND -- assert the
+    // message too, or this stays green if the reason silently becomes "your session expired".
+    expect(asAna.error?.message).toContain("permission denied for table clinical_records");
 
     const approvedByAna = await bruno.client.from("clinical_records").insert({
       clinic_id: bruno.clinicId,
@@ -70,6 +73,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       approved_at: new Date().toISOString(),
     });
     expect(approvedByAna.error?.code).toBe("42501");
+    expect(approvedByAna.error?.message).toContain("permission denied for table clinical_records");
   });
 
   test("a colleague attends the shared record without taking over its authorship", async () => {
@@ -89,6 +93,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       .update({ created_by: bruno.userId })
       .eq("id", recordId);
     expect(tamper.error?.code).toBe("42501");
+    expect(tamper.error?.message).toContain("permission denied for table clinical_records");
   });
 
   test("an attribution can be resolved to the colleague's name (US12/AC2)", async () => {

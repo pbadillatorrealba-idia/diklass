@@ -42,6 +42,7 @@ export type Database = {
           id: string
           last_activity_at: string
           revoked_at: string | null
+          revoked_reason: string | null
           token_hash: string
           veterinarian_id: string
         }
@@ -52,6 +53,7 @@ export type Database = {
           id?: string
           last_activity_at?: string
           revoked_at?: string | null
+          revoked_reason?: string | null
           token_hash?: string
           veterinarian_id: string
         }
@@ -62,6 +64,7 @@ export type Database = {
           id?: string
           last_activity_at?: string
           revoked_at?: string | null
+          revoked_reason?: string | null
           token_hash?: string
           veterinarian_id?: string
         }
