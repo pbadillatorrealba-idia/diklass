@@ -59,7 +59,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       status: "draft",
       created_by: ana.userId,
     });
-    expect(asAna.error?.message).toContain("ATTRIBUTION_IMMUTABLE");
+    expect(asAna.error?.code).toBe("42501");
 
     const approvedByAna = await bruno.client.from("clinical_records").insert({
       clinic_id: bruno.clinicId,
@@ -69,7 +69,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       approved_by: ana.userId,
       approved_at: new Date().toISOString(),
     });
-    expect(approvedByAna.error?.message).toContain("ATTRIBUTION_IMMUTABLE");
+    expect(approvedByAna.error?.code).toBe("42501");
   });
 
   test("a colleague attends the shared record without taking over its authorship", async () => {
@@ -88,7 +88,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       .from("clinical_records")
       .update({ created_by: bruno.userId })
       .eq("id", recordId);
-    expect(tamper.error?.message).toContain("ATTRIBUTION_IMMUTABLE");
+    expect(tamper.error?.code).toBe("42501");
   });
 
   test("an attribution can be resolved to the colleague's name (US12/AC2)", async () => {

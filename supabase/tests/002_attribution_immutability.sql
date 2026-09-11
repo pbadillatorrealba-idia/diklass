@@ -60,8 +60,8 @@ select throws_ok(
   $$insert into public.clinical_records (clinic_id, record_type, content, status, approved_by, approved_at)
     values ('c2c2c2c2-0000-0000-0000-0000000000c2', 'epicrisis', '{}', 'draft',
             'b2b2b2b2-0000-0000-0000-0000000000b2', timezone('utc', now()))$$,
-  '23514',
-  'ATTRIBUTION_IMMUTABLE',
+  '42501',
+  'permission denied for table clinical_records',
   'a veterinarian cannot insert a record naming a colleague as its approver'
 );
 
@@ -122,8 +122,8 @@ select results_eq(
 select throws_ok(
   $$update public.clinical_records set approved_by = 'b2b2b2b2-0000-0000-0000-0000000000b2'
     where id = 'd2d2d2d2-0000-0000-0000-0000000000d2'$$,
-  '23514',
-  'ATTRIBUTION_IMMUTABLE',
+  '42501',
+  'permission denied for table clinical_records',
   'approval columns cannot be written by a plain UPDATE'
 );
 
