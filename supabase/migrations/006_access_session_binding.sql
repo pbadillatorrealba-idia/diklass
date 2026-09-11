@@ -24,13 +24,20 @@ create unique index access_sessions_live_auth_session_idx
   where revoked_at is null;
 
 -- Internal: not granted to any API role (005 closes new functions by default).
+-- A malformed claim (e.g. a future custom access-token hook gone wrong) must yield null and
+-- fail closed through the callers below, never raise 22P02 out of a protected query.
 create or replace function public.current_auth_session_id()
 returns uuid
 language sql
 stable
 set search_path = public, extensions
 as $$
-  select nullif(auth.jwt() ->> 'session_id', '')::uuid;
+  select case
+    when auth.jwt() ->> 'session_id' ~*
+      '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    then (auth.jwt() ->> 'session_id')::uuid
+    else null
+  end;
 $$;
 
 create or replace function public.is_active_access(p_user_id uuid default auth.uid())
@@ -79,6 +86,11 @@ begin
     );
     raise exception 'AUTHENTICATION_REQUIRED' using errcode = '42501';
   end if;
+
+  -- Serialize concurrent starts on this Auth session: under READ COMMITTED, two concurrent
+  -- calls could both see no live row below and both insert, tripping the partial unique
+  -- index with a raw 23505 instead of the retry simply replacing the earlier row.
+  perform pg_advisory_xact_lock(hashtextextended(auth_session::text, 0));
 
   -- D1: several devices at once. Only a previous access session of this same Auth session
   -- is replaced (a retried start, for instance), never another device's.
@@ -145,7 +157,8 @@ as $$
     and access_session.auth_session_id = public.current_auth_session_id()
     and access_session.revoked_at is null
     and access_session.last_activity_at > timezone('utc', now()) - interval '8 hours'
-    and access_session.expires_at > timezone('utc', now());
+    and access_session.expires_at > timezone('utc', now())
+  limit 1;
 $$;
 
 grant execute on function public.current_access_session() to authenticated;

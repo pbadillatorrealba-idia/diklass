@@ -186,9 +186,15 @@ test.describe("auth against the local backend", () => {
             last_activity_at: new Date(now - 9 * 3_600_000).toISOString(),
             expires_at: new Date(now - 3_600_000).toISOString(),
           },
+          headers: { Prefer: "return=representation" },
         },
       );
       expect(aged.ok()).toBeTruthy();
+      // The filter now matches on a single auth_session_id: without a representation, a
+      // request matching zero rows would still return 204/ok, and the test would only fail
+      // later with an opaque timeout instead of here, where the cause is obvious.
+      const agedRows = (await aged.json()) as Array<{ id: string }>;
+      expect(agedRows).toHaveLength(1);
 
       await page.getByRole("button", { name: "Guardar anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();

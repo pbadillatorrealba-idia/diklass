@@ -1,5 +1,5 @@
 begin;
-select plan(15);
+select plan(18);
 
 -- Arrange: one veterinarian who signs in on two devices, i.e. two Supabase Auth sessions.
 insert into auth.users (
@@ -50,6 +50,17 @@ select is(
    where auth_session_id = '5e520000-0000-0000-0000-000000000002' and revoked_at is null),
   1,
   'an Auth session never holds two live access sessions'
+);
+-- Pins the invariant the advisory lock in start_access_session protects: the retried start
+-- must revoke-then-insert, never insert-then-insert. A true concurrent race is not
+-- reproducible in pgTap's single session, so this only proves the sequential outcome is
+-- exactly one revoked row plus one live row -- it would catch a regression that made the
+-- retry leave the earlier row live (a duplicate-row bug), but not the race itself.
+select is(
+  (select count(*)::int from public.access_sessions
+   where auth_session_id = '5e520000-0000-0000-0000-000000000002'),
+  2,
+  'starting again within the same Auth session leaves exactly one revoked and one live row, never two live'
 );
 reset role;
 
@@ -102,6 +113,20 @@ reset role;
 
 select function_privs_are('public', 'current_auth_session_id', array[]::text[], 'authenticated',
   array[]::text[], 'current_auth_session_id is internal');
+
+-- ---------------------------------------------------------------------------
+-- A malformed session_id claim fails closed, never raises.
+-- ---------------------------------------------------------------------------
+
+select set_config('request.jwt.claims',
+  '{"sub":"a5a5a5a5-0000-0000-0000-0000000000a5","role":"authenticated","session_id":"not-a-uuid"}',
+  true);
+set local role authenticated;
+select lives_ok($$select public.is_active_access()$$,
+  'a malformed session_id claim does not raise');
+select ok(not public.is_active_access(),
+  'a malformed session_id claim denies clinical access instead of erroring');
+reset role;
 
 select * from finish();
 rollback;
