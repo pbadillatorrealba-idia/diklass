@@ -5,8 +5,13 @@ export type ConsultationDraft = {
   updatedAt: string;
 };
 
+// SecureStore keys may only contain alphanumerics, ".", "-" and "_", and the consultation id
+// comes from a route param, so every other character is replaced. Segments never contain
+// ".", which keeps the separator unambiguous.
+const keySegment = (value: string) => value.replace(/[^\w-]/g, "_");
+
 export function draftStorageKey(veterinarianId: string, consultationId: string): string {
-  return `diklass:draft:${veterinarianId}:${consultationId}`;
+  return `diklass.draft.${keySegment(veterinarianId)}.${keySegment(consultationId)}`;
 }
 
 export function createDraftStorage(storage: AuthStorage) {

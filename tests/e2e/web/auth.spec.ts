@@ -38,7 +38,11 @@ test.describe("auth web shell", () => {
     page,
   }) => {
     await page.goto("/login");
-    await page.getByLabel("Correo de acceso").click();
+    const emailField = page.getByLabel("Correo de acceso");
+    // The fields stay read-only until React hydrates; a click before that lands on a
+    // non-focusable input and Tab starts from body instead of moving to the password field.
+    await expect(emailField).toBeEditable();
+    await emailField.click();
     await page.keyboard.press("Tab");
     await expect(page.getByLabel("Contraseña")).toBeFocused();
     await page.keyboard.press("Tab");
@@ -164,7 +168,7 @@ test.describe("auth against the local backend", () => {
     await expect
       .poll(() =>
         page.evaluate(() =>
-          Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass:draft:")),
+          Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass.draft.")),
         ),
       )
       .toBe(true);
@@ -224,7 +228,7 @@ test.describe("auth against the local backend", () => {
       await expect
         .poll(() =>
           page.evaluate(() =>
-            Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass:draft:")),
+            Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass.draft.")),
           ),
         )
         .toBe(false);
