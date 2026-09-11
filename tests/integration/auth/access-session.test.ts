@@ -8,7 +8,7 @@ import {
   signedInVeterinarian,
 } from "../live-supabase";
 
-const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
+const hoursAgo = (hours: number, from: number) => new Date(from - hours * 3_600_000).toISOString();
 
 async function expectClinicalAccessDenied(vet: LiveVeterinarian, client = vet.client) {
   const touched = await client.rpc("touch_access_session", { p_session_id: vet.accessSessionId });
@@ -49,12 +49,35 @@ describe.skipIf(!isLiveSupabase)("access session lifecycle against local Supabas
   test("more than eight hours idle expires the session server-side (FR-061)", async () => {
     const ana = await signedInVeterinarian(ANA);
 
+    // Derive both timestamps from a single instant: the table's check constraint requires
+    // expires_at <= last_activity_at + 8h, and two separate Date.now() calls can straddle a
+    // millisecond boundary and violate it.
+    const now = Date.now();
     const { error } = await adminClient()
       .from("access_sessions")
-      .update({ last_activity_at: hoursAgo(9), expires_at: hoursAgo(1) })
+      .update({ last_activity_at: hoursAgo(9, now), expires_at: hoursAgo(1, now) })
       .eq("id", ana.accessSessionId);
     expect(error).toBeNull();
 
     await expectClinicalAccessDenied(ana);
+  });
+
+  test("two devices hold separate access sessions, and logging out ends only one (D1)", async () => {
+    const firstDevice = await signedInVeterinarian(ANA);
+    const secondDevice = await signedInVeterinarian(ANA);
+
+    const firstResume = await firstDevice.client.rpc("current_access_session");
+    expect((firstResume.data as { id: string } | null)?.id).toBe(firstDevice.accessSessionId);
+    const secondResume = await secondDevice.client.rpc("current_access_session");
+    expect((secondResume.data as { id: string } | null)?.id).toBe(secondDevice.accessSessionId);
+
+    const revoked = await firstDevice.client.rpc("revoke_current_access_session");
+    expect(revoked.error).toBeNull();
+    await expectClinicalAccessDenied(firstDevice);
+
+    const stillActive = await secondDevice.client.rpc("touch_access_session", {
+      p_session_id: secondDevice.accessSessionId,
+    });
+    expect(stillActive.data).toBe(true);
   });
 });

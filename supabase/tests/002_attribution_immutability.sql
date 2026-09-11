@@ -27,11 +27,14 @@ values
   ('b2b2b2b2-0000-0000-0000-0000000000b2', 'c2c2c2c2-0000-0000-0000-0000000000c2',
    'bruno.attribution@example.test', 'Dr. Bruno Compartido');
 
-insert into public.access_sessions (veterinarian_id)
-values ('a2a2a2a2-0000-0000-0000-0000000000a2'), ('b2b2b2b2-0000-0000-0000-0000000000b2');
+insert into public.access_sessions (veterinarian_id, auth_session_id)
+values ('a2a2a2a2-0000-0000-0000-0000000000a2', '5e5a2000-0000-0000-0000-0000000000a2'),
+       ('b2b2b2b2-0000-0000-0000-0000000000b2', '5e5b2000-0000-0000-0000-0000000000b2');
 
 -- Ana registers a patient and drafts an epicrisis.
-select set_config('request.jwt.claim.sub', 'a2a2a2a2-0000-0000-0000-0000000000a2', true);
+select set_config('request.jwt.claims',
+  '{"sub":"a2a2a2a2-0000-0000-0000-0000000000a2","role":"authenticated","session_id":"5e5a2000-0000-0000-0000-0000000000a2"}',
+  true);
 set local role authenticated;
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
@@ -91,7 +94,9 @@ reset role;
 -- FR-066 / T055 / T056: Bruno attends a patient Ana registered.
 -- ---------------------------------------------------------------------------
 
-select set_config('request.jwt.claim.sub', 'b2b2b2b2-0000-0000-0000-0000000000b2', true);
+select set_config('request.jwt.claims',
+  '{"sub":"b2b2b2b2-0000-0000-0000-0000000000b2","role":"authenticated","session_id":"5e5b2000-0000-0000-0000-0000000000b2"}',
+  true);
 set local role authenticated;
 
 select results_eq(

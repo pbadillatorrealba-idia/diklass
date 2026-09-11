@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       access_sessions: {
         Row: {
+          auth_session_id: string | null
           created_at: string
           expires_at: string
           id: string
@@ -45,6 +46,7 @@ export type Database = {
           veterinarian_id: string
         }
         Insert: {
+          auth_session_id?: string | null
           created_at?: string
           expires_at?: string
           id?: string
@@ -54,6 +56,7 @@ export type Database = {
           veterinarian_id: string
         }
         Update: {
+          auth_session_id?: string | null
           created_at?: string
           expires_at?: string
           id?: string
@@ -269,6 +272,8 @@ export type Database = {
         }
         Returns: string
       }
+      current_access_session: { Args: never; Returns: Json }
+      current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
       insert_clinical_audit_event: {
         Args: {
@@ -297,6 +302,7 @@ export type Database = {
         Returns: boolean
       }
       revoke_access_sessions: { Args: never; Returns: boolean }
+      revoke_current_access_session: { Args: never; Returns: boolean }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
     }

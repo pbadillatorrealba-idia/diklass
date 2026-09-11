@@ -77,8 +77,8 @@ select ok(
 
 -- ---------------------------------------------------------------------------
 -- Enumerate rather than name one at a time: authenticated can execute exactly
--- the seven functions this migration grants, no others -- this catches a
--- function nobody thought to list above.
+-- the nine functions granted across this migration and 006_access_session_binding,
+-- no others -- this catches a function nobody thought to list above.
 -- ---------------------------------------------------------------------------
 
 select set_eq(
@@ -93,9 +93,11 @@ select set_eq(
       'public.touch_access_session(uuid)',
       'public.revoke_access_session(uuid)',
       'public.revoke_access_sessions()',
-      'public.approve_clinical_record(uuid)'
+      'public.approve_clinical_record(uuid)',
+      'public.current_access_session()',
+      'public.revoke_current_access_session()'
     ]::regprocedure[])::oid$$,
-  'authenticated can execute exactly the seven granted functions, no more'
+  'authenticated can execute exactly the nine granted functions, no more'
 );
 
 -- ---------------------------------------------------------------------------

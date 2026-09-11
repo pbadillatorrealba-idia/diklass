@@ -145,7 +145,16 @@ test.describe("auth against the local backend", () => {
 
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const { userId } = await readSupabaseSession(page);
+    const { accessToken } = await readSupabaseSession(page);
+    // Age only this page's access session: other tests hold Ana's sessions in parallel (D1).
+    const authSessionId = (
+      JSON.parse(Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8")) as {
+        session_id?: string;
+      }
+    ).session_id;
+    if (!authSessionId) {
+      throw new Error("The access token carries no session_id claim.");
+    }
 
     await page.goto(`/consultations/${consultationId}`);
     const notesField = page.getByLabel("Notas de la consulta");
@@ -171,7 +180,7 @@ test.describe("auth against the local backend", () => {
       // Age the live session past the inactivity limit, as eight idle hours would.
       const now = Date.now();
       const aged = await admin.patch(
-        `/rest/v1/access_sessions?veterinarian_id=eq.${userId}&revoked_at=is.null`,
+        `/rest/v1/access_sessions?auth_session_id=eq.${authSessionId}&revoked_at=is.null`,
         {
           data: {
             last_activity_at: new Date(now - 9 * 3_600_000).toISOString(),
