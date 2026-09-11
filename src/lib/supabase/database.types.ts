@@ -272,6 +272,10 @@ export type Database = {
         }
         Returns: string
       }
+      consume_client_error_quota: {
+        Args: { p_bucket_key: string; p_limit?: number }
+        Returns: boolean
+      }
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }

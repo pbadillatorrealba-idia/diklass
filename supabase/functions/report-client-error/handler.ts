@@ -30,10 +30,27 @@ export const clientErrorReportSchema = z.object({
   error: z.object({ name: identifier }),
 });
 
+export const CLIENT_ERROR_REPORTS_PER_MINUTE = 30;
+
 export type ReportDependencies = {
   log: (line: string) => void;
   randomId: () => string;
+  /** Resolves false once the caller has used up its per-minute quota. */
+  consumeQuota: (bucketKey: string) => Promise<boolean>;
 };
+
+// A quota outage must not hide client errors: fail open. The log volume per request stays
+// bounded by MAX_BODY_BYTES either way.
+async function withinQuota(deps: ReportDependencies, bucketKey: string): Promise<boolean> {
+  try {
+    return await deps.consumeQuota(bucketKey);
+  } catch {
+    return true;
+  }
+}
+
+const callerBucketKey = (request: Request) =>
+  `ip:${request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"}`;
 
 const respond = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
@@ -55,6 +72,11 @@ export async function handleClientErrorReport(
       { code: "METHOD_NOT_ALLOWED", requestId: headerRequestId ?? deps.randomId() },
       405,
     );
+  }
+
+  // Counted before parsing, so a flood of invalid payloads is limited too.
+  if (!(await withinQuota(deps, callerBucketKey(request)))) {
+    return respond({ code: "RATE_LIMITED", requestId: headerRequestId ?? deps.randomId() }, 429);
   }
 
   const raw = await request.text();

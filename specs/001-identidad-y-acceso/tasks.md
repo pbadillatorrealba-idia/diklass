@@ -238,5 +238,5 @@ still open in Phase 7.
 - [X] T079 Make `draftStorageKey` produce valid SecureStore keys and report failed draft writes instead of leaving unhandled rejections in `src/lib/storage/drafts.ts` and `src/features/clinical/draft-preserver.tsx` per FR-061, SC-047 (contradicts)
 - [X] T080 Check the snake_case attribution columns PostgREST receives in `ATTRIBUTION_CONTROL_FIELDS` (`src/lib/attribution/types.ts`) and stop blocking `clinic_id` per contracts/clinical-attribution.md (contradicts)
 - [X] T081 Handle the CORS preflight, restrict to `POST`, cap the body size and validate the payload with Zod in `supabase/functions/report-client-error` per Constitution IV (partial)
-- [ ] T082 Rate-limit `report-client-error` per caller IP with `public.consume_client_error_quota` in `supabase/migrations/007_client_error_quota.sql` (missing)
+- [X] T082 Rate-limit `report-client-error` per caller IP with `public.consume_client_error_quota` in `supabase/migrations/007_client_error_quota.sql` (missing)
 - [ ] T083 Make `scripts/provision-veterinarians.ts` refuse non-local URLs without `--allow-remote`, match emails case-insensitively across every page and resync passwords on re-run, and drop the dead `clinical_records` insert from `supabase/seed.sql` (partial)
