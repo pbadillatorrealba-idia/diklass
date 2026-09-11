@@ -19,14 +19,21 @@ type DraftPreserverOptions = {
 const DRAFT_DEBOUNCE_MS = 500;
 
 // A failed write must not become an unhandled rejection: report it (Constitution IV).
-function flushDraft(session: DraftSession) {
-  session.flush().catch((error: unknown) => {
-    void captureClientError(errorReporter, {
-      error,
-      operation: "save_draft",
-      requestId: makeRequestId(),
-    });
-  });
+// Resolves to whether the write succeeded, so a caller that needs to tell the user the
+// truth (e.g. "the draft was kept") can check it; callers that only fire-and-forget (the
+// debounce, expiry and unmount flushes below) can ignore the resolved value.
+export function flushDraft(session: DraftSession): Promise<boolean> {
+  return session.flush().then(
+    () => true,
+    (error: unknown) => {
+      void captureClientError(errorReporter, {
+        error,
+        operation: "save_draft",
+        requestId: makeRequestId(),
+      });
+      return false;
+    },
+  );
 }
 
 export function useDraftPreserver({
