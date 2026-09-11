@@ -1,5 +1,5 @@
 begin;
-select plan(8);
+select plan(14);
 
 -- Arrange: one clinic, one veterinarian. These assertions exercise the triggers and the
 -- grants, not RLS, so no access session is needed.
@@ -78,6 +78,36 @@ select ok(
 select ok(
   has_column_privilege('authenticated', 'public.clinical_records', 'content', 'UPDATE'),
   'authenticated can still update the clinical content'
+);
+
+-- ---------------------------------------------------------------------------
+-- Review #4 follow-up: TRUNCATE bypasses RLS and fires no row triggers, so it must be
+-- revoked wherever the Data API role can reach it, alongside the unneeded DELETE.
+-- ---------------------------------------------------------------------------
+
+select ok(
+  not has_table_privilege('authenticated', 'public.clinical_records', 'TRUNCATE'),
+  'authenticated cannot truncate clinical_records'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.clinical_records', 'DELETE'),
+  'authenticated cannot delete clinical_records'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.clinical_audit_events', 'TRUNCATE'),
+  'authenticated cannot truncate clinical_audit_events'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.clinical_audit_events', 'DELETE'),
+  'authenticated cannot delete clinical_audit_events'
+);
+select ok(
+  not has_table_privilege('anon', 'public.clinical_records', 'INSERT'),
+  'anon cannot insert clinical_records'
+);
+select ok(
+  not has_table_privilege('anon', 'public.clinical_records', 'UPDATE'),
+  'anon cannot update clinical_records'
 );
 
 -- ---------------------------------------------------------------------------

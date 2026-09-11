@@ -70,3 +70,9 @@ revoke insert, update on public.clinical_records from anon, authenticated;
 grant insert (id, clinic_id, record_type, content, status, supersedes_event_id)
   on public.clinical_records to authenticated;
 grant update (content) on public.clinical_records to authenticated;
+
+-- Review #4 follow-up: TRUNCATE bypasses RLS entirely and fires no row-level triggers, so it
+-- would let the Data API role wipe clinical records (and the audit trail) with none of the
+-- protections above ever running. DELETE is likewise unneeded by the Data API role.
+revoke delete, truncate on public.clinical_records from anon, authenticated;
+revoke delete, truncate on public.clinical_audit_events from anon, authenticated;
