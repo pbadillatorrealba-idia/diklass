@@ -61,6 +61,10 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: pgTap (RLS, triggers, session expiry, attribution)
         run: supabase test db
+      - name: Generated database types match the migrations
+        run: |
+          supabase gen types --lang=typescript --local > "$RUNNER_TEMP/database.types.ts"
+          diff -u src/lib/supabase/database.types.ts "$RUNNER_TEMP/database.types.ts"
       - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
       - name: Live integration (access sessions, two clinicians, self-registration)
         run: bun run test:integration
