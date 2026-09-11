@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(30);
 
 -- ---------------------------------------------------------------------------
 -- RLS helpers and app RPCs: authenticated only, never anon.
@@ -76,6 +76,29 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
+-- Enumerate rather than name one at a time: authenticated can execute exactly
+-- the seven functions this migration grants, no others -- this catches a
+-- function nobody thought to list above.
+-- ---------------------------------------------------------------------------
+
+select set_eq(
+  $$select p.oid
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'EXECUTE')$$,
+  $$select unnest(array[
+      'public.is_active_access(uuid)',
+      'public.current_clinic_id()',
+      'public.start_access_session()',
+      'public.touch_access_session(uuid)',
+      'public.revoke_access_session(uuid)',
+      'public.revoke_access_sessions()',
+      'public.approve_clinical_record(uuid)'
+    ]::regprocedure[])::oid$$,
+  'authenticated can execute exactly the seven granted functions, no more'
+);
+
+-- ---------------------------------------------------------------------------
 -- Functions created from now on start closed.
 -- ---------------------------------------------------------------------------
 
@@ -86,8 +109,19 @@ select function_privs_are('public', 'review_privileges_probe', array[]::text[], 
   'a new public function is not executable by anon by default');
 
 -- ---------------------------------------------------------------------------
--- A `create or replace` of an already-granted function must not lose its grant:
--- the closing trigger revokes from PUBLIC only, never from a role granted directly.
+-- Procedures created from now on start closed too (pins the fix for the
+-- event-trigger regression: `revoke ... on function` errors on a procedure,
+-- so no such trigger must ever subscribe to CREATE PROCEDURE again).
+-- ---------------------------------------------------------------------------
+
+create procedure public.review_privileges_probe_proc() language sql as 'select 1';
+select function_privs_are('public', 'review_privileges_probe_proc', array[]::text[], 'authenticated', array[]::text[],
+  'a new public procedure is not executable by authenticated by default');
+select function_privs_are('public', 'review_privileges_probe_proc', array[]::text[], 'anon', array[]::text[],
+  'a new public procedure is not executable by anon by default');
+
+-- ---------------------------------------------------------------------------
+-- A `create or replace` of an already-granted function must not lose its grant.
 -- ---------------------------------------------------------------------------
 
 grant execute on function public.review_privileges_probe() to authenticated;
@@ -96,6 +130,19 @@ select function_privs_are('public', 'review_privileges_probe', array[]::text[], 
   'a direct grant to authenticated survives a later create or replace of the same function');
 select function_privs_are('public', 'review_privileges_probe', array[]::text[], 'anon', array[]::text[],
   'anon still cannot call the replaced function');
+
+-- ---------------------------------------------------------------------------
+-- Enumerate rather than name one at a time: no function in public is
+-- executable by anon at all, including every probe created above.
+-- ---------------------------------------------------------------------------
+
+select is_empty(
+  $$select p.oid::regprocedure::text
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'EXECUTE')$$,
+  'no function in public is executable by anon'
+);
 
 select * from finish();
 rollback;

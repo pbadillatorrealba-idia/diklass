@@ -5,57 +5,48 @@
 -- the app and the RLS policies call. Trigger functions need no grant: EXECUTE is checked
 -- when the trigger is created, not when it fires, and the helpers below are only called
 -- from security-definer functions, which run as their owner.
+--
+-- Converge a database that already applied an earlier version of this migration, which used
+-- a `ddl_command_end` event trigger to close new functions. That trigger is wrong: it
+-- subscribed to the `CREATE PROCEDURE` tag but tried `revoke execute on FUNCTION ...`, which
+-- Postgres rejects for procedures, so it aborted every future `create procedure` in `public`.
+-- It is unnecessary besides: the *global* `alter default privileges` form below (no
+-- `in schema`) replaces Postgres's built-in PUBLIC-execute default outright, where the
+-- per-schema form could only ever be added on top of it.
+drop event trigger if exists revoke_new_function_execute;
+drop function if exists public.revoke_new_function_execute();
 
 alter function public.guard_approved_clinical_record() set search_path = public, extensions;
 alter function public.clinical_record_action(text, text, text, jsonb)
   set search_path = public, extensions;
 
 revoke execute on all functions in schema public from public, anon, authenticated;
-alter default privileges in schema public revoke execute on functions from public;
-alter default privileges in schema public revoke execute on functions from anon, authenticated;
 
--- Verified against this Postgres build: `alter default privileges ... revoke ... from public`
--- above does NOT stop new functions from getting PUBLIC=EXECUTE. Postgres always folds the
--- built-in PUBLIC-execute default into a function's initial ACL, even when the matching
--- pg_default_acl row for its owner/schema explicitly omits public, anon and authenticated
--- (confirmed empirically: a function created after the statements above still shows EXECUTE
--- for anon/authenticated, with or without an explicit `for role postgres` clause). The only
--- reliable way to close EXECUTE on functions created from now on is to strip it right after
--- creation via an event trigger.
+-- Closing new functions to PUBLIC needs both statements below; neither is redundant.
 --
--- The trigger revokes from PUBLIC only, not from anon/authenticated directly: those roles
--- never hold EXECUTE in their own right, they only inherit it by being members of PUBLIC, so
--- revoking PUBLIC closes a brand-new function just as tightly for both of them. Scoping the
--- revoke this way also means a later `create or replace` of a function that already has an
--- explicit `grant execute ... to authenticated` does not lose that grant: the trigger strips
--- PUBLIC again (a no-op, PUBLIC never had it back), and the direct grant to authenticated,
--- being a separate ACL entry, survives untouched. Every later migration that needs a caller to
--- run a genuinely new function must still grant EXECUTE to it explicitly (Task 5's
--- current_access_session and revoke_current_access_session do this).
-create or replace function public.revoke_new_function_execute()
-returns event_trigger
-language plpgsql
-set search_path = public, extensions
-as $$
-declare
-  obj record;
-begin
-  for obj in
-    select object_identity
-    from pg_event_trigger_ddl_commands()
-    where object_type in ('function', 'procedure')
-      and schema_name = 'public'
-  loop
-    execute format('revoke execute on function %s from public', obj.object_identity);
-  end loop;
-end;
-$$;
-
-drop event trigger if exists revoke_new_function_execute;
-create event trigger revoke_new_function_execute
-  on ddl_command_end
-  when tag in ('CREATE FUNCTION', 'CREATE PROCEDURE')
-  execute function public.revoke_new_function_execute();
+-- 1. The global form (no `in schema`) replaces Postgres's built-in default ACL for functions,
+--    which grants EXECUTE to PUBLIC. A per-schema `alter default privileges in schema public
+--    revoke ... from public` cannot do this: Postgres merges a per-schema default-ACL row
+--    additively on top of the built-in default, so a per-schema revoke can never subtract
+--    from it (verified: a function created after a public-schema-only revoke still shows
+--    EXECUTE for PUBLIC). The global row has no such built-in default to fight, so a plain
+--    revoke sticks. This also closes PUBLIC-execute for any function `postgres` creates in
+--    other schemas, not just `public` -- a deliberate widening beyond this migration's
+--    stated scope, and the safer default, since no migration in this repo creates functions
+--    outside `public`.
+-- 2. The per-schema `revoke ... from anon, authenticated` is LOAD-BEARING, not redundant with
+--    the global PUBLIC revoke above: Supabase's own default privileges for schema `public`
+--    grant EXECUTE directly to `anon` and `authenticated` (not merely through PUBLIC
+--    membership), verified by restoring that default and inspecting the resulting ACL
+--    (`anon=X/postgres,authenticated=X/postgres`). Removing this line would leave every new
+--    public function callable by anon and authenticated again.
+--
+-- Caveat: a function installed into `public` by `CREATE EXTENSION` escapes both statements,
+-- because supautils runs extension installs as `supabase_admin`, whose own default ACL grants
+-- `anon`/`authenticated` directly and is untouched by anything `postgres` does here. Install
+-- extensions into the `extensions` schema, as migration 001 already does, not into `public`.
+alter default privileges revoke execute on functions from public;
+alter default privileges in schema public revoke execute on functions from anon, authenticated;
 
 -- Evaluated by the RLS policies as the querying role.
 grant execute on function public.is_active_access(uuid) to authenticated;
