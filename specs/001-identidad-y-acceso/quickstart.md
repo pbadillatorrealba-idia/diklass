@@ -172,8 +172,9 @@ la compuerta axe WCAG 2.2 AA.
   repositorio ya tiene lo que le corresponde: `eas.json` con el perfil `e2e`,
   `ios.bundleIdentifier`/`android.package` = `com.diklass.app` en `app.json`, y
   `.github/workflows/native-e2e.yml` corregido (`eas-cli` por su nombre de paquete, build local del
-  APK y la acción oficial de Maestro Cloud fijada por SHA con `project-id`). Falta enlazar el
-  proyecto EAS, registrar `EXPO_TOKEN`, `MAESTRO_CLOUD_API_KEY` y `MAESTRO_PROJECT_ID`, y
+  APK y la acción oficial de Maestro Cloud fijada por SHA con `project-id`). El proyecto EAS ya
+  está enlazado a `@idia/diklass`. Falta registrar `EXPO_TOKEN`, `MAESTRO_CLOUD_API_KEY` y
+  `MAESTRO_PROJECT_ID`, y
   habilitar un Supabase sintético alcanzable desde Maestro Cloud; los pasos están en
   [`tests/e2e/native/README.md`](../../tests/e2e/native/README.md). Hasta entonces el job termina
   con un aviso y no produce evidencia.

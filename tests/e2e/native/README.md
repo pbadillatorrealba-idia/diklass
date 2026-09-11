@@ -20,9 +20,8 @@ termina con un aviso y no construye nada: no falla, pero **tampoco produce evide
 
 Configuración única, que requiere las cuentas del equipo:
 
-1. **Proyecto EAS** — con una cuenta de Expo, `bunx eas-cli@24.3.0 init` enlaza el proyecto y
-   escribe `extra.eas.projectId` en `app.json`; ese cambio se commitea. `eas build --local` lo
-   necesita para resolver las credenciales de firma.
+1. **Proyecto EAS** — hecho: el repositorio está enlazado a `@idia/diklass` (`extra.eas.projectId`
+   y `owner` en `app.json`). `eas build --local` lo necesita para resolver las credenciales de firma.
 2. **`EXPO_TOKEN`** — token de acceso creado en expo.dev, guardado como GitHub Secret.
 3. **`MAESTRO_CLOUD_API_KEY`** y **`MAESTRO_PROJECT_ID`** — de Maestro Cloud, como GitHub Secrets
    (la acción v3 exige `project-id`).
