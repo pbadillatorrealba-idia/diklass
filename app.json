@@ -6,6 +6,12 @@
     "orientation": "portrait",
     "scheme": "diklass",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.diklass.app"
+    },
+    "android": {
+      "package": "com.diklass.app"
+    },
     "web": {
       "output": "static"
     },

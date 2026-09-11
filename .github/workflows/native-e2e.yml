@@ -20,22 +20,46 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       MAESTRO_CLOUD_API_KEY: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+      MAESTRO_PROJECT_ID: ${{ secrets.MAESTRO_PROJECT_ID }}
+      # Maestro Cloud devices cannot reach a Supabase started inside this runner, so the
+      # build targets a hosted synthetic backend. The anon key is public; never the service role.
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.E2E_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.E2E_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check native build credentials
+        id: credentials
+        run: |
+          if [ -n "$EXPO_TOKEN" ] && [ -n "$MAESTRO_CLOUD_API_KEY" ] && [ -n "$MAESTRO_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::native-e2e skipped: EXPO_TOKEN, MAESTRO_CLOUD_API_KEY and MAESTRO_PROJECT_ID must be GitHub Secrets. See tests/e2e/native/README.md."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: oven-sh/setup-bun@v2
+        if: steps.credentials.outputs.configured == 'true'
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        if: steps.credentials.outputs.configured == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
       - run: bun install --frozen-lockfile
-      - name: Skip when native build credentials are not configured
-        if: env.EXPO_TOKEN == '' || env.MAESTRO_CLOUD_API_KEY == ''
-        run: |
-          echo "::notice::native-e2e skipped: EXPO_TOKEN and/or MAESTRO_CLOUD_API_KEY are not set as GitHub Secrets yet."
-          echo "An eas.json 'e2e' build profile and a linked EAS project are also required before this job can build a real artifact."
-      # Requires an `e2e` build profile in eas.json (no Expo project is linked yet) and the two
-      # secrets above. See specs/001-identidad-y-acceso/plan.md, section "CI de GitHub", job 5.
-      - name: Build Android development artifact
-        if: env.EXPO_TOKEN != '' && env.MAESTRO_CLOUD_API_KEY != ''
-        run: bunx eas build --platform android --profile e2e --non-interactive --wait
-      - name: Run Maestro Cloud flows
-        if: env.EXPO_TOKEN != '' && env.MAESTRO_CLOUD_API_KEY != ''
-        run: bunx maestro cloud tests/e2e/native --apiKey "$MAESTRO_CLOUD_API_KEY"
+        if: steps.credentials.outputs.configured == 'true'
+      # `eas` is published as eas-cli; `--local` builds on this runner so the APK is a file
+      # the Maestro action can upload. Requires the EAS project to be linked in app.json.
+      - name: Build the Android e2e APK with EAS
+        if: steps.credentials.outputs.configured == 'true'
+        run: >
+          bunx eas-cli@24.3.0 build --platform android --profile e2e --local --non-interactive
+          --output build/diklass-e2e.apk
+      # Maestro is not an npm package, so it runs through its official action, pinned by SHA.
+      - name: Run the Maestro flows in Maestro Cloud
+        if: steps.credentials.outputs.configured == 'true'
+        uses: mobile-dev-inc/action-maestro-cloud@5759506b4ec7ee0a1ece4b7e6574bba2b282f241 # v3.0.1
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          project-id: ${{ secrets.MAESTRO_PROJECT_ID }}
+          app-file: build/diklass-e2e.apk
+          workspace: tests/e2e/native

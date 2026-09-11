@@ -1,16 +1,20 @@
 import { create } from "zustand";
 import type { AccessSessionState } from "@/features/auth/access-session-service";
 
+export type SessionIdentity = {
+  veterinarianId: string;
+  displayName: string;
+  clinicId: string;
+  accessSessionId: string;
+};
+
 type SessionStore = {
   veterinarianId: string | null;
   displayName: string | null;
+  clinicId: string | null;
   accessSessionId: string | null;
   accessState: AccessSessionState;
-  setIdentity: (identity: {
-    veterinarianId: string;
-    displayName: string;
-    accessSessionId: string;
-  }) => void;
+  setIdentity: (identity: SessionIdentity) => void;
   setAccessState: (accessState: AccessSessionState) => void;
   clear: () => void;
 };
@@ -18,11 +22,17 @@ type SessionStore = {
 export const useSessionStore = create<SessionStore>((set) => ({
   veterinarianId: null,
   displayName: null,
+  clinicId: null,
   accessSessionId: null,
   accessState: "revoked",
-  setIdentity: ({ veterinarianId, displayName, accessSessionId }) =>
-    set({ veterinarianId, displayName, accessSessionId, accessState: "active" }),
+  setIdentity: (identity) => set({ ...identity, accessState: "active" }),
   setAccessState: (accessState) => set({ accessState }),
   clear: () =>
-    set({ veterinarianId: null, displayName: null, accessSessionId: null, accessState: "revoked" }),
+    set({
+      veterinarianId: null,
+      displayName: null,
+      clinicId: null,
+      accessSessionId: null,
+      accessState: "revoked",
+    }),
 }));

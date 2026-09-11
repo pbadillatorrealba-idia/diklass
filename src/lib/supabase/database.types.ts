@@ -97,6 +97,7 @@ export type Database = {
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean };
       revoke_access_session: { Args: { p_session_id?: string }; Returns: boolean };
       revoke_access_sessions: { Args: Record<string, never>; Returns: boolean };
+      approve_clinical_record: { Args: { p_record_id: string }; Returns: Json };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

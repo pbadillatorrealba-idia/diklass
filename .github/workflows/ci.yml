@@ -33,6 +33,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
+      # The live suites under tests/integration skip here: there is no Supabase in this job.
       - run: bun run test
 
   database:
@@ -40,12 +41,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase start
-      - run: supabase db reset
-      - run: supabase test db
+      - run: bun install --frozen-lockfile
+      - name: Start local Supabase
+        run: |
+          supabase start
+          supabase db reset
+          status=$(supabase status -o json)
+          {
+            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
+            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
+          } >> "$GITHUB_ENV"
+      - name: pgTap (RLS, triggers, session expiry, attribution)
+        run: supabase test db
+      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+      - name: Live integration (access sessions, two clinicians, self-registration)
+        run: bun run test:integration
+        env:
+          SUPABASE_LIVE_TESTS: "1"
 
   web-e2e:
     name: Web E2E
@@ -56,8 +76,24 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - run: bun install --frozen-lockfile
+      - name: Start local Supabase and provision synthetic veterinarians
+        run: |
+          supabase start
+          supabase db reset
+          status=$(supabase status -o json)
+          {
+            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
+            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
+          } >> "$GITHUB_ENV"
+      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
       - run: bunx playwright install --with-deps chromium
+      # Includes tests/e2e/web/accessibility.spec.ts: the axe WCAG 2.2 AA gate.
       - run: bun run test:e2e:web -- --project=chromium
 
   # Firefox and WebKit run only on push to main to keep pull-request feedback fast, per
@@ -76,7 +112,22 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - run: bun install --frozen-lockfile
+      - name: Start local Supabase and provision synthetic veterinarians
+        run: |
+          supabase start
+          supabase db reset
+          status=$(supabase status -o json)
+          {
+            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
+            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
+          } >> "$GITHUB_ENV"
+      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
       - run: bunx playwright install --with-deps ${{ matrix.project }}
       - run: bun run test:e2e:web -- --project=${{ matrix.project }}
 

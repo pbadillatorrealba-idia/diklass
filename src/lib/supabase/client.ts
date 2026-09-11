@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { ErrorReporterClient } from "@/lib/observability/client-error-reporter";
 import { createPlatformAuthStorage } from "@/lib/storage/platform-auth-storage";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -18,3 +19,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
   },
 });
+
+/** The same client, narrowed to what `captureClientError` needs. */
+export const errorReporter = supabase as unknown as ErrorReporterClient;

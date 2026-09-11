@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "@/features/auth/auth-provider";
 
 export default function Index() {
-  const { isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
     return (
       <View
@@ -15,5 +15,5 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={user ? "/home" : "/login"} />;
+  return <Redirect href={isAuthenticated ? "/home" : "/login"} />;
 }

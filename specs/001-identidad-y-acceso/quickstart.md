@@ -41,9 +41,13 @@ development build. Los secretos administrativos solo viven en `.env` local o Git
 ```bash
 bun run typecheck       # tsc --noEmit
 bunx biome ci .
-bun run test
-bun run test:integration
-bun run test:e2e:web
+bun run test            # unitarias; las suites vivas se omiten sin SUPABASE_LIVE_TESTS
+bunx supabase test db   # pgTap: RLS, triggers, expiración y atribución
+
+# Playwright y las suites vivas leen el backend local desde el entorno:
+set -a; . ./.env; set +a
+SUPABASE_LIVE_TESTS=1 bun run test:integration   # requiere supabase start y provisioning
+bun run test:e2e:web    # incluye la compuerta axe WCAG 2.2 AA
 maestro test tests/e2e/native
 ```
 
@@ -125,19 +129,51 @@ entidades en [`data-model.md`](data-model.md).
 
 La rama de implementación contiene el shell universal Expo, login provisionado, sesión de acceso
 con TTL de ocho horas, borradores aislados por veterinario/consulta, RLS/triggers de atribución,
-componentes gluestack, pruebas Bun y E2E web en la matriz completa.
+componentes gluestack-ui v3 sobre NativeWind, pantalla de consulta con borrador preservado, pruebas
+Bun, pgTap de comportamiento, integración contra Supabase local y E2E web en la matriz completa con
+la compuerta axe WCAG 2.2 AA.
 
-- **Matriz web (Chromium, Firefox, WebKit)**: verificada localmente el 2026-09-10 sin Docker
-  (`bunx playwright install` + `bun run test:e2e:web -- --project=chromium --project=firefox
-  --project=webkit`): 12 pasan, 3 omitidos (el escenario de dos contextos de US12 requiere un
-  backend Supabase real y se omite igual en los tres motores). CI ahora ejecuta Chromium en cada
-  PR y Firefox/WebKit en cada push a `main` (`web-e2e-full-matrix` en `.github/workflows/ci.yml`).
-- **Pruebas SQL (Supabase local)**: no pudieron ejecutarse en este entorno de desarrollo por
-  permisos sobre `/var/run/docker.sock`, pero sí corren y pasan en GitHub Actions (`Supabase
-  database tests` en `.github/workflows/ci.yml`), verificado en el run
-  `34475556811` del PR #2.
-- **Flows Maestro nativos**: siguen bloqueados en este entorno (sin emulador/dispositivo ni
-  development build). Se agregó el job `native-e2e` (`.github/workflows/native-e2e.yml`,
-  Maestro Cloud en push a `main`/nightly/manual), pero permanece inactivo hasta configurar los
-  secrets `EXPO_TOKEN` y `MAESTRO_CLOUD_API_KEY` y enlazar un proyecto EAS con un perfil de build
-  `e2e` en `eas.json` — ninguno de los dos existe todavía en este repositorio.
+- **Docker local**: `/var/run/docker.sock` apunta al socket *rootful* de podman, al que este
+  usuario no tiene acceso; el socket *rootless* del propio usuario (`systemctl --user enable
+  podman.socket` + `DOCKER_HOST=unix:///run/user/<uid>/podman/podman.sock`) sí funciona y quedó
+  habilitado de forma persistente. Con eso, Supabase local corre igual en este entorno.
+- **Bug de configuración corregido**: `supabase/config.toml` tenía `[auth.email] enable_signup =
+  false` (pensado solo para bloquear autoregistro). En esta versión del CLI esa clave también
+  gobierna `GOTRUE_EXTERNAL_EMAIL_ENABLED`, así que además deshabilitaba el login por
+  contraseña — nadie pudo iniciar sesión nunca contra un `supabase start` limpio hasta este fix.
+  Se corrigió a `enable_signup = true`; el bloqueo de autoregistro real sigue viviendo en que la
+  app no expone pantalla de registro y un usuario auto-creado no tiene fila en
+  `public.veterinarians`, así que no puede operar. Desde la fase 8 eso ya no descansa en un
+  comentario: `tests/integration/auth/self-registration.test.ts` crea una cuenta con `signUp` y
+  verifica que no puede iniciar una sesión de acceso, leer ni escribir registros clínicos, ni ver
+  a los veterinarios.
+- **Test de dos contextos (US12) implementado**: `tests/e2e/web/attribution.spec.ts` solo tenía
+  un `test.skip` vacío (no verificaba nada). Se reemplazó por un test real: login de Ana y Bruno
+  vía la UI, y verificación contra la API real (RLS/triggers) de que Bruno ve el registro de Ana,
+  no puede crear uno a nombre de ella, y no puede modificar la atribución de uno existente.
+  Nota para quien escriba más E2E web: `page.locator(...).fill()`/`pressSequentially()` no
+  siempre disparan el `onChangeText` de los `TextInput` de React Native Web bajo carga; usar
+  `click()` + `page.keyboard.type()` y verificar con `toHaveValue()`.
+- **Matriz web (Chromium, Firefox, WebKit) contra backend real**: verificada localmente el
+  2026-09-11 con Supabase local (vía podman) y los dos veterinarios sintéticos provisionados:
+  pasan 39 de 39 pruebas (13 por motor, `--workers=1`), entre ellas la compuerta axe WCAG 2.2 AA,
+  la expiración con restauración del borrador y el test de dos contextos. La intermitencia que
+  antes se atribuía a la contención de recursos tenía una causa en la app: en WebKit, lo tecleado
+  antes de que React hidratara la página estática se borraba. Con los campos del login de solo
+  lectura hasta la hidratación, las dos pruebas afectadas pasan 10 de 10 repeticiones en WebKit
+  (antes fallaba 1 de cada 3). El job `web-e2e` de CI ya levanta su propio Supabase, así que la
+  pregunta que quedaba abierta está resuelta.
+- **Pruebas SQL e integración (Supabase local)**: las 30 aserciones pgTap de comportamiento (tres
+  archivos) y las 13 pruebas vivas de `tests/integration` pasan localmente. En CI ambas corren en
+  el job `Supabase database tests`. La suite anterior, que solo comprobaba la existencia de
+  objetos, pasó en el run `34475556811` del PR #2; la suite de comportamiento se valida por
+  primera vez en CI con la PR de convergencia.
+- **Flows Maestro nativos**: siguen sin ejecutarse, porque dependen de cuentas del equipo. El
+  repositorio ya tiene lo que le corresponde: `eas.json` con el perfil `e2e`,
+  `ios.bundleIdentifier`/`android.package` = `com.diklass.app` en `app.json`, y
+  `.github/workflows/native-e2e.yml` corregido (`eas-cli` por su nombre de paquete, build local del
+  APK y la acción oficial de Maestro Cloud fijada por SHA con `project-id`). Falta enlazar el
+  proyecto EAS, registrar `EXPO_TOKEN`, `MAESTRO_CLOUD_API_KEY` y `MAESTRO_PROJECT_ID`, y
+  habilitar un Supabase sintético alcanzable desde Maestro Cloud; los pasos están en
+  [`tests/e2e/native/README.md`](../../tests/e2e/native/README.md). Hasta entonces el job termina
+  con un aviso y no produce evidencia.

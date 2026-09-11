@@ -1,5 +1,8 @@
-import { Button, ButtonText, Heading, Text, VStack } from "@gluestack-ui/themed";
 import { Modal, View } from "react-native";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 
 type SessionExpiredDialogProps = {
   visible: boolean;
@@ -21,14 +24,7 @@ export function SessionExpiredDialog({ visible, onReauthenticate }: SessionExpir
       >
         <VStack
           accessibilityLabel="Sesión expirada"
-          style={{
-            backgroundColor: "white",
-            borderRadius: 16,
-            gap: 16,
-            maxWidth: 440,
-            padding: 24,
-            width: "100%",
-          }}
+          className="w-full max-w-[440px] gap-4 rounded-2xl bg-white p-6"
         >
           <Heading>Sesión expirada</Heading>
           <Text>Tu sesión dejó de estar activa. El borrador local se conservará.</Text>
