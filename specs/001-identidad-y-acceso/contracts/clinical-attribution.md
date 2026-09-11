@@ -59,8 +59,12 @@ Una llamada Supabase directa sin sesión devuelve:
 
 ## Registros aprobados y correcciones
 
-- Un `UPDATE` sobre `createdBy`, `createdAt`, `approvedBy` o `approvedAt` devuelve
-  `409 ATTRIBUTION_IMMUTABLE` y no cambia datos.
+- Un `UPDATE` sobre `createdBy`, `createdAt`, `approvedBy` o `approvedAt` no cambia datos. El rol
+  de la Data API (`authenticated`) solo tiene privilegio de columna sobre `content`, así que
+  PostgreSQL rechaza esas columnas antes de que corra el trigger: `403` / `42501` /
+  `permission denied for table clinical_records`. Si una columna llegara a ejecutar el trigger
+  (por ejemplo, una llamada directa con un rol que sí tuviera el privilegio de columna), este
+  responde `409 ATTRIBUTION_IMMUTABLE` y tampoco cambia datos.
 - Un `UPDATE` de un registro aprobado devuelve `409 APPROVED_RECORD_IMMUTABLE`.
 - La corrección usa una operación de creación de un registro adicional, con acción
   `corrective_record_created`, nuevo `actorId` y `supersedesEventId` que apunta al evento original.

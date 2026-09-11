@@ -37,7 +37,8 @@ desactivación, eliminación ni edición de cuentas.
 | Campo | Tipo | Reglas |
 |---|---|---|
 | `id` | `uuid` | PK interna |
-| `token_hash` | `bytea` | Único; hash de un token opaco aleatorio, nunca el token en claro |
+| `token_hash` | `bytea` | Único; nonce interno aleatorio. El vínculo con Auth es `auth_session_id` |
+| `auth_session_id` | `uuid` | `session_id` del JWT de Supabase Auth que inició la sesión; obligatorio y único mientras está activa; solo un JWT de esa sesión de Auth autoriza acceso clínico |
 | `veterinarian_id` | `uuid` | FK a `veterinarians.id`; obligatorio |
 | `created_at` | `timestamptz` | Generado por servidor |
 | `last_activity_at` | `timestamptz` | Se actualiza solo desde una operación protegida válida |

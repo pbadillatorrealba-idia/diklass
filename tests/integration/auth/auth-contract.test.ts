@@ -53,12 +53,12 @@ describe("auth contract", () => {
     ).rejects.toMatchObject({ normalized: { code: "AUTHENTICATION_FAILED" } });
   });
 
-  test("makes logout safe to call repeatedly", async () => {
-    let logoutCalls = 0;
+  test("logout ends only this device's session and is safe to call repeatedly (D1)", async () => {
+    const scopes: unknown[] = [];
     const rpcCalls: string[] = [];
     const client = makeClient({
-      signOut: async () => {
-        logoutCalls += 1;
+      signOut: async (options) => {
+        scopes.push(options?.scope);
         return { error: null };
       },
     });
@@ -72,7 +72,7 @@ describe("auth contract", () => {
 
     await signOut(clientWithTrace);
     await signOut(clientWithTrace);
-    expect(logoutCalls).toBe(2);
-    expect(rpcCalls).toEqual(["revoke_access_sessions", "revoke_access_sessions"]);
+    expect(scopes).toEqual(["local", "local"]);
+    expect(rpcCalls).toEqual(["revoke_current_access_session", "revoke_current_access_session"]);
   });
 });
