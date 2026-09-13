@@ -1,0 +1,9 @@
+appId: com.diklass.app
+---
+- launchApp
+- assertVisible: "Diklass"
+- assertVisible: "Correo de acceso"
+- assertVisible: "Contraseña"
+- assertVisible: "Iniciar sesión"
+- tapOn: "Iniciar sesión"
+- assertVisible: "Revisa los campos marcados antes de continuar."

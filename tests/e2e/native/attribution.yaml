@@ -1,0 +1,6 @@
+appId: com.diklass.app
+---
+# Requires a development build plus two provisioned synthetic accounts.
+- launchApp
+- assertVisible: "Diklass"
+- assertVisible: "Correo de acceso"

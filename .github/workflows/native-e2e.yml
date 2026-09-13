@@ -1,0 +1,41 @@
+name: Native E2E
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: 1.4.0
+
+jobs:
+  native-e2e:
+    name: Native E2E (Maestro Cloud)
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      MAESTRO_CLOUD_API_KEY: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - name: Skip when native build credentials are not configured
+        if: env.EXPO_TOKEN == '' || env.MAESTRO_CLOUD_API_KEY == ''
+        run: |
+          echo "::notice::native-e2e skipped: EXPO_TOKEN and/or MAESTRO_CLOUD_API_KEY are not set as GitHub Secrets yet."
+          echo "An eas.json 'e2e' build profile and a linked EAS project are also required before this job can build a real artifact."
+      # Requires an `e2e` build profile in eas.json (no Expo project is linked yet) and the two
+      # secrets above. See specs/001-identidad-y-acceso/plan.md, section "CI de GitHub", job 5.
+      - name: Build Android development artifact
+        if: env.EXPO_TOKEN != '' && env.MAESTRO_CLOUD_API_KEY != ''
+        run: bunx eas build --platform android --profile e2e --non-interactive --wait
+      - name: Run Maestro Cloud flows
+        if: env.EXPO_TOKEN != '' && env.MAESTRO_CLOUD_API_KEY != ''
+        run: bunx maestro cloud tests/e2e/native --apiKey "$MAESTRO_CLOUD_API_KEY"
