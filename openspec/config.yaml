@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  Proyecto: PoC de CDSS veterinario canino con datos sintéticos, una clínica única compartida,
+  apoyo a la decisión profesional y evidencia trazable. No es un sistema de decisión clínica
+  definitiva automática.
+  Stack vigente: el fijado en docs/constitution.md (TypeScript con Bun 1.4.0 como runtime y
+  package manager, Expo SDK 57 sobre React Native con Expo Router para iOS, Android y web,
+  gluestack-ui v3, Supabase Auth/PostgreSQL con Row Level Security, TanStack Query, Zustand,
+  TanStack Form, Zod; Biome, tsc --noEmit, Bun test, Playwright 1.61.0, Maestro y GitHub Actions).
+  Antes de trabajar en cualquier cambio, leer los dos documentos de gobierno:
+  docs/constitution.md (autoridad normativa) y docs/brief-poc-cdss.md (documento canónico de
+  producto).
+  Diferenciar siempre lo pendiente, lo implementado y lo aceptado; el estado documental no
+  constituye aceptación.
+  Idioma: español. Mantener los encabezados y las palabras clave estructurales de OpenSpec
+  (MUST, MUST NOT, Requirement, Scenario, GIVEN/WHEN/THEN) en inglés.
+
+rules:
+  proposal:
+    - Identificar la capability afectada y sus dependencias de construcción; separar explícitamente
+      las condiciones de aceptación conjunta.
+  specs:
+    - Conservar los requisitos funcionales (FR), criterios de éxito (SC) e historias (US) con sus
+      IDs globales, incluidas las especializaciones transversales de un mismo ID por dominio.
+    - Preservar íntegras las sentencias MUST/MUST NOT, los escenarios y los umbrales; ninguna
+      decisión clínica definitiva automática.
+  design:
+    - Justificar por escrito toda complejidad y dependencia nueva; registrar los presupuestos
+      acordados y verificar los principios constitucionales.
+  tasks:
+    - Formato numerado X.Y con trazabilidad explícita a requisitos; pruebas antes de la
+      implementación conforme a la constitución y criterio observable de terminación.

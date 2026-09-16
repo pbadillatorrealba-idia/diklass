@@ -3,7 +3,7 @@
 **Creado**: 2026-09-09
 **Estado**: Vigente
 **Naturaleza**: Documento de contexto de producto. **No es una especificación de funcionalidad** y
-no se implementa directamente. Las specs de `specs/` lo referencian en lugar de repetirlo.
+no se implementa directamente. Las especificaciones de `openspec/changes/` lo referencian en lugar de repetirlo.
 
 ## 1. Propósito
 
@@ -70,6 +70,10 @@ asistencia por texto, con captura por voz de la conversación clínica; aplicaci
 La prioridad es demostrar el flujo clínico completo antes que alcanzar cobertura exhaustiva de
 conocimiento veterinario.
 
+La formulación de alcance móvil anterior se conserva como contexto de producto. Para las decisiones
+de implementación y aceptación prevalece la [constitución](constitution.md), incluida su matriz
+de plataformas y sus compuertas nativas; la viabilidad móvil no permite omitir esas obligaciones.
+
 **Decisión de producto sobre la captura por voz**: el procesamiento del audio puede ser incremental,
 en ventanas de aproximadamente 30 segundos, sin exigir transcripción completamente en tiempo real.
 Proviene de la descripción original del producto y acota la expectativa de latencia de la spec 004.
@@ -84,24 +88,25 @@ Paciente → Antecedentes clínicos → Anamnesis → Identificación de informa
 
 ## 7. Mapa de especificaciones
 
-El PoC se especifica en siete funcionalidades. Cada una es independientemente construible, y todas
-salvo la 001 son también verificables por sí solas. La numeración sigue el orden de construcción
-del PoC.
+El PoC se especifica en siete funcionalidades propuestas como cambios abiertos, pendientes de
+aceptación. Cada una es construible una vez satisfechas sus dependencias; todas salvo identidad
+y acceso son también verificables por sí solas. Los identificadores históricos 001–007 de la tabla
+siguen el orden de construcción del PoC y no representan capacidades publicadas.
 
 | Spec | Alcance | Depende de |
 |---|---|---|
-| [001 — Identidad y acceso](../specs/001-identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
-| [002 — Registro clínico longitudinal](../specs/002-registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
-| [003 — Base de conocimiento trazable](../specs/003-base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
-| [004 — Captura de voz hacia anamnesis](../specs/004-captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001, 002 |
-| [005 — Retroalimentación clínica](../specs/005-retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
-| [006 — Asistencia clínica proactiva](../specs/006-asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 003 |
-| [007 — Apoyo al tratamiento y farmacología](../specs/007-apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 003, 006 |
+| [001 — Identidad y acceso](../openspec/changes/implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
+| [002 — Registro clínico longitudinal](../openspec/changes/implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
+| [003 — Base de conocimiento trazable](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
+| [004 — Captura de voz hacia anamnesis](../openspec/changes/implementar-captura-voz-anamnesis/specs/captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001, 002 |
+| [005 — Retroalimentación clínica](../openspec/changes/implementar-retroalimentacion-clinica/specs/retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
+| [006 — Asistencia clínica proactiva](../openspec/changes/implementar-asistencia-clinica-proactiva/specs/asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 003 |
+| [007 — Apoyo al tratamiento y farmacología](../openspec/changes/implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 003, 006 |
 
-**Aristas de dependencia** (origen → destino significa "el destino necesita al origen"):
+**Las 14 relaciones directas de dependencia declaradas** (origen → destino significa "el destino necesita al origen"):
 
 ```text
-001 → 002
+001 → 002      001 → 003      001 → 004      001 → 005      001 → 006      001 → 007
 002 → 003      002 → 004      002 → 005      002 → 006      002 → 007
 003 → 006      003 → 007
 006 → 007
@@ -111,9 +116,9 @@ del PoC.
 incluso en paralelo. Luego 006, que necesita 003. Por último 007, que necesita 001, 002, 003 y 006.
 
 La 001 es la única cuya verificación no se cierra sola: su historia de acceso (US11) sí, pero la de
-atribución (US12) se expresa sobre pacientes y consultas que define la 002, de modo que se verifica
-junto con ella. No es una arista de dependencia —invertirla crearía un ciclo— sino un punto de
-verificación conjunta.
+atribución (US12) se expresa sobre pacientes, consultas y epicrisis que define la 002, de modo que
+se verifica junto con ella. Esto incluye la aceptación de SC-040, SC-041, SC-042 y SC-044. No es
+una arista de construcción —invertirla crearía un ciclo— sino un punto de aceptación conjunta.
 
 003 y 004 pueden construirse en paralelo tras 002. El riesgo de calendario se concentra en 003: es
 el único que depende de conseguir documentos clínicos legalmente utilizables, y de él cuelgan 006 y
@@ -121,8 +126,9 @@ el único que depende de conseguir documentos clínicos legalmente utilizables, 
 
 ### Convención de identificadores
 
-Los identificadores `FR-NNN` y `SC-NNN` son **únicos a nivel de familia de specs**, no locales a
-cada archivo: un número designa siempre el mismo requisito, en cualquier spec donde aparezca.
+Los identificadores `FR-NNN` y `SC-NNN` son **globales a la familia de especificaciones**, no
+locales a cada archivo. Los requisitos transversales conservan su ID al especializarse por dominio;
+compartir identificador no implica que el texto normativo sea idéntico.
 
 Un requisito transversal aparece en varias specs. En cada una se enuncia **aplicado a esa
 funcionalidad**, no copiado palabra por palabra: FR-021 (separación entre dato e inferencia) habla
@@ -149,8 +155,15 @@ de reenunciado.
 Cada spec incluye además una tabla de **trazabilidad de requisitos** que asocia cada `FR` a los
 escenarios de aceptación que lo verifican.
 
-**Números no asignados**: FR-047, FR-048 y FR-050 nunca se usaron; quedaron libres al repartir los
-requisitos entre las specs. SC-007 fue retirado tras descomponerse (ver §8). Ninguno se reutilizará.
+**Números no asignados o retirados**: FR-047, FR-048 y FR-050 nunca se usaron; quedaron libres al
+repartir los requisitos entre las specs. FR-065 se retiró al excluir del PoC la desactivación y
+eliminación de cuentas. SC-007 fue retirado tras descomponerse (ver §8). Ninguno se reutilizará.
+
+**SC-045 histórico y vigente**: el checklist de identidad conserva la referencia histórica a un
+SC-045 ligado a FR-065 y a la supervivencia de la atribución tras desactivar o eliminar una cuenta.
+Ese criterio histórico no es el SC-045 vigente: el criterio actual exige cero operaciones protegidas
+completadas eludiendo la interfaz de usuario sin sesión válida. El historial documental no amplía
+el alcance actual ni demuestra aceptación de ese comportamiento.
 
 ## 8. Criterios de éxito del PoC
 
@@ -218,7 +231,7 @@ cada una de ellas.
 4. **Incertidumbre explícita**: el sistema comunica cuando no posee información suficiente. → FR-022
 5. **No inventar evidencia**: una recomendación sin respaldo documental debe indicarlo. → FR-023
 6. **No prescripción autónoma**: ninguna recomendación farmacológica se convierte automáticamente en
-   prescripción. → FR-019
+   prescripción. → [Validación profesional (FR-010), aprobación individual de cada fármaco (FR-036) y exclusión de sugerencias no aprobadas de la epicrisis (FR-058)](../openspec/changes/implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md)
 7. **Validación de registros**: la información extraída automáticamente no se incorpora
    silenciosamente a la ficha. → FR-017
 8. **Persistencia del historial**: una consulta nueva no sobrescribe el registro histórico. → FR-024
@@ -299,6 +312,8 @@ sobre datos agregados y herramientas educativas.
   con precisión suficiente. Afecta spec 003.
 - **R3 — Alucinaciones**: con qué frecuencia el sistema genera información clínica no respaldada.
   Afecta specs 002, 004, 005.
+  La obligación de [declarar la ausencia de respaldo documental y no presentar afirmaciones sin cita como respaldadas (FR-023)](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md#requirement-fr-023)
+  aporta trazabilidad normativa a este riesgo, sin sustituir la lista de ámbitos afectada en el texto histórico.
 - **R4 — Captura mediante voz**: si la transcripción de conversaciones reales tiene calidad
   suficiente en ambientes clínicos. Afecta spec 004.
 - **R5 — Extracción estructurada**: si el sistema distingue correctamente antecedentes expresados,
