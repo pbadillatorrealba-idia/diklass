@@ -32,7 +32,7 @@ jobs:
           echo "::notice::native-e2e skipped: EXPO_TOKEN and/or MAESTRO_CLOUD_API_KEY are not set as GitHub Secrets yet."
           echo "An eas.json 'e2e' build profile and a linked EAS project are also required before this job can build a real artifact."
       # Requires an `e2e` build profile in eas.json (no Expo project is linked yet) and the two
-      # secrets above. See specs/001-identidad-y-acceso/plan.md, section "CI de GitHub", job 5.
+      # secrets above. See openspec/changes/implementar-identidad-y-acceso/design.md, section "CI de GitHub", job 5.
       - name: Build Android development artifact
         if: env.EXPO_TOKEN != '' && env.MAESTRO_CLOUD_API_KEY != ''
         run: bunx eas build --platform android --profile e2e --non-interactive --wait
