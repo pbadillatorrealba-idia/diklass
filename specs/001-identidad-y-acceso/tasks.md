@@ -221,3 +221,22 @@ still open in Phase 7.
 - [X] T070 Replace the stub-only `tests/integration/auth/access-session.test.ts`, which asserts only that three RPC names are invoked against an in-memory client, with integration coverage against a live local Supabase: logout followed by denied clinical access, inactivity expiration, `touch_access_session` returning false for a revoked or expired session, and RLS denial of a protected read per SC-039, FR-061, contracts/auth-session.md (partial)
 - [X] T071 Extend `tests/unit/auth/login-screen.test.ts` beyond the `loginSchema` parse it asserts today with the component contract T023 declared — focus order across the login fields and the announced error state after a failed submit — which the axe scan of T065 cannot verify per US11/AC2, Constitution: Restricciones de Aplicación Web (partial)
 - [X] T072 Prevent `public.is_active_access(p_user_id uuid default auth.uid())` in `supabase/migrations/001_identity_access.sql` from answering for an arbitrary uuid: it must stay executable by `authenticated` for the RLS policies, but should ignore or reject a `p_user_id` different from `auth.uid()` so a veterinarian cannot probe whether a named colleague currently has a live session per Constitution V, spec Assumptions (Sin trazabilidad de accesos) (partial)
+
+---
+
+## Phase 9: Review follow-up (PR #4)
+
+**Purpose**: Close the findings of the PR #4 code review that PR #3 leaves open
+(https://github.com/pbadillatorrealba-idia/diklass/pull/4#pullrequestreview-5180031684).
+
+- [X] T073 Pin `oven-sh/setup-bun` and `supabase/setup-cli` by commit SHA, and the Supabase CLI to `2.117.0`, in `.github/workflows/ci.yml` and `.github/workflows/native-e2e.yml`, guarded by `tests/unit/ci/pinned-actions.test.ts` per plan.md: CI de GitHub (contradicts)
+- [X] T074 Generate `src/lib/supabase/database.types.ts` with `bun run db:types` instead of maintaining it by hand, and fail the `database` CI job when it drifts from the migrations (partial)
+- [X] T075 Stamp `created_at` on INSERT, reject `status` changes outside `approve_clinical_record`, reject clinical-record updates without an authenticated veterinarian, and restrict `authenticated` to column-level INSERT/UPDATE grants on `public.clinical_records` in `supabase/migrations/004_attribution_columns.sql` per FR-064, SC-042, data-model.md (contradicts)
+- [X] T076 Revoke `EXECUTE` on every `public` function from `PUBLIC`, `anon` and `authenticated` (now and by default), grant back only the RLS helpers and app RPCs, and fix `search_path` on the remaining invoker functions in `supabase/migrations/005_function_privileges.sql` per Supabase lints 0011/0028 (partial)
+- [X] T077 Bind every access session to the Supabase Auth `session_id` of the JWT that started it, allow concurrent sessions across devices, make `is_active_access`/`touch_access_session` honour only that binding, and add `current_access_session()` and `revoke_current_access_session()` in `supabase/migrations/006_access_session_binding.sql` per FR-061, FR-067, contracts/auth-session.md (contradicts)
+- [X] T078 Resume only the access session bound to the current Auth session on restore (`getCurrentAccessSession` in `src/features/auth/access-session-service.ts`), and make logout end only the current device (`revoke_current_access_session()` + `signOut({ scope: "local" })`) in `src/features/auth/` per FR-061, contracts/auth-session.md (contradicts)
+- [X] T079 Make `draftStorageKey` produce valid SecureStore keys and report failed draft writes instead of leaving unhandled rejections in `src/lib/storage/drafts.ts` and `src/features/clinical/draft-preserver.tsx` per FR-061, SC-047 (contradicts)
+- [X] T080 Check the snake_case attribution columns PostgREST receives in `ATTRIBUTION_CONTROL_FIELDS` (`src/lib/attribution/types.ts`) and stop blocking `clinic_id` per contracts/clinical-attribution.md (contradicts)
+- [X] T081 Handle the CORS preflight, restrict to `POST`, cap the body size and validate the payload with Zod in `supabase/functions/report-client-error` per Constitution IV (partial)
+- [X] T082 Rate-limit `report-client-error` per caller IP with `public.consume_client_error_quota` in `supabase/migrations/007_client_error_quota.sql` (missing)
+- [X] T083 Make `scripts/provision-veterinarians.ts` refuse non-local URLs without `--allow-remote`, match emails case-insensitively across every page and resync passwords on re-run, and drop the dead `clinical_records` insert from `supabase/seed.sql` (partial)

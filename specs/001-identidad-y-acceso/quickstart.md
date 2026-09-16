@@ -121,6 +121,74 @@ registro adicional.
 - Assertion del borrador restaurado en web y móvil.
 - Registro de actor/momento original y evento correctivo separado.
 
+### Evidencia de verificación final (cierre de la revisión de la PR #4, Task 12)
+
+Corrida completa desde cero (`supabase stop && supabase start`, `supabase db reset`, reprovisionar,
+sin saltarse ningún paso) el 2026-09-11, sobre las migraciones 001–007:
+
+| Compuerta | Fecha | Resultado |
+|---|---|---|
+| `supabase stop && supabase start` | 2026-09-11 | `stop` imprimió `LegacyStopContainerError` (ruido cosmético de podman en esta máquina); `podman ps` confirmó los 8 contenedores en `Exited` antes de `start`. `start` levantó el stack con las mismas claves de `env.sh`. |
+| `supabase db reset` | 2026-09-11 | Aplicó las 7 migraciones (001–007) y `seed.sql` sin error. |
+| `provision:veterinarians` | 2026-09-11 | 2 veterinarios sintéticos aprovisionados (`vet.ana@example.test`, `vet.bruno@example.test`). |
+| `bunx biome ci .` | 2026-09-11 | 81 archivos revisados, sin errores. |
+| `bun run typecheck` | 2026-09-11 | Sin errores (`tsc --noEmit` sin salida). |
+| `bun run test` | 2026-09-11 | 85 pass / 14 skip / 0 fail — 99 pruebas en 22 archivos, 153 `expect()` (las vivas se omiten sin `SUPABASE_LIVE_TESTS`). |
+| `supabase test db` | 2026-09-11 | 97/97 aserciones pgTap en 7 archivos: `001_identity_access.sql` 12, `002_attribution_immutability.sql` 15, `003_attribution_columns.sql` 14, `004_function_privileges.sql` 30, `005_access_session_binding.sql` 18, `006_client_error_quota.sql` 5, `fixtures/attribution.sql` 3. |
+| `bun run db:types` | 2026-09-11 | `git diff --exit-code src/lib/supabase/database.types.ts` sin cambios: el archivo generado coincide con el commiteado tras el reset limpio. |
+| `SUPABASE_LIVE_TESTS=1 bun run test:integration` | 2026-09-11 | 16/16 pruebas vivas en 5 archivos, 40 `expect()`, 0 fallos. |
+| `test:e2e:web -- --project=chromium` | 2026-09-11 | 13/13 pasan, concurrencia por defecto (6 workers). |
+| `test:e2e:web -- --project=firefox` | 2026-09-11 | 13/13 pasan, concurrencia por defecto (6 workers). |
+| `test:e2e:web -- --project=webkit` | 2026-09-11 | 13/13 pasan, concurrencia por defecto (6 workers); sin reaparición del flake de hidratación de `auth.spec.ts:37` ni de la intermitencia por cuentas compartidas. |
+
+**Diferencias frente a la línea base de la PR #3** (documentada más abajo, «Pruebas SQL e
+integración»): esa evidencia reportaba 30/30 aserciones pgTap en 3 archivos y 13/13 pruebas vivas.
+Los números crecieron a 97 (7 archivos) y 16 respectivamente porque este plan (T073–T083) agregó
+las migraciones 004–007 con su propia suite pgTap cada una, y una prueba viva nueva para
+`report-client-error`. No es una regresión de conteo: son aserciones nuevas de la fase 9.
+
+### Evidencia de verificación final (cierre de la revisión de rama completa, `fix/001-cierre-revision-pr4`)
+
+Un hallazgo Crítico (logout no terminaba realmente el acceso clínico: el token seguía
+pudiendo reiniciar `start_access_session()` y restaurar acceso) y seis Importantes se
+corrigieron en un único pase (migración `008_logout_and_privilege_hardening.sql`, sin editar
+`001`–`007`). Corrida completa desde cero (`supabase stop && supabase start`, `supabase db
+reset`, reprovisionar) el 2026-09-11, sobre las migraciones 001–008:
+
+| Compuerta | Fecha | Resultado |
+|---|---|---|
+| `supabase stop && supabase start` | 2026-09-11 | `stop` volvió a imprimir `LegacyStopContainerError` (mismo ruido cosmético de podman); `podman ps -a` confirmó los 7 contenedores base `Exited` antes de `start`, que levantó el stack completo incluido `supabase_edge_runtime_diklass` (necesario para la Edge Function). |
+| Reproducción en vivo del Crítico **antes** del fix | 2026-09-11 | Contra las migraciones 001–007: login → logout (`revoke_current_access_session` + `signOut({scope:'local'})`) → lectura clínica `[]` (correcto) → `start_access_session()` con el mismo token **tuvo éxito** → lectura clínica volvió a devolver filas. Vulnerabilidad confirmada tal como la reportó la revisión. |
+| `supabase db reset` | 2026-09-11 | Aplicó las 8 migraciones (001–008) y `seed.sql` sin error. |
+| Reproducción en vivo **después** del fix | 2026-09-11 | Mismo guion: tras logout, `start_access_session()` respondió `AUTHENTICATION_REQUIRED` (42501) y la lectura clínica siguió devolviendo `[]`. |
+| `provision:veterinarians` | 2026-09-11 | 2 veterinarios sintéticos aprovisionados (`vet.ana@example.test`, `vet.bruno@example.test`). |
+| `supabase test db` | 2026-09-11 | 109/109 aserciones pgTap en 8 archivos: `001_identity_access.sql` 12, `002_attribution_immutability.sql` 17, `003_attribution_columns.sql` 14, `004_function_privileges.sql` 30, `005_access_session_binding.sql` 18, `006_client_error_quota.sql` 5, `007_logout_binding.sql` 10 (nuevo), `fixtures/attribution.sql` 3. |
+| `SUPABASE_LIVE_TESTS=1 bun run test:integration` | 2026-09-11 | 16/16 pruebas vivas en 5 archivos, 50 `expect()`, 0 fallos (incluye el nuevo probe de `start_access_session` en `expectClinicalAccessDenied`, que falla contra 001–007 sin `008` y pasa con él). |
+| `bun run test` | 2026-09-11 | 84 pass / 14 skip / 0 fail — 98 pruebas en 21 archivos, 153 `expect()` (las vivas se omiten sin `SUPABASE_LIVE_TESTS`). |
+| `bun run typecheck` | 2026-09-11 | Sin errores (`tsc --noEmit` sin salida). |
+| `bunx biome ci .` | 2026-09-11 | 80 archivos revisados, sin errores. |
+| `bun run db:types` | 2026-09-11 | Deriva esperada: `revoked_reason` (nueva columna de `access_sessions`) apareció en `Row`/`Insert`/`Update`; regenerado y commiteado. |
+| `test:e2e:web -- --project=chromium` | 2026-09-11 | 13/13 pasan, concurrencia por defecto (6 workers), incluida `auth.spec.ts:105` («after logout the previous session cannot operate»). |
+
+**No se pudo verificar / limitación documentada**: `supabase/functions/report-client-error/deno.json`
+quedó con `zod@4.6.1` y `@supabase/supabase-js@2.116.0` fijados exactos (coinciden con lo que
+resuelve `bun.lock`), pero no se generó `deno.lock`: no hay binario `deno` en este entorno
+(`deno --version` → *command not found*) y el runtime de Edge Functions del CLI local no expone
+uno (`podman exec supabase_edge_runtime_diklass which deno` falla); `supabase functions serve`
+tampoco escribe un lockfile. Se documenta aquí en vez de inventar uno.
+
+**Revisión del diff completo** (`git log --oneline` y `git diff --stat` contra
+`origin/feat/001-convergencia-fase-7-8`): 20 commits, no 13 — el plan asumía un commit por tarea,
+pero varias tareas (T075, T076, T077, T082, T083) tuvieron rondas adicionales de corrección tras la
+revisión de código, cada una en su propio commit; todos están descritos en el ledger
+(`.superpowers/sdd/2026-09-11-cierre-revision-pr4/progress.md`). El diffstat toca algunos archivos
+fuera de la lista original de «Estructura de archivos» del plan, todos documentados como hallazgos
+de revisión dentro del alcance de la misma tarea: `src/lib/errors.ts` y
+`tests/unit/auth/authentication-required.test.ts` (extracción de un predicado en la revisión de
+T075), `src/app/(protected)/consultations/[id].tsx` y `tests/unit/clinical/draft-lifecycle.test.ts`
+(el cuarto sitio de `flush()` sin proteger, T079) y `.gitignore` (una regla heredada ocultaba
+`scripts/lib/provisioning.ts`, T083). Ningún archivo fuera de estas adiciones documentadas.
+
 Las reglas de sesión están en [`contracts/auth-session.md`](contracts/auth-session.md), la
 atribución en [`contracts/clinical-attribution.md`](contracts/clinical-attribution.md) y las
 entidades en [`data-model.md`](data-model.md).

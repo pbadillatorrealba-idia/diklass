@@ -29,7 +29,9 @@ values
 
 -- auth.uid() must already resolve to Ana: the attribution trigger rejects any insert
 -- whose created_by is not the authenticated caller.
-select set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-00000000000a', true);
+select set_config('request.jwt.claims',
+  '{"sub":"aaaaaaaa-0000-0000-0000-00000000000a","role":"authenticated","session_id":"5e5a0000-0000-0000-0000-00000000000a"}',
+  true);
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values ('dddddddd-0000-0000-0000-00000000000d', 'cccccccc-0000-0000-0000-00000000000c',
@@ -72,8 +74,9 @@ reset role;
 -- FR-059: an active session authorizes the shared clinic.
 -- ---------------------------------------------------------------------------
 
-insert into public.access_sessions (id, veterinarian_id)
-values ('eeeeeeee-0000-0000-0000-00000000000e', 'aaaaaaaa-0000-0000-0000-00000000000a');
+insert into public.access_sessions (id, veterinarian_id, auth_session_id)
+values ('eeeeeeee-0000-0000-0000-00000000000e', 'aaaaaaaa-0000-0000-0000-00000000000a',
+        '5e5a0000-0000-0000-0000-00000000000a');
 
 set local role authenticated;
 select ok(
@@ -123,8 +126,8 @@ reset role;
 -- T072: is_active_access must not answer for a peer.
 -- ---------------------------------------------------------------------------
 
-insert into public.access_sessions (veterinarian_id)
-values ('bbbbbbbb-0000-0000-0000-00000000000b');
+insert into public.access_sessions (veterinarian_id, auth_session_id)
+values ('bbbbbbbb-0000-0000-0000-00000000000b', '5e5b0000-0000-0000-0000-00000000000b');
 
 set local role authenticated;
 select ok(
