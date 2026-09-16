@@ -4,6 +4,7 @@ import {
 } from "@/features/auth/access-session-service";
 import { AuthErrorCode, type NormalizedAuthError, normalizeAuthError } from "@/lib/errors";
 import type { LoginValues } from "@/lib/forms/form";
+import { makeRequestId } from "@/lib/observability/client-error-reporter";
 
 export type AuthUser = { id: string; email?: string };
 
@@ -31,10 +32,6 @@ export class AuthenticationError extends Error {
     this.name = "AuthenticationError";
     this.normalized = normalized;
   }
-}
-
-function makeRequestId(): string {
-  return globalThis.crypto?.randomUUID?.() ?? `req-${Date.now()}`;
 }
 
 export async function signInWithPassword(

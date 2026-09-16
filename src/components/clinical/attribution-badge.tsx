@@ -1,14 +1,22 @@
-import { Box, Text } from "@gluestack-ui/themed";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { useVeterinarianDisplayName } from "@/features/clinical/use-veterinarian-display-name";
 import type { Attribution } from "@/lib/attribution/types";
 
 export function AttributionBadge({ attribution }: { attribution: Attribution }) {
+  const { data: displayName } = useVeterinarianDisplayName(attribution.actorId);
+  // Never fall back to the raw uuid: an attribution has to name a person (US12/AC2).
+  const actor = displayName ?? "Profesional de la clínica";
+  const occurredAt = new Date(attribution.occurredAt).toLocaleString("es-CL");
+
   return (
     <Box
-      accessibilityLabel={`Atribuido a ${attribution.actorId} el ${attribution.occurredAt}`}
-      style={{ backgroundColor: "#e0f2fe", borderRadius: 8, padding: 8 }}
+      accessibilityLabel={`Atribuido a ${actor} el ${occurredAt}`}
+      className="rounded-lg bg-sky-100 p-2"
+      testID="attribution-badge"
     >
-      <Text>{attribution.actorId}</Text>
-      <Text color="$textLight600">{new Date(attribution.occurredAt).toLocaleString("es-CL")}</Text>
+      <Text bold>{actor}</Text>
+      <Text className="text-foreground/70">{occurredAt}</Text>
     </Box>
   );
 }

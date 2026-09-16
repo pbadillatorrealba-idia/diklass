@@ -4,7 +4,12 @@ export type LogContext = {
   clinicId?: string;
   operation?: string;
   durationMs?: number;
+  errorName?: string;
 };
+
+export type LogLevel = "info" | "error";
+
+export type LogSink = (line: string, level: LogLevel) => void;
 
 const SENSITIVE_KEYS = /password|token|secret|authorization|content|clinical/i;
 
@@ -24,16 +29,35 @@ function redact(value: unknown): unknown {
   );
 }
 
-export function logEvent(event: string, context: LogContext = {}): void {
-  if (__DEV__) {
-    console.info(
-      JSON.stringify({
-        event,
-        ...(redact(context) as Record<string, unknown>),
-        timestamp: new Date().toISOString(),
-      }),
-    );
+const consoleSink: LogSink = (line, level) => {
+  if (level === "error") {
+    console.error(line);
+  } else {
+    console.info(line);
   }
+};
+
+let sink: LogSink = consoleSink;
+
+/** Replaces where structured lines are written; `null` restores the console sink. */
+export function setLogSink(next: LogSink | null): void {
+  sink = next ?? consoleSink;
+}
+
+/**
+ * Emits one machine-readable line in every build. Failures additionally travel to
+ * the central destination through `captureClientError` (Constitution IV).
+ */
+export function logEvent(event: string, context: LogContext = {}, level: LogLevel = "info"): void {
+  sink(
+    JSON.stringify({
+      event,
+      level,
+      ...(redact(context) as Record<string, unknown>),
+      timestamp: new Date().toISOString(),
+    }),
+    level,
+  );
 }
 
 export function redactLogContext(context: Record<string, unknown>): Record<string, unknown> {

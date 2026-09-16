@@ -1,10 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import {
   ACCESS_SESSION_INACTIVITY_MS,
   type AccessSessionRpcClient,
   touchAccessSession,
 } from "@/features/auth/access-session-service";
+import { type ActivityTracker, createActivityTracker } from "@/features/auth/activity-tracker";
+import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { errorReporter } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 
 type SessionActivityOptions = {
@@ -14,62 +17,72 @@ type SessionActivityOptions = {
 };
 
 const TOUCH_DEBOUNCE_MS = 60_000;
+const EXPIRY_CHECK_MS = 60_000;
 
 export function useSessionActivity({ client, sessionId, onExpired }: SessionActivityOptions) {
-  const lastActivityRef = useRef(Date.now());
+  const trackerRef = useRef<ActivityTracker | null>(null);
   const setAccessState = useSessionStore((state) => state.setAccessState);
 
   useEffect(() => {
     if (!sessionId) {
+      trackerRef.current = null;
       return;
     }
 
-    let disposed = false;
-    let lastTouchedAt = 0;
-    const expire = () => {
-      if (disposed) {
-        return;
-      }
-      setAccessState("expired");
-      onExpired();
-    };
-    const checkAndTouch = async () => {
-      const elapsed = Date.now() - lastActivityRef.current;
-      if (elapsed >= ACCESS_SESSION_INACTIVITY_MS) {
-        expire();
-        return;
-      }
-      if (Date.now() - lastTouchedAt < TOUCH_DEBOUNCE_MS) {
-        return;
-      }
+    const tracker = createActivityTracker({
+      touch: async () => {
+        const requestId = makeRequestId();
+        try {
+          return await touchAccessSession(client, sessionId);
+        } catch (error) {
+          // A network failure is not evidence of expiry; the server stays the authority.
+          void captureClientError(errorReporter, {
+            error,
+            operation: "touch_access_session",
+            requestId,
+          });
+          return true;
+        }
+      },
+      onExpired: () => {
+        setAccessState("expired");
+        onExpired();
+      },
+      debounceMs: TOUCH_DEBOUNCE_MS,
+      inactivityMs: ACCESS_SESSION_INACTIVITY_MS,
+    });
+    trackerRef.current = tracker;
 
-      lastTouchedAt = Date.now();
-      const isActive = await touchAccessSession(client, sessionId);
-      if (!isActive) {
-        expire();
+    // The timer and a return to the foreground only re-check expiry: neither is an
+    // interaction, so neither may refresh the server-side session (FR-061, FR-067).
+    const interval = setInterval(() => void tracker.tick(), EXPIRY_CHECK_MS);
+    const appState = AppState.addEventListener("change", (status) => {
+      if (status === "active") {
+        void tracker.tick();
       }
-    };
-    const registerActivity = () => {
-      lastActivityRef.current = Date.now();
-      void checkAndTouch();
-    };
-    const interval = setInterval(() => void checkAndTouch(), TOUCH_DEBOUNCE_MS);
-    const appStateSubscription =
-      Platform.OS === "web" ? null : AppState.addEventListener("change", registerActivity);
-
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.addEventListener("pointerdown", registerActivity);
-      window.addEventListener("keydown", registerActivity);
+    });
+    const register = () => void tracker.registerActivity();
+    const hasWindow = Platform.OS === "web" && typeof window !== "undefined";
+    if (hasWindow) {
+      window.addEventListener("pointerdown", register);
+      window.addEventListener("keydown", register);
     }
 
     return () => {
-      disposed = true;
       clearInterval(interval);
-      appStateSubscription?.remove();
-      if (Platform.OS === "web" && typeof window !== "undefined") {
-        window.removeEventListener("pointerdown", registerActivity);
-        window.removeEventListener("keydown", registerActivity);
+      appState.remove();
+      if (hasWindow) {
+        window.removeEventListener("pointerdown", register);
+        window.removeEventListener("keydown", register);
       }
+      trackerRef.current = null;
     };
   }, [client, onExpired, sessionId, setAccessState]);
+
+  // Native has no global input events: the protected layout feeds its root touches here.
+  const registerActivity = useCallback(() => {
+    void trackerRef.current?.registerActivity();
+  }, []);
+
+  return { registerActivity };
 }

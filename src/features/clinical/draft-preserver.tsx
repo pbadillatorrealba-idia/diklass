@@ -1,13 +1,19 @@
-import { useEffect, useMemo } from "react";
-import { type ConsultationDraft, createDraftStorage } from "@/lib/storage/drafts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import {
+  type ConsultationDraft,
+  createDraftSession,
+  type DraftSession,
+} from "@/lib/storage/drafts";
 import { createPlatformAuthStorage } from "@/lib/storage/platform-auth-storage";
+import { errorReporter } from "@/lib/supabase/client";
 
-type DraftPreserverProps = {
+type DraftPreserverOptions = {
   veterinarianId: string | null;
   consultationId: string;
-  draft: ConsultationDraft;
+  draft: ConsultationDraft | null;
   isSessionActive: boolean;
-  children?: React.ReactNode;
+  onRestore: (draft: ConsultationDraft) => void;
 };
 
 const DRAFT_DEBOUNCE_MS = 500;
@@ -17,24 +23,77 @@ export function useDraftPreserver({
   consultationId,
   draft,
   isSessionActive,
-}: Omit<DraftPreserverProps, "children">) {
-  const storage = useMemo(() => createDraftStorage(createPlatformAuthStorage()), []);
-
+  onRestore,
+}: DraftPreserverOptions): DraftSession | null {
+  const session = useMemo(
+    () =>
+      veterinarianId
+        ? createDraftSession(createPlatformAuthStorage(), veterinarianId, consultationId)
+        : null,
+    [consultationId, veterinarianId],
+  );
+  const [isRestored, setIsRestored] = useState(false);
+  const onRestoreRef = useRef(onRestore);
   useEffect(() => {
-    if (!veterinarianId || !isSessionActive) {
+    onRestoreRef.current = onRestore;
+  });
+
+  // restored: bring back what an expired session left behind, before any new write.
+  useEffect(() => {
+    setIsRestored(false);
+    if (!session) {
       return;
     }
+    let cancelled = false;
+    session
+      .restore()
+      .then((restored) => {
+        if (!cancelled && restored) {
+          onRestoreRef.current(restored);
+        }
+      })
+      .catch((error: unknown) => {
+        void captureClientError(errorReporter, {
+          error,
+          operation: "restore_draft",
+          requestId: makeRequestId(),
+        });
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsRestored(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
-    const timeout = setTimeout(() => {
-      void storage.save(veterinarianId, consultationId, draft);
-    }, DRAFT_DEBOUNCE_MS);
+  // editing: debounced writes, never before the restore finished, or the empty initial
+  // state would overwrite the preserved draft.
+  useEffect(() => {
+    if (!session || !isRestored || !draft) {
+      return;
+    }
+    session.edit(draft);
+    const timeout = setTimeout(() => void session.flush(), DRAFT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [consultationId, draft, isSessionActive, storage, veterinarianId]);
+  }, [draft, isRestored, session]);
 
-  return storage;
-}
+  // Expiry must keep the latest edit instead of dropping the pending debounce (FR-061).
+  useEffect(() => {
+    if (session && !isSessionActive) {
+      void session.flush();
+    }
+  }, [isSessionActive, session]);
 
-export function DraftPreserver({ children, ...props }: DraftPreserverProps) {
-  useDraftPreserver(props);
-  return children ?? null;
+  // Leaving the screen (reauthentication navigates away) flushes as well.
+  useEffect(
+    () => () => {
+      void session?.flush();
+    },
+    [session],
+  );
+
+  return session;
 }

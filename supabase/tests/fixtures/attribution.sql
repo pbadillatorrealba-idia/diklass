@@ -30,7 +30,7 @@ select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values (
   '33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222',
-  'synthetic_patient', '{"name":"Luna"}', 'draft'
+  'patient', '{"name":"Luna"}', 'draft'
 );
 
 select results_eq(
@@ -41,7 +41,7 @@ select results_eq(
 
 select throws_ok(
   $$insert into public.clinical_records (clinic_id, record_type, content, status, created_by)
-    values ('22222222-2222-2222-2222-222222222222', 'synthetic_patient', '{"name":"Rex"}', 'draft', '99999999-9999-9999-9999-999999999999')$$,
+    values ('22222222-2222-2222-2222-222222222222', 'patient', '{"name":"Rex"}', 'draft', '99999999-9999-9999-9999-999999999999')$$,
   '23514',
   'ATTRIBUTION_IMMUTABLE',
   'creating a record with a spoofed created_by is rejected'

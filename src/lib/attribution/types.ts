@@ -1,7 +1,8 @@
 export type Attribution = {
   actorId: string;
   occurredAt: string;
-  action: string;
+  /** An FR-063 action, or null when the transition has no enumerated action. */
+  action: string | null;
   supersedesEventId?: string | null;
 };
 

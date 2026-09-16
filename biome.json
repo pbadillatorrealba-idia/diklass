@@ -4,6 +4,7 @@
     "ignoreUnknown": true,
     "includes": [
       "src/**",
+      "!src/global.css",
       "tests/**",
       "scripts/**",
       "supabase/functions/**",

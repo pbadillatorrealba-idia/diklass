@@ -19,14 +19,33 @@ export async function createClinicalRecord(
     throw error ?? new Error("No se pudo crear el registro clínico.");
   }
 
+  // The action comes from the audit event the trigger wrote, so the response names
+  // the enumerated FR-063 action instead of a client-side guess.
+  const { data: event, error: eventError } = await client
+    .from("clinical_audit_events")
+    .select("action, actor_id, occurred_at, supersedes_event_id")
+    .eq("entity_id", data.id)
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (eventError) {
+    throw eventError;
+  }
+
   return {
     record: data,
-    attribution: {
-      actorId: data.created_by,
-      occurredAt: data.created_at,
-      action:
-        data.status === "corrective" ? "corrective_record_created" : "clinical_record_created",
-      supersedesEventId: data.supersedes_event_id,
-    },
+    attribution: event
+      ? {
+          actorId: event.actor_id,
+          occurredAt: event.occurred_at,
+          action: event.action,
+          supersedesEventId: event.supersedes_event_id,
+        }
+      : {
+          actorId: data.created_by,
+          occurredAt: data.created_at,
+          action: null,
+          supersedesEventId: data.supersedes_event_id,
+        },
   };
 }

@@ -1,19 +1,18 @@
+import { useForm } from "@tanstack/react-form";
+import { useEffect, useState } from "react";
+import { Button, ButtonText } from "@/components/ui/button";
 import {
-  Button,
-  ButtonText,
   FormControl,
   FormControlError,
   FormControlErrorText,
   FormControlLabel,
   FormControlLabelText,
-  Heading,
-  Input,
-  InputField,
-  Text,
-  VStack,
-} from "@gluestack-ui/themed";
-import { useForm } from "@tanstack/react-form";
-import { useEffect, useState } from "react";
+} from "@/components/ui/form-control";
+import { Heading } from "@/components/ui/heading";
+import { Input, InputField } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { AuthenticationError } from "@/features/auth/auth-service";
 import { type LoginValues, loginSchema } from "@/lib/forms/form";
 
 type LoginFormProps = {
@@ -36,7 +35,11 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       try {
         await onSubmit(result.data);
       } catch (error) {
-        setSubmitError(error instanceof Error ? error.message : "No pudimos iniciar sesión.");
+        setSubmitError(
+          error instanceof AuthenticationError
+            ? error.message
+            : "No pudimos iniciar sesión. Inténtalo nuevamente.",
+        );
       }
     },
   });
@@ -46,10 +49,10 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   }, []);
 
   return (
-    <VStack style={{ gap: 24, maxWidth: 480, width: "100%" }}>
-      <VStack style={{ gap: 4 }}>
-        <Heading style={{ fontSize: 30, fontWeight: "700" }}>Diklass</Heading>
-        <Text color="$textLight600">Acceso para profesionales veterinarios</Text>
+    <VStack className="w-full max-w-[480px] gap-6">
+      <VStack className="gap-1">
+        <Heading size="3xl">Diklass</Heading>
+        <Text className="text-foreground/70">Acceso para profesionales veterinarios</Text>
       </VStack>
 
       <form.Field name="email">
@@ -66,6 +69,9 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
                   aria-label="Correo de acceso"
                   autoCapitalize="none"
                   autoComplete="email"
+                  // Read-only until hydrated: keystrokes typed into the static HTML before React
+                  // takes over would be silently wiped (reproduced in WebKit e2e runs).
+                  editable={isHydrated}
                   keyboardType="email-address"
                   nativeID="login-email"
                   onBlur={field.handleBlur}
@@ -98,6 +104,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
                   accessibilityLabel="Contraseña"
                   aria-label="Contraseña"
                   autoComplete="current-password"
+                  editable={isHydrated}
                   nativeID="login-password"
                   onBlur={field.handleBlur}
                   onChangeText={field.handleChange}
@@ -118,7 +125,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       </form.Field>
 
       {submitError ? (
-        <Text accessibilityLiveRegion="polite" color="$error600" testID="login-error">
+        <Text accessibilityLiveRegion="polite" className="text-destructive" testID="login-error">
           {submitError}
         </Text>
       ) : null}
