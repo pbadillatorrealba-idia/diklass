@@ -91,7 +91,19 @@ export async function getConsultation(
     if (error) {
       throw error;
     }
-    return data ? { record: data, content: consultationContentSchema.parse(data.content) } : null;
+    if (!data) {
+      return null;
+    }
+    const legible = consultationContentSchema.safeParse(data.content);
+    if (!legible.success) {
+      logEvent(
+        "registro.row_content_skipped",
+        { operation: "getConsultation", recordId: consultationId, errorName: "ZodError" },
+        "error",
+      );
+      return null;
+    }
+    return { record: data, content: legible.data };
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -118,10 +130,18 @@ export async function listConsultationsByPatient(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: consultationContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = consultationContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listConsultationsByPatient", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
