@@ -6,6 +6,7 @@ import {
   type PatientContent,
   patientContentSchema,
   type TutorContent,
+  tutorContentSchema,
 } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createTutor } from "@/features/registro/tutor-service";
