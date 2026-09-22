@@ -23,10 +23,12 @@ ella (ver [propuesta](proposal.md) para el porqué):
 - `deny_attribution_mutation` rechaza todo `INSERT` con `status = 'approved'`: el camino de
   aprobación está reservado a la epicrisis (`approve_clinical_record` solo aprueba
   `record_type = 'epicrisis'` y, con D4 de 002, cierra su consulta en la misma transacción).
-- `guard_consultation_sealed` (009, D5 de 002) sella ante `UPDATE` toda fila cuyo
-  `content->>'consultationId'` resuelva a una consulta `closed`, e impide re-apuntar el vínculo.
-  La retroalimentación nace apuntando a una consulta ya cerrada: **queda sellada desde su
-  inserción**.
+- `guard_consultation_sealed` (009, D5 de 002; alcance acotado tras el fix `2fd95ac`) sella
+  ante `INSERT`/`UPDATE` los registros de TRABAJO (anamnesis, diagnosis, epicrisis) cuyo
+  `content->>'consultationId'` resuelva a una consulta `closed`, e impide re-apuntar el vínculo
+  en TODO tipo. La retroalimentación (`clinical_feedback`) es un registro longitudinal, no de
+  trabajo: queda **fuera** del sellado de 002 y su inmutabilidad es exclusivamente el trigger de
+  D4 (que era exactamente el objetivo de D4).
 - Contrato de cliente en `src/lib/attribution/clinical-mutations.ts`: `createClinicalRecord`,
   `createCorrectiveRecord` (registro adicional `corrective` con `supersedesEventId`), guardas
   `ATTRIBUTION_CONTROL_FIELDS` y respuesta `ClinicalMutationResult` con la atribución leída de la
@@ -160,10 +162,11 @@ Dos mecanismos, ambos deliberados:
 
 1. **Nada de lo registrado se edita.** Trigger `guard_clinical_feedback_immutable`
    (`BEFORE UPDATE`) que rechaza todo `UPDATE` de `record_type = 'clinical_feedback'` con
-   `CLINICAL_FEEDBACK_IMMUTABLE` (SQLSTATE 23514). El sello de 002 ya lo impediría mientras la
-   consulta siga cerrada, pero este trigger deja la garantía **estructural**: si una consulta
-   cerrada fuera reabierta por un `UPDATE` directo (agujero heredado del modelo de amenazas de
-   T055, ver Riesgos), la retroalimentación seguiría intocable. Ninguna operación legítima necesita
+   `CLINICAL_FEEDBACK_IMMUTABLE` (SQLSTATE 23514). Tras el fix `2fd95ac` el sellado de 002 NO
+   cubre `clinical_feedback` (solo los registros de trabajo), de modo que esta inmutabilidad es
+   **estructural y única** para esta entidad —el objetivo de D4—: si una consulta cerrada fuera
+   reabierta por un `UPDATE` directo (agujero heredado del modelo de amenazas de T055, ver
+   Riesgos), la retroalimentación seguiría intocable. Ninguna operación legítima necesita
    `UPDATE` sobre estas filas: corregir es crear (punto 2). El original permanece recuperable por
    construcción (FR-024 · SC-022 · US10-AC5).
 2. **Corregir crea un registro nuevo.** `createCorrectiveRecord` (contrato existente) inserta una

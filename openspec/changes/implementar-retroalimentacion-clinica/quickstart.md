@@ -53,9 +53,10 @@ bash /tmp/verify-005/run.sh                         # rojo/verde pgTap 011 + com
 
 | Etapa | Dónde | Resultado |
 |---|---|---|
-| Rojo previo (suite 011 sin migración 012) | `bash /tmp/verify-005/run.sh`, salida `/tmp/verify-005/011-red.tap` | **20 ok / 11 not ok** — fallan exactamente los asserts 14–24 (vocabularios, forma cerrada, campos obligatorios, eventos adversos estructurados, consulta abierta, consulta inexistente, uuid malformado, clínica ajena e inmutabilidad ante UPDATE), por la razón prevista |
+| Rojo previo (suite 011 sin migración 012) | `bash /tmp/verify-005/run.sh`, salida `/tmp/verify-005/011-red.tap` | **20 ok / 11 not ok** — fallan exactamente los asserts 14–24 (vocabularios, forma cerrada, campos obligatorios, eventos adversos estructurados, consulta abierta, consulta inexistente, uuid malformado, clínica ajena e inmutabilidad ante UPDATE), por la razón prevista. **Nota histórica** (integración, 2026-09-22): observado con la migración 009 pre-`2fd95ac`; con el sellado acotado a registros de trabajo tras ese fix, el rojo equivalente hoy extiende la cascada a los asserts 14–29 |
 | Verde (suite 011 con migración 012) | ídem, `/tmp/verify-005/011-green.tap` | **31 ok / 0 not ok** |
 | Compatibilidad (suites 001–008 + fixtures con 012 aplicada) | ídem, TAP por suite en `/tmp/verify-005/` | todas verdes: 001 12/12, 002 17/17, 003 14/14, 004 30/30, 005 18/18, 006 5/5, 007 10/10, 008 26/26, fixtures 3/3 |
+| Re-verificación tras el fix `2fd95ac` de 002 (sellado acotado a registros de trabajo; merge `1637afa`) | ídem, 2026-09-22 | suite 011 **31 ok / 0 not ok** con el 009 corregido + 012, y compatibilidad completa: 001 12/12, 002 17/17, 003 14/14, 004 30/30, 005 18/18, 006 5/5, 007 10/10, 008 28/28 (versión nueva de 002), fixtures 3/3 |
 
 **Modelos, vistas puras y servicios (tareas 2.1–3.2)**: `bun test tests/unit/retroalimentacion` —
 ciclo rojo→verde por módulos inexistentes antes de cada implementación (razón prevista) y
