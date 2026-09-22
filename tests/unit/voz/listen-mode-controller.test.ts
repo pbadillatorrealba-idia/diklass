@@ -138,7 +138,7 @@ describe("ListenModeController", () => {
         procesados.push(window.seq);
         return Promise.resolve();
       },
-      settlePartialWindow: (window, decision) => {
+      settlePartialWindow: (window, _result, decision) => {
         parciales.push({ seq: window.seq, decision });
         return Promise.resolve();
       },

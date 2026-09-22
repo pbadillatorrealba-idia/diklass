@@ -101,7 +101,6 @@ export async function endListenSession(
     logEvent("voz.listen_session_ended", {
       requestId,
       operation: "endListenSession",
-      state: input.state,
     });
     return aSesiónDeEscucha(data as ListeningSessionRow);
   } catch (error) {

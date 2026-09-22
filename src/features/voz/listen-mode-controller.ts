@@ -1,5 +1,9 @@
 import type { CaptureSource } from "@/features/voz/capture-source";
-import type { AudioWindow, TranscriptResult, TranscriptionPort } from "@/features/voz/transcription-port";
+import type {
+  AudioWindow,
+  TranscriptionPort,
+  TranscriptResult,
+} from "@/features/voz/transcription-port";
 
 /**
  * Controlador del modo de escucha clínica (D3 del diseño; FR-014 · FR-015 · FR-025 · FR-054 ·
@@ -22,6 +26,7 @@ export type ListenModeDeps = {
   processWindow: (window: AudioWindow, result: TranscriptResult) => Promise<void>;
   settlePartialWindow?: (
     window: AudioWindow,
+    result: TranscriptResult,
     decision: "processed" | "discarded",
   ) => Promise<void>;
   onState?: (state: ListenModeState) => void;
@@ -54,8 +59,9 @@ export class ListenModeController {
     for await (const window of this.#deps.source.windows(signal)) {
       const result = await this.#deps.transcription.transcribe(window);
       if (signal.aborted) {
-        // FR-055 · US6-AC12: el tramo a medio capturar se resuelve explícitamente.
-        await this.#deps.settlePartialWindow?.(window, this.#decision);
+        // FR-055 · US6-AC12: el tramo interrumpido se resuelve explícitamente, con su
+        // transcripción ya disponible: se procesa o se descarta, nunca a medio camino.
+        await this.#deps.settlePartialWindow?.(window, result, this.#decision);
         break;
       }
       await this.#deps.processWindow(window, result);

@@ -62,7 +62,9 @@ describe("createAudioFactDrafts", () => {
     expect(borradores).toHaveLength(1);
     expect(borradores[0]?.content.confirmationState).toBe("pending");
     expect(borradores[0]?.content.provenance).toBe("inferida");
-    const alta = calls.find((call) => call.table === "clinical_records" && call.method === "insert");
+    const alta = calls.find(
+      (call) => call.table === "clinical_records" && call.method === "insert",
+    );
     expect(alta?.args[0]).toMatchObject({ record_type: "audio_fact", status: "draft" });
   });
 
@@ -71,7 +73,9 @@ describe("createAudioFactDrafts", () => {
       "clinical_records:insert": [{ data: fila(contenidoBorrador), error: null }],
     });
     await createAudioFactDrafts(client, { ...entrada, drafts: [propuesta] });
-    const alta = calls.find((call) => call.table === "clinical_records" && call.method === "insert");
+    const alta = calls.find(
+      (call) => call.table === "clinical_records" && call.method === "insert",
+    );
     const contenido = z.object({ content: audioFactContentSchema }).parse(alta?.args[0]).content;
     expect(contenido.transcriptSegmentId).toBe("tramo-1");
     expect(contenido.transcriptExcerpt).toBe(
@@ -103,9 +107,9 @@ describe("editAudioFactDraft y discardAudioFactDraft", () => {
     });
     const resultado = await discardAudioFactDraft(client, "hecho-1");
     expect(resultado.content.confirmationState).toBe("discarded");
-    expect(calls.some((call) => call.table === "clinical_records" && call.method === "insert")).toBe(
-      false,
-    );
+    expect(
+      calls.some((call) => call.table === "clinical_records" && call.method === "insert"),
+    ).toBe(false);
   });
 });
 

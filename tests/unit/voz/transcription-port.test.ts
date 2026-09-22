@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import {
-  type AudioWindow,
-  SimulatedTranscriptionAdapter,
-} from "@/features/voz/transcription-port";
 import { SyntheticCaptureSource } from "@/features/voz/capture-source";
+import { type AudioWindow, SimulatedTranscriptionAdapter } from "@/features/voz/transcription-port";
 
 // Tasks.md 2.2 — TranscriptionPort determinista por defecto (D2) y captura sintética (D3).
 
@@ -15,9 +12,9 @@ const tramoGuiónSchema = z.object({
   calidad: z.enum(["ok", "insufficient"]),
   transcripcion: z.string(),
 });
-const GUIÓN = z.object({ guion: z.array(tramoGuiónSchema) }).parse(
-  JSON.parse(await Bun.file(RUTA_GUIÓN).text()),
-);
+const GUIÓN = z
+  .object({ guion: z.array(tramoGuiónSchema) })
+  .parse(JSON.parse(await Bun.file(RUTA_GUIÓN).text()));
 
 const ventana = (seq: number): AudioWindow => ({
   listenSessionId: "55555555-0000-0000-0000-000000000005",

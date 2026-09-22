@@ -40,9 +40,9 @@ describe("audioFactContentSchema", () => {
   });
 
   test("exige el fragmento de transcripción que originó el hecho (FR-021 · US6-AC6)", () => {
-    expect(() =>
-      audioFactContentSchema.parse({ ...borrador, transcriptExcerpt: "" }),
-    ).toThrow(z.ZodError);
+    expect(() => audioFactContentSchema.parse({ ...borrador, transcriptExcerpt: "" })).toThrow(
+      z.ZodError,
+    );
     expect(() => audioFactContentSchema.parse({ ...borrador, segmentSeq: -1 })).toThrow(z.ZodError);
   });
 

@@ -82,6 +82,7 @@ export const extractedFactDraftSchema = z.object({
   text: requiredTextSchema,
   excerptStart: z.number().int().nonnegative(),
   excerptEnd: z.number().int().positive(),
+  contradiction: contradictionSchema.nullish(),
 });
 
 /** Propuesta de antecedente extraída de un tramo, con su fragmento de origen (D4 · SC-027). */

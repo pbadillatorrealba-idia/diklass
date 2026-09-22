@@ -64,6 +64,7 @@ export async function createAudioFactDrafts(
         transcriptSegmentId: input.transcriptSegmentId,
         transcriptExcerpt: input.segmentText.slice(propuesta.excerptStart, propuesta.excerptEnd),
         segmentSeq: input.segmentSeq,
+        contradiction: propuesta.contradiction ?? null,
       });
       const creada: ClinicalMutationResult<ClinicalRecordRow> = await createClinicalRecord(client, {
         clinic_id: input.clinicId,
@@ -76,7 +77,6 @@ export async function createAudioFactDrafts(
     logEvent("voz.audio_fact_drafts_created", {
       requestId,
       operation: "createAudioFactDrafts",
-      total: hechos.length,
     });
     return hechos;
   } catch (error) {

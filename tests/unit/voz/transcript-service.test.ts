@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  saveTranscriptSegment,
-  settleTranscriptSegment,
-} from "@/features/voz/transcript-service";
+import { saveTranscriptSegment, settleTranscriptSegment } from "@/features/voz/transcript-service";
 import { fakeClient } from "./fakes";
 
 // Tasks.md 3.1 — tramos de transcripción (D10 · FR-031 · US6-AC12).

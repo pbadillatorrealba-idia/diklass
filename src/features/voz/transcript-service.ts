@@ -79,7 +79,6 @@ export async function saveTranscriptSegment(
     logEvent("voz.transcript_segment_saved", {
       requestId,
       operation: "saveTranscriptSegment",
-      quality: tramo.quality,
     });
     return aTramo(data as TranscriptSegmentRow);
   } catch (error) {
@@ -111,7 +110,6 @@ export async function settleTranscriptSegment(
     logEvent("voz.transcript_segment_settled", {
       requestId,
       operation: "settleTranscriptSegment",
-      processingState: resuelto,
     });
     return aTramo(data as TranscriptSegmentRow);
   } catch (error) {

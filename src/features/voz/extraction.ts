@@ -31,7 +31,8 @@ const REGLAS: readonly ReglaExtraccion[] = [
   },
   {
     field: "comportamiento_problematico",
-    patron: /destroz\w*|ladr\w*|muerd\w*|orin\w*|llor\w*|grun\w*|maull\w*|se persigue|monta\w*|agred\w*/,
+    patron:
+      /destroz\w*|ladr\w*|muerd\w*|orin\w*|llor\w*|grun\w*|maull\w*|se persigue|monta\w*|agred\w*/,
   },
   {
     field: "frecuencia",
