@@ -23,7 +23,7 @@ jobs:
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.E2E_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.E2E_SUPABASE_ANON_KEY }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Check native build credentials
         id: credentials
         run: |
@@ -37,7 +37,7 @@ jobs:
         if: steps.credentials.outputs.configured == 'true'
         with:
           bun-version-file: .bun-version
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         if: steps.credentials.outputs.configured == 'true'
         with:
           distribution: temurin
