@@ -4,6 +4,7 @@ import {
 } from "@/features/auth/access-session-service";
 import { AuthErrorCode, type NormalizedAuthError, normalizeAuthError } from "@/lib/errors";
 import type { LoginValues } from "@/lib/forms/form";
+import { makeRequestId } from "@/lib/observability/client-error-reporter";
 
 export type AuthUser = { id: string; email?: string };
 
@@ -13,7 +14,9 @@ export type AuthClient = AccessSessionRpcClient & {
       data: { user: AuthUser | null; session: unknown | null };
       error: unknown | null;
     }>;
-    signOut: () => Promise<{ error: unknown | null }>;
+    signOut: (options?: { scope?: "global" | "local" | "others" }) => Promise<{
+      error: unknown | null;
+    }>;
   };
 };
 
@@ -31,10 +34,6 @@ export class AuthenticationError extends Error {
     this.name = "AuthenticationError";
     this.normalized = normalized;
   }
-}
-
-function makeRequestId(): string {
-  return globalThis.crypto?.randomUUID?.() ?? `req-${Date.now()}`;
 }
 
 export async function signInWithPassword(
@@ -65,14 +64,16 @@ export async function signInWithPassword(
 
     return { user: data.user, accessSessionId: result.id, accessSessionExpiresAt: expiresAt };
   } catch (sessionError) {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: "local" });
     throw new AuthenticationError(normalizeAuthError(sessionError, requestId));
   }
 }
 
 export async function signOut(client: AuthClient): Promise<void> {
-  await client.rpc<boolean>("revoke_access_sessions");
-  const { error } = await client.auth.signOut();
+  // D1: a veterinarian may be signed in on several devices, so logout ends only this one.
+  // supabase.auth.signOut() defaults to scope "global", which would end every device.
+  await client.rpc<boolean>("revoke_current_access_session");
+  const { error } = await client.auth.signOut({ scope: "local" });
   if (error && normalizeAuthError(error).code === AuthErrorCode.ServiceUnavailable) {
     throw error;
   }

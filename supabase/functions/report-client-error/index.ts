@@ -1,37 +1,33 @@
-type ClientErrorPayload = {
-  operation?: unknown;
-  requestId?: unknown;
-  error?: { name?: unknown; message?: unknown };
-};
+import { createClient } from "@supabase/supabase-js";
+import { CLIENT_ERROR_REPORTS_PER_MINUTE, handleClientErrorReport } from "./handler.ts";
 
 declare const Deno: {
   serve: (handler: (request: Request) => Response | Promise<Response>) => void;
+  env: { get: (name: string) => string | undefined };
 };
 
-const safeText = (value: unknown, fallback: string) =>
-  typeof value === "string" && value.length <= 160 ? value : fallback;
+// The Edge runtime provides both variables. The service role only touches the quota counter,
+// never clinical data.
+const admin = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  { auth: { persistSession: false, autoRefreshToken: false } },
+);
 
-Deno.serve(async (request) => {
-  const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
-  let payload: ClientErrorPayload = {};
-  try {
-    payload = (await request.json()) as ClientErrorPayload;
-  } catch {
-    return Response.json({ code: "INVALID_INPUT", requestId }, { status: 400 });
-  }
-
-  // Never persist request bodies, auth headers, tokens, or clinical content.
-  console.error(
-    JSON.stringify({
-      event: "client_error",
-      requestId,
-      operation: safeText(payload.operation, "unknown"),
-      error: {
-        name: safeText(payload.error?.name, "Error"),
-      },
-      timestamp: new Date().toISOString(),
-    }),
-  );
-
-  return Response.json({ accepted: true, requestId });
-});
+Deno.serve((request) =>
+  handleClientErrorReport(request, {
+    // Never persist request bodies, auth headers, tokens, or clinical content.
+    log: (line) => console.error(line),
+    randomId: () => crypto.randomUUID(),
+    consumeQuota: async (bucketKey) => {
+      const { data, error } = await admin.rpc("consume_client_error_quota", {
+        p_bucket_key: bucketKey,
+        p_limit: CLIENT_ERROR_REPORTS_PER_MINUTE,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data === true;
+    },
+  }),
+);

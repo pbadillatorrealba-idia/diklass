@@ -1,0 +1,20 @@
+{
+  "cli": {
+    "version": ">= 24.3.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "e2e": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "e2e"
+      }
+    }
+  }
+}
