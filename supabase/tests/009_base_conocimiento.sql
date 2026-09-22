@@ -385,14 +385,14 @@ select function_privs_are('public', 'search_knowledge_fragments',
   'anon no puede invocar la recuperación de evidencia');
 
 select table_privs_are('public', 'knowledge_documents', 'authenticated',
-  array['select', 'insert', 'update'],
+  array['SELECT', 'INSERT', 'UPDATE'],
   'el rol de la API incorpora, retira y lee fuentes; nunca borra');
 select table_privs_are('public', 'knowledge_documents', 'anon',
   array[]::text[],
   'anon no toca la colección documental');
 
 select table_privs_are('public', 'knowledge_queries', 'authenticated',
-  array['select', 'insert'],
+  array['SELECT', 'INSERT'],
   'el rol de la API solo añade y lee el registro de consultas');
 select table_privs_are('public', 'knowledge_queries', 'anon',
   array[]::text[],
