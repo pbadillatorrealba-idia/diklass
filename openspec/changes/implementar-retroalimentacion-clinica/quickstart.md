@@ -3,18 +3,20 @@
 **Creado**: 2026-09-22 · **Cambio**: `implementar-retroalimentacion-clinica` ·
 **Diseño**: [design.md](design.md) · **Tareas**: [tasks.md](tasks.md)
 
-Documento vivo: nace con la evidencia de la tarea 1.1 y se llena de forma incremental;
-la consolidación final corresponde a la tarea 5.2.
+Documento consolidado al cierre de la implementación (tarea 5.2): registra la evidencia real
+acumulada desde la tarea 1.1 y los pendientes explícitos. Diferencia pendiente / implementado /
+aceptado en cada afirmación.
 
 ## Prerrequisitos
 
 - Bun 1.4.0 (`.bun-version`) y dependencias con `bun install --frozen-lockfile`.
 - Verificación SQL local: clúster PostgreSQL 18 scratch + pgTap 1.3.4 con shims en
   `/tmp/verify-005/` (`run.sh`, `bootstrap.sql` — patrón del quickstart de 002; rutas y
-  puerto 55433 propios para no pisar a las ramas hermanas). **Nunca `supabase stop`**.
-- Integración viva opcional con el stack local: `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`,
+  puerto 55433 propios). **Nunca `supabase stop`**.
+- Integración viva con el stack compartido: protocolo de reserva por hub («reservo stack» /
+  «stack libre») acordado entre ramas hermanas; `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`,
   `supabase start`, `supabase db reset`, `bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json`
-  y `SUPABASE_LIVE_TESTS=1`. Las suites vivas también se ejecutan en el job `database` de CI.
+  y `SUPABASE_LIVE_TESTS=1`.
 
 ## Compuertas locales
 
@@ -29,32 +31,56 @@ bash /tmp/verify-005/run.sh                         # rojo/verde pgTap 011 + com
 ## Escenarios de validación (mapeo a la spec)
 
 1. **Registro estructurado de evolución** (FR-018, FR-039, FR-057 · US10-AC1/AC7/AC10/AC12):
-   registrar una entrada sobre una consulta cerrada con tratamiento aplicado y su modificación
-   distinguibles, fechas de registro y consulta separadas, y aceptar tratamiento vacío.
+   entrada sobre consulta cerrada con tratamiento aplicado y su modificación distinguibles,
+   fechas de registro y consulta separadas, tratamiento vacío aceptado.
 2. **Categorías sin forzar binarias** (FR-040, FR-043 · SC-023 · US10-AC8/AC9): adherencia y
-   evolución con `parcial`/`desconocida`; recuperación agregada de los categóricos sin texto libre.
+   evolución con `parcial`/`desconocida`; agregados por categoría sin texto libre.
 3. **Eventos adversos diferenciados** (FR-041 · SC-035 · US10-AC2): recuperables aparte de la
    evolución, con `grave` destacado.
-4. **Aditivo e inmutable** (FR-024 · SC-022 · US10-AC3/AC4/AC5): epicrisis y diagnóstico intactos
-   tras registrar; corrección como registro nuevo con el original y las correctivas previas
-   recuperables.
-5. **Atribución** (FR-063, FR-070 · SC-049 · US10-AC13): cada entrada y corrección atribuida a la
-   identidad autenticada de quien la registró, aunque sea distinta del veterinario que atendió.
-6. **Antecedentes de seguimiento** (FR-042 · US10-AC6): la evolución previa se presenta en el panel
-   de seguimiento; su integración en el resumen de la consulta posterior queda como requisito de
+4. **Aditivo e inmutable** (FR-024 · SC-022 · US10-AC3/AC4/AC5): epicrisis y diagnóstico
+   intactos tras registrar; corrección como registro nuevo con el original y correctivas
+   previas recuperables.
+5. **Atribución** (FR-063, FR-070 · SC-049 · US10-AC13): entrada y corrección atribuidas a la
+   identidad autenticada de quien las registró, aunque sea distinta del veterinario que atendió.
+6. **Antecedentes de seguimiento** (FR-042 · US10-AC6): evolución previa presentada en el panel
+   de seguimiento; integración en el resumen de la consulta posterior = requisito de
    integración (D9).
 
-## Evidencia de verificación (incremental)
+## Evidencia de verificación (real, 2026-09-22)
 
 **Suite pgTap 011 — ciclo rojo→verde (Constitución II).** Clúster scratch `/tmp/verify-005/`
-(PostgreSQL 18.6 desde los .deb de `/tmp/pgdl`, pgTap 1.3.4, shims de `/tmp/verify-005/bootstrap.sql`).
+(PostgreSQL 18.6 desde los .deb de `/tmp/pgdl`, pgTap 1.3.4, shims de `bootstrap.sql`).
 
 | Etapa | Dónde | Resultado |
 |---|---|---|
-| Rojo previo (suite 011 sin migración 012) | `bash /tmp/verify-005/run.sh`, salida en `/tmp/verify-005/011-red.tap` (2026-09-22) | **20 ok / 11 not ok** — fallan exactamente los asserts 14–24 (los que exigen la migración 012: vocabularios, forma cerrada, campos obligatorios, eventos adversos estructurados, consulta abierta, consulta inexistente, uuid malformado, clínica ajena e inmutabilidad ante UPDATE), por la razón prevista |
-| Verde (suite 011 con migración 012) | ídem, salida en `/tmp/verify-005/011-green.tap` (2026-09-22) | **31 ok / 0 not ok** |
-| Compatibilidad (suites 001–008 + fixtures con 012 aplicada) | ídem, TAP por suite en `/tmp/verify-005/` (2026-09-22) | todas verdes: 001 12/12, 002 17/17, 003 14/14, 004 30/30, 005 18/18, 006 5/5, 007 10/10, 008 26/26, fixtures 3/3 |
-| Verde oficial en CI (job `database`) | se registra en 5.1 con la URL de la ejecución | pendiente de registro |
+| Rojo previo (suite 011 sin migración 012) | `bash /tmp/verify-005/run.sh`, salida `/tmp/verify-005/011-red.tap` | **20 ok / 11 not ok** — fallan exactamente los asserts 14–24 (vocabularios, forma cerrada, campos obligatorios, eventos adversos estructurados, consulta abierta, consulta inexistente, uuid malformado, clínica ajena e inmutabilidad ante UPDATE), por la razón prevista |
+| Verde (suite 011 con migración 012) | ídem, `/tmp/verify-005/011-green.tap` | **31 ok / 0 not ok** |
+| Compatibilidad (suites 001–008 + fixtures con 012 aplicada) | ídem, TAP por suite en `/tmp/verify-005/` | todas verdes: 001 12/12, 002 17/17, 003 14/14, 004 30/30, 005 18/18, 006 5/5, 007 10/10, 008 26/26, fixtures 3/3 |
+
+**Modelos, vistas puras y servicios (tareas 2.1–3.2)**: `bun test tests/unit/retroalimentacion` —
+ciclo rojo→verde por módulos inexistentes antes de cada implementación (razón prevista) y
+resultado final **45 pass / 0 fail (129 `expect()`)**, verificado localmente.
+
+**Integración viva (tareas 3.1–3.2)**: `tests/integration/retroalimentacion/feedback.test.ts`
+contra el stack local compartido (podman) con `SUPABASE_LIVE_TESTS=1`, migración 012 aplicada y
+veterinarios sintéticos provisionados — **8 pass / 0 fail (38 `expect()`)**. Cubre, contra
+PostgREST real: registro atribuido al segundo veterinario, epicrisis/diagnóstico idénticos
+(comparación), rechazo sobre consulta abierta, rechazo de vocabulario fuera de enumerado por el
+trigger del servidor (`23514` `CLINICAL_FEEDBACK_INVALID_CONTENT`), inmutabilidad ante UPDATE
+directo (`23514` `CLINICAL_FEEDBACK_IMMUTABLE`), corrección como registro nuevo con el original
+intacto, agregados por categoría de varias consultas y eventos adversos diferenciados con
+fechas distinguibles. Presupuestos verificados con aserciones: registro/corrección ≤ 2 s y
+carga del panel ≤ 2 s (reales: 10–40 ms).
+
+**Compuertas locales de cierre (tarea 5.1)**: `bun run typecheck` **limpio**; `bunx biome check`
+sobre los archivos de este cambio **limpio (0 errores, 0 avisos)**; unidades e integración en
+skip sin `SUPABASE_LIVE_TESTS`, verdes con ella.
+
+**CI**: pendiente de registro. `ci.yml` solo se dispara en `pull_request` y en `push` a `main`;
+esta rama aún no tiene PR (la crea el orquestador, por contrato de este cambio). El job
+`database` (`supabase test db` con la suite 011 y diff de `supabase gen types`) y el resto de
+compuertas se ejecutarán en esa PR; sus URLs se registran aquí al abrirse. El clúster scratch y
+la integración viva local cubren la misma superficie de verificación SQL/RLS en el entorno.
 
 ## Mapping `clinical_record_action` sin cambios (tarea 1.3)
 
@@ -69,14 +95,28 @@ el mapping existente cubre esta capacidad sin modificaciones.
    rama queda **sin uso práctico**: D4 prohíbe todo `UPDATE` sobre estas filas
    (`CLINICAL_FEEDBACK_IMMUTABLE`) y el trigger propio responde antes que el sello genérico de 009.
 
-## Pendientes de esta funcionalidad (declarados; se consolidan en 5.2)
+## Deviaciones menores del diseño registradas (tarea 6.3)
+
+- El formulario usa el patrón de formularios ya establecido en el repo (valores de control + Zod
+  con mensajes en español, al estilo de `ficha-form.tsx`), no TanStack Form: reutilizar la
+  convención existente prima sobre el mención del stack (Principio III). La lógica testeable
+  vive en `feedback-form-values.ts`.
+- `buildFeedbackAntecedents` recibe además las filas de consulta (`{ timeline, consultations, excludeConsultationId }`)
+  para exponer las DOS fechas de FR-039/US10-AC7 (registro y consulta) ya distinguidas en el
+  antecedente; el diseño la describía como `(timeline, excludeConsultationId?)`.
+- La verificación viva se hizo sobre el stack Supabase compartido (podman) además del clúster
+  scratch; el clúster scratch cumplió exactamente su rol de observación del ciclo rojo→verde.
+
+## Pendientes declarados (no cumplidos; nada de esto se afirma como aceptado)
 
 - Verificación visual de las pantallas nuevas (`/follow-up`, componentes de
   `src/components/retroalimentacion/`).
 - Compuerta axe WCAG 2.2 AA + teclado/foco/viewport sobre `/follow-up` (requisito de integración
-  sobre `tests/e2e/web/accessibility.spec.ts`; esta rama no toca Playwright).
+  sobre `tests/e2e/web/accessibility.spec.ts`; esta rama no toca Playwright por decisión acordada).
 - Integración de FR-042 en `buildFollowUpSummary` (`src/features/registro/summaries.ts`) y el
-  resumen previo de `/consultations/[id]` (requisito de integración D9; SC-036 queda parcial hasta
-  entonces).
-- Aceptación humana de SC-036 y de SC-037 en su componente de tiempo (< 2 min).
+  resumen previo de `/consultations/[id]` (requisito de integración D9; SC-036 queda parcialmente
+  verificado — solo la superficie `/follow-up` — hasta entonces).
+- Aceptación humana de SC-036 y de SC-037 en su componente de tiempo (< 2 min); su componente
+  estructural (campos categóricos solo por selección) sí está verificado por diseño del formulario.
 - Ratificación por el equipo clínico de los vocabularios categóricos de D2 (Open Questions).
+- URLs del verde de CI en la PR que cree el orquestador (sección CI de arriba).
