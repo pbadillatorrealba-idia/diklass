@@ -3,9 +3,9 @@ import type { EpicrisisContent, PatientContent } from "@/features/registro/schem
 import {
   buildFollowUpSummary,
   buildPatientHistory,
-  computeMissingFichaFields,
-  type ConsultationHistoryEntry,
   type ClinicalRecordRow,
+  type ConsultationHistoryEntry,
+  computeMissingFichaFields,
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
 import type { Json } from "@/lib/supabase/database.types";

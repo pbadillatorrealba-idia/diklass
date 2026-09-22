@@ -241,9 +241,9 @@ describe("consultationContentSchema y diagnosisContentSchema", () => {
     expect(
       diagnosisContentSchema.safeParse({ consultationId: "consulta-1", text: "Ansiedad" }).success,
     ).toBe(true);
-    expect(diagnosisContentSchema.safeParse({ consultationId: "consulta-1", text: "" }).success).toBe(
-      false,
-    );
+    expect(
+      diagnosisContentSchema.safeParse({ consultationId: "consulta-1", text: "" }).success,
+    ).toBe(false);
     expect(diagnosisContentSchema.safeParse({ text: "Ansiedad" }).success).toBe(false);
   });
 });
