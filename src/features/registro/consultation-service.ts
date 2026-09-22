@@ -5,7 +5,11 @@ import type { DiagnosisEntry } from "@/features/registro/diagnosis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import type { EpicrisisEntry } from "@/features/registro/epicrisis-service";
 import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
-import { type ConsultationContent, consultationContentSchema } from "@/features/registro/schema";
+import {
+  type ConsultationContent,
+  consultationContentSchema,
+  epicrisisContentSchema,
+} from "@/features/registro/schema";
 import {
   buildFollowUpSummary,
   buildPatientHistory,
@@ -91,7 +95,19 @@ export async function getConsultation(
     if (error) {
       throw error;
     }
-    return data ? { record: data, content: consultationContentSchema.parse(data.content) } : null;
+    if (!data) {
+      return null;
+    }
+    const legible = consultationContentSchema.safeParse(data.content);
+    if (!legible.success) {
+      logEvent(
+        "registro.row_content_skipped",
+        { operation: "getConsultation", recordId: consultationId, errorName: "ZodError" },
+        "error",
+      );
+      return null;
+    }
+    return { record: data, content: legible.data };
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -118,10 +134,18 @@ export async function listConsultationsByPatient(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: consultationContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = consultationContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listConsultationsByPatient", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -185,7 +209,20 @@ export async function listPatientTimeline(
       if (error) {
         throw error;
       }
-      epicrisis = data ?? [];
+      // Misma frontera de lectura tolerante que las listas: una fila de epicrisis ajena o
+      // malformada se omite con log en vez de tumbar el historial y el resumen completos.
+      epicrisis = (data ?? []).flatMap((row) => {
+        const legible = epicrisisContentSchema.safeParse(row.content);
+        if (!legible.success) {
+          logEvent(
+            "registro.row_content_skipped",
+            { operation: "listPatientTimeline", recordId: row.id, errorName: "ZodError" },
+            "error",
+          );
+          return [];
+        }
+        return [row];
+      });
     }
 
     const history = buildPatientHistory({

@@ -82,10 +82,18 @@ export async function listTutors(client: SupabaseClient<Database>): Promise<Tuto
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: tutorContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = tutorContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listTutors", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,

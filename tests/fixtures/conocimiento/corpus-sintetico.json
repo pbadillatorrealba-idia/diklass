@@ -1,0 +1,195 @@
+{
+  "fuentes": [
+    {
+      "clave": "protocolo-ansiedad-separacion",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Protocolo de evaluación de la ansiedad por separación (ficticio)",
+          "autores": ["Dra. Ficticia Uno", "Dr. Ficticio Dos"],
+          "anio": 2025,
+          "revista": "Cuadernos Ficticios de Conducta Canina",
+          "editorial": null,
+          "edicion": null,
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY 4.0 (ficticia)",
+          "nota": "Documento clínico sintético de demostración; el corpus real se integra después."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Anamnesis",
+            "texto": "Ante un cuadro de ansiedad por separación, la anamnesis debe revisar los antecedentes de apego, las rutinas del hogar y la respuesta previa a la soledad."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Diagnóstico",
+            "texto": "La ansiedad por separación se diagnostica por la historia clínica, la videovigilancia domiciliaria y la exclusión del dolor."
+          },
+          {
+            "ordinal": 3,
+            "seccion": "Tratamiento",
+            "texto": "El tratamiento de la ansiedad por separación combina modificación de conducta, desensibilización gradual a las ausencias y manejo ambiental."
+          }
+        ]
+      }
+    },
+    {
+      "clave": "guia-modificacion-conducta",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Guía de modificación de conducta canina (ficticia)",
+          "autores": ["Dra. Ficticia Tres"],
+          "anio": 2024,
+          "revista": "Revista Ficticia de Etología",
+          "editorial": "Editorial Ficticia",
+          "edicion": "2.ª edición ficticia",
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY-NC 4.0 (ficticia)",
+          "nota": "Documento clínico sintético de demostración."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Desensibilización",
+            "texto": "La desensibilización gradual a las ausencias exige ausencias breves sin señales de partida y refuerzo de la calma."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Manejo ambiental",
+            "texto": "El enriquecimiento ambiental y el ejercicio diario reducen la ansiedad generalizada y mejoran el umbral de frustración."
+          },
+          {
+            "ordinal": 3,
+            "seccion": "Límites del manejo",
+            "texto": "El castigo no está indicado en los cuadros de ansiedad: aumenta la angustia y deteriora el vínculo con el tutor."
+          }
+        ]
+      }
+    },
+    {
+      "clave": "ficha-fluoxetina",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Ficha farmacológica ficticia de fluoxetina",
+          "autores": ["Dr. Ficticio Cuatro"],
+          "anio": 2023,
+          "revista": null,
+          "editorial": "Vademécum Ficticio Veterinario",
+          "edicion": "1.ª edición ficticia",
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY 4.0 (ficticia)",
+          "nota": "Ficha farmacológica sintética; ninguna indicación es prescripción."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Efecto esperado",
+            "texto": "La fluoxetina se emplea como coadyuvante en la ansiedad por separación y su efecto tarda entre cuatro y seis semanas."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Precauciones",
+            "texto": "Antes de iniciar fluoxetina revisar la medicación actual del paciente y las posibles interacciones serotoninérgicas."
+          }
+        ]
+      }
+    },
+    {
+      "clave": "protocolo-convivencia-especies",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Protocolo de convivencia perro-gato (ficticio)",
+          "autores": ["Dra. Ficticia Cinco"],
+          "anio": 2022,
+          "revista": "Cuadernos Ficticios de Convivencia",
+          "editorial": null,
+          "edicion": null,
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY 4.0 (ficticia)",
+          "nota": "Documento clínico sintético de demostración."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Presentaciones",
+            "texto": "Las presentaciones entre especies requieren sesiones cortas y supervisadas, con refuerzo de la conducta relajada del perro y del gato."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Evaluación",
+            "texto": "La convivencia perro-gato se evalúa mediante encuentros progresivos, recursos separados y señales de calma de ambos."
+          }
+        ]
+      }
+    },
+    {
+      "clave": "guia-habituacion-transportin",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Habituación al transportín (ficticia)",
+          "autores": ["Dr. Ficticio Seis"],
+          "anio": 2021,
+          "revista": null,
+          "editorial": null,
+          "edicion": null,
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY 4.0 (ficticia)",
+          "nota": "Documento clínico sintético de demostración."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Habituación",
+            "texto": "El transportín debe asociarse a experiencias positivas mediante habituación progresiva y comida preferida dentro del transportín."
+          }
+        ]
+      }
+    },
+    {
+      "clave": "protocolo-miedo-fuegos",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Manejo del miedo a los fuegos artificiales (ficticio)",
+          "autores": ["Dra. Ficticia Siete"],
+          "anio": 2025,
+          "revista": "Revista Ficticia de Etología",
+          "editorial": null,
+          "edicion": null,
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "CC BY 4.0 (ficticia)",
+          "nota": "Documento clínico sintético de demostración."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Manejo agudo",
+            "texto": "Ante el miedo a los fuegos artificiales, crear un refugio acústico y evitar consolar el pánico con refuerzo involuntario."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Prevención",
+            "texto": "El miedo a los fuegos artificiales puede prevenirse con habituación a grabaciones de volumen muy bajo."
+          }
+        ]
+      }
+    }
+  ]
+}

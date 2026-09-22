@@ -6,64 +6,82 @@
 ## Prerrequisitos
 
 - Bun 1.4.0 (`.bun-version`) y dependencias con `bun install --frozen-lockfile`.
-- Para las suites vivas y pgTap: Supabase CLI 2.117.0 + Docker (`supabase start`,
-  `supabase db reset`, `bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json`,
-  `SUPABASE_LIVE_TESTS=1`).
-- **Restricción de esta ejecución**: el entorno de desarrollo no tuvo Docker/Supabase local ni
-  Playwright. Por eso las suites pgTap y de integración viva se ejecutaron en el job `database` de
-  CI y el e2e web en el job `web-e2e`; lo verificado localmente queda anotado como tal abajo.
+- Para las suites vivas y pgTap: Supabase CLI 2.117.0 + Docker (vía podman rootless:
+  `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`), luego `supabase start`,
+  `supabase db reset`, `bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json`
+  y `SUPABASE_LIVE_TESTS=1`.
 
 ## Compuertas locales
 
 ```sh
-bun run typecheck        # tsc --noEmit
-bun run lint             # biome check .
-bun test tests/unit tests/integration   # las vivas se omiten sin SUPABASE_LIVE_TESTS=1
+bun run typecheck                       # tsc --noEmit
+bun run lint                            # biome check .
+bun test tests/unit tests/integration   # vivas omitidas sin SUPABASE_LIVE_TESTS=1
+supabase test db                        # pgTap 001–008
+SUPABASE_LIVE_TESTS=1 bun test tests/integration   # integración viva (tras provisionar)
 ```
 
-## GitHub Actions (compuertas de la PR)
+## GitHub Actions (compuertas de la PR #27)
 
 - `quality`: `bun.lock` en sync, `bunx biome ci .`, `tsc --noEmit`.
 - `unit`: `bun test tests/unit tests/integration` (suites vivas omitidas).
-- `database`: `supabase start` + `supabase db reset` + `supabase test db` (pgTap 001–008) +
-  diff de `database.types.ts` + `provision:veterinarians` + integración viva
-  (`SUPABASE_LIVE_TESTS=1`).
-- `web-e2e`: Playwright Chromium (incluye el escaneo axe WCAG 2.2 AA ampliado a las pantallas de
-  pacientes/consulta); Firefox/WebKit solo en corridas de `main`.
+- `database`: `supabase start` + `db reset` + `supabase test db` (pgTap 001–008) + diff de
+  `database.types.ts` + `provision:veterinarians` + integración viva (`SUPABASE_LIVE_TESTS=1`).
+- `web-e2e`: Playwright Chromium — accesibilidad axe WCAG 2.2 AA (login, home, pacientes, ficha,
+  consulta), recorrido por teclado con foco visible, viewport 375/1280 px y el ciclo del borrador
+  US11/AC5; Firefox/WebKit solo en corridas de `main`.
 - `dependency-audit`: `bun audit` con las excepciones vigentes del repo.
 
 ## Escenarios de validación (mapeo a la spec)
 
-1. **Ficha y tutor** (FR-001, FR-027, FR-044 · US1): registrar paciente con campos mínimos y
-   tutor; ampliar con enfermedad preexistente y alergia sin pérdida; guardar ficha incompleta y
-   ver la señalización de campos sin dato frente a hallazgos negativos; asociar un segundo perro al
-   tutor existente.
-2. **Consulta con anamnesis** (FR-003, FR-004, FR-021 · US2): abrir consulta; registrar motivo y
-   comportamiento problemático en texto libre distinguibles; marcar un antecedente como inferido;
-   ver campo sin dato como desconocido; corregir procedencia y recuperar la corrección; registrar
-   un antecedente con un segundo veterinario y verificar su atribución.
-3. **Epicrisis validada** (FR-010, FR-011, FR-012, FR-024 · US3): generar borrador editable desde
-   la sesión; verificar que el borrador no figura como definitivo; aprobar y comprobar aprobador y
-   momento; corregir una epicrisis aprobada y verificar registro adicional con el original intacto.
-4. **Seguimiento longitudinal** (FR-002, FR-013, FR-024, FR-045 · US4): iniciar segunda consulta y
-   ver el resumen previo con pendientes señalados; cerrarla y comprobar que la consulta anterior
-   permanece idéntica; listar el historial en orden cronológico con su epicrisis; interrumpir y
-   retomar una consulta sin contaminar el historial.
+1. **Ficha y tutor** (FR-001, FR-027, FR-044 · US1): alta con tutor nuevo o existente sin
+   duplicar; ampliación con antecedentes sin pérdida; ficha incompleta aceptada con señalización
+   de campos sin dato vs hallazgos negativos; consulta con medicamentos y conductuales.
+2. **Consulta con anamnesis** (FR-003, FR-004, FR-021 · US2): apertura con profesional; motivo y
+   comportamiento problemático distinguibles; procedencia por antecedente (4 valores canónicos);
+   campo sin dato como desconocido; corrección de procedencia recuperable; atribución al segundo
+   veterinario.
+3. **Epicrisis validada** (FR-010, FR-011, FR-012, FR-024 · US3): borrador editable desde la
+   sesión (no definitivo); aprobación con aprobador y momento que cierra la consulta en la misma
+   transacción; corrección posterior como registro adicional con el original intacto.
+4. **Seguimiento longitudinal** (FR-002, FR-013, FR-024, FR-045 · US4): resumen previo automático
+   con pendientes señalados; registros anteriores idénticos tras cerrar la segunda consulta;
+   historial cronológico con epicrisis; retoma de consulta interrumpida sin contaminar el historial.
 
-## Evidencia de verificación (incremental)
+## Evidencia de verificación (2026-09-22)
 
 **Suite pgTap 008 — ciclo rojo→verde (Constitución II).**
 
 | Etapa | Dónde | Resultado |
 |---|---|---|
-| Rojo previo (suite 008 sin migración 009) | CI run [#35785252849](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849), job [Supabase database tests](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849/job/106940381816) (2026-09-22) | **4/26 fallan exactamente** los asserts 14 (cierre atómico D4), 20 (`CONSULTATION_LINK_IMMUTABLE`), 21 (`CLINICAL_RECORD_SEALED`) y 25 (segunda consulta cerrada) por la razón prevista; suites 001–007 verdes |
-| Reproducción local (evidencia complementaria) | clúster PostgreSQL 18 scratch con pgTap 1.3.4, fuera del repo (`/tmp/verify`) | rojo 22 ok / 4 not-ok (mismos 4 asserts); verde 26/26 con la migración 009; suites 001–007 verdes con 009 aplicada (12/12, 17/17, 14/14, 30/30, 18/18, 5/5, 10/10) |
-| Verde oficial (con migración 009 + modelos TS) | CI run [#35785766371](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371), job [Supabase database tests](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371/job/106942064048) (2026-09-22) | **26/26 verdes** en la suite 008 y suites 001–007 verdes; `supabase gen types` sin diff |
+| Rojo previo (008 sin migración 009) | CI [#35785252849](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849) · [job database](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849/job/106940381816) | **4/26 fallan exactamente** los asserts 14 (cierre atómico D4), 20 (`CONSULTATION_LINK_IMMUTABLE`), 21 (`CLINICAL_RECORD_SEALED`) y 25 (segunda consulta cerrada) por la razón prevista; 001–007 verdes |
+| Reproducción local complementaria | clúster PostgreSQL 18 scratch con pgTap 1.3.4 (`/tmp/verify`) | rojo 22/4 (mismos 4 asserts); verde 26/26 con 009; 001–007 verdes con 009 aplicada |
+| Verde oficial | CI [#35785766371](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371) · [job database](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371/job/106942064048) | **26/26** en 008; 001–007 verdes; `supabase gen types` sin diff |
 
-**Modelos TS (tareas 2.1–2.3)**: `bun test tests/unit/registro` — rojo previo por módulos inexistentes
-(la razón prevista) y luego **56 pass / 0 fail** (125 `expect()`), verificado localmente.
+**Pruebas de TypeScript (rojo→verde observado en cada capa).**
 
-<!-- Verde de CI con migración 009 + TS y el resto de compuertas: se registra en 5.2. -->
+| Capa | Rojo previo | Verde |
+|---|---|---|
+| Modelos y contrato (2.1–2.3) | `Cannot find module '@/features/registro/…'` y export faltante (razón prevista) | 56 pass / 0 fail (125 `expect()`) |
+| Servicios (3.1–3.3) | `Cannot find module` de los servicios (razón prevista) | 99 pass / 0 fail (225 `expect()`) |
+| Regresión de lecturas tolerantes | 3 fail por `ZodError` sobre filas ajenas (flaky del run #35789226489) | 3 pass / 0 fail con `registro.row_content_skipped` |
+| Ciclo del borrador con `discard` (4.3) | `TypeError: session.discard is not a function` (razón prevista) | verde |
+| Total unitario final | — | **184 pass / 0 fail** (377 `expect()`), `tsc --noEmit` y `bunx biome ci .` limpios |
+
+**Integración viva local** (stack podman + provision ANA/BRUNO, en el mismo orden que rompía en
+CI): **35 pass / 0 fail** (tests/integration completos, `SUPABASE_LIVE_TESTS=1`).
+
+**Compulta completa de la PR — CI [#35791139550](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35791139550): TODOS los jobs en verde**
+(`quality`, `unit`, `database`, `dependency-audit`, `web-e2e` con axe WCAG 2.2 AA + teclado/foco +
+viewport + US11/AC5 sobre la superficie 002).
+
+**Correcciones de compuerta incluidas en la evidencia**: lecturas tolerantes a filas ajenas
+(regresión con test propia), `aria-checked` en los radios del selector de opciones, indicador
+global de foco visible (`:focus-visible` en `src/global.css`), exclusión documentada del overlay
+de desarrollo `#error-toast` de `@expo/log-box` en el escaneo axe (solo existe con
+`NODE_ENV=development`; su marcado no es superficie de la aplicación), y reencuadre del test
+US11/AC5 de la 001 sobre la superficie 002 conservando todas sus aserciones de contrato
+(provisionando ficha y consulta reales con el token de ANA).
 
 ## Transiciones sin acción enumerada (D4 · tarea 1.3)
 
@@ -71,8 +89,8 @@ bun test tests/unit tests/integration   # las vivas se omiten sin SUPABASE_LIVE_
 transiciones — verificado en `003_attribution_hardening.sql` y por el assert 16 de la suite 008:
 
 1. `INSERT` de `epicrisis`: el borrador nace sin acción enumerada; solo su aprobación lo es.
-2. `UPDATE` de `epicrisis`: la edición del borrador (y el propio `UPDATE` que ejecuta la aprobación:
-   su evento `epicrisis_approved` lo inserta la RPC, no el trigger).
+2. `UPDATE` de `epicrisis`: la edición del borrador (y el propio `UPDATE` que ejecuta la
+   aprobación: su evento `epicrisis_approved` lo inserta la RPC, no el trigger).
 3. `UPDATE` de `consultation`: el cierre es consecuencia de la aprobación (D4) y
    `epicrisis_approved` es su única acción enumerada.
 
@@ -85,22 +103,21 @@ Ninguna otra transición da `null`: el `INSERT` cubre los 12 `record_type` salvo
 Las dos tareas restantes del cambio `implementar-identidad-y-acceso` quedan **pendientes** y no se
 cierran en esta tanda (decisión explícita del 2026-09-22). Su evidencia exige herramientas fuera
 del entorno de esta ejecución (Playwright con matriz de navegadores y Maestro Cloud con
-`EXPO_TOKEN`/`MAESTRO_CLOUD_API_KEY`, además de Docker/Supabase local):
+`EXPO_TOKEN`/`MAESTRO_CLOUD_API_KEY`):
 
-- **T045**: ejecutar la matriz web completa y los flows Maestro nativos, registrando la evidencia
-  que exige el `quickstart.md` de 001 («Evidencia mínima»).
-- **T063**: dejar obtenible la evidencia e2e nativa: perfil `e2e` en `eas.json`, secretos
-  documentados y registrados, ejecución de `tests/e2e/native/*.yaml` y registro del resultado.
+- **T045**: matriz web completa y flows Maestro nativos con la evidencia mínima del quickstart de 001.
+- **T063**: perfil `e2e` en `eas.json`, secretos documentados y ejecución de `tests/e2e/native/*.yaml`.
 
-Ninguna de las dos bloquea la construcción de registro clínico longitudinal; la aceptación conjunta
-de la historia de atribución (US12, SC-040/041/042/044) se ejercita con las entidades que esta
-funcionalidad define y se registra en esta guía.
+Ninguna bloquea registro clínico longitudinal; la aceptación conjunta de la historia de atribución
+(US12, SC-040/041/042/044) se ejercita con las entidades de esta funcionalidad y queda registrada
+aquí.
 
 ## Pendientes de esta funcionalidad (declarados)
 
-- Verificación visual de las pantallas nuevas (el entorno no permitió levantar la app contra
-  Supabase local).
-- Flujo e2e funcional web del recorrido clínico completo (solo se amplió el escaneo de
-  accesibilidad; el resto lo cubren pgTap e integración viva).
-- Aceptación humana de SC-012 (registro de ficha < 3 min sin asistencia) y SC-013 (utilidad de la
-  epicrisis, ≥ 3 especialistas sobre ≥ 5 casos, ≥ 3/5 en promedio).
+- **Verificación visual**: no hubo inspección visual humana ni del navegador del orquestador sobre
+  las pantallas nuevas en esta tanda; la verificación de superficie es la suite web de CI (axe +
+  teclado + viewport). Queda una pasada visual/aceptación cuando el entorno lo permita.
+- **Flujo e2e funcional web completo** del recorrido clínico (solo se amplió la compuerta de
+  accesibilidad; la verificación funcional la cargan pgTap e integración viva en CI).
+- **Aceptación humana** de SC-012 (registro de ficha < 3 min sin asistencia) y SC-013 (utilidad de
+  la epicrisis: ≥ 3 especialistas sobre ≥ 5 casos, ≥ 3/5 en promedio).

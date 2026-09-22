@@ -17,7 +17,7 @@
 -- comparación SC-009 exige snapshot antes de cerrar la segunda consulta).
 
 begin;
-select plan(26);
+select plan(28);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: dos veterinarios de una clínica, ambos con sesión de acceso activa.
@@ -497,6 +497,42 @@ select results_eq(
   $$select * from registro_previo_consulta_a order by id$$,
   'FR-024 · US4-AC2 · SC-009: los registros de la consulta anterior permanecen idénticos tras cerrar la segunda consulta'
 );
+
+-- ---------------------------------------------------------------------------
+-- FR-024 · US4-AC2 · SC-009 (revisión de la PR #27): el sellado también cubre INSERT.
+-- ---------------------------------------------------------------------------
+
+select set_config('request.jwt.claims',
+  '{"sub":"a9a9a9a9-0000-0000-0000-00000000000a","role":"authenticated","session_id":"5e9a2000-0000-0000-0000-00000000000a"}',
+  true);
+set local role authenticated;
+
+-- No se pueden anexar registros de trabajo a una consulta cerrada por el camino directo
+-- de PostgREST (el mismo modelo de amenazas T055 que motivó D5): el conjunto que muestra
+-- el workspace de una consulta cerrada no puede crecer tras el cierre.
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+    values ('c9c9c9c9-0000-0000-0000-00000000000c', 'anamnesis',
+      '{"consultationId":"d9d9d9d9-0000-0000-0000-000000000004","field":"texto_libre","text":"Tarde","provenance":"reportada"}',
+      'draft')$$,
+  '23514',
+  'CLINICAL_RECORD_SEALED',
+  'FR-024 · US4-AC2 · SC-009: INSERT sobre una consulta cerrada fracasa con CLINICAL_RECORD_SEALED'
+);
+
+-- La epicrisis correctiva sigue anexándose legítimamente a la consulta cerrada (US3-AC4 · D8).
+select lives_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status, supersedes_event_id)
+    select 'c9c9c9c9-0000-0000-0000-00000000000c', 'epicrisis',
+      '{"consultationId":"d9d9d9d9-0000-0000-0000-000000000004","motivoConsulta":"Agresividad hacia visitas"}',
+      'corrective', id
+    from public.clinical_audit_events
+    where entity_id = 'd9d9d9d9-0000-0000-0000-000000000008' and action = 'epicrisis_approved'
+    limit 1$$,
+  'FR-024 · US3-AC4 · D8: la epicrisis correctiva puede anexarse a la consulta cerrada'
+);
+
+reset role;
 
 select * from finish();
 rollback;

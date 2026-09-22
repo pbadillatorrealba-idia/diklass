@@ -149,7 +149,7 @@ test.describe("auth against the local backend", () => {
 
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const { accessToken } = await readSupabaseSession(page);
+    const { accessToken, userId } = await readSupabaseSession(page);
     // Age only this page's access session: other tests hold Ana's sessions in parallel (D1).
     const authSessionId = (
       JSON.parse(Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8")) as {
@@ -160,8 +160,68 @@ test.describe("auth against the local backend", () => {
       throw new Error("The access token carries no session_id claim.");
     }
 
+    // US11/AC5 sobre la superficie 002: el workspace solo compone sobre consultas reales
+    // (D11 de su design), así que se provisionan ficha y consulta con el token de ANA —
+    // los triggers de atribución exigen `auth.uid()`, nunca service role. El contrato del
+    // borrador local (editing → restored → saved) es el mismo de la 001.
+    const patientId = crypto.randomUUID();
+    const anaApi = await apiRequest.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SUPABASE_ANON_KEY as string,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    try {
+      const vet = await anaApi.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
+      const rows = (await vet.json()) as Array<{ clinic_id: string }>;
+      const clinicId = rows[0]?.clinic_id;
+      if (!clinicId) {
+        throw new Error("No se encontró la clínica del veterinario.");
+      }
+      const patient = await anaApi.post("/rest/v1/clinical_records", {
+        data: {
+          id: patientId,
+          clinic_id: clinicId,
+          record_type: "patient",
+          content: {
+            name: "Luna",
+            species: "canino",
+            breed: "Mestizo",
+            birthDate: null,
+            ageMonths: 48,
+            weightKg: 12.5,
+            sex: "hembra",
+            reproductiveStatus: "entera",
+            antecedentes: {
+              medicalHistory: [],
+              preexistingDiseases: [],
+              currentMedications: [],
+              knownAllergies: [],
+              behavioralHistory: [],
+            },
+            tutorId: crypto.randomUUID(),
+          },
+          status: "draft",
+        },
+      });
+      expect(patient.ok()).toBeTruthy();
+      const consultation = await anaApi.post("/rest/v1/clinical_records", {
+        data: {
+          id: consultationId,
+          clinic_id: clinicId,
+          record_type: "consultation",
+          content: { patientId, status: "open" },
+          status: "draft",
+        },
+      });
+      expect(consultation.ok()).toBeTruthy();
+    } finally {
+      await anaApi.dispose();
+    }
+
     await page.goto(`/consultations/${consultationId}`);
-    const notesField = page.getByLabel("Notas de la consulta");
+    const notesField = page.getByLabel("Texto del antecedente");
     await notesField.click();
     await page.keyboard.type(notes, { delay: 5 });
     await expect(notesField).toHaveValue(notes);
@@ -200,7 +260,7 @@ test.describe("auth against the local backend", () => {
       const agedRows = (await aged.json()) as Array<{ id: string }>;
       expect(agedRows).toHaveLength(1);
 
-      await page.getByRole("button", { name: "Guardar anamnesis" }).click();
+      await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();
       await expect(page.getByTestId("consultation-status")).toHaveText(
         "La sesión ya no es válida. El borrador se conservó.",
@@ -217,13 +277,15 @@ test.describe("auth against the local backend", () => {
       await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
 
       await page.goto(`/consultations/${consultationId}`);
-      await expect(page.getByLabel("Notas de la consulta")).toHaveValue(notes);
+      await expect(page.getByLabel("Texto del antecedente")).toHaveValue(notes);
       await expect(page.getByTestId("consultation-status")).toHaveText(
-        "Se recuperó un borrador no guardado.",
+        "Se recuperó un borrador no guardado de esta consulta.",
       );
 
-      await page.getByRole("button", { name: "Guardar anamnesis" }).click();
-      await expect(page.getByTestId("consultation-status")).toHaveText("Anamnesis guardada.");
+      await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
+      await expect(page.getByTestId("consultation-status")).toHaveText(
+        "Antecedente de anamnesis registrado.",
+      );
       await expect(page.getByTestId("attribution-badge")).toContainText(ANA.displayName);
       await expect
         .poll(() =>
