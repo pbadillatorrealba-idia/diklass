@@ -6,6 +6,9 @@
 implementada y mergeada (PRs #2–#5, #13). Este diseño se aprueba antes de `tasks.md`; su
 implementación sigue el Rojo-Verde-Refactor obligatorio.
 
+**Revisión del plan (2026-09-22)**: revisión cruzada spec↔diseño↔tareas con veredicto «Con
+correcciones»; hallazgos aplicados a D2, D4, D5, D7, D8, D10, D12, presupuestos y riesgos.
+
 ## Context
 
 La capa de identidad y atribución ya existe y está endurecida en `main`:
@@ -30,9 +33,12 @@ La capa de identidad y atribución ya existe y está endurecida en `main`:
 - RPC `approve_clinical_record(uuid)` aprueba solo `record_type = 'epicrisis'`, deriva el aprobador
   de la sesión y emite `epicrisis_approved`.
 - Contrato de cliente en `src/lib/attribution/` (`createClinicalRecord`, guardas
-  `ATTRIBUTION_CONTROL_FIELDS`, respuesta `ClinicalMutationResult`).
-- RLS exige sesión de acceso activa y clínica compartida; los logs estructurados usan
-  `log_server_event` en SQL y `logEvent`/`captureClientError` en el cliente.
+  `ATTRIBUTION_CONTROL_FIELDS`, respuesta `ClinicalMutationResult`); su especificación vive en
+  [`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../implementar-identidad-y-acceso/contracts/clinical-attribution.md).
+- RLS exige sesión de acceso activa y clínica compartida; la política de actualización (T055)
+  permite a cualquier veterinario activo de la clínica editar filas no aprobadas — premisa de
+  amenaza de D5 —; los logs estructurados usan `log_server_event` en SQL y
+  `logEvent`/`captureClientError` en el cliente.
 
 Restricción de esta ejecución: no hay Docker/Supabase local ni Playwright disponibles. Las suites
 pgTap y las de integración viva solo **se ejecutan** en el job `database` de CI; el ciclo
@@ -57,7 +63,7 @@ reducción de alcance.
 - Extracción automática de antecedentes (spec 004), hipótesis pobladas (006), medicamentos
   prescritos (007) y evolución posterior (005): FR-011 y FR-013 reservan sus campos vacíos.
 - Gestión de cuentas, multi-tenancy, multi-especie, i18n, voz.
-- Flujo e2e funcional Playwright nuevo y verificación visual local en esta tanda (ver Riesgos).
+- Flujo e2e funcional Playwright completo en esta tanda (ver D12 y Riesgos).
 
 ## Decisions
 
@@ -84,18 +90,25 @@ Claves `camelCase`; `zod` valida toda frontera de entrada (Principio V).
 | `patient` | `{ name, species, breed, birthDate \| null, ageMonths \| null, weightKg \| null, sex, reproductiveStatus, antecedentes: { medicalHistory: Item[], preexistingDiseases: Item[], currentMedications: Item[], knownAllergies: Item[], behavioralHistory: Item[] }, tutorId }` |
 | `tutor` | `{ name, phone: string \| null, email: string \| null }` (al menos un medio de contacto, FR-027) |
 | `consultation` | `{ patientId, status: 'open' \| 'closed' }` |
-| `anamnesis` | `{ consultationId, field: AnamnesisField, text, provenance: 'reportada' \| 'inferida' \| 'desconocida', provenanceHistory?: ProvenanceEntry[] }` |
+| `anamnesis` | `{ consultationId, field: AnamnesisField, text, provenance: Provenance, provenanceHistory?: { provenance: Provenance }[] }` |
 | `diagnosis` | `{ consultationId, text }` |
 | `epicrisis` | `{ consultationId, motivoConsulta, antecedentesRelevantes, hallazgosAnamnesis, hipotesis: [{ texto, estado }], diagnostico, examenesSolicitados: string[], intervencionesPropuestas: string[], medicamentosAprobados: string[], recomendacionesTutor, planSeguimiento: { pendientes: string[] }, observaciones }` |
 
 `Item = { text, negative: boolean }`: un ítem `negative: true` es un **hallazgo negativo
-explícitamente registrado** y una lista vacía es **campo sin dato** (FR-044 exige distinguirlos;
-un peso `null` es «sin dato», nunca un valor por omisión). `AnamnesisField` enumera los campos
-estructurados de US2 (`motivo_consulta`, `comportamiento_problematico`, `frecuencia`, `duracion`,
-`contexto`, `desencadenantes`, `cambios_recientes`, `ambiente`, `convivencia`, `alimentacion`,
-`actividad`, `rutinas`, `tratamientos_anteriores`, `respuesta_tratamientos`) más `texto_libre`
-(FR-004: ambos en una misma consulta). Los campos `hipotesis` y `medicamentosAprobados` quedan
-vacíos: los poblán 006 y 007 (FR-011 lo permite explícitamente).
+explícitamente registrado** y una lista vacía es **campo sin dato** (FR-044 y SC-024 exigen
+distinguirlos; un peso `null` es «sin dato», nunca un valor por omisión). `AnamnesisField` enumera
+los campos estructurados de US2 (`motivo_consulta`, `comportamiento_problematico`, `frecuencia`,
+`duracion`, `contexto`, `desencadenantes`, `cambios_recientes`, `ambiente`, `convivencia`,
+`alimentacion`, `actividad`, `rutinas`, `tratamientos_anteriores`, `respuesta_tratamientos`) más
+`texto_libre` (FR-004: ambos en una misma consulta). Los campos `hipotesis` y
+`medicamentosAprobados` quedan vacíos: los poblán 006 y 007 (FR-011 lo permite explícitamente).
+
+`Provenance` sigue el **vocabulario canónico de FR-021** (brief §7): `'reportada' | 'inferida' |
+'recuperada' | 'desconocida'`. Los escenarios de 002 ejercitan `reportada`, `inferida` y
+`desconocida`; `'recuperada'` (información recuperada de una fuente) queda admitida desde ya porque
+las specs 003 y 004 aterrizan hechos con esa procedencia en esta misma anamnesis y una
+especialización no puede contradecir el enunciado canónico. Cerrar el enum en tres valores forzaría
+a romper el contrato después.
 
 ### D3. El borrador de epicrisis se arma con una función pura del cliente
 
@@ -106,13 +119,19 @@ sin validación (FR-010, FR-021). *Alternativa rechazada*: generación en SQL o 
 ventaja, más difícil de probar y de traducir; el ensamblaje es derivación de datos, no lógica de
 servidor.
 
-### D4. Aprobación y cierre de consulta son atómicos
+### D4. Aprobación y cierre de consulta son atómicos, en este orden
 
 `approve_clinical_record` se extiende (`create or replace`, misma firma y respuesta) para que, al
 aprobar una epicrisis con `content.consultationId`, cierre en la misma transacción la consulta
 vinculada (`content.status = 'closed'`). Así US3-AC2 (almacena versión aprobada con aprobador y
 momento) y el paso de la consulta al historial ocurren juntos, y FR-045 queda bien definido: todo
 lo que no está aprobado sigue siendo retomable.
+
+**Orden de escritura obligatorio**: primero el `UPDATE` de la epicrisis (`approved_by`,
+`approved_at`, `status`) y **después** el `UPDATE` que cierra la consulta. El trigger de sellado de
+D5 evalúa sobre `old` y mataría la propia aprobación con `CLINICAL_RECORD_SEALED` si el cierre
+viniera antes (la epicrisis apunta a esa consulta y pasaría a estar «cerrada»). La suite pgTap
+incluye una aserción que delata la inversión del orden.
 
 *Alternativa rechazada*: aprobar y cerrar como dos llamadas del cliente — deja el estado intermedio
 «epicrisis aprobada + consulta abierta», que rompe la relación SC-014 (toda consulta cerrada con su
@@ -122,18 +141,27 @@ aprobación conserva su enumeración: `epicrisis_approved` sigue siendo la únic
 (el mapping de 001 no tiene `consultation_closed` a propósito: el cierre es consecuencia de la
 aprobación, y el UPDATE de la fila de consulta emite `null`).
 
-### D5. Las consultas cerradas sellan sus registros de trabajo
+### D5. Las consultas cerradas sellan sus registros de trabajo (evaluado sobre `old`, sin repunteo)
 
-Trigger `guard_consultation_sealed` (`BEFORE UPDATE` sobre `clinical_records`): si la fila
-`content.consultationId` apunta a una consulta `closed`, cualquier UPDATE fracasa con
-`CLINICAL_RECORD_SEALED` (SQLSTATE 23514). Cumple FR-024 y US4-AC2 («los registros de la consulta
-anterior permanecen idénticos») también sobre anamnesis y diagnósticos, no solo sobre epicrisis.
+Trigger `guard_consultation_sealed` (`BEFORE UPDATE` sobre `clinical_records`):
+
+1. Evalúa el sellado sobre **`old.content->>'consultationId'`**: si esa referencia resuelve a una
+   consulta `closed`, todo `UPDATE` fracasa con `CLINICAL_RECORD_SEALED` (SQLSTATE 23514).
+2. **Rechaza además todo cambio del propio vínculo**: si `old.content->>'consultationId'` no es
+   nulo, `new.content->>'consultationId'` debe ser igual (ni repuntear a otra consulta, ni
+   anularse). Sin esto, un `UPDATE` con payload que reescribiera `consultationId` burlaría un
+   sellado evaluado sobre `new` — y la política T055 permite a cualquier veterinario de la clínica
+   hacer `UPDATE` directo por PostgREST sobre filas no aprobadas, que son exactamente las anamnesis
+   y diagnósticos que este sellado promete proteger.
+
+Cumple FR-024, SC-009 y US4-AC2 («los registros de la consulta anterior permanecen idénticos»)
+también sobre anamnesis y diagnósticos, no solo sobre epicrisis.
 
 *Alternativa rechazada*: marcar como `approved` los registros de trabajo al cerrar — `approved`
 significa «validado como registro definitivo» y su camino (RPC de aprobación) está reservado a la
 epicrisis; crear un segundo camino de aprobación lo contradiría. Las fichas (`patient`, `tutor`)
 carecen de `consultationId` y siguen editables: la ficha se amplía entre consultas sin alterar
-epicrisis aprobadas (caso límite de la spec).
+epicrisis aprobadas (caso límite de la spec, ejercitado en las pruebas de integración).
 
 ### D6. Tutor sin duplicar: referencia por `tutorId` en la ficha
 
@@ -147,18 +175,23 @@ Riesgos).
 
 US2-AC5 («queda registrado como reportado y la corrección es recuperable»): el UPDATE del registro
 de anamnesis actualiza `content.provenance` y **agrega** la procedencia anterior a
-`content.provenanceHistory`; el trigger de auditoría ya emite `anamnesis_corrected` con autor y
-momento. El estado previo queda recuperable desde la fila y desde la traza. FR-024 exige registro
-adicional para corregir **registros clínicos aprobados** (US3-AC4), que se cubre con la epicrisis
-correctiva (D8); extender ese mecanismo a la corrección de procedencia en curso sería una lectura
-más fuerte que la que pide el escenario.
+`content.provenanceHistory`; el trigger de auditoría emite `anamnesis_corrected` con autor y
+momento. La recuperación del estado previo vive en `content.provenanceHistory` (dentro de la fila);
+la traza acredita **que** hubo una corrección, **quién** y **cuándo**, pero no conserva el valor
+superado (el metadata del evento es `{recordType, status}`). FR-024 exige registro adicional para
+corregir **registros clínicos aprobados** (US3-AC4), que se cubre con la epicrisis correctiva (D8);
+extender ese mecanismo a la corrección de procedencia en curso sería una lectura más fuerte que la
+que pide el escenario.
 
 ### D8. Epicrisis correctiva: registro adicional que conserva el original
 
 US3-AC4/FR-024: corregir una epicrisis aprobada crea una fila nueva (`status = 'corrective'`,
 `supersedes_event_id` = evento `epicrisis_approved` original, acción enumerada
 `corrective_record_created`), con el contenido corregido. El original permanece legible e
-intocable (`guard_approved_clinical_record`); `CorrectionHistory` presenta la cadena.
+intocable (`guard_approved_clinical_record`); `CorrectionHistory` presenta la cadena. Si hubiera
+varias correcciones de la misma epicrisis, todas apuntan al **mismo** evento `epicrisis_approved`
+original y `effectiveEpicrisis` elige la correctiva más reciente (la última en el tiempo que
+supersede a la original).
 
 ### D9. Toda mutación cruza el contrato de atribución
 
@@ -166,16 +199,18 @@ Los servicios de `src/features/registro/` escriben solo vía `src/lib/attributio
 (`createClinicalRecord` y las extensiones `updateClinicalContent`, `approveClinicalRecord`,
 `createCorrectiveRecord`), que rechazan campos de control (`ATTRIBUTION_CONTROL_FIELDS`) y devuelven
 `ClinicalMutationResult` con la atribución real leída de la traza (contrato de
-`contracts/clinical-attribution.md`: respuesta verificable sin estado efímero de la UI).
+[`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../implementar-identidad-y-acceso/contracts/clinical-attribution.md):
+respuesta verificable sin estado efímero de la UI).
 
 ### D10. Lecturas como funciones puras + consultas simples
 
 `buildPatientHistory` (FR-002/US4-AC4, orden cronológico), `buildFollowUpSummary`
 (FR-013/US4-AC1/AC3: diagnóstico previo, intervenciones, recomendaciones, exámenes y pendientes
 señalados, a partir de las epicrisis efectivas), `effectiveEpicrisis` (approved + correctivas que
-las superseden) y `computeMissingFichaFields` (FR-044) son funciones puras unit-testeadas; las
-consultas Supabase son lecturas por `content->>` con índices de expresión
-(`patientId`, `consultationId`) agregados en la migración.
+la superseden) y `computeMissingFichaFields` (FR-044/SC-024) son funciones puras unit-testeadas.
+Las consultas Supabase son lecturas por `content->>` con índices de expresión (`patientId`,
+`consultationId`) agregados en la migración; el listado de fichas de la pantalla `/patients` usa
+`listPatients` (con presupuesto de rendimiento verificado en 3.1).
 
 ### D11. Interfaz: rutas nuevas, componentes de `src/components/registro`, WCAG 2.2 AA
 
@@ -192,17 +227,24 @@ suite e2e de 001 consulta.
 
 ### D12. Sin dependencias nuevas; alcance de e2e acotado y declarado
 
-Cero cambios en `package.json` (Principio III). La suite web solo se amplía con el escaneo de
-accesibilidad axe de las pantallas nuevas (`accessibility.spec.ts`, compuerta WCAG existente). No se
-escribe flujo funcional Playwright nuevo en esta tanda porque el entorno no permite ejecutarlo ni
-depurarlo; la verificación funcional la cargan pgTap y las pruebas de integración viva en CI. La
-aceptación de SC-012 y SC-013 es humana y queda explícitamente pendiente.
+Cero cambios en `package.json` (Principio III). La suite web se amplía en `accessibility.spec.ts`
+con: (a) el escaneo axe WCAG 2.2 AA de las pantallas nuevas, (b) un recorrido mínimo por teclado
+con aserción de foco visible en cada control interactivo y (c) una comprobación de adaptabilidad a
+viewport (375 px y 1280 px sin desbordamiento horizontal). Para que el escaneo ejerza las
+superficies con más riesgo (procedencia por antecedente, negativo vs. sin dato, `CorrectionHistory`,
+resumen de seguimiento), la tarea 5.1 provisiona un caso clínico sintético (paciente, tutor, dos
+consultas, anamnesis, epicrisis aprobada y correctiva) por API con las credenciales provisionadas,
+siguiendo el patrón de `tests/e2e/web/attribution.spec.ts`. Lo que **no** se cubre en esta tanda es
+el flujo funcional e2e completo del recorrido clínico: su verificación funcional la cargan pgTap y
+las pruebas de integración viva en CI, y el aplazamiento queda como pendiente declarado del cambio
+(no como compuerta cumplida). La aceptación de SC-012 y SC-013 es humana y queda explícitamente
+pendiente.
 
 ## Seguimiento de complejidad (Principio III)
 
 | Complejidad nueva | Justificación exigida por el requisito | Se elimina cuando |
 |---|---|---|
-| Trigger `guard_consultation_sealed` | FR-024 / US4-AC2: registros de consultas cerradas idénticos | Nunca mientras la spec exija inmutabilidad |
+| Trigger `guard_consultation_sealed` | FR-024 / SC-009 / US4-AC2: registros de consultas cerradas idénticos | Nunca mientras la spec exija inmutabilidad |
 | Extensión de `approve_clinical_record` | FR-012 + SC-014: aprobación y cierre en un paso | Nunca; es refinamiento del camino de aprobación existente |
 | Índices de expresión sobre `content->>` | FR-002 / FR-013 con carga realista (presupuestos abajo) | Si el modelo deja `jsonb` |
 | `provenanceHistory` en el contenido | US2-AC5: corrección recuperable | Si se exige registro adicional para anamnesis (ver Riesgos) |
@@ -216,10 +258,10 @@ y pantallas sobre los patrones de `features/auth`, `features/clinical` y `lib/at
 
 | Operación | Presupuesto | Cómo se verifica |
 |---|---|---|
-| Crear/actualizar ficha o antecedente | ≤ 2 s por operación (red local incluida) | umbral laxo en integración viva (detecta regresiones groseras) |
-| Abrir consulta con resumen (≤ 3 consultas previas) | ≤ 2 s | umbral laxo en integración viva |
-| Ensamblar borrador de epicrisis | ≤ 300 ms CPU cliente | prueba unitaria con temporización amplia (función pura) |
-| Listar fichas (≤ 200 pacientes) | ≤ 2 s | umbral laxo en integración viva |
+| Crear/actualizar ficha o antecedente | ≤ 2 s por operación (red local incluida) | aserción de tiempo en `tests/integration/registro/ficha.test.ts` (tarea 3.1) |
+| Listar fichas (≤ 200 pacientes) | ≤ 2 s | aserción de tiempo sobre `listPatients` en `tests/integration/registro/ficha.test.ts` (tarea 3.1) |
+| Abrir consulta con resumen (≤ 3 consultas previas) | ≤ 2 s | aserción de tiempo en `tests/integration/registro/anamnesis.test.ts` (tarea 3.2) |
+| Ensamblar borrador de epicrisis | ≤ 300 ms CPU cliente | prueba unitaria con temporización amplia (tarea 2.2) |
 
 SC-012 (registro de ficha < 3 min sin asistencia) y SC-008/SC-013 son medición con usuarios o
 especialistas: quedan como **pendiente de aceptación**, no como verificados.
@@ -230,24 +272,30 @@ especialistas: quedan como **pendiente de aceptación**, no como verificados.
   de comportamiento pasarán primero por la spec (`openspec-update-change`).
 - **II (pruebas primero)**: cada grupo de `tasks.md` abre con sus pruebas en rojo —pgTap e
   integración vía CI, unidad local— observadas fallando por la razón prevista antes de implementar;
-  evidencia con URLs de ejecución en `quickstart.md`.
+  evidencia incremental en `quickstart.md` desde la tarea 1.1 y consolidada en 5.3.
 - **III (simplicidad/YAGNI)**: sin dependencias ni capas nuevas; complejidad justificada arriba.
 - **IV (observabilidad)**: servicios con `logEvent` + `requestId` y `captureClientError` en fallos;
   SQL con `log_server_event` (patrón `approve_clinical_record`); ninguna excepción silenciada.
 - **V (seguridad)**: RLS y triggers del servidor siguen siendo el control; validación Zod en cada
   formulario; ningún campo de atribución aceptado del cliente; sin secretos nuevos.
-- **Accesibilidad web (WCAG 2.2 AA)**: etiquetas programáticas, teclado, foco visible y contraste;
-  compuerta axe en CI sobre las pantallas nuevas.
+- **Accesibilidad web (WCAG 2.2 AA)**: etiquetas programáticas, operación por teclado, foco visible
+  y contraste; compuerta en CI con axe + recorrido por teclado/foco + viewport (D12).
 
 ## Risks / Trade-offs
 
-- **Verificación visual y e2e local imposibles** (sin Supabase local ni Playwright): las pantallas
-  se verifican por typecheck, lint, compilación y el escaneo axe en CI; el flujo funcional lo cubre
-  la integración viva de CI. Se declara en la PR y en `quickstart.md`; queda pendiente una pasada
-  manual/e2e cuando el entorno lo permita.
+- **Verificación visual y e2e funcional local imposibles** (sin Supabase local ni Playwright en el
+  entorno de desarrollo): las pantallas se verifican por typecheck, lint, compilación, axe +
+  teclado/foco/viewport en CI; el flujo funcional lo cubre la integración viva de CI. El e2e
+  funcional web completo queda **aplazado y declarado pendiente** (D12): declararlo no lo convierte
+  en compuerta cumplida. Falta una pasada manual/e2e cuando el entorno lo permita.
 - **`jsonb` sin FK** (D1/D6): un cliente que escriba fuera de los servicios puede dejar referencias
   huérfanas; RLS no lo impide. Mitigación: servicios únicos de escritura, pruebas de integración y
   este registro explícito. Es el coste de no crear una segunda convención de persistencia.
+- **`provenanceHistory` dentro de contenido editable** (D7): un `UPDATE` directo podría borrarla;
+  el sellado de D5 lo impide en consultas cerradas y la traza `anamnesis_corrected` acredita la
+  corrección (autor/momento) aunque no el valor superado. Si la revisión exige que el valor previo
+  viva también en la traza, el cambio se acota a `anamnesis-service`, el trigger de auditoría y
+  pgTap.
 - **Lectura de US2-AC5** (D7): si la revisión exige que toda corrección —incluida la de
   procedencia— cree registro adicional, el cambio se acota a `anamnesis-service` (+ pgTap).
 - **Ciclos TDD lentos para SQL** (rojo/verde por CI): se mitigan con suites pequeñas y enfocadas;
