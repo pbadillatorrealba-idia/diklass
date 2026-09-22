@@ -97,9 +97,7 @@ export const patientContentSchema = z.object({
   name: requiredTextSchema,
   species: requiredTextSchema,
   breed: requiredTextSchema,
-  birthDate: isoDateSchema
-    .nullish()
-    .transform((value) => value ?? null),
+  birthDate: isoDateSchema.nullish().transform((value) => value ?? null),
   ageMonths: z
     .number()
     .nonnegative("La edad no puede ser negativa.")
@@ -151,9 +149,7 @@ export const anamnesisContentSchema = z.object({
   field: z.enum(AnamnesisField),
   text: requiredTextSchema,
   provenance: provenanceSchema,
-  provenanceHistory: z
-    .array(z.object({ provenance: provenanceSchema }))
-    .optional(),
+  provenanceHistory: z.array(z.object({ provenance: provenanceSchema })).optional(),
 });
 
 /** Contenido de un antecedente de anamnesis (FR-004, FR-021). */

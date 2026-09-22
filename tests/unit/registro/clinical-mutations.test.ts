@@ -20,10 +20,12 @@ function makeClient(config: { record?: FakeResult; event?: FakeResult; rpc?: Fak
   };
   const from = (table: string) => {
     const result = results[table] ?? { data: null, error: null };
-    const chain = (method: string) => (...args: unknown[]) => {
-      calls.push({ table, method, args });
-      return query;
-    };
+    const chain =
+      (method: string) =>
+      (...args: unknown[]) => {
+        calls.push({ table, method, args });
+        return query;
+      };
     const query = {
       insert: chain("insert"),
       update: chain("update"),
