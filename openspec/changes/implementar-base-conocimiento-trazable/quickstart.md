@@ -111,8 +111,14 @@ Estas métricas verifican el **mecanismo** sobre datos sintéticos; no aceptan S
 | Merge de `feat/002-registro-clinico-longitudinal` (fix `2fd95ac`) | worktree (commit de merge `af91382`) | merge limpio, sin conflictos |
 | `supabase db reset` (migraciones 001–010 con el 009 corregido) + `supabase test db` | stack local (ventana reservada por hub) | **168 asserts, «All tests successful»** — suites `001`–`009` verdes, incluida la `009` con 31 asserts |
 | Integración viva (`SUPABASE_LIVE_TESTS=1`) | stack local | **14 pass / 0 fail** (90 `expect()`); arnés: SC-002 100% (8/8), SC-025 100% (5/5), SC-010·SC-003 0 incumplimientos sobre 16 citas |
-| `bun run db:types` + `git diff --exit-code` (RI-1) | stack local | **SIN DIFF** sobre `src/lib/supabase/database.types.ts` |
+| `bun run db:types` + `git diff --exit-code` (RI-1) | stack local | **SIN DIFF** sobre `src/lib/supabase/database.types.ts` (respecto al esquema de esta rama, migraciones 001–010) |
 | Unidad (`bun test tests/unit/conocimiento`) tras el merge | local | 53 pass / 0 fail (147 `expect()`) |
+| CI de la rama | GitHub Actions | Las corridas de workflow se disparan por PR en este repositorio: el push a la rama no las genera y la URL de la corrida nacerá con la PR que abre el orquestador. La evidencia local completa es la de arriba. |
+
+**Matiz sobre tipos generados (RI-1)**: el «SIN DIFF» cierra RI-1 para el esquema de esta rama
+(001–010). Al integrar las ramas hermanas, cuyas migraciones añaden tablas (p. ej. la `011` de
+captura de voz), volverá a hacer falta `bun run db:types` sobre el esquema combinado: lo ejecuta
+quien integre, al cerrar el conjunto.
 
 ## Transiciones sin acción enumerada (D3 · tarea 1.3)
 
