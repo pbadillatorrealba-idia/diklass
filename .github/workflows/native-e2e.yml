@@ -49,6 +49,7 @@ jobs:
         if: steps.credentials.outputs.configured == 'true'
       # `eas` is published as eas-cli; `--local` builds on this runner so the APK is a file
       # the Maestro action can upload. Requires the EAS project to be linked in app.json.
+      # See openspec/changes/implementar-identidad-y-acceso/design.md, section "CI de GitHub", job 5.
       - name: Build the Android e2e APK with EAS
         if: steps.credentials.outputs.configured == 'true'
         run: >
