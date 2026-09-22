@@ -58,6 +58,7 @@ bun test tests/unit tests/integration   # las vivas se omiten sin SUPABASE_LIVE_
 |---|---|---|
 | Rojo previo (suite 008 sin migración 009) | CI run [#35785252849](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849), job [Supabase database tests](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849/job/106940381816) (2026-09-22) | **4/26 fallan exactamente** los asserts 14 (cierre atómico D4), 20 (`CONSULTATION_LINK_IMMUTABLE`), 21 (`CLINICAL_RECORD_SEALED`) y 25 (segunda consulta cerrada) por la razón prevista; suites 001–007 verdes |
 | Reproducción local (evidencia complementaria) | clúster PostgreSQL 18 scratch con pgTap 1.3.4, fuera del repo (`/tmp/verify`) | rojo 22 ok / 4 not-ok (mismos 4 asserts); verde 26/26 con la migración 009; suites 001–007 verdes con 009 aplicada (12/12, 17/17, 14/14, 30/30, 18/18, 5/5, 10/10) |
+| Verde oficial (con migración 009 + modelos TS) | CI run [#35785766371](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371), job [Supabase database tests](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785766371/job/106942064048) (2026-09-22) | **26/26 verdes** en la suite 008 y suites 001–007 verdes; `supabase gen types` sin diff |
 
 **Modelos TS (tareas 2.1–2.3)**: `bun test tests/unit/registro` — rojo previo por módulos inexistentes
 (la razón prevista) y luego **56 pass / 0 fail** (125 `expect()`), verificado localmente.
