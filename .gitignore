@@ -238,3 +238,5 @@ expo-env.d.ts
 # The Python template's global `lib/` rule must not hide application libraries.
 !src/lib/
 !src/lib/**
+!scripts/lib/
+!scripts/lib/**

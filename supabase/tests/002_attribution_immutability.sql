@@ -1,5 +1,5 @@
 begin;
-select plan(15);
+select plan(17);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: two veterinarians of one clinic, both with a live access session.
@@ -27,11 +27,14 @@ values
   ('b2b2b2b2-0000-0000-0000-0000000000b2', 'c2c2c2c2-0000-0000-0000-0000000000c2',
    'bruno.attribution@example.test', 'Dr. Bruno Compartido');
 
-insert into public.access_sessions (veterinarian_id)
-values ('a2a2a2a2-0000-0000-0000-0000000000a2'), ('b2b2b2b2-0000-0000-0000-0000000000b2');
+insert into public.access_sessions (veterinarian_id, auth_session_id)
+values ('a2a2a2a2-0000-0000-0000-0000000000a2', '5e5a2000-0000-0000-0000-0000000000a2'),
+       ('b2b2b2b2-0000-0000-0000-0000000000b2', '5e5b2000-0000-0000-0000-0000000000b2');
 
 -- Ana registers a patient and drafts an epicrisis.
-select set_config('request.jwt.claim.sub', 'a2a2a2a2-0000-0000-0000-0000000000a2', true);
+select set_config('request.jwt.claims',
+  '{"sub":"a2a2a2a2-0000-0000-0000-0000000000a2","role":"authenticated","session_id":"5e5a2000-0000-0000-0000-0000000000a2"}',
+  true);
 set local role authenticated;
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
@@ -60,8 +63,8 @@ select throws_ok(
   $$insert into public.clinical_records (clinic_id, record_type, content, status, approved_by, approved_at)
     values ('c2c2c2c2-0000-0000-0000-0000000000c2', 'epicrisis', '{}', 'draft',
             'b2b2b2b2-0000-0000-0000-0000000000b2', timezone('utc', now()))$$,
-  '23514',
-  'ATTRIBUTION_IMMUTABLE',
+  '42501',
+  'permission denied for table clinical_records',
   'a veterinarian cannot insert a record naming a colleague as its approver'
 );
 
@@ -91,7 +94,9 @@ reset role;
 -- FR-066 / T055 / T056: Bruno attends a patient Ana registered.
 -- ---------------------------------------------------------------------------
 
-select set_config('request.jwt.claim.sub', 'b2b2b2b2-0000-0000-0000-0000000000b2', true);
+select set_config('request.jwt.claims',
+  '{"sub":"b2b2b2b2-0000-0000-0000-0000000000b2","role":"authenticated","session_id":"5e5b2000-0000-0000-0000-0000000000b2"}',
+  true);
 set local role authenticated;
 
 select results_eq(
@@ -122,8 +127,8 @@ select results_eq(
 select throws_ok(
   $$update public.clinical_records set approved_by = 'b2b2b2b2-0000-0000-0000-0000000000b2'
     where id = 'd2d2d2d2-0000-0000-0000-0000000000d2'$$,
-  '23514',
-  'ATTRIBUTION_IMMUTABLE',
+  '42501',
+  'permission denied for table clinical_records',
   'approval columns cannot be written by a plain UPDATE'
 );
 
@@ -164,6 +169,40 @@ select throws_ok(
   'only an epicrisis is approvable, keeping the audit action truthful'
 );
 
+-- ---------------------------------------------------------------------------
+-- Whole-branch review: the diklass.approving flag alone must not disable the guard.
+-- `select set_config('diklass.approving','on',true)` succeeds for role authenticated, but
+-- only approve_clinical_record (security definer, owned by postgres) may actually flip the
+-- flag and have it count: the trigger also requires current_user = postgres.
+-- ---------------------------------------------------------------------------
+
+select set_config('diklass.approving', 'on', true);
+select throws_ok(
+  $$update public.clinical_records set status = 'approved'
+    where id = 'd2d2d2d2-0000-0000-0000-0000000000d1'$$,
+  '42501',
+  'permission denied for table clinical_records',
+  'setting diklass.approving as authenticated does not bypass the status/approval guard'
+    || ' (column grants still refuse the write)'
+);
+select set_config('diklass.approving', 'off', true);
+
+reset role;
+
+-- The column grants above are one layer; the trigger's current_user check is the other.
+-- A role with full column privileges (service_role, granted by default) proves the trigger
+-- alone -- not just the grants -- refuses a client-set flag: before 008 this update would
+-- have succeeded, since the old trigger trusted the flag with no regard for who set it.
+set local role service_role;
+select set_config('diklass.approving', 'on', true);
+select throws_ok(
+  $$update public.clinical_records set status = 'approved'
+    where id = 'd2d2d2d2-0000-0000-0000-0000000000d1'$$,
+  '23514',
+  'ATTRIBUTION_IMMUTABLE',
+  'the trigger itself refuses the flag for a non-owner role even when column grants would allow the write'
+);
+select set_config('diklass.approving', 'off', true);
 reset role;
 
 -- ---------------------------------------------------------------------------

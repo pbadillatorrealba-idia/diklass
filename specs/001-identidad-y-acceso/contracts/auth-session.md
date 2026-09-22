@@ -36,9 +36,11 @@ los tokens nunca se registran.
 
 ## Logout
 
-La app llama a `revoke_access_sessions()` y después a `supabase.auth.signOut()`. Ambas operaciones
-son idempotentes. Tras logout, RLS debe rechazar cualquier lectura o escritura clínica con la sesión
-anterior.
+Un veterinario puede tener sesiones abiertas en varios dispositivos a la vez. El logout cierra solo la
+del dispositivo actual: la app llama a `revoke_current_access_session()` y después a
+`supabase.auth.signOut({ scope: 'local' })`. Ambas operaciones son idempotentes. Tras logout, RLS debe
+rechazar cualquier lectura o escritura clínica con la sesión anterior, y las sesiones de otros
+dispositivos siguen activas. `revoke_access_sessions()` cierra la sesión en todos los dispositivos.
 
 ## Actividad y expiración
 
@@ -46,8 +48,16 @@ La app llama a `touch_access_session()` al detectar interacción real del usuari
 función actualiza `last_activity_at` solo para `auth.uid()` y nunca acepta timestamps del cliente.
 
 La función `is_active_access(auth.uid())`, usada por las policies RLS, devuelve falso cuando no existe
-una sesión no revocada cuya actividad tenga menos de ocho horas. Por tanto, una llamada directa que
-evite Expo Router sigue siendo denegada.
+una sesión no revocada cuya actividad tenga menos de ocho horas y que esté ligada al `session_id` del
+JWT de la petición. Por tanto, una llamada directa que evite Expo Router sigue siendo denegada, y un
+token de otra sesión de Auth del mismo veterinario tampoco pasa.
+
+## Restauración de sesión
+
+Al reabrir la app o recargar la web con una sesión de Supabase restaurada, la app llama a
+`current_access_session()`. La función devuelve la sesión de acceso ligada al `session_id` del JWT
+actual, o `null`. Con `null`, la app cierra la sesión de Supabase de este dispositivo y conduce al
+login. Iniciar sesión en otro dispositivo no afecta a las sesiones existentes.
 
 La respuesta normalizada para sesión ausente, revocada o expirada es:
 

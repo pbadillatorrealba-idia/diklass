@@ -4,6 +4,7 @@
     "ignoreUnknown": true,
     "includes": [
       "src/**",
+      "!src/lib/supabase/database.types.ts",
       "!src/global.css",
       "tests/**",
       "scripts/**",

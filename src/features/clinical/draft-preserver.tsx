@@ -18,6 +18,24 @@ type DraftPreserverOptions = {
 
 const DRAFT_DEBOUNCE_MS = 500;
 
+// A failed write must not become an unhandled rejection: report it (Constitution IV).
+// Resolves to whether the write succeeded, so a caller that needs to tell the user the
+// truth (e.g. "the draft was kept") can check it; callers that only fire-and-forget (the
+// debounce, expiry and unmount flushes below) can ignore the resolved value.
+export function flushDraft(session: DraftSession): Promise<boolean> {
+  return session.flush().then(
+    () => true,
+    (error: unknown) => {
+      void captureClientError(errorReporter, {
+        error,
+        operation: "save_draft",
+        requestId: makeRequestId(),
+      });
+      return false;
+    },
+  );
+}
+
 export function useDraftPreserver({
   veterinarianId,
   consultationId,
@@ -76,21 +94,23 @@ export function useDraftPreserver({
       return;
     }
     session.edit(draft);
-    const timeout = setTimeout(() => void session.flush(), DRAFT_DEBOUNCE_MS);
+    const timeout = setTimeout(() => flushDraft(session), DRAFT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [draft, isRestored, session]);
 
   // Expiry must keep the latest edit instead of dropping the pending debounce (FR-061).
   useEffect(() => {
     if (session && !isSessionActive) {
-      void session.flush();
+      flushDraft(session);
     }
   }, [isSessionActive, session]);
 
   // Leaving the screen (reauthentication navigates away) flushes as well.
   useEffect(
     () => () => {
-      void session?.flush();
+      if (session) {
+        flushDraft(session);
+      }
     },
     [session],
   );

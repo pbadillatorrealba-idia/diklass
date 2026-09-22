@@ -16,7 +16,8 @@
     "test:integration": "bun test tests/integration",
     "test:e2e:web": "playwright test",
     "test:e2e:native": "maestro test tests/e2e/native",
-    "provision:veterinarians": "bun scripts/provision-veterinarians.ts"
+    "provision:veterinarians": "bun scripts/provision-veterinarians.ts",
+    "db:types": "supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

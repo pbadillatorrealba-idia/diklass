@@ -14,7 +14,9 @@ export type AuthClient = AccessSessionRpcClient & {
       data: { user: AuthUser | null; session: unknown | null };
       error: unknown | null;
     }>;
-    signOut: () => Promise<{ error: unknown | null }>;
+    signOut: (options?: { scope?: "global" | "local" | "others" }) => Promise<{
+      error: unknown | null;
+    }>;
   };
 };
 
@@ -62,14 +64,16 @@ export async function signInWithPassword(
 
     return { user: data.user, accessSessionId: result.id, accessSessionExpiresAt: expiresAt };
   } catch (sessionError) {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: "local" });
     throw new AuthenticationError(normalizeAuthError(sessionError, requestId));
   }
 }
 
 export async function signOut(client: AuthClient): Promise<void> {
-  await client.rpc<boolean>("revoke_access_sessions");
-  const { error } = await client.auth.signOut();
+  // D1: a veterinarian may be signed in on several devices, so logout ends only this one.
+  // supabase.auth.signOut() defaults to scope "global", which would end every device.
+  await client.rpc<boolean>("revoke_current_access_session");
+  const { error } = await client.auth.signOut({ scope: "local" });
   if (error && normalizeAuthError(error).code === AuthErrorCode.ServiceUnavailable) {
     throw error;
   }

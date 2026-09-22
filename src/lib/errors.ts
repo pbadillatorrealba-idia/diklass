@@ -67,3 +67,25 @@ export class AccessDeniedError extends Error {
     this.name = "AccessDeniedError";
   }
 }
+
+/**
+ * RLS denial (42501) or a rejected JWT (PGRST3xx): the session is no longer valid.
+ *
+ * A grant refusal also surfaces as 42501 (PostgreSQL: "permission denied for table ..."),
+ * but that means the client sent a column the Data API role cannot write — a client bug,
+ * not an expired session — so it is excluded here to avoid a false "session expired" dialog.
+ */
+export function isAuthenticationRequired(error: unknown): boolean {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code: unknown }).code)
+      : "";
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : "";
+  if (message.startsWith("permission denied for")) {
+    return false;
+  }
+  return code === "42501" || code.startsWith("PGRST3");
+}
