@@ -50,10 +50,34 @@ bun test tests/unit tests/integration   # las vivas se omiten sin SUPABASE_LIVE_
    permanece idéntica; listar el historial en orden cronológico con su epicrisis; interrumpir y
    retomar una consulta sin contaminar el historial.
 
-## Evidencia de verificación
+## Evidencia de verificación (incremental)
 
-<!-- Se completa en la tarea 5.2 con comandos reales, resultados y URLs de ejecuciones de CI. -->
-_Pendiente de registro al cerrar las compuertas._
+**Suite pgTap 008 — ciclo rojo→verde (Constitución II).**
+
+| Etapa | Dónde | Resultado |
+|---|---|---|
+| Rojo previo (suite 008 sin migración 009) | CI run [#35785252849](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849), job [Supabase database tests](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35785252849/job/106940381816) (2026-09-22) | **4/26 fallan exactamente** los asserts 14 (cierre atómico D4), 20 (`CONSULTATION_LINK_IMMUTABLE`), 21 (`CLINICAL_RECORD_SEALED`) y 25 (segunda consulta cerrada) por la razón prevista; suites 001–007 verdes |
+| Reproducción local (evidencia complementaria) | clúster PostgreSQL 18 scratch con pgTap 1.3.4, fuera del repo (`/tmp/verify`) | rojo 22 ok / 4 not-ok (mismos 4 asserts); verde 26/26 con la migración 009; suites 001–007 verdes con 009 aplicada (12/12, 17/17, 14/14, 30/30, 18/18, 5/5, 10/10) |
+
+**Modelos TS (tareas 2.1–2.3)**: `bun test tests/unit/registro` — rojo previo por módulos inexistentes
+(la razón prevista) y luego **56 pass / 0 fail** (125 `expect()`), verificado localmente.
+
+<!-- Verde de CI con migración 009 + TS y el resto de compuertas: se registra en 5.2. -->
+
+## Transiciones sin acción enumerada (D4 · tarea 1.3)
+
+`clinical_record_action` devuelve `null` (sin evento de auditoría propio) en exactamente tres
+transiciones — verificado en `003_attribution_hardening.sql` y por el assert 16 de la suite 008:
+
+1. `INSERT` de `epicrisis`: el borrador nace sin acción enumerada; solo su aprobación lo es.
+2. `UPDATE` de `epicrisis`: la edición del borrador (y el propio `UPDATE` que ejecuta la aprobación:
+   su evento `epicrisis_approved` lo inserta la RPC, no el trigger).
+3. `UPDATE` de `consultation`: el cierre es consecuencia de la aprobación (D4) y
+   `epicrisis_approved` es su única acción enumerada.
+
+Ninguna otra transición da `null`: el `INSERT` cubre los 12 `record_type` salvo `epicrisis`; el
+`UPDATE` los cubre salvo `consultation` y `epicrisis`; `status='corrective'` siempre mapea a
+`corrective_record_created`.
 
 ## Tareas pendientes de 001 (identidad y acceso) — estado documental
 
