@@ -21,12 +21,14 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   como borrador sin evento de auditoría (D6 · FR-017 · SC-005), edición y descarte de borrador sin
   evento (D6), `pending → confirmed` emite exactamente un `audio_fact_confirmed` cuyo actor es el
   confirmante —distinto del que abrió la consulta— (FR-068 · SC-048 · US6-AC15), la transición a
-  `confirmed` solo es posible vía la RPC `confirm_audio_fact` (D5 · D6 · FR-017), imposible fabricar
+  `confirmed` aterriza en la misma transacción la entrada de anamnesis y exige contenido válido
+  (`AUDIO_FACT_INVALID_CONTENT`, D5 · D6 · FR-017), imposible fabricar
   un `audio_fact` ya confirmado por INSERT (D6), hechos confirmados inmutables (SC-027 · FR-017),
-  confirmación rechazada con consulta cerrada (`CONSULTATION_NOT_OPEN`, US6-AC4 · FR-010) y sin
-  sesión de acceso (`AUTHENTICATION_REQUIRED`, FR-068), la RPC aterriza la entrada de anamnesis con
-  `provenance = 'inferida'` sin alterarla al confirmar (FR-021 · US6-AC9) y con `anamnesisEntryId`
-  enlazado en la traza (SC-027 · US6-AC6), atribución server-stamped de `listening_sessions.started_by`
+  confirmación rechazada con consulta cerrada (`CLINICAL_RECORD_SEALED` de 002, US6-AC4 · FR-010) y
+  sin sesión de acceso (`AUTHENTICATION_REQUIRED`, FR-068), el aterrizaje crea la entrada de
+  anamnesis con `provenance = 'inferida'` sin alterarla al confirmar (FR-021 · US6-AC9) y con
+  `anamnesisEntryId` derivado por el servidor y enlazado en la traza (SC-027 · US6-AC6), CHECKs de
+  `state`/`quality`/`processing_state` (D8 · D10 · FR-031 · US6-AC12), atribución server-stamped de `listening_sessions.started_by`
   imposible de suplantar por el cliente (FR-068 · D8 · FR-063), RLS de `listening_sessions` y
   `transcript_segments` (sesión activa y clínica compartida) y `processing_state` explícito de los
   tramos al interrumpir (FR-055 · US6-AC12 · D10). Verificación: suite 010 con asserts en `not ok`
@@ -34,11 +36,12 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
 - [ ] 1.3 Escribir `supabase/migrations/011_captura_voz.sql`: refinamiento de
   `clinical_record_action` solo para `audio_fact` conservando firma, `language sql immutable`,
   `set search_path = public, extensions` y privilegios (D6, fijados por `004_function_privileges.sql`),
-  trigger `guard_audio_fact_lifecycle` (D6 completo), tablas `listening_sessions` y
+  trigger `guard_audio_fact_lifecycle` (D6 completo, incluido el aterrizaje atómico de la anamnesis
+  de D5), tablas `listening_sessions` y
   `transcript_segments` con columnas de atribución server-stamped, privilegios de columna revocados,
   RLS de clínica compartida con sesión activa y CHECK de `state`/`quality`/`processing_state` (D8,
-  D10), y RPC `confirm_audio_fact(uuid)` transaccional con validaciones y errores normalizados
-  (D5), `grant execute … to authenticated` y `log_server_event`. Verificación: suite 010 verde en
+  D10) — sin ninguna función ejecutable nueva, conservando intacta la enumeración taxativa de
+  `004_function_privileges.sql`. Verificación: suite 010 verde en
   `/tmp/verify-004/` y suites 001–008 sin regresión en el mismo clúster; job `database` de CI verde
   en pgTap (suites 001–010) — la compuerta de tipos queda documentada como R1 pendiente.
 
@@ -83,8 +86,9 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   mitad de tramo (FR-055 · US6-AC12). Verificación: `bun test tests/unit/voz` rojo→verde.
 - [ ] 3.2 Escribir en rojo `tests/unit/voz/audio-fact-service.test.ts` y luego
   `src/features/voz/audio-fact-service.ts`: alta de borradores desde la extracción (FR-016 ·
-  FR-017 · SC-005), edición y descarte por antecedente (US6-AC3), `confirmAudioFact` como envoltura
-  de la RPC `confirm_audio_fact` (D5 · FR-068 · SC-048 · US6-AC15) con la atribución real de la
+  FR-017 · SC-005), edición y descarte por antecedente (US6-AC3), `confirmAudioFact` como
+  confirmación vía `updateClinicalContent` que aterriza la anamnesis en la misma transacción
+  (D5 · FR-068 · SC-048 · US6-AC15) con la atribución real de la
   respuesta, procedencia `inferida` que no cambia al confirmar (FR-021 · US6-AC9) y listado con
   fragmento de origen para la revisión (SC-027 · US6-AC6). Toda mutación cruza
   `src/lib/attribution` (D8 · FR-063). Verificación: ídem 3.1.
@@ -148,6 +152,6 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   de entregar (mismo ciclo de revisión de artefactos). Verificación: artefactos coherentes entre sí
   y con el código.
 - [ ] 6.2 Preparar el reporte final en español para el orquestador: mapa tarea ↔ FR/US/SC, mapa de
-  decisiones duras (ASR simulado por defecto, procedencia `inferida`, RPC de confirmación,
-  refinamiento del mapping) y lista de requisitos de integración R1–R3. Verificación: reporte
+  decisiones duras (ASR simulado por defecto, procedencia `inferida`, confirmación atómica por
+  trigger de dominio, refinamiento del mapping) y lista de requisitos de integración R1–R3. Verificación: reporte
   entregado; sin PRs ni merges (restricción de esta rama).

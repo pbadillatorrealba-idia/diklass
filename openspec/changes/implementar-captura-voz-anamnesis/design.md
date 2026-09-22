@@ -149,31 +149,29 @@ FR-032 prohíbe resolverla por cuenta del sistema y US6-AC8 prohíbe sobrescribi
 decisión es siempre del veterinario. Los falsos positivos son admisibles porque el resultado es una
 advertencia revisable, nunca una escritura.
 
-### D5. Confirmación atómica en servidor: RPC `confirm_audio_fact` (patrón `approve_clinical_record`)
+### D5. Confirmación atómica: el trigger de dominio aterriza la anamnesis en la misma transacción
 
-La única ruta sancionada de confirmación es la RPC `confirm_audio_fact(p_audio_fact_id uuid)`
-(migración 011), espejo deliberado de `approve_clinical_record`: `security definer`,
-`set search_path = public, extensions`, `actor := auth.uid()`, validaciones con errores
-normalizados (`AUTHENTICATION_REQUIRED` 42501, `RECORD_NOT_FOUND` 42501, `INVALID_INPUT` 22023,
-`AUDIO_FACT_IMMUTABLE` 23514, `CONSULTATION_NOT_OPEN` 23514), `log_server_event`, respuesta `jsonb`
-con la atribución real, y `grant execute … to authenticated`. En **una sola transacción**:
+La única ruta de confirmación es la UPDATE del borrador a `confirmationState = 'confirmed'` por el
+contrato `updateClinicalContent` (sesión activa obligatoria vía RLS y `stamp_update_attribution`,
+FR-068). El trigger `guard_audio_fact_lifecycle` (`BEFORE UPDATE`, ver D6) **aterriza en la misma
+transacción** la entrada de anamnesis de 002 con `provenance = 'inferida'` y enlaza
+`content.anamnesisEntryId` antes de dejar pasar la UPDATE: la sentencia es indivisible, no existe
+estado intermedio persistido (`pending → confirmed | discarded`, estados terminales) ni ventana de
+fallo parcial, y `confirmed` solo puede escribirse aterrizando — no hay ruta de confirmación que
+burlar. Los triggers de auditoría existentes emiten `anamnesis_recorded` (actor = confirmante,
+derivado del servidor) y `audio_fact_confirmed` (actor = confirmante, que puede ser distinto del que
+abrió la consulta, US6-AC15 · SC-048); la procedencia queda en `inferida` y no cambia
+(FR-021 · US6-AC9).
 
-1. Valida: sesión de acceso activa (FR-068), fila `audio_fact` en `pending`, y que su
-   `content.consultationId` resuelve a una consulta `open`.
-2. INSERT de la entrada de anamnesis de 002 con `provenance = 'inferida'` (trigger emite
-   `anamnesis_recorded`, actor = confirmante).
-3. UPDATE del `audio_fact` a `confirmationState = 'confirmed'` con `anamnesisEntryId` (trigger emite
-   `audio_fact_confirmed`, actor = confirmante), dentro de la bandera transaccional
-   `diklass.confirming_audio_fact` que exige el trigger de D6.
-
-La confirmación queda atribuida server-side al confirmante (que puede ser distinto del que abrió la
-consulta, US6-AC15 · SC-048), la procedencia queda en `inferida` y no cambia (FR-021 · US6-AC9), y
-no existe estado intermedio persistido: `pending → confirmed | discarded` con estados terminales.
-
-*Alternativa rechazada*: orquestar en el cliente dos escrituras (anamnesis y luego `updateClinicalContent`) — deja una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o
-traza sin anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción. Al
-margen, la RPC deriva el actor en el servidor (Constitución V: atribución server-side), que el
-cliente no puede nombrar.
+*Alternativas rechazadas*: (a) una RPC `confirm_audio_fact(uuid)` al estilo
+`approve_clinical_record` — la enumeración de funciones ejecutables por `authenticated` está
+pinificada taxativamente en `004_function_privileges.sql` (exactamente nueve) y el orquestador exige
+las suites 001–008 verdes sin tocarlas: toda RPC nueva con `grant execute` rompe esa suite
+compartida; (b) orquestar en el cliente dos escrituras (anamnesis y luego UPDATE de la traza) — deja
+una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o traza sin
+anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción. La atribución
+server-side (Constitución V) se conserva: `created_by`/`updated_by`/`actor_id` los sella el servidor
+desde `auth.uid()` y el cliente no puede nombrarlos.
 
 ### D6. Refinamiento de `clinical_record_action` y sellado del ciclo de vida de `audio_fact`
 
@@ -196,9 +194,11 @@ Complemento: el trigger `guard_audio_fact_lifecycle` (`BEFORE INSERT OR UPDATE`)
 confirmaciones fuera de la ruta sancionada: (a) INSERT solo con `confirmationState = 'pending'`;
 (b) cualquier UPDATE sobre un estado terminal (`confirmed`, `discarded`) → `AUDIO_FACT_IMMUTABLE`
 23514 — la traza confirmada es inmutable (SC-027) y las correcciones del antecedente van por las
-rutas de corrección de anamnesis de 002 (`correctProvenance`, anamnesis correctiva); (c) la
-transición a `confirmed` exige la bandera transaccional `diklass.confirming_audio_fact` que solo
-enciende la RPC de D5.
+rutas de corrección de anamnesis de 002 (`correctProvenance`, anamnesis correctiva); y (c) la
+transición a `confirmed` **aterriza** en la misma transacción la entrada de anamnesis (D5): exige
+`consultationId`, `field` y `text` válidos (`AUDIO_FACT_INVALID_CONTENT` 22023), inserta la entrada
+de anamnesis de 002 con `provenance = 'inferida'` y reescribe `content.anamnesisEntryId` con el id
+que devuelve ese INSERT — id derivado por el servidor, nunca por el cliente.
 
 ### D7. Procedencia del flujo de voz = `inferida` (justificación)
 
@@ -271,7 +271,7 @@ se verifican con aserciones de tiempo/secuencia en las pruebas indicadas.
 
 | ID | Requisito | Archivo compartido | Efecto hasta aplicarlo |
 |---|---|---|---|
-| R1 | Regenerar los tipos generados tras la migración 011: `supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts` (los tipos nuevos incluyen `listening_sessions`, `transcript_segments` y la RPC `confirm_audio_fact`) | `src/lib/supabase/database.types.ts` | La compuerta de CI «Generated database types match the migrations» queda en rojo en esta rama; la integración viva en CI queda tras ese paso. Mientras, `src/features/voz/db-types.ts` contiene el seam de tipado (un único `asVozClient`) con los tipos generados desde el clúster scratch, para que `bun run typecheck` quede limpio; se elimina al aplicar R1 |
+| R1 | Regenerar los tipos generados tras la migración 011: `supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts` (los tipos nuevos incluyen `listening_sessions` y `transcript_segments`) | `src/lib/supabase/database.types.ts` | La compuerta de CI «Generated database types match the migrations» queda en rojo en esta rama; la integración viva en CI queda tras ese paso. Mientras, `src/features/voz/db-types.ts` contiene el seam de tipado (un único `asVozClient`) con los tipos generados desde el clúster scratch, para que `bun run typecheck` quede limpio; se elimina al aplicar R1 |
 | R2 | Montar el modo de escucha en el workspace de consulta (una importación y `<ListenModeSection consultationId={…} />`) | `src/app/(protected)/consultations/[id].tsx` | El botón «Modo de escucha» no aparece en la app; el componente aislado y sus pruebas existen |
 | R3 | Actualizar la nota «Transiciones sin acción enumerada» del quickstart de 002: con el refinamiento de D6, el INSERT de `audio_fact` (borrador) también devuelve `null` | `openspec/changes/implementar-registro-clinico-longitudinal/quickstart.md` | Nota documental desactualizada (ninguna prueba la pinifica) |
 
@@ -287,8 +287,8 @@ públicas (`recordAnamnesisEntry`, `listAnamnesisEntries`, `getConsultation`, `c
 | `CaptureSource` + `SyntheticCaptureSource` | FR-014 · FR-054 (señal de indisponibilidad) sin micrófono real | Al implementar `MicrophoneCaptureSource` (D3) |
 | `extractClinicalFacts` determinista | FR-016 con SC-004/SC-016 medibles sin dependencias externas | Si un requisito futuro exige un extractor externo (mismo seam que D2) |
 | `detectContradictions` | FR-032 (presentar la contradicción) | Nunca mientras la spec exija señalarla |
-| RPC `confirm_audio_fact` | FR-017 + FR-068 + SC-027/SC-048: confirmación atómica y atribución server-side | Nunca; es la ruta sancionada, igual que `approve_clinical_record` |
-| Refinamiento de `clinical_record_action` + `guard_audio_fact_lifecycle` | FR-017/FR-063: `audio_fact_confirmed` exactamente al confirmar y traza inmutable | Nunca mientras la spec exija confirmación explícita |
+| Trigger `guard_audio_fact_lifecycle` con aterrizaje de la anamnesis | FR-017 + FR-068 + SC-027/SC-048: confirmación atómica y atribución server-side sin funciones ejecutables nuevas (D5) | Nunca; es la única ruta de confirmación |
+| Refinamiento de `clinical_record_action` | FR-017/FR-063: `audio_fact_confirmed` exactamente al confirmar, nunca al insertar o editar un borrador | Nunca mientras la spec exija confirmación explícita |
 | Tablas `listening_sessions` y `transcript_segments` | FR-068 (atribución de activación, entidad Sesión de escucha), FR-055 · US6-AC12 (estado explícito por tramo), SC-027 (fragmento) | — |
 | Seam `src/features/voz/db-types.ts` | Tipos generados compartidos no editables (R1) | Al aplicar R1 |
 
@@ -302,7 +302,7 @@ documentadas). Capas arquitectónicas nuevas: **ninguna** (servicios sobre el pa
 |---|---|---|
 | Procesar una ventana de 30 s (transcribir + extraer + persistir borradores) con el adaptador simulado | ≤ 2 s desde el cierre de la ventana; y SC-028: el tramo N queda reflejado en el borrador antes del cierre del tramo N+1 | aserción de tiempo y de orden de eventos con reloj falso en `tests/unit/voz/listen-mode-controller.test.ts` (tarea 3.3) e integración (5.1) |
 | `extractClinicalFacts` sobre un tramo de ~30 s de habla | ≤ 300 ms de CPU | aserción de tiempo en `tests/unit/voz/extraction.test.ts` (tarea 2.3) |
-| `confirmAudioFact` (RPC: INSERT anamnesis + UPDATE traza) | ≤ 2 s con red local | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
+| `confirmAudioFact` (una UPDATE que aterriza la anamnesis en su misma transacción) | ≤ 2 s con red local | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
 | Listar borradores de una consulta (≤ 100 borradores, ≤ 10 tramos) | ≤ 2 s | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
 
 SC-004 (≥ 70 % de antecedentes identificados) y SC-016 (≤ 30 % de propuestas incorrectas) se miden
@@ -319,9 +319,11 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   «quién detuvo la escucha» y retención de audio/transcripción quedan fuera por no existir
   requisito.
 - **IV (observabilidad)**: servicios con `logEvent` + `requestId` y `captureClientError` en fallos;
-  la RPC usa `log_server_event` (patrón `approve_clinical_record`); ninguna excepción silenciada.
+  los triggers de la migración 011 siguen el patrón de los guards existentes (error normalizado que
+  aborta la escritura, nunca silenciado); ninguna excepción silenciada.
 - **V (seguridad)**: RLS y triggers del servidor como control real; validación Zod en cada frontera
-  de entrada; atribución server-side (la RPC deriva el actor de la sesión; columnas de atribución de
+  de entrada; atribución server-side (los triggers derivan el actor desde `auth.uid()` y el cliente
+  no puede nombrarlo; columnas de atribución de
   `listening_sessions` con privilegios de columna revocados); sin secretos nuevos.
 - **Accesibilidad web (WCAG 2.2 AA)**: etiquetas programáticas, operación por teclado, foco visible,
   contraste del paletín vigente y avisos nunca solo por color (D9); la compuerta visual/e2e queda
@@ -329,7 +331,7 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
 
 ## Risks / Trade-offs
 
-- **Compuerta de tipos en rojo hasta R1** (R1): la migración 011 añade tablas y una RPC, y
+- **Compuerta de tipos en rojo hasta R1** (R1): la migración 011 añade dos tablas, y
   `database.types.ts` es archivo compartido. Mitigación: el seam `db-types.ts` mantiene
   `bun run typecheck` limpio y la evidencia pgTap corre localmente; el paso exacto de desbloqueo
   está documentado. Es el coste de la única convención de persistencia sin tocar archivos ajenos.
@@ -349,7 +351,8 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   la garantía es estructural — nada aterriza en la ficha sin confirmación explícita por
   antecedente (FR-017) — y el riesgo se declara en la revisión (edge case de la spec).
 - **`jsonb` sin FK** (D1, igual que en 002): las referencias `transcriptSegmentId` /
-  `anamnesisEntryId` las asegura la única puerta de escritura (`audio-fact-service` + RPC) y las
+  `anamnesisEntryId` las asegura la única puerta de escritura (`audio-fact-service` + trigger de
+  dominio) y las
   pruebas de integración; es el coste de no crear una segunda convención clínica.
 
 ## Open Questions
