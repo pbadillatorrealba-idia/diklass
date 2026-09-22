@@ -5,10 +5,7 @@ import type { DiagnosisEntry } from "@/features/registro/diagnosis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import type { EpicrisisEntry } from "@/features/registro/epicrisis-service";
 import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
-import {
-  type ConsultationContent,
-  consultationContentSchema,
-} from "@/features/registro/schema";
+import { type ConsultationContent, consultationContentSchema } from "@/features/registro/schema";
 import {
   buildFollowUpSummary,
   buildPatientHistory,

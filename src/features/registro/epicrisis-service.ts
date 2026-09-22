@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listAnamnesisEntries } from "@/features/registro/anamnesis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
-import { getPatient } from "@/features/registro/ficha-service";
 import { buildEpicrisisDraft } from "@/features/registro/epicrisis-draft";
+import { getPatient } from "@/features/registro/ficha-service";
 import {
   consultationContentSchema,
   type EpicrisisContent,

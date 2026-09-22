@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type AnamnesisContent,
-  anamnesisContentSchema,
   type AnamnesisField,
+  anamnesisContentSchema,
   type Provenance,
 } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
