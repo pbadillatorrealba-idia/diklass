@@ -1,7 +1,9 @@
+import { useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { SafeAreaView } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -10,6 +12,7 @@ import { useSessionStore } from "@/stores/session-store";
 
 export default function HomeScreen() {
   const { signOut } = useAuth();
+  const router = useRouter();
   const displayName = useSessionStore((state) => state.displayName);
 
   return (
@@ -27,6 +30,13 @@ export default function HomeScreen() {
             <Text className="text-foreground/70">
               Tu identidad queda asociada a las operaciones clínicas de esta sesión.
             </Text>
+            <Button
+              accessibilityLabel="Ir a pacientes"
+              onPress={() => router.push("/patients")}
+              testID="home-patients"
+            >
+              <ButtonText>Pacientes</ButtonText>
+            </Button>
           </VStack>
           <LogoutButton onLogout={signOut} />
         </VStack>

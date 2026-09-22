@@ -6,6 +6,7 @@ import {
   type PatientContent,
   patientContentSchema,
   type TutorContent,
+  tutorContentSchema,
 } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createTutor } from "@/features/registro/tutor-service";
@@ -192,7 +193,21 @@ export async function getPatient(
     if (error) {
       throw error;
     }
-    return data ? { record: data, content: patientContentSchema.parse(data.content) } : null;
+    if (!data) {
+      return null;
+    }
+    // Frontera de lectura tolerante: una fila malformada ajena al contrato se omite con log
+    // estructurado (la escritura sigue siendo estricta). Una ficha ilegible resuelve `null`.
+    const legible = patientContentSchema.safeParse(data.content);
+    if (!legible.success) {
+      logEvent(
+        "registro.row_content_skipped",
+        { operation: "getPatient", recordId: patientId, errorName: "ZodError" },
+        "error",
+      );
+      return null;
+    }
+    return { record: data, content: legible.data };
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -215,10 +230,18 @@ export async function listPatients(client: SupabaseClient<Database>): Promise<Pa
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: patientContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = patientContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listPatients", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
