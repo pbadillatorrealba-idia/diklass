@@ -57,7 +57,7 @@ export async function startListenSession(
       state: "active",
     });
     const consulta = await getConsultation(client, planeada.consultationId);
-    if (!consulta || consulta.content.status !== "open") {
+    if (consulta?.content.status !== "open") {
       throw new Error("La escucha clínica requiere una consulta abierta (FR-014 · US6-AC14).");
     }
     const { data, error } = await asVozClient(client)

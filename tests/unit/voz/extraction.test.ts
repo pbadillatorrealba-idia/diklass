@@ -6,14 +6,6 @@ import { extractClinicalFacts } from "@/features/voz/extraction";
 // referencia (SC-004 recall ≥ 70 %, SC-016 propuestas incorrectas ≤ 30 %) y presupuesto
 // ≤ 300 ms de CPU por tramo (presupuestos de design.md).
 
-type Esperado = { field: string; sujeto: string };
-type TramoGuión = {
-  seq: number;
-  calidad: string;
-  transcripcion: string;
-  hechosEsperados: Esperado[];
-};
-
 const RUTA_GUIÓN = new URL("../../fixtures/voz/conversacion-referencia.json", import.meta.url);
 const esperadoSchema = z.object({ field: z.string(), sujeto: z.string() });
 const tramoGuiónSchema = z.object({
