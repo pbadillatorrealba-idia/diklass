@@ -104,6 +104,13 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
     await cerrarConsulta(ana.client, ana.clinicId, patientId, "uno");
     await cerrarConsulta(ana.client, ana.clinicId, patientId, "dos");
     await cerrarConsulta(ana.client, ana.clinicId, patientId, "tres");
+    // Consulta de trabajo compartida creada en beforeAll: los tests no consumen estado
+    // creado por otros tests (un fallo del primero no puede cascading en los demás).
+    const abiertaTrabajo = await openConsultation(ana.client, {
+      clinicId: ana.clinicId,
+      patientId,
+    });
+    consultaId = abiertaTrabajo.record.id;
   });
 
   test("apertura con fecha y profesional y resumen previo en ≤ 2 s (FR-003 · US2-AC1, FR-002/FR-013)", async () => {
@@ -115,13 +122,14 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
     const { history, followUp } = await listPatientTimeline(ana.client, patientId);
     expect(performance.now() - inicio).toBeLessThan(2000);
 
-    consultaId = abierta.record.id;
     expect(abierta.record.content).toEqual({ patientId, status: "open" });
     expect(Number.isNaN(Date.parse(abierta.record.created_at))).toBe(false);
     expect(abierta.attribution.actorId).toBe(ana.userId);
     expect(abierta.attribution.action).toBe("consultation_opened");
 
-    expect(history).toHaveLength(4);
+    // ≥ 4: clínica compartida con la consulta de trabajo del beforeAll; lo que se fija es
+    // el orden cronológico y el contenido del resumen (abajo), no el conteo absoluto.
+    expect(history.length).toBeGreaterThanOrEqual(4);
     const aperturas = history.map((entrada) => Date.parse(entrada.openedAt));
     expect(aperturas).toEqual([...aperturas].sort((a, b) => a - b));
     expect(followUp.previousDiagnoses).toEqual([
