@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import {
   aggregateFeedback,
   buildFeedbackAntecedents,
@@ -7,7 +8,6 @@ import {
   type FeedbackEntry,
 } from "@/features/retroalimentacion/feedback-summary";
 import type { FeedbackContent } from "@/features/retroalimentacion/schema";
-import type { ClinicalRecordRow } from "@/features/registro/summaries";
 
 function fila(overrides: Partial<ClinicalRecordRow> = {}): ClinicalRecordRow {
   return {
@@ -79,10 +79,7 @@ describe("buildFeedbackTimeline — cronología sin sobrescritura (FR-056 · US1
 
   test("filtra por consulta cuando se pide", () => {
     const timeline = buildFeedbackTimeline(
-      [
-        entrada("fb-1", { consultationId: "c-1" }),
-        entrada("fb-2", { consultationId: "c-2" }),
-      ],
+      [entrada("fb-1", { consultationId: "c-1" }), entrada("fb-2", { consultationId: "c-2" })],
       "c-1",
     );
 
@@ -133,12 +130,20 @@ describe("buildFeedbackTimeline — corrección como registro nuevo (FR-024 · U
       entrada(
         "fb-corr-1",
         { consultationId: "c-1" },
-        { createdAt: "2026-09-15T09:00:00.000Z", correctsRecordId: "fb-original", status: "corrective" },
+        {
+          createdAt: "2026-09-15T09:00:00.000Z",
+          correctsRecordId: "fb-original",
+          status: "corrective",
+        },
       ),
       entrada(
         "fb-corr-2",
         { consultationId: "c-1" },
-        { createdAt: "2026-09-22T09:00:00.000Z", correctsRecordId: "fb-original", status: "corrective" },
+        {
+          createdAt: "2026-09-22T09:00:00.000Z",
+          correctsRecordId: "fb-original",
+          status: "corrective",
+        },
       ),
     ]);
 
@@ -155,17 +160,28 @@ describe("collectAdverseEvents — diferenciados del resto de la evolución (FR-
     const timeline = buildFeedbackTimeline([
       entrada(
         "fb-original",
-        { consultationId: "c-1", evolutionNote: "Mejora parcial", adverseEvents: [{ severity: "grave", description: "Convulsiones" }] },
+        {
+          consultationId: "c-1",
+          evolutionNote: "Mejora parcial",
+          adverseEvents: [{ severity: "grave", description: "Convulsiones" }],
+        },
         { createdAt: "2026-09-01T09:00:00.000Z" },
       ),
       entrada(
         "fb-corr",
         { consultationId: "c-1", evolutionNote: "Sin eventos", adverseEvents: [] },
-        { createdAt: "2026-09-15T09:00:00.000Z", correctsRecordId: "fb-original", status: "corrective" },
+        {
+          createdAt: "2026-09-15T09:00:00.000Z",
+          correctsRecordId: "fb-original",
+          status: "corrective",
+        },
       ),
       entrada(
         "fb-2",
-        { consultationId: "c-2", adverseEvents: [{ severity: "leve", description: "Somnolencia leve" }] },
+        {
+          consultationId: "c-2",
+          adverseEvents: [{ severity: "leve", description: "Somnolencia leve" }],
+        },
         { createdAt: "2026-09-22T09:00:00.000Z" },
       ),
     ]);
@@ -241,7 +257,11 @@ describe("aggregateFeedback — categóricos agregados sin texto libre (FR-043 �
           evolution: "mejoria",
           adverseEvents: [{ severity: "leve", description: "Somnolencia" }],
         },
-        { createdAt: "2026-09-15T09:00:00.000Z", correctsRecordId: "fb-original", status: "corrective" },
+        {
+          createdAt: "2026-09-15T09:00:00.000Z",
+          correctsRecordId: "fb-original",
+          status: "corrective",
+        },
       ),
     ]);
 
@@ -310,7 +330,11 @@ describe("buildFeedbackAntecedents — evolución previa presentable (FR-042 · 
       entrada(
         "fb-corr",
         { consultationId: "c-1", adherence: "completa" },
-        { createdAt: "2026-09-15T09:00:00.000Z", correctsRecordId: "fb-original", status: "corrective" },
+        {
+          createdAt: "2026-09-15T09:00:00.000Z",
+          correctsRecordId: "fb-original",
+          status: "corrective",
+        },
       ),
       entrada(
         "fb-2",

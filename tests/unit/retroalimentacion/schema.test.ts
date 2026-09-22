@@ -176,9 +176,9 @@ describe("feedbackContentSchema — campos categóricos obligatorios y forma cer
     expect(
       feedbackContentSchema.safeParse({ ...entradaBase, adverseEvents: undefined }).success,
     ).toBe(false);
-    expect(
-      feedbackContentSchema.safeParse({ ...entradaBase, consultationId: "  " }).success,
-    ).toBe(false);
+    expect(feedbackContentSchema.safeParse({ ...entradaBase, consultationId: "  " }).success).toBe(
+      false,
+    );
   });
 
   test("las claves ajenas al modelo no llegan al contenido que se escribe", () => {

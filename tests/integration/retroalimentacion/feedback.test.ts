@@ -1,24 +1,27 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import {
-  buildFeedbackAntecedents,
-  buildFeedbackTimeline,
-  collectAdverseEvents,
-  aggregateFeedback,
-} from "@/features/retroalimentacion/feedback-summary";
+import { listConsultationsByPatient } from "@/features/registro/consultation-service";
+import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import {
   correctFeedbackEntry,
   createFeedbackEntry,
   listFeedbackByConsultation,
   listFeedbackByPatient,
 } from "@/features/retroalimentacion/feedback-service";
-import type { FeedbackContent } from "@/features/retroalimentacion/schema";
-import { listConsultationsByPatient } from "@/features/registro/consultation-service";
-import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import {
-  approveClinicalRecord,
-  createClinicalRecord,
-} from "@/lib/attribution/clinical-mutations";
-import { ANA, BRUNO, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
+  aggregateFeedback,
+  buildFeedbackAntecedents,
+  buildFeedbackTimeline,
+  collectAdverseEvents,
+} from "@/features/retroalimentacion/feedback-summary";
+import type { FeedbackContent } from "@/features/retroalimentacion/schema";
+import { approveClinicalRecord } from "@/lib/attribution/clinical-mutations";
+import {
+  ANA,
+  BRUNO,
+  isLiveSupabase,
+  type LiveVeterinarian,
+  signedInVeterinarian,
+} from "../live-supabase";
 
 /**
  * Retroalimentación clínica contra Supabase viva (FR-018, FR-024, FR-039, FR-040, FR-041,
@@ -144,6 +147,9 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
           .select("*")
           .eq("id", epicrisis.id)
           .single();
+        if (!fila) {
+          throw new Error("No se pudo releer la epicrisis de la prueba.");
+        }
         epicrisisPrevia = fila;
       }
     };
@@ -303,6 +309,8 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
     expect(antecedente?.registeredAt).not.toBe(antecedente?.consultationDate);
     expect(antecedente?.adherence).toBe("completa");
     expect(antecedente?.treatmentApplied).toBe("Fluoxetina 20 mg cada 24 h");
-    expect(antecedente?.treatmentModification).toBe("Dosis reducida a 10 mg cada 24 h por somnolencia");
+    expect(antecedente?.treatmentModification).toBe(
+      "Dosis reducida a 10 mg cada 24 h por somnolencia",
+    );
   });
 });

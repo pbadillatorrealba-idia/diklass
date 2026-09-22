@@ -1,0 +1,348 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocalSearchParams } from "expo-router";
+import Head from "expo-router/head";
+import { useEffect, useMemo, useState } from "react";
+import { SafeAreaView, ScrollView } from "react-native";
+import { OptionPicker } from "@/components/registro/option-picker";
+import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
+import { AdverseEventReport } from "@/components/retroalimentacion/adverse-event-report";
+import { FeedbackForm } from "@/components/retroalimentacion/feedback-form";
+import { FeedbackTimeline } from "@/components/retroalimentacion/feedback-timeline";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { listConsultationsByPatient } from "@/features/registro/consultation-service";
+import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
+import { getPatient } from "@/features/registro/ficha-service";
+import { epicrisisContentSchema } from "@/features/registro/schema";
+import { effectiveEpicrisis } from "@/features/registro/summaries";
+import {
+  type AdverseEventFormValue,
+  emptyFeedbackFormValues,
+  type FeedbackFormValues,
+  feedbackFormValuesFromContent,
+  parseFeedbackValues,
+} from "@/features/retroalimentacion/feedback-form-values";
+import {
+  correctFeedbackEntry,
+  createFeedbackEntry,
+  listFeedbackByPatient,
+} from "@/features/retroalimentacion/feedback-service";
+import {
+  aggregateFeedback,
+  buildFeedbackAntecedents,
+  buildFeedbackTimeline,
+  collectAdverseEvents,
+} from "@/features/retroalimentacion/feedback-summary";
+import { supabase } from "@/lib/supabase/client";
+import { useSessionStore } from "@/stores/session-store";
+
+/**
+ * Panel de evolución del seguimiento del paciente (US10 en la superficie propia de D10):
+ * registro y corrección de retroalimentación sobre consultas cerradas, cronología con
+ * atribución, eventos adversos diferenciados (SC-035) y la evolución previa como antecedente
+ * (FR-042 · US10-AC6 en esta superficie; su integración en el resumen de la consulta
+ * posterior es el requisito de integración de D9).
+ */
+export default function FollowUpPanelScreen() {
+  const { patientId: routePatientId } = useLocalSearchParams<{ patientId: string }>();
+  const patientId = String(routePatientId);
+  const clinicId = useSessionStore((state) => state.clinicId);
+  const queryClient = useQueryClient();
+  const guard = useClinicalGuard();
+
+  const [selectedConsultationId, setSelectedConsultationId] = useState<string>("");
+  const [formValues, setFormValues] = useState<FeedbackFormValues>(emptyFeedbackFormValues);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [correctionTargetId, setCorrectionTargetId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+
+  const patientQuery = useQuery({
+    queryKey: ["registro", "patient", patientId],
+    queryFn: () => getPatient(supabase, patientId),
+  });
+  const consultationsQuery = useQuery({
+    queryKey: ["registro", "patient-consultations", patientId],
+    queryFn: () => listConsultationsByPatient(supabase, patientId),
+  });
+  const feedbackQuery = useQuery({
+    queryKey: ["retroalimentacion", "patient-feedback", patientId],
+    queryFn: () => listFeedbackByPatient(supabase, patientId),
+  });
+  const epicrisisQuery = useQuery({
+    queryKey: ["registro", "epicrisis", selectedConsultationId],
+    queryFn: async () => {
+      const rows = await listEpicrisisByConsultation(supabase, selectedConsultationId);
+      return effectiveEpicrisis(
+        rows.map((entry) => entry.record),
+        selectedConsultationId,
+      );
+    },
+    enabled: selectedConsultationId !== "",
+  });
+
+  const consultas = consultationsQuery.data ?? [];
+  const consultasCerradas = consultas.filter((entry) => entry.content.status === "closed");
+  const feedback = feedbackQuery.data ?? [];
+  const timeline = useMemo(() => buildFeedbackTimeline(feedback), [feedback]);
+  const eventosAdversos = useMemo(() => collectAdverseEvents(timeline), [timeline]);
+  const antecedentes = useMemo(
+    () =>
+      buildFeedbackAntecedents({
+        timeline,
+        consultations: consultas.map((entry) => entry.record),
+      }),
+    [timeline, consultas],
+  );
+  const agregados = useMemo(() => aggregateFeedback(timeline), [timeline]);
+  const epicrisisIndicada = useMemo(() => {
+    const fila = epicrisisQuery.data;
+    if (!fila) {
+      return null;
+    }
+    const legible = epicrisisContentSchema.safeParse(fila.content);
+    return legible.success ? legible.data : null;
+  }, [epicrisisQuery.data]);
+
+  const queryError =
+    patientQuery.error ?? consultationsQuery.error ?? feedbackQuery.error ?? epicrisisQuery.error;
+  useEffect(() => {
+    if (queryError) {
+      setStatus("No pudimos cargar la evolución del paciente. Vuelve a intentarlo.");
+    }
+  }, [queryError]);
+
+  const cambiarCampo = (patch: Partial<FeedbackFormValues>) => {
+    setFormValues((prev) => ({ ...prev, ...patch }));
+  };
+  const cambiarEvento = (index: number, patch: Partial<AdverseEventFormValue>) => {
+    setFormValues((prev) => ({
+      ...prev,
+      adverseEvents: prev.adverseEvents.map((evento, posicion) =>
+        posicion === index ? { ...evento, ...patch } : evento,
+      ),
+    }));
+  };
+  const agregarEvento = () => {
+    setFormValues((prev) => ({
+      ...prev,
+      adverseEvents: [...prev.adverseEvents, { severity: "leve", description: "" }],
+    }));
+  };
+  const quitarEvento = (index: number) => {
+    setFormValues((prev) => ({
+      ...prev,
+      adverseEvents: prev.adverseEvents.filter((_, posicion) => posicion !== index),
+    }));
+  };
+
+  const corregirEntrada = (entry: (typeof timeline)[number]) => {
+    setCorrectionTargetId(entry.record.id);
+    setSelectedConsultationId(entry.content.consultationId);
+    setFormValues(feedbackFormValuesFromContent(entry.content));
+    setFormErrors({});
+    setStatus("Corrigiendo una entrada: la corrección creará un registro nuevo.");
+  };
+
+  const cancelarCorreccion = () => {
+    setCorrectionTargetId(null);
+    setFormValues(emptyFeedbackFormValues);
+    setFormErrors({});
+    setStatus(null);
+  };
+
+  const guardar = async () => {
+    if (!clinicId) {
+      setStatus("La sesión no tiene una clínica asociada.");
+      return;
+    }
+    const { value, errors } = parseFeedbackValues(formValues, selectedConsultationId);
+    if (!value) {
+      setFormErrors(errors);
+      setStatus("Revisa los campos señalados antes de guardar.");
+      return;
+    }
+    setFormErrors({});
+    setIsBusy(true);
+    const desenlace = await guard(
+      correctionTargetId === null ? "createFeedbackEntry" : "correctFeedbackEntry",
+      async () => {
+        if (correctionTargetId === null) {
+          await createFeedbackEntry(supabase, { clinicId, content: value });
+        } else {
+          await correctFeedbackEntry(supabase, correctionTargetId, value);
+        }
+        await queryClient.invalidateQueries({
+          queryKey: ["retroalimentacion", "patient-feedback", patientId],
+        });
+      },
+    );
+    setIsBusy(false);
+    if (desenlace === "ok") {
+      setCorrectionTargetId(null);
+      setFormValues(emptyFeedbackFormValues);
+      setStatus("Retroalimentación registrada.");
+    } else if (desenlace === "error") {
+      setStatus("No pudimos registrar la evolución. Vuelve a intentarlo.");
+    }
+  };
+
+  const opcionesConsulta = consultasCerradas.map((entry) => ({
+    value: entry.record.id,
+    label: `Consulta del ${new Date(entry.record.created_at).toLocaleString("es-CL")}`,
+  }));
+
+  return (
+    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+      <Head>
+        <title>Seguimiento del paciente · Diklass</title>
+      </Head>
+      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
+        <VStack className="w-full max-w-[720px] gap-6">
+          <Heading size="2xl">
+            Seguimiento de {patientQuery.data?.content.name ?? "este paciente"}
+          </Heading>
+
+          <Box
+            className="rounded-xl border border-border bg-white p-4"
+            testID="feedback-antecedents"
+          >
+            <VStack className="gap-2">
+              <Heading size="lg">Evolución previa (antecedentes)</Heading>
+              {antecedentes.length === 0 ? (
+                <Text testID="feedback-antecedents-empty">
+                  Sin evolución registrada antes de hoy.
+                </Text>
+              ) : (
+                antecedentes.map((antecedente) => (
+                  <Text key={antecedente.feedbackRecordId} testID="feedback-antecedent-item">
+                    Consulta del{" "}
+                    {antecedente.consultationDate === null
+                      ? "(fecha no disponible)"
+                      : new Date(antecedente.consultationDate).toLocaleString("es-CL")}
+                    , evolución registrada el{" "}
+                    {new Date(antecedente.registeredAt).toLocaleString("es-CL")}: adherencia{" "}
+                    {antecedente.adherence}, evolución {antecedente.evolution}
+                    {antecedente.revisedDiagnosis === null
+                      ? ""
+                      : `; cambio de diagnóstico: ${antecedente.revisedDiagnosis}`}
+                  </Text>
+                ))
+              )}
+              <Text className="text-foreground/70">
+                Este es el antecedente que el resumen de la consulta posterior integrará cuando se
+                extienda `buildFollowUpSummary` (requisito de integración D9).
+              </Text>
+            </VStack>
+          </Box>
+
+          <FeedbackTimeline entries={timeline} onCorrect={corregirEntrada} />
+          <AdverseEventReport events={eventosAdversos} />
+
+          <Box
+            className="rounded-xl border border-border bg-white p-4"
+            testID="feedback-aggregates"
+          >
+            <VStack className="gap-1">
+              <Heading size="lg">Agregado por categoría</Heading>
+              <Text testID="feedback-aggregates-total">Entradas vigentes: {agregados.total}</Text>
+              <Text testID="feedback-aggregates-detail">
+                Adherencia — completa: {agregados.adherence.completa}, parcial:{" "}
+                {agregados.adherence.parcial}, ninguna: {agregados.adherence.ninguna}, desconocida:{" "}
+                {agregados.adherence.desconocida}. Evolución — mejoría:{" "}
+                {agregados.evolution.mejoria}, mejoría parcial: {agregados.evolution.mejoriaParcial}
+                , sin cambios: {agregados.evolution.sinCambios}, empeoramiento:{" "}
+                {agregados.evolution.empeoramiento}, desconocida: {agregados.evolution.desconocida}.
+                Eventos adversos — leve: {agregados.adverseEvents.leve}, moderado:{" "}
+                {agregados.adverseEvents.moderado}, grave: {agregados.adverseEvents.grave}.
+              </Text>
+            </VStack>
+          </Box>
+
+          <Box className="rounded-xl border border-border bg-white p-4" testID="feedback-register">
+            <VStack className="gap-4">
+              <Heading size="lg">
+                {correctionTargetId === null
+                  ? "Registrar evolución posterior"
+                  : "Corregir una entrada registrada"}
+              </Heading>
+              {consultasCerradas.length === 0 ? (
+                <Text testID="feedback-no-closed-consultations">
+                  La evolución se registra sobre una consulta cerrada: este paciente aún no tiene
+                  ninguna.
+                </Text>
+              ) : (
+                <>
+                  <OptionPicker
+                    isDisabled={isBusy || correctionTargetId !== null}
+                    label="Consulta a la que se refiere la evolución"
+                    onChange={(value: string) => setSelectedConsultationId(value)}
+                    options={opcionesConsulta}
+                    testID="feedback-consultation-picker"
+                    value={selectedConsultationId}
+                  />
+                  {epicrisisIndicada ? (
+                    <Box testID="feedback-indicated-treatment">
+                      <Text bold>Tratamiento indicado en esa consulta</Text>
+                      <Text>
+                        Medicamentos aprobados:{" "}
+                        {epicrisisIndicada.medicamentosAprobados.length === 0
+                          ? "ninguno"
+                          : epicrisisIndicada.medicamentosAprobados.join(", ")}
+                      </Text>
+                      <Text>
+                        Intervenciones propuestas:{" "}
+                        {epicrisisIndicada.intervencionesPropuestas.length === 0
+                          ? "ninguna"
+                          : epicrisisIndicada.intervencionesPropuestas.join(", ")}
+                      </Text>
+                    </Box>
+                  ) : null}
+                  <FeedbackForm
+                    errors={formErrors}
+                    isDisabled={isBusy}
+                    onAddAdverseEvent={agregarEvento}
+                    onChange={cambiarCampo}
+                    onChangeAdverseEvent={cambiarEvento}
+                    onRemoveAdverseEvent={quitarEvento}
+                    values={formValues}
+                  />
+                  <Button
+                    accessibilityLabel="Guardar la retroalimentación"
+                    isDisabled={isBusy || selectedConsultationId === ""}
+                    onPress={() => void guardar()}
+                    testID="feedback-submit"
+                  >
+                    <ButtonText>
+                      {correctionTargetId === null
+                        ? "Registrar evolución"
+                        : "Guardar corrección (registro nuevo)"}
+                    </ButtonText>
+                  </Button>
+                  {correctionTargetId === null ? null : (
+                    <Button
+                      accessibilityLabel="Cancelar la corrección"
+                      isDisabled={isBusy}
+                      onPress={cancelarCorreccion}
+                      testID="feedback-cancel-correction"
+                    >
+                      <ButtonText>Cancelar corrección</ButtonText>
+                    </Button>
+                  )}
+                </>
+              )}
+              {status === null ? null : (
+                <Text accessibilityLiveRegion="polite" testID="feedback-status">
+                  {status}
+                </Text>
+              )}
+            </VStack>
+          </Box>
+        </VStack>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

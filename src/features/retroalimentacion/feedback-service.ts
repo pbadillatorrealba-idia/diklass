@@ -1,16 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FeedbackEntry } from "@/features/retroalimentacion/feedback-summary";
-import {
-  type FeedbackContent,
-  feedbackContentSchema,
-} from "@/features/retroalimentacion/schema";
 import { listConsultationsByPatient } from "@/features/registro/consultation-service";
 import { consultationContentSchema } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
-import {
-  createClinicalRecord,
-  createCorrectiveRecord,
-} from "@/lib/attribution/clinical-mutations";
+import type { FeedbackEntry } from "@/features/retroalimentacion/feedback-summary";
+import { type FeedbackContent, feedbackContentSchema } from "@/features/retroalimentacion/schema";
+import { createClinicalRecord, createCorrectiveRecord } from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
 import {
   captureClientError,
@@ -50,7 +44,7 @@ export async function createFeedbackEntry(
     if (error) {
       throw error;
     }
-    if (!filaConsulta || filaConsulta.record_type !== "consultation") {
+    if (filaConsulta?.record_type !== "consultation") {
       throw new Error("No se encontró la consulta referida.");
     }
     const consulta = consultationContentSchema.parse(filaConsulta.content);
@@ -104,7 +98,7 @@ export async function correctFeedbackEntry(
     if (error) {
       throw error;
     }
-    if (!original || original.record_type !== "clinical_feedback") {
+    if (original?.record_type !== "clinical_feedback") {
       throw new Error("No se encontró la entrada de retroalimentación.");
     }
     const contenidoOriginal = feedbackContentSchema.parse(original.content);

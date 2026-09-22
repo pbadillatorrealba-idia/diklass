@@ -1,13 +1,13 @@
+import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import {
   Adherence,
-  AdverseEventSeverity,
-  type AdverseEvent,
-  Evolution,
   type Adherence as AdherenceValue,
+  type AdverseEvent,
+  AdverseEventSeverity,
+  Evolution,
   type Evolution as EvolutionValue,
   type FeedbackContent,
 } from "@/features/retroalimentacion/schema";
-import type { ClinicalRecordRow } from "@/features/registro/summaries";
 
 /**
  * Lecturas de la retroalimentación clínica como funciones puras (D8 del diseño del cambio).
@@ -73,7 +73,9 @@ function instante(iso: string): number {
 
 /** Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo. */
 function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
-  return instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  return (
+    instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
 }
 
 function recuentoCero<T extends string>(valores: readonly T[]): Record<T, number> {
@@ -98,7 +100,9 @@ export function buildFeedbackTimeline(
   consultationId?: string,
 ): FeedbackTimelineEntry[] {
   const ordenadas = [...entries]
-    .filter((entry) => consultationId === undefined || entry.content.consultationId === consultationId)
+    .filter(
+      (entry) => consultationId === undefined || entry.content.consultationId === consultationId,
+    )
     .sort((a, b) => compararFilas(a.record, b.record));
 
   const cadenas = new Map<string, FeedbackEntry[]>();

@@ -44,6 +44,7 @@ function makeClient(config: { results?: Record<string, FakeResult[]> }) {
       limit: registrar("limit"),
       single: async () => consume(),
       maybeSingle: async () => consume(),
+      // biome-ignore lint/suspicious/noThenProperty: emula el builder thenable de supabase-js en el cliente falso.
       then: (resolve: (value: FakeResult) => unknown) => resolve(consume()),
     };
     return query;
@@ -195,7 +196,9 @@ describe("createFeedbackEntry — registro estructurado y atribuido (FR-018 · U
   });
 
   test("rechaza una consulta referida inexistente, sin escribir nada (D5)", async () => {
-    const { client, calls } = makeClient({ results: { clinical_records: [{ data: null, error: null }] } });
+    const { client, calls } = makeClient({
+      results: { clinical_records: [{ data: null, error: null }] },
+    });
 
     await expect(
       createFeedbackEntry(client, { clinicId: "clinica-1", content: contenido }),
@@ -398,7 +401,9 @@ describe("listFeedbackByConsultation — cadena de correcciones en la lectura (F
 
     expect(entradas.map((entrada) => entrada.record.id)).toEqual(["fb-1"]);
     expect(
-      calls.filter((llamada) => llamada.method === "in" && llamada.table === "clinical_audit_events"),
+      calls.filter(
+        (llamada) => llamada.method === "in" && llamada.table === "clinical_audit_events",
+      ),
     ).toHaveLength(0);
   });
 });
