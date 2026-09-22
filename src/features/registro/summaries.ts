@@ -75,11 +75,12 @@ function consultaDelContenido(content: ClinicalRecordRow["content"]): string | n
  * borrador ('draft') nunca es efectivo: nada entra al historial sin validación explícita.
  *
  * Cadena de supersede (D8): una corrección es una fila 'corrective' cuyo `supersedes_event_id`
- * apunta al evento que supersede (el `epicrisis_approved` del original o el
- * `corrective_record_created` de la corrección anterior). Esos ids viven en
- * `clinical_audit_events`, no en la fila, así que dentro de esta vista pura la cadena se
- * resuelve por orden cronológico: la candidata más reciente (`created_at`; empate por `id`) es
- * el extremo de la cadena y por tanto la efectiva. Una fila 'corrective' sin
+ * apunta al evento `epicrisis_approved` del ORIGINAL (todas las correcciones sucesivas apuntan
+ * al mismo evento original; nunca al `corrective_record_created` de una corrección anterior —
+ * `correctEpicrisis` siempre repunta al original, y este docstring debe reflejarlo). Esos ids
+ * viven en `clinical_audit_events`, no en la fila, así que dentro de esta vista pura la cadena
+ * se resuelve por orden cronológico: la candidata más reciente (`created_at`; empate por `id`)
+ * es el extremo de la cadena y por tanto la efectiva. Una fila 'corrective' sin
  * `supersedes_event_id` no es una corrección válida y queda fuera de la cadena. El original
  * superseded permanece legible y recuperable en la traza (FR-024).
  */

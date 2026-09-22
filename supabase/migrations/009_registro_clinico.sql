@@ -41,6 +41,36 @@ declare
   consultation_id uuid;
   consultation_status text;
 begin
+  if tg_op = 'INSERT' then
+    -- FR-024 · US4-AC2 · SC-009 (revisión de la PR #27): el sellado también cubre INSERT.
+    -- Una fila de trabajo no puede anexarse a una consulta cerrada por el camino directo
+    -- de PostgREST (T055): el conjunto que muestra el workspace de una consulta cerrada no
+    -- puede crecer tras el cierre. La epicrisis correctiva (status 'corrective', D8 ·
+    -- US3-AC4) queda exenta: corregir una epicrisis aprobada crea legítimamente un registro
+    -- adicional sobre la consulta cerrada. Un consultationId que no resuelve a ninguna
+    -- consulta se tolera (huérfanos: riesgo documentado D1/D6), pero si resuelve y está
+    -- cerrada, se rechaza.
+    if new.content ->> 'consultationId' is not null and new.status <> 'corrective' then
+      begin
+        consultation_id := (new.content ->> 'consultationId')::uuid;
+      exception when invalid_text_representation then
+        consultation_id := null;
+      end;
+
+      if consultation_id is not null then
+        select target.content ->> 'status' into consultation_status
+        from public.clinical_records target
+        where target.id = consultation_id
+          and target.record_type = 'consultation'
+          and target.clinic_id = new.clinic_id;
+
+        if consultation_status = 'closed' then
+          raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
+        end if;
+      end if;
+    end if;
+  end if;
+
   if tg_op = 'UPDATE' then
     -- El sello se evalúa sobre OLD: la pertenencia a la consulta es la que la fila tenía
     -- antes del UPDATE.
@@ -84,7 +114,7 @@ end;
 $$;
 
 create trigger clinical_records_guard_sealed
-before update on public.clinical_records
+before insert or update on public.clinical_records
 for each row execute function public.guard_consultation_sealed();
 
 -- ---------------------------------------------------------------------------
