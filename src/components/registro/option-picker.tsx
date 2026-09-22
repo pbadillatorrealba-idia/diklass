@@ -48,6 +48,7 @@ export function OptionPicker<T extends string>({
             <Button
               accessibilityLabel={option.label}
               accessibilityRole="radio"
+              aria-checked={isSelected}
               accessibilityState={{ checked: isSelected, disabled: isDisabled }}
               isDisabled={isDisabled}
               key={option.value}

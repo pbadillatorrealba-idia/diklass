@@ -21,13 +21,21 @@ const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 async function expectNoViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_22_AA).analyze();
-  expect(
-    violations.map(({ id, help, nodes }) => ({
+  // Exclusión documentada del gate: `#error-toast` es el overlay de desarrollo de
+  // `@expo/log-box` (`renderInShadowRoot('error-toast', …)`, solo con NODE_ENV=development;
+  // no existe en builds de producción). Su marcado —contenedor `.toast` con focables
+  // anidados y botón dismiss sin nombre— pertenece al runtime, no a la superficie de la
+  // aplicación, y no es editable desde este repo.
+  const sobreLaAplicacion = violations
+    .map(({ id, help, nodes }) => ({
       id,
       help,
-      nodes: nodes.map((node) => ({ target: node.target, why: node.failureSummary })),
-    })),
-  ).toEqual([]);
+      nodes: nodes
+        .filter((node) => !node.target.some((part) => String(part).includes("#error-toast")))
+        .map((node) => ({ target: node.target, why: node.failureSummary })),
+    }))
+    .filter((violation) => violation.nodes.length > 0);
+  expect(sobreLaAplicacion).toEqual([]);
 }
 
 type SyntheticCase = {
