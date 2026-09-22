@@ -66,10 +66,18 @@ export async function listDiagnoses(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: diagnosisContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = diagnosisContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listDiagnoses", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
