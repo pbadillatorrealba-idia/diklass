@@ -35,9 +35,10 @@ La plataforma que este cambio usa ya existe y está endurecida:
 
 Restricciones de esta ejecución y de la coordinación entre ramas hermanas:
 
-- Sin Docker/Supabase local ni Playwright. La verificación SQL local usa un clúster PostgreSQL
-  scratch con shims (`roles` de API, `auth.users`, `auth.uid()`, `auth.jwt()`, pgtap) en
-  `/tmp/verify-003/`; la verificación oficial corre en el job `database` de CI. Sin e2e web propio
+- Sin Playwright. La verificación SQL local usa el stack Supabase compartido (podman) bajo el
+  protocolo de reserva por hub («reservo stack» / «stack libre»): la colisión real entre worktrees
+  hermanos hizo sustituir el clúster scratch `/tmp/verify-003/` de la primera versión de este
+  diseño. La verificación oficial corre en el job `database` de CI. Sin e2e web propio
   (la compuerta de accesibilidad la cubre 002 en `tests/e2e/web/accessibility.spec.ts`).
 - Archivos compartidos prohibidos para esta rama: `src/lib/attribution/*`, `src/lib/storage/*`,
   `src/lib/supabase/*`, `src/app/(protected)/consultations/[id].tsx`,
@@ -99,10 +100,12 @@ tienen consulta ni epicrisis, y exigiría inventar acciones enumeradas que la sp
 convención de persistencia y pérdida de RLS/atención compartida; Principio III la prohíbe.
 
 *Coste aceptado*: al ser tablas nuevas, `src/lib/supabase/database.types.ts` debe regenerarse con
-`supabase gen types` — archivo compartido **prohibido** para esta rama. Queda como **requisito de
-integración RI-1** (ver Riesgos): hasta que el orquestador lo regenere, el paso de diff de tipos
-del job `database` queda en rojo declarado, y los servicios de 003 tipan su superficie Supabase en
-frontera propia validando cada fila con Zod (D7).
+`supabase gen types` — archivo compartido **prohibido** para esta rama: quedó como requisito de
+integración **RI-1** y el orquestador autorizó expresamente su regeneración dentro de la rama
+durante la FASE 2 (junto con **RI-3**, la enumeración de funciones del test 23 de
+`supabase/tests/004_function_privileges.sql`). Ambas quedan documentadas como integración
+autorizada en `quickstart.md` y en el reporte final; los servicios de 003 validan además cada fila
+y cada frontera con Zod (Principio V, D7).
 
 ### D2. Forma del documento y de la cita: fragmentos embebidos, cita documento+ordinal
 
@@ -152,8 +155,14 @@ La RPC `search_knowledge_fragments(p_query text, p_limit integer default 25)` (*
 con `search_path` fijado, chequeo explícito `is_active_access(auth.uid())` y acotada a la clínica y
 a fuentes `available`) recupera candidatos:
 
-- **Consulta**: `websearch_to_tsquery('spanish', p_query)` sobre el `texto` de cada fragmento.
-- **Ranking**: `ts_rank_cd`; desempate determinista por documento y `ordinal`.
+- **Consulta**: la pregunta se reduce a sus lexemas con `ts_debug('spanish', …)` y un fragmento
+  concurre si su conjunto de lexemas **cubre** los de la pregunta (intersección de arreglos sobre
+  el `texto` de cada fragmento). La recuperación es por cobertura, no por conjunción estricta: una
+  palabra no contenida no anula una evidencia que cubre el resto de la pregunta. La primera
+  implementación usó `websearch_to_tsquery`, que conjunta todos los términos y devolvía cero
+  evidencias ante una sola palabra ausente; el assert 18 de la suite `009` delata esa regresión.
+- **Ranking**: `ts_rank_cd` sobre la consulta formada por la unión de lexemas; desempate
+  determinista por documento y `ordinal`.
 - **Cobertura de lemas**: con `ts_debug('spanish', …)` devuelve `lemasPregunta` (lexemas de la
   pregunta, ya filtrados por el diccionario español) y, por candidato, `lemasCubiertos`
   (intersección con los lexemas del fragmento). La regla de producto —un fragmento **califica** si
@@ -205,7 +214,10 @@ Las reglas del contrato (todas unit-testeadas):
   evidencia, su cita. Lo persistido (D6) **es** la reconstrucción.
 
 Preguntas sin términos consultables (la pregunta son solo palabras vacías para el diccionario
-español): se trata como `sin_evidencia` con aviso `sin_terminos_consultables`, un caso de FR-022.
+español): se tratan como `sin_evidencia` con el mismo aviso `sin_respaldo_documental`, que es
+verdadero en ambos casos de ausencia. La implementación descartó el aviso separado
+`sin_terminos_consultables` que preveía esta primera versión (YAGNI: ningún FR distingue los dos
+motivos de la ausencia).
 
 *Alternativa rechazada* (**decisión dura HD1**): generación con LLM en una Edge Function con
 proveedor externo. Rechazada porque añade dependencia de ejecución + secreto nuevo, rompe el TDD
@@ -241,10 +253,11 @@ mutaciones de corpus respetan el contrato de
 `ATTRIBUTION_CONTROL_FIELDS` en la frontera y devuelven `ClinicalMutationResult` con la atribución
 releída de la fila (con `action: null`, D3), sin reimplementar guardas.
 
-Tipado: los servicios de 003 reciben `SupabaseClient` **sin** el parámetro `Database` y validan
-cada fila y cada frontera con Zod (Principio V), porque el tipo generado aún no conoce las tablas
-nuevas (RI-1). Tras RI-1, endurecer las firmas a `SupabaseClient<Database>` es un cambio acotado y
-documentado (HD8).
+Tipado: los servicios de 003 reciben `SupabaseClient<Database>` y validan además cada fila y cada
+frontera con Zod (Principio V). Como RI-1 (regeneración de `database.types.ts`) se resolvió dentro
+de la rama con la autorización expresa del orquestador al empezar la FASE 2, la alternativa de
+«frontera propia sin el parámetro `Database`» (HD8) quedó obsoleta antes del primer servicio:
+las firmas quedaron endurecidas contra el tipo generado desde el inicio.
 
 ### D8. Conversación con contexto de paciente por sesión de acceso (FR-026)
 
@@ -291,13 +304,15 @@ edición sobre un archivo existente es un enlace de navegación a `/knowledge` e
 `src/app/(protected)/home.tsx` (1–2 líneas, documentada en `quickstart.md`, coordinada por hub con
 las ramas hermanas); nada más sale de los namespaces propios.
 
-### D11. Sin dependencias nuevas; verificación local por clúster scratch y CI
+### D11. Sin dependencias nuevas; verificación local con el stack Supabase y CI
 
-Cero cambios en `package.json` (Principio III). Verificación SQL local sin `supabase start`
-(colisiona con las ramas hermanas): clúster PostgreSQL scratch en `/tmp/verify-003/` con los shims
-probados por 002 (roles `anon`/`authenticated`/`service_role`, esquema `auth` con `users`,
-`auth.uid()`/`auth.jwt()` leídos de `request.jwt.claims`, pgtap), migraciones 001–010 y suites
-001–009. La verificación oficial vive en el job `database` de CI (suites pgTap +
+Cero cambios en `package.json` (Principio III). Verificación SQL local sobre el stack Supabase
+compartido (podman) con **protocolo de reserva por hub** («reservo stack» / «stack libre»): la
+primera versión de este diseño preveía un clúster scratch `/tmp/verify-003/` para evitar
+colisiones entre worktrees hermanos; una colisión real (un `db reset` ajeno borró las tablas en
+mitad de una corrida viva) confirmó el riesgo y motivó el protocolo acordado con el orquestador.
+El clúster scratch queda como alternativa si el stack está ocupado. La verificación oficial vive en
+el job `database` de CI (suites pgTap +
 `SUPABASE_LIVE_TESTS=1`); las pruebas de unidad corren localmente con `bun test`. Sin e2e web
 propio (restricción del entorno; la compuerta de accesibilidad la cubre 002): queda como pendiente
 declarado, no como compuerta cumplida.
@@ -316,7 +331,9 @@ declarado, no como compuerta cumplida.
 
 Dependencias de ejecución nuevas: **ninguna**. Capas arquitectónicas nuevas: **ninguna**
 (`features/conocimiento` y `components/conocimiento` sobre los patrones de `features/registro` y
-`lib/attribution`). Archivos compartidos modificados: **ninguno** (RI-1 queda para el orquestador).
+`lib/attribution`). Archivos compartidos modificados: solo los dos de la **integración autorizada**
+por el orquestador en FASE 2 — `src/lib/supabase/database.types.ts` (RI-1) y el test 23 de
+`supabase/tests/004_function_privileges.sql` (RI-3) —, documentados en `quickstart.md`.
 
 ## Presupuestos de rendimiento (verificables antes de integrar)
 
@@ -338,7 +355,7 @@ sobre corpus y conjunto reales queda como **pendiente explícita**.
 - **I (especificación primero)**: este diseño y `tasks.md` preceden a cualquier código; todo cambio
   de comportamiento pasa primero por la spec (`openspec-update-change`).
 - **II (pruebas primero)**: cada grupo de `tasks.md` abre con sus pruebas en rojo —pgTap e
-  integración viva observadas en el clúster scratch y en CI (URLs en `quickstart.md`), unidad
+  integración viva observadas en el stack local y en CI (evidencias en `quickstart.md`), unidad
   local— fallando por la razón prevista antes de implementar.
 - **III (simplicidad/YAGNI)**: sin dependencias ni capas nuevas; complejidad justificada arriba;
   generación con LLM y similitud vectorial rechazadas por escrito (D4/D5).
@@ -360,18 +377,19 @@ Una única migración aditiva `supabase/migrations/010_base_conocimiento.sql`: t
 RLS/grants, triggers de ciclo de vida y log, y la RPC de búsqueda. Cero cambios destructivos sobre
 objetos existentes y cero escritura en `clinical_audit_events` ni en su enumeración (D3). Rollback =
 revertir el commit (no hay datos que migrar). RI-1 (`supabase gen types` sobre
-`src/lib/supabase/database.types.ts`) la ejecuta el orquestador al integrar.
+`src/lib/supabase/database.types.ts`) quedó ejecutada dentro de la rama con la autorización
+expresa del orquestador y se re-verifica sin diff tras cada merge.
 
 ## Risks / Trade-offs
 
-- **[RI-1] `database.types.ts` exige regeneración compartida** → la migración 010 añade tablas y
-  el tipo generado no las conoce; el archivo está prohibido para esta rama. Mitigación: servicios
-  con tipado en frontera propia + Zod (D7), `supabase gen types` listo para ejecutar por el
-  orquestador y HD8 para endurecer tipos después. Hasta entonces el paso de diff de tipos del job
-  `database` queda en **rojo declarado**; se documenta en `quickstart.md` y en el reporte.
-- **[RI-2] Enlace de navegación en `home.tsx`** → única edición sobre archivo existente (fuera de
-  mis namespaces, no prohibido); se coordina por hub con las ramas hermanas y se documenta la
-  edición mínima. Si la coordinación falla, queda como requisito de integración.
+- **[RI-1 · resuelta] `database.types.ts` exige regeneración compartida** → la migración 010 añade
+  tablas que el tipo generado no conocía y el archivo está prohibido para esta rama: el orquestador
+  autorizó su regeneración en FASE 2 y quedó commiteada como integración autorizada, con el diff
+  de tipos del job `database` en verde y re-verificado tras el merge de 002.
+- **[RI-2 · pendiente] Enlace de navegación en `home.tsx`** → el orquestador mantuvo el veto sobre
+  ese archivo en FASE 2: el enlace a `/knowledge` queda como requisito de integración (1–2 líneas
+  en `src/app/(protected)/home.tsx`, con el `testID` `authenticated-identity` intacto); las rutas
+  son alcanzables por URL mientras tanto.
 - **Umbral léxico de respaldo (D4/D5)** → una pregunta con léxico divergente del corpus puede
   declararse «sin respaldo» pese a existir evidencia semánticamente cercana (falso negativo de
   FR-023) o vivir en cobertura parcial crónica. Mitigación: medido por SC-002/SC-025 sobre el
@@ -386,10 +404,13 @@ revertir el commit (no hay datos que migrar). RI-1 (`supabase gen types` sobre
 - **Citas como referencias dentro de `answer jsonb` (D6)** → sin FK de las citas hacia el fragmento
   (mismo coste `jsonb` que asumió 002 en D1). Mitigación: el registro es append-only, el corpus es
   inmutable salvo retirada y el texto citado viaja verbatim en la propia cita (siempre resoluble).
-- **Ciclos TDD lentos para SQL** (rojo/verde por clúster scratch y CI) → suites pequeñas y
-  enfocadas; URLs de ejecución como evidencia.
-- **Verificación visual y e2e funcional web** → imposibles en este entorno; queda pendiente
-  declarado (D11), no compuerta cumplida.
+- **Ciclos TDD lentos para SQL** (rojo/verde por el stack local con reserva y CI) → suites
+  pequeñas y enfocadas; salidas de ejecución como evidencia.
+- **Verificación visual interactiva y e2e funcional web** → el daemon de Chromium del entorno no
+  arranca (`omp.browser.headed` falla con exit=21) y no hay Playwright: la verificación visual
+  interactiva queda **pendiente declarado** (D11), no compuerta cumplida. La compilación web
+  completa sí quedó verificada (`expo export --platform web` exporta las cuatro rutas de
+  `/knowledge`) y el shell responde HTTP 200 con el título de la app.
 
 ### Decisiones duras (reversibles por el usuario)
 
@@ -402,7 +423,7 @@ revertir el commit (no hay datos que migrar). RI-1 (`supabase gen types` sobre
 | HD5 | `knowledge_queries` **sin actor** (supuesto de la spec) (D6) | Columna `asked_by` + guarda | Columna + trigger + consulta de «quién preguntó» en la reconstrucción |
 | HD6 | Cobertura por **lemas** (`ts_debug`) para FR-022/FR-023/SC-025 (D4/D5) | Clasificador semántico de cobertura | Sustituye el análisis de cobertura de `composeAnswer`; el resto del contrato no cambia |
 | HD7 | Corpus y conjunto anotado **sintéticos** como sustitutos provisionales (D9) | Esperar al corpus real y al conjunto del equipo clínico | Reemplazo de fixtures; el loader y el arnés de evaluación (formato) se conservan |
-| HD8 | Servicios 003 **sin parámetro `Database`** en `SupabaseClient` hasta RI-1 (D7) | Tipar contra `database.types.ts` regenerado ya | Endurecer firmas (cambio acotado) tras la regeneración compartida |
+| HD8 | Servicios 003 **sin parámetro `Database`** en `SupabaseClient` hasta RI-1 (D7) — **aplicó la alternativa**: firmas tipadas contra `database.types.ts` desde el inicio (D7) | Tipar contra `database.types.ts` regenerado ya | Alternativa aplicada; la opción inicial quedó obsoleta al resolverse RI-1 dentro de la rama |
 
 ## Open Questions
 
