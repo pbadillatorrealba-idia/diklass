@@ -5,7 +5,11 @@ import type { DiagnosisEntry } from "@/features/registro/diagnosis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import type { EpicrisisEntry } from "@/features/registro/epicrisis-service";
 import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
-import { type ConsultationContent, consultationContentSchema } from "@/features/registro/schema";
+import {
+  type ConsultationContent,
+  consultationContentSchema,
+  epicrisisContentSchema,
+} from "@/features/registro/schema";
 import {
   buildFollowUpSummary,
   buildPatientHistory,
@@ -205,7 +209,20 @@ export async function listPatientTimeline(
       if (error) {
         throw error;
       }
-      epicrisis = data ?? [];
+      // Misma frontera de lectura tolerante que las listas: una fila de epicrisis ajena o
+      // malformada se omite con log en vez de tumbar el historial y el resumen completos.
+      epicrisis = (data ?? []).flatMap((row) => {
+        const legible = epicrisisContentSchema.safeParse(row.content);
+        if (!legible.success) {
+          logEvent(
+            "registro.row_content_skipped",
+            { operation: "listPatientTimeline", recordId: row.id, errorName: "ZodError" },
+            "error",
+          );
+          return [];
+        }
+        return [row];
+      });
     }
 
     const history = buildPatientHistory({

@@ -39,6 +39,6 @@ final en 5.3). Cada tarea indica su criterio observable de terminación y su tra
 
 ## 6. Revisión y cierre
 
-- [ ] 6.1 Publicar en la PR el reporte de revisión en español generado con `requesting-code-review` (subagente) sobre el rango completo de la rama. Verificación: comentario existente en la PR (URL registrada).
-- [ ] 6.2 Aplicar los hallazgos con `receiving-code-review` (verificación técnica por ítem, respuestas en los hilos de la PR), pushear los cambios y comentar el resultado. Verificación: hilos respondidos, commits pusheados y comentario de cambios publicado.
-- [ ] 6.3 Si la implementación desvía `design.md` o estas tareas, actualizar los artefactos con `openspec-update-change` antes del merge. Verificación: artefactos coherentes entre sí.
+- [x] 6.1 Publicar en la PR el reporte de revisión en español generado con `requesting-code-review` (subagente) sobre el rango completo de la rama. Verificación: comentario existente en la PR (URL registrada).
+- [x] 6.2 Aplicar los hallazgos con `receiving-code-review` (verificación técnica por ítem, respuestas en los hilos de la PR), pushear los cambios y comentar el resultado. Verificación: hilos respondidos, commits pusheados y comentario de cambios publicado.
+- [x] 6.3 Si la implementación desvía `design.md` o estas tareas, actualizar los artefactos con `openspec-update-change` antes del merge. Verificación: artefactos coherentes entre sí.

@@ -149,7 +149,9 @@ export const anamnesisContentSchema = z.object({
   field: z.enum(AnamnesisField),
   text: requiredTextSchema,
   provenance: provenanceSchema,
-  provenanceHistory: z.array(z.object({ provenance: provenanceSchema })).optional(),
+  provenanceHistory: z
+    .array(z.object({ provenance: provenanceSchema, text: z.string().optional() }))
+    .optional(),
 });
 
 /** Contenido de un antecedente de anamnesis (FR-004, FR-021). */

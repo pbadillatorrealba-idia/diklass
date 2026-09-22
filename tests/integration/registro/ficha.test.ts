@@ -116,6 +116,21 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
   beforeAll(async () => {
     ana = await signedInVeterinarian(ANA);
     caso = await provisionarCasoCerrado(ana.client, ana.clinicId, "Caso límite integración");
+    // Fixtures compartidos creados en beforeAll: los tests no consumen estado creado por
+    // otros tests (un fallo del primero no puede cascading en los demás).
+    const compartida = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      ficha: fichaBase("Luna compartida"),
+      tutor: { newTutor: { name: "Sra. Pérez compartida", phone: "+56 9 1111 2222", email: null } },
+    });
+    tutorId = compartida.tutorId;
+    pacienteId = compartida.record.id;
+    const segundoCompartido = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      ficha: fichaBase("Simón compartida"),
+      tutor: { existingTutorId: compartida.tutorId },
+    });
+    segundoId = segundoCompartido.record.id;
   });
 
   test("alta con tutor nuevo y segundo paciente sin duplicar tutor (FR-001 · US1-AC1, FR-027 · US1-AC4)", async () => {
@@ -127,8 +142,6 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     });
     expect(performance.now() - inicio).toBeLessThan(2000);
 
-    tutorId = alta.tutorId;
-    pacienteId = alta.record.id;
     expect(alta.tutorId).toBeTruthy();
     expect(alta.attribution.actorId).toBe(ana.userId);
     expect(alta.attribution.action).toBe("patient_created");
@@ -141,14 +154,13 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     });
     expect(performance.now() - inicioSegundo).toBeLessThan(2000);
 
-    segundoId = segundo.record.id;
     expect(segundo.tutorId).toBe(alta.tutorId);
 
     // Un único tutor para dos pacientes: no se duplicó (US1-AC4).
     const tutores = await listTutors(ana.client);
     expect(tutores.filter((entrada) => entrada.record.id === alta.tutorId)).toHaveLength(1);
-    const luna = await getPatient(ana.client, pacienteId);
-    const simon = await getPatient(ana.client, segundoId);
+    const luna = await getPatient(ana.client, alta.record.id);
+    const simon = await getPatient(ana.client, segundo.record.id);
     expect(luna?.content.tutorId).toBe(alta.tutorId);
     expect(simon?.content.tutorId).toBe(alta.tutorId);
   });
