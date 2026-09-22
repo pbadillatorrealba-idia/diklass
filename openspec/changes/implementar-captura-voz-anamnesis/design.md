@@ -170,8 +170,7 @@ La confirmación queda atribuida server-side al confirmante (que puede ser disti
 consulta, US6-AC15 · SC-048), la procedencia queda en `inferida` y no cambia (FR-021 · US6-AC9), y
 no existe estado intermedio persistido: `pending → confirmed | discarded` con estados terminales.
 
-*Alternativa rechazada*: orquestar en el cliente dos escrituras (anamnesis y luego `updateClinical
-Content`) — deja una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o
+*Alternativa rechazada*: orquestar en el cliente dos escrituras (anamnesis y luego `updateClinicalContent`) — deja una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o
 traza sin anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción. Al
 margen, la RPC deriva el actor en el servidor (Constitución V: atribución server-side), que el
 cliente no puede nombrar.
@@ -179,7 +178,7 @@ cliente no puede nombrar.
 ### D6. Refinamiento de `clinical_record_action` y sellado del ciclo de vida de `audio_fact`
 
 La migración 011 hace `create or replace` de `clinical_record_action` **conservando firma,
-`language sql immutable`, `set search_path = public, extensions` y privilegios** (pinificados por
+`language sql immutable`, `set search_path = public, extensions` y privilegios** (fijados por
 `004_function_privileges.sql`), y solo refina el caso `audio_fact`, aprovechando que la función ya
 discrimina por contenido (`p_content ->>'decision'` para `hypothesis`):
 

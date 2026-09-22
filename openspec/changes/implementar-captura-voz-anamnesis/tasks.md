@@ -33,7 +33,7 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   por las razones previstas en el clúster scratch.
 - [ ] 1.3 Escribir `supabase/migrations/011_captura_voz.sql`: refinamiento de
   `clinical_record_action` solo para `audio_fact` conservando firma, `language sql immutable`,
-  `set search_path = public, extensions` y privilegios (D6, pins de `004_function_privileges.sql`),
+  `set search_path = public, extensions` y privilegios (D6, fijados por `004_function_privileges.sql`),
   trigger `guard_audio_fact_lifecycle` (D6 completo), tablas `listening_sessions` y
   `transcript_segments` con columnas de atribución server-stamped, privilegios de columna revocados,
   RLS de clínica compartida con sesión activa y CHECK de `state`/`quality`/`processing_state` (D8,
