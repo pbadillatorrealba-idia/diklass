@@ -261,6 +261,7 @@ declare
   v_started timestamptz := clock_timestamp();
   v_actor uuid := auth.uid();
   v_lexemas text[];
+  v_consulta tsquery;
   v_fila record;
   v_n integer := 0;
 begin
@@ -284,6 +285,14 @@ begin
     return;
   end if;
 
+  -- Recuperación por cobertura de lemas (D4): la pregunta es la UNIÓN de sus lexemas, no una
+  -- conjunción estricta — una sola palabra no contenida no anula una evidencia que cubre el
+  -- resto de la pregunta (FR-022). Los lexemas van entrecomillados para que el analizador no
+  -- los vuelva a talar («ansied» re-talado sería «ansi» y no cruzaría con los vectores).
+  select to_tsquery('spanish', coalesce(string_agg(quote_literal(lexema.lexeme), ' | '), ''''))
+    into v_consulta
+    from unnest(v_lexemas) as lexema(lexeme);
+
   for v_fila in
     select
       documento.id as r_documento_id,
@@ -293,8 +302,7 @@ begin
       documento.content -> 'bibliografia' as r_bibliografia,
       documento.content -> 'licencia' as r_licencia,
       documento.status as r_estado,
-      ts_rank_cd(to_tsvector('spanish', fragmento.value ->> 'texto'),
-                 websearch_to_tsquery('spanish', coalesce(p_query, ''))) as r_rank_cd,
+      ts_rank_cd(to_tsvector('spanish', fragmento.value ->> 'texto'), v_consulta) as r_rank_cd,
       (select coalesce(array_agg(lexema.lexeme order by lexema.lexeme), '{}')
          from unnest(v_lexemas) as lexema(lexeme)
         where lexema.lexeme = any(lexemas_fragmento.lexemas)) as r_lemas_cubiertos
@@ -311,8 +319,7 @@ begin
       ) as lexemas_fragmento
      where documento.clinic_id = public.current_clinic_id()
        and documento.status = 'available'
-       and to_tsvector('spanish', fragmento.value ->> 'texto')
-           @@ websearch_to_tsquery('spanish', coalesce(p_query, ''))
+       and lexemas_fragmento.lexemas && v_lexemas
      order by 8 desc, documento.id, (fragmento.value ->> 'ordinal')::integer
      limit greatest(least(coalesce(p_limit, 25), 100), 1)
   loop

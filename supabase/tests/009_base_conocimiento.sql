@@ -19,7 +19,7 @@
 -- enumeradas de FR-063 para fuentes, D3).
 
 begin;
-select plan(30);
+select plan(31);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: ana y bruno (clínica principal), carlos (otra clínica) y daniela
@@ -280,6 +280,13 @@ select is(
    from public.search_knowledge_fragments('apego y rutinas del hogar', 5)),
   0,
   'FR-053 · US5-AC12: el fragmento de una fuente retirada no responde consultas nuevas'
+);
+
+select is(
+  (select count(*)::integer
+   from public.search_knowledge_fragments('apego y ansiedad', 5)),
+  2,
+  'FR-006 · FR-022: la recuperación es por cobertura de lemas, no por conjunción estricta de la pregunta'
 );
 
 -- ---------------------------------------------------------------------------
