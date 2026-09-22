@@ -219,10 +219,18 @@ export async function listEpicrisisByConsultation(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: epicrisisContentSchema.parse(row.content),
-    }));
+    return (data ?? []).flatMap((row) => {
+      const legible = epicrisisContentSchema.safeParse(row.content);
+      if (!legible.success) {
+        logEvent(
+          "registro.row_content_skipped",
+          { operation: "listEpicrisisByConsultation", recordId: row.id, errorName: "ZodError" },
+          "error",
+        );
+        return [];
+      }
+      return [{ record: row, content: legible.data }];
+    });
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
