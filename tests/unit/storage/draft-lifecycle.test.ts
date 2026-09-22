@@ -97,6 +97,29 @@ describe("draft lifecycle (FR-061, SC-047, data-model borrador)", () => {
     expect(await session.restore()).toEqual(draft("versión más reciente"));
   });
 
+  // Spec 002 (D11): el cierre explícito de la consulta trae la transición `discard`
+  // anticipada por la 001 en el ciclo `editing → restored → saved`.
+  test("el cierre explícito de la consulta descarta el borrador preservado (transición discard)", async () => {
+    const storage = createMemoryStorage();
+    const session = createDraftSession(storage, "vet-ana", "consultation-1");
+    session.edit(draft("pendiente al cerrar la consulta"));
+    await session.flush();
+
+    await session.discard();
+    expect(await session.restore()).toBeNull();
+  });
+
+  test("discard también descarta la edición aún pendiente en memoria", async () => {
+    const storage = createMemoryStorage();
+    const session = createDraftSession(storage, "vet-ana", "consultation-1");
+    session.edit(draft("sin persistir aún"));
+
+    await session.discard();
+    // Si discard dejara viva la edición pendiente, este flush resucitaría el borrador.
+    await session.flush();
+    expect(await createDraftSession(storage, "vet-ana", "consultation-1").restore()).toBeNull();
+  });
+
   test("a successful write clears the pending draft, not just returns its content", async () => {
     const storage = createMemoryStorage();
     const session = createDraftSession(storage, "vet-ana", "consultation-1");
