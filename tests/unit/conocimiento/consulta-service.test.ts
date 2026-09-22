@@ -1,10 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, test } from "bun:test";
-import {
-  consultKnowledge,
-  getQuery,
-  listQueries,
-} from "@/features/conocimiento/consulta-service";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento/consulta-service";
 import type { PatientContent } from "@/features/registro/schema";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -175,7 +171,9 @@ describe("consultKnowledge (FR-005 · FR-006 · FR-007 · US5-AC1 · D4/D6)", ()
     expect(evidencia.cita.bibliografia.titulo).toBe("Guía ficticia");
 
     const busqueda = calls.find((call) => call.table === "rpc");
-    expect(busqueda?.args[0]).toMatchObject({ p_query: "¿Cómo se diagnostica la ansiedad por separación?" });
+    expect(busqueda?.args[0]).toMatchObject({
+      p_query: "¿Cómo se diagnostica la ansiedad por separación?",
+    });
     const persistencia = calls.find((call) => call.method === "insert");
     expect(persistencia?.table).toBe("knowledge_queries");
   });
@@ -223,7 +221,9 @@ describe("consultKnowledge (FR-005 · FR-006 · FR-007 · US5-AC1 · D4/D6)", ()
     });
 
     expect(answer.segmentos.filter((s) => s.kind === "ficha")).toHaveLength(0);
-    expect(answer.avisos).toEqual(expect.arrayContaining(["sin_paciente_seleccionado", "sin_respaldo_documental"]));
+    expect(answer.avisos).toEqual(
+      expect.arrayContaining(["sin_paciente_seleccionado", "sin_respaldo_documental"]),
+    );
     expect(calls.some((call) => call.table === "clinical_records")).toBe(false);
   });
 
@@ -275,7 +275,9 @@ describe("getQuery y listQueries (FR-020 · FR-053 · US5-AC5/AC12 · D6)", () =
     expect(reconstruida?.row.id).toBe("query-7");
     const evidencia = reconstruida?.answer.segmentos.find((s) => s.kind === "evidencia");
     if (evidencia?.kind !== "evidencia") throw new Error("sin evidencia");
-    expect(evidencia.cita.textoCitado).toBe("La ansiedad por separación se diagnostica por la historia clínica.");
+    expect(evidencia.cita.textoCitado).toBe(
+      "La ansiedad por separación se diagnostica por la historia clínica.",
+    );
     expect(evidencia.cita.estado).toBe("withdrawn");
     expect(reconstruida?.answer.avisos).toContain("fuente_retirada");
   });

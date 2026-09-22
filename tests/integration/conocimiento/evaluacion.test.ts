@@ -1,9 +1,9 @@
+import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { beforeAll, describe, expect, test } from "bun:test";
 import { getSource, listSources, withdrawSource } from "@/features/conocimiento/coleccion-service";
-import { loadSyntheticCorpus } from "@/features/conocimiento/corpus-loader";
 import { consultKnowledge } from "@/features/conocimiento/consulta-service";
+import { loadSyntheticCorpus } from "@/features/conocimiento/corpus-loader";
 import type { KnowledgeAnswer, SegmentoRespuesta } from "@/features/conocimiento/schema";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
@@ -56,7 +56,12 @@ describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado sintéti
     }
     ({ claves } = await loadSyntheticCorpus(ana.client, {
       clinicId: ana.clinicId,
-      corpus: { fuentes: corpus.fuentes.map((entrada) => ({ clave: entrada.clave, fuente: entrada.fuente })) },
+      corpus: {
+        fuentes: corpus.fuentes.map((entrada) => ({
+          clave: entrada.clave,
+          fuente: entrada.fuente,
+        })),
+      },
     }));
 
     for (const item of conjunto.preguntas) {
@@ -94,7 +99,9 @@ describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado sintéti
       detalle.push(`${hit ? "hit" : "miss"}@5 · ${item.pregunta}`);
     });
     const tasa = aciertos / conjunto.preguntas.length;
-    console.log(`SC-002 hit@5 = ${(tasa * 100).toFixed(0)}% (${aciertos}/${conjunto.preguntas.length})`);
+    console.log(
+      `SC-002 hit@5 = ${(tasa * 100).toFixed(0)}% (${aciertos}/${conjunto.preguntas.length})`,
+    );
     for (const linea of detalle) console.log(`  ${linea}`);
     expect(tasa).toBeGreaterThanOrEqual(0.8);
   });
@@ -125,7 +132,9 @@ describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado sintéti
         verificadas += 1;
       }
     }
-    console.log(`SC-010 · SC-003 (verbatim) = 0 incumplimientos sobre ${verificadas} citas verificadas`);
+    console.log(
+      `SC-010 · SC-003 (verbatim) = 0 incumplimientos sobre ${verificadas} citas verificadas`,
+    );
     expect(verificadas).toBeGreaterThan(0);
   });
 });

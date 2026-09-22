@@ -4,7 +4,13 @@ import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento
 import type { FuenteContent } from "@/features/conocimiento/schema";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
-import { ANA, BRUNO, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
+import {
+  ANA,
+  BRUNO,
+  isLiveSupabase,
+  type LiveVeterinarian,
+  signedInVeterinarian,
+} from "../live-supabase";
 
 /**
  * Consulta al asistente contra Supabase viva (FR-005, FR-006, FR-007, FR-020, FR-021,
@@ -91,7 +97,9 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
     );
     if (evidencia?.kind !== "evidencia") throw new Error("sin evidencia de la fuente incorporada");
     expect(evidencia.cita.textoCitado).toContain(termino);
-    expect(evidencia.cita.bibliografia.titulo).toBe("Protocolo de habituación zurdísima (ficticio)");
+    expect(evidencia.cita.bibliografia.titulo).toBe(
+      "Protocolo de habituación zurdísima (ficticio)",
+    );
   });
 
   test("la respuesta combina fuente, ficha e inferencia con sus procedencias (FR-021 · US5-AC3)", async () => {

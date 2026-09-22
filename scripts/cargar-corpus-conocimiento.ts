@@ -22,19 +22,27 @@ const email = process.env.CORPUS_VET_EMAIL ?? "vet.ana@example.test";
 const password = process.env.CORPUS_VET_PASSWORD ?? "synthetic-password-ana";
 
 if (!url || !anonKey) {
-  console.error("Faltan SUPABASE_URL y la clave anónima del entorno (ver `supabase status -o env`).");
+  console.error(
+    "Faltan SUPABASE_URL y la clave anónima del entorno (ver `supabase status -o env`).",
+  );
   process.exit(1);
 }
 
 const corpus = JSON.parse(
-  readFileSync(join(import.meta.dir, "../tests/fixtures/conocimiento/corpus-sintetico.json"), "utf8"),
+  readFileSync(
+    join(import.meta.dir, "../tests/fixtures/conocimiento/corpus-sintetico.json"),
+    "utf8",
+  ),
 );
 
 const client = createClient<Database>(url, anonKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const { data: sesion, error: errorAcceso } = await client.auth.signInWithPassword({ email, password });
+const { data: sesion, error: errorAcceso } = await client.auth.signInWithPassword({
+  email,
+  password,
+});
 if (errorAcceso || !sesion.user) {
   console.error(`No se pudo iniciar sesión como ${email}:`, errorAcceso?.message);
   process.exit(1);

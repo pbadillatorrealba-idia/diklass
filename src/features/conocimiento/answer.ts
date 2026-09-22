@@ -135,8 +135,7 @@ export function composeAnswer(input: {
       a.fragmentoOrdinal - b.fragmentoOrdinal,
   );
   const calificados = ordenados.filter(
-    (candidato) =>
-      candidato.lemasCubiertos.filter((lema) => lemas.includes(lema)).length >= umbral,
+    (candidato) => candidato.lemasCubiertos.filter((lema) => lemas.includes(lema)).length >= umbral,
   );
   const referencias = calificados.slice(0, MAX_REFERENCIAS);
 
@@ -151,11 +150,7 @@ export function composeAnswer(input: {
 
   const cobertura: Cobertura = {
     estado:
-      referencias.length === 0
-        ? "sin_evidencia"
-        : noCubiertos.length === 0
-          ? "cubre"
-          : "parcial",
+      referencias.length === 0 ? "sin_evidencia" : noCubiertos.length === 0 ? "cubre" : "parcial",
     cubiertos,
     noCubiertos: referencias.length === 0 ? [] : noCubiertos,
   };
@@ -225,7 +220,7 @@ export function resolveCitations(
     return { ...segmento, cita: { ...segmento.cita, estado } };
   });
 
-  const avisos =
+  const avisos: AvisoRespuesta[] =
     hayRetirada && !answer.avisos.includes("fuente_retirada")
       ? [...answer.avisos, "fuente_retirada"]
       : answer.avisos;

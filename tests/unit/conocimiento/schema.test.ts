@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-  avisoRespuestaSchema,
   AvisoRespuesta,
+  avisoRespuestaSchema,
   bibliografiaSchema,
   fragmentoRecuperadoSchema,
   fuenteContentSchema,
@@ -31,8 +31,16 @@ const fuente = {
   bibliografia,
   licencia,
   fragmentos: [
-    { ordinal: 1, seccion: "Diagnóstico", texto: "La ansiedad por separación se diagnostica por la historia clínica." },
-    { ordinal: 2, seccion: null, texto: "El enriquecimiento ambiental reduce la ansiedad generalizada." },
+    {
+      ordinal: 1,
+      seccion: "Diagnóstico",
+      texto: "La ansiedad por separación se diagnostica por la historia clínica.",
+    },
+    {
+      ordinal: 2,
+      seccion: null,
+      texto: "El enriquecimiento ambiental reduce la ansiedad generalizada.",
+    },
   ],
 };
 
@@ -288,6 +296,8 @@ describe("fragmentoRecuperadoSchema (D4)", () => {
       lemas_pregunta: ["ansied", "separ"],
     });
     expect(fila.success).toBe(true);
-    expect(fragmentoRecuperadoSchema.safeParse({ ...{}, texto: "sin el resto" }).success).toBe(false);
+    expect(fragmentoRecuperadoSchema.safeParse({ ...{}, texto: "sin el resto" }).success).toBe(
+      false,
+    );
   });
 });

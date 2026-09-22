@@ -31,7 +31,8 @@ function candidato(cambios: Partial<CandidatoFragmento> = {}): CandidatoFragment
   return {
     documentoId: "doc-1",
     fragmentoOrdinal: 1,
-    texto: "La ansiedad por separación se diagnostica por la historia clínica y la videovigilancia.",
+    texto:
+      "La ansiedad por separación se diagnostica por la historia clínica y la videovigilancia.",
     seccion: "Diagnóstico",
     bibliografia,
     licencia,
@@ -180,7 +181,11 @@ describe("composeAnswer con respaldo (FR-007 · FR-021 · SC-003 · US5-AC1/AC3)
     expect(inferencia?.kind).toBe("inferencia");
     if (inferencia?.kind !== "inferencia") throw new Error("sin inferencia");
     expect(inferencia.texto).toContain("derivación del sistema");
-    expect(answer.cobertura).toEqual({ estado: "cubre", cubiertos: ["ansied", "separ"], noCubiertos: [] });
+    expect(answer.cobertura).toEqual({
+      estado: "cubre",
+      cubiertos: ["ansied", "separ"],
+      noCubiertos: [],
+    });
   });
 });
 
@@ -221,7 +226,10 @@ describe("composeAnswer múltiples fuentes (FR-052 · US5-AC11)", () => {
     const answer = composeAnswer({
       pregunta,
       lemasPregunta: ["ansied", "separ"],
-      candidatos: [candidato({ documentoId: "doc-1" }), candidato({ documentoId: "doc-1", fragmentoOrdinal: 2 })],
+      candidatos: [
+        candidato({ documentoId: "doc-1" }),
+        candidato({ documentoId: "doc-1", fragmentoOrdinal: 2 }),
+      ],
       paciente: null,
     });
     expect(answer.avisos).not.toContain("fuentes_multiples");
@@ -275,7 +283,12 @@ describe("composeAnswer top-5 y presupuesto (SC-002 · D4)", () => {
     const candidatos = Array.from({ length: 25 }, (_, i) => candidato({ documentoId: `doc-${i}` }));
     const inicio = performance.now();
     for (let i = 0; i < 20; i += 1) {
-      composeAnswer({ pregunta, lemasPregunta: ["ansied", "separ"], candidatos, paciente: paciente() });
+      composeAnswer({
+        pregunta,
+        lemasPregunta: ["ansied", "separ"],
+        candidatos,
+        paciente: paciente(),
+      });
     }
     expect(performance.now() - inicio).toBeLessThan(200);
   });
@@ -338,9 +351,16 @@ describe("buildFragmentContext (FR-007 · US5-AC7)", () => {
 describe("splitIntoFragments (D2 · ingesta)", () => {
   test("parte por párrafos, hereda encabezados de sección y numera en orden", () => {
     const fragmentos = splitIntoFragments(
-      ["# Diagnóstico", "", "Primer párrafo.", "Sigue el mismo.", "", "## Manejo", "", "Segundo párrafo."].join(
-        "\n",
-      ),
+      [
+        "# Diagnóstico",
+        "",
+        "Primer párrafo.",
+        "Sigue el mismo.",
+        "",
+        "## Manejo",
+        "",
+        "Segundo párrafo.",
+      ].join("\n"),
     );
 
     expect(fragmentos).toEqual([

@@ -21,7 +21,12 @@ function respuesta(patientId: string | null): KnowledgeAnswer {
 }
 
 function turno(patientId: string | null, id: string): TurnoConversacion {
-  return { id, pregunta: "¿Qué antecedentes revisar?", queryId: `query-${id}`, respuesta: respuesta(patientId) };
+  return {
+    id,
+    pregunta: "¿Qué antecedentes revisar?",
+    queryId: `query-${id}`,
+    respuesta: respuesta(patientId),
+  };
 }
 
 beforeEach(() => {

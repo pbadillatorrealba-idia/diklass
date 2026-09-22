@@ -8,11 +8,16 @@ import {
 } from "@/lib/observability/client-error-reporter";
 import { logEvent } from "@/lib/observability/logger";
 import type { Database } from "@/lib/supabase/database.types";
-import { type CandidatoFragmento, type ContextoPaciente, composeAnswer, resolveCitations } from "./answer";
 import {
+  type CandidatoFragmento,
+  type ContextoPaciente,
+  composeAnswer,
+  resolveCitations,
+} from "./answer";
+import {
+  fragmentoRecuperadoSchema,
   type KnowledgeAnswer,
   type KnowledgeQueryRow,
-  fragmentoRecuperadoSchema,
   knowledgeQueryRowSchema,
 } from "./schema";
 

@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, test } from "bun:test";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   incorporateSource,
   listSources,
@@ -105,7 +105,11 @@ const fuente: FuenteContent = {
   licencia: { tipo: "CC BY 4.0 (ficticia)", nota: null },
   fragmentos: [
     { ordinal: 1, seccion: "Anamnesis", texto: "Revisar los antecedentes de apego." },
-    { ordinal: 2, seccion: null, texto: "La desensibilización gradual a las ausencias es el pilar." },
+    {
+      ordinal: 2,
+      seccion: null,
+      texto: "La desensibilización gradual a las ausencias es el pilar.",
+    },
   ],
 };
 
@@ -230,7 +234,10 @@ describe("loadSyntheticCorpus (D9 · decisión de usuario: corpus sintético)", 
     const corpus = {
       fuentes: [
         { clave: "ansiedad", fuente },
-        { clave: "conducta", fuente: { ...fuente, bibliografia: { ...fuente.bibliografia, titulo: "Otra" } } },
+        {
+          clave: "conducta",
+          fuente: { ...fuente, bibliografia: { ...fuente.bibliografia, titulo: "Otra" } },
+        },
       ],
     };
 

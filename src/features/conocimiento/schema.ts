@@ -65,10 +65,13 @@ export const fuenteContentSchema = z
     licencia: licenciaSchema,
     fragmentos: z.array(fragmentoSchema).min(1, "Incluye al menos un fragmento citable."),
   })
-  .refine((fuente) => fuente.fragmentos.every((fragmento, indice) => fragmento.ordinal === indice + 1), {
-    message: "Los fragmentos se numeran de 1 en adelante, sin huecos ni repetidos.",
-    path: ["fragmentos"],
-  });
+  .refine(
+    (fuente) => fuente.fragmentos.every((fragmento, indice) => fragmento.ordinal === indice + 1),
+    {
+      message: "Los fragmentos se numeran de 1 en adelante, sin huecos ni repetidos.",
+      path: ["fragmentos"],
+    },
+  );
 
 /** Contenido de una fuente clínica: forma de ingesta y de `content` en el servidor (D2). */
 export type FuenteContent = z.infer<typeof fuenteContentSchema>;

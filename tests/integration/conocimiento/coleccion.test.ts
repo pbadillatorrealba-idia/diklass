@@ -1,14 +1,21 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import { consultKnowledge } from "@/features/conocimiento/consulta-service";
 import {
   getSource,
   incorporateSource,
   listSources,
   withdrawSource,
 } from "@/features/conocimiento/coleccion-service";
+import { consultKnowledge } from "@/features/conocimiento/consulta-service";
 import { loadSyntheticCorpus } from "@/features/conocimiento/corpus-loader";
 import type { FuenteContent } from "@/features/conocimiento/schema";
-import { adminClient, ANA, BRUNO, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
+import {
+  ANA,
+  adminClient,
+  BRUNO,
+  isLiveSupabase,
+  type LiveVeterinarian,
+  signedInVeterinarian,
+} from "../live-supabase";
 
 /**
  * Colección documental contra Supabase viva (FR-028, FR-030, FR-053, FR-069, SC-026 ·
@@ -46,7 +53,10 @@ describe.skipIf(!isLiveSupabase)("colección documental (US5-AC6/AC9/AC12/AC13)"
     const inicio = performance.now();
     const alta = await incorporateSource(ana.client, {
       clinicId: ana.clinicId,
-      fuente: fuenteNueva("Protocolo de integración (ficticio)", "Texto de integración único zurdo."),
+      fuente: fuenteNueva(
+        "Protocolo de integración (ficticio)",
+        "Texto de integración único zurdo.",
+      ),
     });
     expect(performance.now() - inicio).toBeLessThan(2000);
 
@@ -127,7 +137,10 @@ describe.skipIf(!isLiveSupabase)("colección documental (US5-AC6/AC9/AC12/AC13)"
     const termino = `habituación zurdísima ${Date.now()}`;
     const alta = await incorporateSource(ana.client, {
       clinicId: ana.clinicId,
-      fuente: fuenteNueva("Fuente incremental (ficticia)", `La habituación zurdísima al transportín: ${termino}.`),
+      fuente: fuenteNueva(
+        "Fuente incremental (ficticia)",
+        `La habituación zurdísima al transportín: ${termino}.`,
+      ),
     });
     const despues = await snapshot();
     expect(despues).toBe(antes);
@@ -138,9 +151,11 @@ describe.skipIf(!isLiveSupabase)("colección documental (US5-AC6/AC9/AC12/AC13)"
       patientId: null,
     });
     const evidencias = answer.segmentos.filter((s) => s.kind === "evidencia");
-    expect(evidencias.some((s) => s.kind === "evidencia" && s.cita.documentoId === alta.record.record.id)).toBe(
-      true,
-    );
+    expect(
+      evidencias.some(
+        (s) => s.kind === "evidencia" && s.cita.documentoId === alta.record.record.id,
+      ),
+    ).toBe(true);
   });
 
   test("el corpus sintético se carga por el mismo camino que la ingesta manual (D9)", async () => {
@@ -150,7 +165,10 @@ describe.skipIf(!isLiveSupabase)("colección documental (US5-AC6/AC9/AC12/AC13)"
         fuentes: [
           {
             clave: "fixture-local",
-            fuente: fuenteNueva("Fixture de carga (ficticio)", "El cargador usa la puerta de escritura normal."),
+            fuente: fuenteNueva(
+              "Fixture de carga (ficticio)",
+              "El cargador usa la puerta de escritura normal.",
+            ),
           },
         ],
       },
