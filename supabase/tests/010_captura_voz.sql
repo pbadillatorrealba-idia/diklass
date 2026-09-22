@@ -22,7 +22,7 @@
 -- (abortan con undefined_table en rojo: la razón prevista es que falta la migración 011).
 
 begin;
-select plan(26);
+select plan(28);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: ANA abre la consulta y extrae; BRUNO confirma (distinto del que abrió la
@@ -151,6 +151,16 @@ select throws_ok(
   'D5 · FR-017: confirmar sin campo de anamnesis válido es rechazado'
 );
 
+-- 5b. D5 · FR-017 · SC-027: confirmar fuera de la ruta sancionada — fabricando el enlace del
+-- aterrizaje — está rechazado; el anamnesisEntryId solo lo deriva el servidor.
+select throws_ok(
+  $$update public.clinical_records
+    set content = content || '{"confirmationState":"confirmed","anamnesisEntryId":"99999999-0000-0000-0000-000000000099"}'::jsonb
+    where id = '11111111-0000-0000-0000-000000000101'$$,
+  '23514', 'AUDIO_FACT_ANAMNESIS_FORGED',
+  'D5 · FR-017: fabricar el anamnesisEntryId es una confirmación fuera de ruta y se rechaza'
+);
+
 -- 6. FR-068: confirmar exige identidad autenticada. Se ejerce como superuser para saltarse el
 -- filtro de RLS (que ya oculta la fila sin sesión) y llegar a la capa de triggers — patrón de
 -- fixtures/attribution.sql: «exercises the attribution trigger in isolation from RLS».
@@ -169,12 +179,13 @@ select set_config('request.jwt.claims',
   '{"sub":"b4b4b4b4-0000-0000-0000-00000000000b","role":"authenticated","session_id":"5e4b2000-0000-0000-0000-00000000000b"}',
   true);
 
--- 7. US6-AC4 · FR-010: lo extraído de una consulta cerrada no se incorpora.
+-- 7. US6-AC4 · FR-010: lo extraído de una consulta cerrada no se incorpora (la garantía vive en
+-- el ciclo de vida del hecho: el sellado de 002 acota a los registros de trabajo, fix 2fd95ac).
 select throws_ok(
   $$update public.clinical_records
     set content = content || '{"confirmationState":"confirmed"}'::jsonb
     where id = '11111111-0000-0000-0000-000000000104'$$,
-  '23514', 'CLINICAL_RECORD_SEALED',
+  '23514', 'CONSULTATION_NOT_OPEN',
   'US6-AC4 · FR-010: nada se confirma con la consulta cerrada'
 );
 
@@ -362,6 +373,16 @@ select results_eq(
     where id = '11111111-0000-0000-0000-000000000201'$$,
   $$values ('a4a4a4a4-0000-0000-0000-00000000000a'::uuid)$$,
   'D8: la clínica compartida con sesión activa sí ve la sesión de escucha'
+);
+
+-- 27. FR-063 · SC-048: la entrada de anamnesis aterrizada queda atribuida por servidor a quien
+-- confirmó (created_by derivado de auth.uid(), nunca del payload del cliente).
+select results_eq(
+  $$select created_by from public.clinical_records
+    where id = (select (content ->> 'anamnesisEntryId')::uuid from public.clinical_records
+                where id = '11111111-0000-0000-0000-000000000103')$$,
+  $$values ('b4b4b4b4-0000-0000-0000-00000000000b'::uuid)$$,
+  'FR-063 · SC-048: el aterrizaje queda atribuido por servidor a quien confirmó'
 );
 
 select * from finish();

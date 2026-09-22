@@ -1,0 +1,127 @@
+# Guía de validación rápida: Captura de voz hacia anamnesis
+
+**Creado**: 2026-09-22 · **Cambio**: `implementar-captura-voz-anamnesis` ·
+**Diseño**: [design.md](design.md) · **Tareas**: [tasks.md](tasks.md)
+
+## Prerrequisitos
+
+- Bun 1.4.0 (`.bun-version`) y dependencias con `bun install --frozen-lockfile`.
+- Para las suites vivas: stack Supabase local (`DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
+  supabase start`, `supabase db reset`, `bun run provision:veterinarians -- --fixture
+  tests/fixtures/veterinarians.json`, `SUPABASE_LIVE_TESTS=1`). El stack es compartido con los
+  worktrees hermanos: se reserva por hub («reservo stack» / «stack libre») y **no** se ejecuta
+  `supabase stop`.
+- Para el SQL: clúster PostgreSQL 18 scratch con shims en `/tmp/verify-004/` (patrón del
+  [quickstart de 002](../../implementar-registro-clinico-longitudinal/quickstart.md)); no usa
+  `supabase start` (evita colisiones de puertos con los worktrees hermanos).
+
+## Compuertas locales
+
+```sh
+bun run typecheck                      # tsc --noEmit
+bunx biome check --write src/features/voz src/components/voz tests/unit/voz tests/integration/voz tests/fixtures/voz
+bun test tests/unit/voz                # unidad (determinista)
+bun test tests/integration/voz         # integración viva: en skip sin SUPABASE_LIVE_TESTS=1
+```
+
+## Verificación SQL local (clúster scratch)
+
+```sh
+/tmp/verify-004/run.sh red     # rojo de la suite 010 contra migraciones 001–009
+/tmp/verify-004/run.sh         # rojo → aplica 011 → verde → compatibilidad 001–008 + fixtures
+```
+
+`run.sh` levanta un clúster PostgreSQL 18 desechable (datos `/tmp/pgdata-004`, socket
+`/tmp/pgsock-004`, puerto 56404) desde los `.deb` ya descargados, aplica los shims de
+`bootstrap.sql` (roles `anon`/`authenticated`/`service_role`, esquemas `auth`/`extensions`,
+`auth.uid()`/`auth.jwt()` sobre `request.jwt.claims`) y pgTap 1.3.4 en el esquema `tap` antes de
+las migraciones (005 revoca EXECUTE en `public` y 004 audita su contenido).
+
+## Evidencia de verificación (real)
+
+**Suite pgTap 010 — ciclo rojo→verde local (Constitución II).**
+
+| Etapa | Dónde | Resultado |
+|---|---|---|
+| Rojo previo (suite 010 sin migración 011) | `/tmp/verify-004/010-red.tap`, clúster scratch | **3 ok / 19 not ok + abort final** (`undefined_table` en el assert de stamping, la razón prevista: faltan `listening_sessions`/`transcript_segments`). Los `not ok` son exactamente el mapping actual emitiendo `audio_fact_confirmed` de más (asserts 1–3), las validaciones de ciclo de vida ausentes (4–6, 10–11), el aterrizaje inexistente (12–14, 16) y los objetos nuevos (17–22) |
+| Verde (suite 010 contra 001–009 + 011) | `/tmp/verify-004/010-green.tap` | **28/28 verdes** |
+| Compatibilidad de las suites compartidas con 011 aplicada | `/tmp/verify-004/*.tap` | **todas verdes**: 001 (12/12), 002 (17/17), 003 (14/14), **004 (30/30 — la enumeración taxativa de nueve funciones ejecutables se conserva intacta)**, 005 (18/18), 006 (5/5), 007 (10/10), 008 (28/28, con el fix `2fd95ac` de 002 ya integrado) y `fixtures/attribution.sql` (3/3) |
+
+**Modelos, puertos, extracción, servicios y controlador (tareas 2.x–3.x)**: `bun test
+tests/unit/voz` — rojo previo por módulos inexistentes (`Cannot find module '@/features/voz/*'`,
+la razón prevista) y luego **44 pass / 0 fail** (110 `expect()`), verificado localmente. Cubre:
+SC-004 (recall ≥ 70 %) y SC-016 (≤ 30 % de propuestas incorrectas) medidos sobre
+`tests/fixtures/voz/conversacion-referencia.json`; FR-031 (tramo no confiable sin hechos);
+presupuestos ≤ 300 ms de CPU por tramo y ≤ 2 s por ventana; SC-028 (tramo N procesado antes de
+abrir el tramo N+1) por orden de eventos; FR-055 · US6-AC12 (interrupción resuelta con decisión
+explícita); FR-054 (estado `no_disponible`); FR-032 (señal de contradicción sin sobrescribir);
+D5 (confirmación con `anamnesisEntryId` derivado por el servidor y error explícito si falta).
+
+**Suites completas e integración viva sobre el stack local (tarea 5.1)**: ventana de stack
+reservada por hub («reservo stack» / «stack libre», protocolo de los worktrees hermanos) con
+`DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`, `supabase db reset` con las migraciones
+001–009 (fix `2fd95ac` incluido) + 011, `NOTIFY pgrst 'reload schema'` y
+`bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json`. Resultado real:
+
+| Verificación | Resultado |
+|---|---|
+| `supabase test db` (suites pgTap 001–010 completas sobre el stack) | **All tests successful — Files=10, Tests=165** (`/tmp/verify-004/testdb-final4.log`) |
+| `SUPABASE_LIVE_TESTS=1 bun test tests/integration/voz` (ANA abre consulta y escucha; BRUNO confirma) | **6 pass / 0 fail** (70 `expect()`): activación atribuida y rechazo sin consulta abierta (FR-014 · FR-068), borradores de los primeros tramos conservados con fragmento (FR-055 · US6-AC11 · SC-027), tramo no confiable sin hechos e interrupción con estado definido (FR-031 · US6-AC12), contradicción con la ficha señalada sin sobrescribir (FR-032 · US6-AC8), confirmación por BRUNO con aterrizaje en la anamnesis `inferida` y presupuestos ≤ 2 s (FR-068 · US6-AC15 · SC-048 · SC-027 · FR-021 · US6-AC9) y nada no confirmado en la anamnesis (FR-017 · SC-005) |
+| Ciclo rojo→verde de la integración viva | el rojo previo corresponde a los módulos inexistentes observado en la unidad (documentado arriba); la corrida viva del stack fue 6/6 en verde sobre la implementación completa. El rojo→verde en CI queda pendiente hasta R1 (abajo) |
+
+**Interfaz (tarea 4.x)**: `bun run typecheck` en verde; `bunx biome check` sin diagnósticos sobre
+los archivos propios; revisión estática WCAG 2.2 AA (etiquetas programáticas, operación por
+teclado, foco visible, avisos `role="status"`/`aria-live` nunca solo por color, `testID`
+estables). La verificación visual/e2e queda pendiente y declarada abajo.
+
+## Montaje mínimo en el workspace de consulta (requisito R2)
+
+En `src/app/(protected)/consultations/[id].tsx` (archivo compartido, no tocado):
+
+```tsx
+import { ListenModeSection } from "@/components/voz/listen-mode-section";
+// …
+<ListenModeSection consultationId={id} />
+```
+
+Sin ese montaje el botón «Modo de escucha» no aparece en la app; el componente aislado y sus
+garantías existen y están verificadas. Con la captura caída (FR-054) el indicador lo dice y el
+registro manual de anamnesis de 002 sigue expedito: nada de esta spec lo bloquea.
+
+## Transiciones de `audio_fact` sin acción enumerada (D6)
+
+Con el refinamiento de `clinical_record_action` (migración 011, `create or replace` que conserva
+firma, `search_path` y privilegios) las transiciones que devuelven `null` son:
+
+1. `INSERT` de `audio_fact`: una extracción nace borrador; su alta no es acción clínica enumerada.
+2. `UPDATE` de un `audio_fact` no confirmado (edición o descarte del borrador).
+3. `UPDATE` de `consultation` (cierre, consecuencia de la aprobación — sin cambios) y `INSERT` de
+   `epicrisis` (borrador — sin cambios).
+
+La única transición enumerada de `audio_fact` es el paso a `confirmationState = 'confirmed'` →
+`audio_fact_confirmed`, que ocurre exactamente una vez (los estados terminales quedan sellados por
+`guard_audio_fact_lifecycle`).
+
+## Requisitos de integración (archivos compartidos, fuera de esta rama)
+
+| ID | Requisito | Comando / acción |
+|---|---|---|
+| R1 | Regenerar los tipos generados tras la migración 011 | `supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts` (añade `listening_sessions` y `transcript_segments`). Hasta entonces la compuerta «Generated database types match the migrations» está en rojo en esta rama y `src/features/voz/db-types.ts` (seam `asVozClient`) mantiene `bun run typecheck` limpio; **eliminar ese módulo** al aplicar R1 |
+| R2 | Montar `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx` | ver snippet de arriba |
+| R3 | Actualizar la nota de transiciones del quickstart de 002 | su «INSERT cubre los 12 `record_type` salvo `epicrisis`» ya no incluye `audio_fact` (D6) |
+
+No se ha tocado `src/features/registro/*`, `src/lib/attribution/*`, `src/lib/storage/*`,
+`src/lib/supabase/*`, `supabase/tests/001-008*`, `supabase/migrations/001-009*` ni `seed.sql`.
+
+## Pendientes explícitos (declarados, no cumplidos)
+
+- **Compuerta de tipos de CI** (rojo hasta R1) y la **corrida del job `database` de CI** con el
+  diff de tipos ya aplicado: ambos bloqueados por R1 (archivo compartido); el paso exacto de
+  desbloqueo está arriba. La integración viva local ya corrió en verde (arriba).
+- **Verificación visual/e2e de la UI**: sin Playwright en esta ejecución; queda la revisión
+  estática WCAG y falta una pasada manual/e2e cuando el entorno lo permita.
+- **Micrófono real y ASR real**: extensiones documentadas del diseño (D2 · D3), sin implementar y
+  sin dependencias nuevas. FR-054 se ejercita por la señal de indisponibilidad de `CaptureSource`;
+  el flujo real de permisos de micrófono no está verificado.
+- **Aceptación humana de SC-004/SC-016 sobre conversaciones reales**: aquí se miden sobre la
+  conversación simulada de referencia (SC-004 y SC-016 medidos por test, no aceptados).

@@ -167,11 +167,23 @@ abrió la consulta, US6-AC15 · SC-048); la procedencia queda en `inferida` y no
 `approve_clinical_record` — la enumeración de funciones ejecutables por `authenticated` está
 pinificada taxativamente en `004_function_privileges.sql` (exactamente nueve) y el orquestador exige
 las suites 001–008 verdes sin tocarlas: toda RPC nueva con `grant execute` rompe esa suite
-compartida; (b) orquestar en el cliente dos escrituras (anamnesis y luego UPDATE de la traza) — deja
+compartida; además duplicaría una ruta sancionada que el trigger ya cubre (Principio III). Si algún
+día se prefiere una ruta explícita por RPC, esta decisión se invierte así: crear
+`confirm_audio_fact(uuid)` con su `grant execute`, regenerar tipos, mover allí el aterrizaje y
+patchear la enumeración de `004_function_privileges.sql` — es el único costo, y el pipeline no
+cambia; (b) orquestar en el cliente dos escrituras (anamnesis y luego UPDATE de la traza) — deja
 una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o traza sin
-anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción. La atribución
-server-side (Constitución V) se conserva: `created_by`/`updated_by`/`actor_id` los sella el servidor
-desde `auth.uid()` y el cliente no puede nombrarlos.
+anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción.
+
+*Equivalencia con una validación explícita de RPC* (los dos invariantes del arbitraje de
+integración, verificados por `supabase/tests/010_captura_voz.sql`): «confirmar solo con consulta
+abierta» equivale a `CONSULTATION_NOT_OPEN` 23514 del propio trigger; «no hay UPDATE a `confirmed`
+fuera de la ruta sancionada» equivale al triple guard `AUDIO_FACT_ANAMNESIS_FORGED` 23514 (el
+`anamnesisEntryId` fabricado por el cliente se rechaza: el id lo deriva el servidor),
+`AUDIO_FACT_STATE_INVALID` 23514 (INSERT ya confirmado) y `AUDIO_FACT_IMMUTABLE` 23514 (estados
+terminales sellados). La atribución server-side (Constitución V) se conserva: `created_by` /
+`updated_by` / `actor_id` los sella el servidor desde `auth.uid()` y el cliente no puede
+nombrarlos.
 
 ### D6. Refinamiento de `clinical_record_action` y sellado del ciclo de vida de `audio_fact`
 
@@ -198,7 +210,10 @@ rutas de corrección de anamnesis de 002 (`correctProvenance`, anamnesis correct
 transición a `confirmed` **aterriza** en la misma transacción la entrada de anamnesis (D5): exige
 `consultationId`, `field` y `text` válidos (`AUDIO_FACT_INVALID_CONTENT` 22023), inserta la entrada
 de anamnesis de 002 con `provenance = 'inferida'` y reescribe `content.anamnesisEntryId` con el id
-que devuelve ese INSERT — id derivado por el servidor, nunca por el cliente.
+que devuelve ese INSERT — id derivado por el servidor, nunca por el cliente. Además exige que su
+consulta contenedora siga abierta (`CONSULTATION_NOT_OPEN` 23514): el sellado de 002 acota su
+alcance a los registros de trabajo (fix `2fd95ac`), así que la garantía de US6-AC4 · FR-010 —lo no
+confirmado nunca entra a la anamnesis definitiva— vive en el propio ciclo de vida del hecho.
 
 ### D7. Procedencia del flujo de voz = `inferida` (justificación)
 

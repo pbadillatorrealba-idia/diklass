@@ -121,6 +121,25 @@ begin
       raise exception 'AUDIO_FACT_INVALID_CONTENT' using errcode = '22023';
     end if;
 
+    -- D5 · SC-027: el id del aterrizaje lo deriva SIEMPRE el servidor; fabricar el enlace desde
+    -- el cliente es una confirmación fuera de la ruta sancionada y se rechaza de plano.
+    if new.content ->> 'anamnesisEntryId' is not null then
+      raise exception 'AUDIO_FACT_ANAMNESIS_FORGED' using errcode = '23514';
+    end if;
+
+    -- US6-AC4 · FR-010: con la consulta cerrada, lo extraído no confirmado NO se incorpora a la
+    -- anamnesis definitiva. El sellado de 002 (fix 2fd95ac) acota su alcance a los registros de
+    -- trabajo (anamnesis/diagnosis/epicrisis), así que esta garantía la exige el propio ciclo de
+    -- vida del hecho, sobre su consulta contenedora.
+    if not exists (
+      select 1 from public.clinical_records target
+      where target.id::text = new.content ->> 'consultationId'
+        and target.record_type = 'consultation'
+        and target.content ->> 'status' = 'open'
+    ) then
+      raise exception 'CONSULTATION_NOT_OPEN' using errcode = '23514';
+    end if;
+
     -- D5 (FR-017 · FR-021 · SC-027 · US6-AC6): la confirmación aterriza EN ESTA MISMA
     -- TRANSACCIÓN la entrada de anamnesis de 002 — con procedencia 'inferida', que la
     -- confirmación no altera (US6-AC9) — y enlaza su id en la traza. El id lo deriva el
