@@ -5,7 +5,24 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      react-native-stack:
+        patterns:
+          - "react-native*"
+          - "expo*"
+      dev-tooling:
+        patterns:
+          - "@biomejs/*"
+          - "bun-types"
+          - "typescript"
+          - "@types/*"
+          - "@playwright/*"
+          - "@axe-core/*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
