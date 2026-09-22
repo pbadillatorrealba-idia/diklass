@@ -50,7 +50,15 @@ begin
     -- adicional sobre la consulta cerrada. Un consultationId que no resuelve a ninguna
     -- consulta se tolera (huérfanos: riesgo documentado D1/D6), pero si resuelve y está
     -- cerrada, se rechaza.
-    if new.content ->> 'consultationId' is not null and new.status <> 'corrective' then
+    -- El sellado protege el conjunto de REGISTROS DE TRABAJO de la consulta cerrada
+    -- (anamnesis, diagnosis, epicrisis — el set que fija SC-009). Los registros
+    -- longitudinales que solo REFERENCIAN la consulta (clinical_feedback de la spec 005,
+    -- registrado legítimamente entre consultas sobre la consulta cerrada) son datos nuevos
+    -- y no se sellan; su propia spec fija su inmutabilidad.
+    if new.content ->> 'consultationId' is not null
+      and new.status <> 'corrective'
+      and new.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
+    then
       begin
         consultation_id := (new.content ->> 'consultationId')::uuid;
       exception when invalid_text_representation then
@@ -95,7 +103,12 @@ begin
         consultation_id := null;
       end;
 
-      if consultation_id is not null then
+      -- Mismo alcance que en INSERT: solo los registros de TRABAJO quedan sellados. Una
+      -- fila longitudinal (p. ej. clinical_feedback) que apunta a la consulta cerrada puede
+      -- seguir rigiéndose por su propia spec (005 la hace inmutable con su trigger).
+      if consultation_id is not null
+        and old.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
+      then
         select target.content ->> 'status' into consultation_status
         from public.clinical_records target
         where target.id = consultation_id

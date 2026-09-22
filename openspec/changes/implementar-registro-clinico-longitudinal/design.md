@@ -162,6 +162,13 @@ epicrisis correctiva de D8—):
    epicrisis correctiva de D8 se anexa legítimamente a la consulta cerrada. Los `consultationId`
    que no resuelven a ninguna consulta se toleran (huérfanos: riesgo documentado de D1/D6).
 
+   **Alcance: el conjunto de registros de TRABAJO** (`record_type` en `anamnesis`, `diagnosis`,
+   `epicrisis` — el set que fija SC-009). Los registros longitudinales que solo referencian la
+   consulta —`clinical_feedback` de la spec 005, que se registra legítimamente entre consultas
+   sobre una consulta cerrada (US10-AC1), y en general datos nuevos de specs futuras— no quedan
+   sellados por esta 002: su inmutabilidad y vocabulario los fija su propia spec (D4/D5 de 005).
+   El guard de inmutabilidad del vínculo (`consultationId` inmutable) sí se aplica a TODO tipo.
+
 Cumple FR-024, SC-009 y US4-AC2 («los registros de la consulta anterior permanecen idénticos»)
 también sobre anamnesis y diagnósticos, no solo sobre epicrisis, y con ello el conjunto del
 workspace de una consulta cerrada queda estable (SC-009).
