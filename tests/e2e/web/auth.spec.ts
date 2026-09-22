@@ -38,7 +38,11 @@ test.describe("auth web shell", () => {
     page,
   }) => {
     await page.goto("/login");
-    await page.getByLabel("Correo de acceso").click();
+    const emailField = page.getByLabel("Correo de acceso");
+    // The fields stay read-only until React hydrates; a click before that lands on a
+    // non-focusable input and Tab starts from body instead of moving to the password field.
+    await expect(emailField).toBeEditable();
+    await emailField.click();
     await page.keyboard.press("Tab");
     await expect(page.getByLabel("Contraseña")).toBeFocused();
     await page.keyboard.press("Tab");
@@ -145,7 +149,16 @@ test.describe("auth against the local backend", () => {
 
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const { userId } = await readSupabaseSession(page);
+    const { accessToken } = await readSupabaseSession(page);
+    // Age only this page's access session: other tests hold Ana's sessions in parallel (D1).
+    const authSessionId = (
+      JSON.parse(Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8")) as {
+        session_id?: string;
+      }
+    ).session_id;
+    if (!authSessionId) {
+      throw new Error("The access token carries no session_id claim.");
+    }
 
     await page.goto(`/consultations/${consultationId}`);
     const notesField = page.getByLabel("Notas de la consulta");
@@ -155,7 +168,7 @@ test.describe("auth against the local backend", () => {
     await expect
       .poll(() =>
         page.evaluate(() =>
-          Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass:draft:")),
+          Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass.draft.")),
         ),
       )
       .toBe(true);
@@ -171,15 +184,21 @@ test.describe("auth against the local backend", () => {
       // Age the live session past the inactivity limit, as eight idle hours would.
       const now = Date.now();
       const aged = await admin.patch(
-        `/rest/v1/access_sessions?veterinarian_id=eq.${userId}&revoked_at=is.null`,
+        `/rest/v1/access_sessions?auth_session_id=eq.${authSessionId}&revoked_at=is.null`,
         {
           data: {
             last_activity_at: new Date(now - 9 * 3_600_000).toISOString(),
             expires_at: new Date(now - 3_600_000).toISOString(),
           },
+          headers: { Prefer: "return=representation" },
         },
       );
       expect(aged.ok()).toBeTruthy();
+      // The filter now matches on a single auth_session_id: without a representation, a
+      // request matching zero rows would still return 204/ok, and the test would only fail
+      // later with an opaque timeout instead of here, where the cause is obvious.
+      const agedRows = (await aged.json()) as Array<{ id: string }>;
+      expect(agedRows).toHaveLength(1);
 
       await page.getByRole("button", { name: "Guardar anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();
@@ -209,7 +228,7 @@ test.describe("auth against the local backend", () => {
       await expect
         .poll(() =>
           page.evaluate(() =>
-            Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass:draft:")),
+            Object.keys(window.sessionStorage).some((key) => key.startsWith("diklass.draft.")),
           ),
         )
         .toBe(false);

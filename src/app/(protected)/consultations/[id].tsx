@@ -9,23 +9,15 @@ import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { useDraftPreserver } from "@/features/clinical/draft-preserver";
+import { flushDraft, useDraftPreserver } from "@/features/clinical/draft-preserver";
 import { createClinicalRecord } from "@/lib/attribution/clinical-mutations";
 import type { Attribution } from "@/lib/attribution/types";
+import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import type { ConsultationDraft } from "@/lib/storage/drafts";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
-
-/** RLS denial (42501) or a rejected JWT (PGRST3xx): the session is no longer valid. */
-function isAuthenticationRequired(error: unknown): boolean {
-  const code =
-    typeof error === "object" && error !== null && "code" in error
-      ? String((error as { code: unknown }).code)
-      : "";
-  return code === "42501" || code.startsWith("PGRST3");
-}
 
 export default function ConsultationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,9 +50,14 @@ export default function ConsultationScreen() {
     setDraft({ notes: text, updatedAt: new Date().toISOString() });
   };
 
-  const preserveCurrentNotes = async () => {
-    draftSession?.edit({ notes, updatedAt: new Date().toISOString() });
-    await draftSession?.flush();
+  // Resolves to whether the draft actually made it to storage, so callers can tell the
+  // user the truth instead of always claiming it was kept (review #4 follow-up).
+  const preserveCurrentNotes = async (): Promise<boolean> => {
+    if (!draftSession) {
+      return true;
+    }
+    draftSession.edit({ notes, updatedAt: new Date().toISOString() });
+    return flushDraft(draftSession);
   };
 
   const handleSave = async () => {
@@ -69,8 +66,13 @@ export default function ConsultationScreen() {
     }
     // Save blocking after expiry: nothing enters the history without a valid identity.
     if (accessState !== "active") {
-      await preserveCurrentNotes();
+      const preserved = await preserveCurrentNotes();
       openExpiredDialog();
+      setStatus(
+        preserved
+          ? "La sesión ya no es válida. El borrador se conservó."
+          : "La sesión ya no es válida. No pudimos guardar el borrador: no cierres esta pantalla.",
+      );
       return;
     }
 
@@ -82,18 +84,32 @@ export default function ConsultationScreen() {
         record_type: "anamnesis",
         content: { consultationId, notes },
       });
-      await draftSession.markSaved();
+      try {
+        await draftSession.markSaved();
+      } catch (error) {
+        // The record is already saved; only clearing the local draft cache failed.
+        // Distinct label from "save_anamnesis" so the two are not conflated in logs.
+        void captureClientError(errorReporter, { error, operation: "clear_draft", requestId });
+      }
       setSavedAttribution(result.attribution);
       setStatus("Anamnesis guardada.");
     } catch (error) {
-      await preserveCurrentNotes();
+      const preserved = await preserveCurrentNotes();
       if (isAuthenticationRequired(error)) {
         setAccessState("expired");
         openExpiredDialog();
-        setStatus("La sesión ya no es válida. El borrador se conservó.");
+        setStatus(
+          preserved
+            ? "La sesión ya no es válida. El borrador se conservó."
+            : "La sesión ya no es válida. No pudimos guardar el borrador: no cierres esta pantalla.",
+        );
       } else {
         void captureClientError(errorReporter, { error, operation: "save_anamnesis", requestId });
-        setStatus("No pudimos guardar. El borrador se conservó.");
+        setStatus(
+          preserved
+            ? "No pudimos guardar. El borrador se conservó."
+            : "No pudimos guardar. Tampoco pudimos guardar el borrador: no cierres esta pantalla.",
+        );
       }
     } finally {
       setIsSaving(false);
