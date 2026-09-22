@@ -179,11 +179,14 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
       ...anamnesisBase,
       field: "frecuencia",
       provenance: "inferida",
-      provenanceHistory: [{ provenance: "desconocida" }],
+      provenanceHistory: [{ provenance: "desconocida", text: "Fluoxetina en 2024." }],
     });
 
     expect(entrada.provenance).toBe("inferida");
-    expect(entrada.provenanceHistory).toEqual([{ provenance: "desconocida" }]);
+    // El `text` de la historia se preserva: Zod no debe recortar lo ya almacenado (FR-021).
+    expect(entrada.provenanceHistory).toEqual([
+      { provenance: "desconocida", text: "Fluoxetina en 2024." },
+    ]);
   });
 
   test("acepta el vocabulario canónico de procedencia y rechaza lo demás", () => {

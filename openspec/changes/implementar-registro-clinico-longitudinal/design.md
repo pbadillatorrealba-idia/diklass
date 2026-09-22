@@ -143,7 +143,9 @@ aprobación, y el UPDATE de la fila de consulta emite `null`).
 
 ### D5. Las consultas cerradas sellan sus registros de trabajo (evaluado sobre `old`, sin repunteo)
 
-Trigger `guard_consultation_sealed` (`BEFORE UPDATE` sobre `clinical_records`):
+Trigger `guard_consultation_sealed` (`BEFORE INSERT OR UPDATE` sobre `clinical_records`;
+tras el Problema 2 de la revisión de la PR #27 el sellado también cubre el INSERT —salvo la
+epicrisis correctiva de D8—):
 
 1. Evalúa el sellado sobre **`old.content->>'consultationId'`**: si esa referencia resuelve a una
    consulta `closed`, todo `UPDATE` fracasa con `CLINICAL_RECORD_SEALED` (SQLSTATE 23514).
@@ -154,8 +156,22 @@ Trigger `guard_consultation_sealed` (`BEFORE UPDATE` sobre `clinical_records`):
    hacer `UPDATE` directo por PostgREST sobre filas no aprobadas, que son exactamente las anamnesis
    y diagnósticos que este sellado promete proteger.
 
+3. **Cubre también el INSERT** (corrección de la revisión de la PR #27): una fila de trabajo
+   cuyo `content.consultationId` resuelve a una consulta `closed` no puede crearse por el
+   camino directo de PostgREST (premisa de amenaza T055), salvo `status='corrective'` — la
+   epicrisis correctiva de D8 se anexa legítimamente a la consulta cerrada. Los `consultationId`
+   que no resuelven a ninguna consulta se toleran (huérfanos: riesgo documentado de D1/D6).
+
+   **Alcance: el conjunto de registros de TRABAJO** (`record_type` en `anamnesis`, `diagnosis`,
+   `epicrisis` — el set que fija SC-009). Los registros longitudinales que solo referencian la
+   consulta —`clinical_feedback` de la spec 005, que se registra legítimamente entre consultas
+   sobre una consulta cerrada (US10-AC1), y en general datos nuevos de specs futuras— no quedan
+   sellados por esta 002: su inmutabilidad y vocabulario los fija su propia spec (D4/D5 de 005).
+   El guard de inmutabilidad del vínculo (`consultationId` inmutable) sí se aplica a TODO tipo.
+
 Cumple FR-024, SC-009 y US4-AC2 («los registros de la consulta anterior permanecen idénticos»)
-también sobre anamnesis y diagnósticos, no solo sobre epicrisis.
+también sobre anamnesis y diagnósticos, no solo sobre epicrisis, y con ello el conjunto del
+workspace de una consulta cerrada queda estable (SC-009).
 
 *Alternativa rechazada*: marcar como `approved` los registros de trabajo al cerrar — `approved`
 significa «validado como registro definitivo» y su camino (RPC de aprobación) está reservado a la
