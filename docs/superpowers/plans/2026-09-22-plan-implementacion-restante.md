@@ -8,10 +8,10 @@ Las decisiones de diseño por funcionalidad viven en el `design.md` de su cambio
 
 | Feature | Rama | Base de la PR | Estado |
 |---|---|---|---|
-| 002 registro clínico | `feat/002-registro-clinico-longitudinal` | `main` (PR #27) | implementada; revisión y cierre en curso |
-| 003 base de conocimiento | `feat/003-base-conocimiento-trazable` | `feat/002-registro-clinico-longitudinal` | plan + implementación (apilada) |
-| 004 captura de voz | `feat/004-captura-voz-anamnesis` | `feat/002-registro-clinico-longitudinal` | plan + implementación (apilada) |
-| 005 retroalimentación clínica | `feat/005-retroalimentacion-clinica` | `feat/002-registro-clinico-longitudinal` | plan + implementación (apilada) |
+| 002 registro clínico | `feat/002-registro-clinico-longitudinal` | `main` (PR #27) | **lista** (27/27 tareas, revisión aplicada íntegra, CI verde) |
+| 003 base de conocimiento | `feat/003-base-conocimiento-trazable` | `feat/002-registro-clinico-longitudinal` | PR #30 — revisión publicada (Con correcciones, 2 Importantes); fixes aplicándose |
+| 004 captura de voz | `feat/004-captura-voz-anamnesis` | `feat/002-registro-clinico-longitudinal` | PR #29 — revisión publicada (Con correcciones, 2 Importantes); fixes aplicándose |
+| 005 retroalimentación clínica | `feat/005-retroalimentacion-clinica` | `feat/002-registro-clinico-longitudinal` | PR #28 — **lista** (revisión aplicada íntegra, CI 6/6 verde, run #35801116495) |
 | 006 asistencia proactiva | `feat/006-asistencia-clinica-proactiva` | `feat/003-base-conocimiento-trazable` | pendiente (depende de 003) |
 | 007 tratamiento/farmacología | `feat/007-apoyo-tratamiento-farmacologia` | `feat/006-asistencia-clinica-proactiva` | pendiente (depende de 006) |
 
