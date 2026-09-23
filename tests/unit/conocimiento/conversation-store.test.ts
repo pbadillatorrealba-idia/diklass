@@ -4,6 +4,7 @@ import {
   useConversationStore,
 } from "@/features/conocimiento/conversation-store";
 import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
+import { useSessionStore } from "@/stores/session-store";
 
 /**
  * Contexto de la conversación del asistente durante la sesión de acceso (D8 de
@@ -79,6 +80,37 @@ describe("conversation-store (FR-026 · US5-AC4)", () => {
     store.setPatient("patient-1");
     store.addTurno(turno("patient-1", "t1"));
     store.reset();
+    expect(useConversationStore.getState()).toMatchObject({ patientId: null, turnos: [] });
+  });
+});
+
+describe("ciclo de sesión (FR-026 · US5-AC4 · Constitución V)", () => {
+  const identidad = {
+    veterinarianId: "vet-1",
+    displayName: "Dra. Ana",
+    clinicId: "clinic-1",
+    accessSessionId: "session-1",
+  };
+
+  test("expirar la sesión de acceso limpia el contexto y los turnos con snapshot de ficha", () => {
+    useSessionStore.getState().setIdentity(identidad);
+    const store = useConversationStore.getState();
+    store.setPatient("patient-1");
+    store.addTurno(turno("patient-1", "t1"));
+
+    useSessionStore.getState().setAccessState("expired");
+
+    expect(useConversationStore.getState()).toMatchObject({ patientId: null, turnos: [] });
+  });
+
+  test("cerrar la sesión (logout) limpia el contexto de la conversación", () => {
+    useSessionStore.getState().setIdentity(identidad);
+    const store = useConversationStore.getState();
+    store.setPatient("patient-1");
+    store.addTurno(turno("patient-1", "t2"));
+
+    useSessionStore.getState().clear();
+
     expect(useConversationStore.getState()).toMatchObject({ patientId: null, turnos: [] });
   });
 });

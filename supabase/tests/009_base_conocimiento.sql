@@ -19,7 +19,7 @@
 -- enumeradas de FR-063 para fuentes, D3).
 
 begin;
-select plan(31);
+select plan(33);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: ana y bruno (clínica principal), carlos (otra clínica) y daniela
@@ -144,6 +144,15 @@ select throws_ok(
   '23514',
   'KNOWLEDGE_SOURCE_IMMUTABLE',
   'FR-069: la atribución de la incorporación es inamovible'
+);
+
+select throws_ok(
+  $$update public.knowledge_documents
+    set status = 'withdrawn', id = 'e0e0e0e0-0000-4000-8000-000000000099'
+    where id = 'e0e0e0e0-0000-4000-8000-000000000001'$$,
+  '23514',
+  'KNOWLEDGE_SOURCE_IMMUTABLE',
+  'FR-053: la retirada no puede reescribir la identidad de la fuente citable (D3)'
 );
 
 select throws_ok(
@@ -374,10 +383,20 @@ select throws_ok(
 select throws_ok(
   $$insert into public.knowledge_queries (id, clinic_id, question, patient_id, answer)
     values ('f0f0f0f0-0000-4000-8000-000000000002', '11111111-0000-4000-8000-000000000001',
-      'pregunta con paciente fantasma', '99999999-9999-4999-8999-999999999999', '{}')$$,
+      'pregunta con paciente fantasma', '99999999-9999-4999-8999-999999999999',
+      '{"pregunta":"pregunta con paciente fantasma","patientId":null,"segmentos":[],"cobertura":{"estado":"sin_evidencia","cubiertos":[],"noCubiertos":[]},"avisos":[]}')$$,
   '23503',
   null,
   'FR-020: el contexto de paciente referenciado existe o la consulta no se registra'
+);
+
+select throws_ok(
+  $$insert into public.knowledge_queries (id, clinic_id, question, answer)
+    values ('f0f0f0f0-0000-4000-8000-000000000003', '11111111-0000-4000-8000-000000000001',
+      'respuesta fabricada', '{}')$$,
+  '23514',
+  null,
+  'FR-020 · SC-010: una respuesta sin la forma del contrato no se registra (D6)'
 );
 
 -- ---------------------------------------------------------------------------

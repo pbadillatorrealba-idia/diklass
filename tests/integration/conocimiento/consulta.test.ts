@@ -84,6 +84,15 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
   });
 
   test("la pregunta en lenguaje natural responde con cita documento+fragmento y su bibliografia (FR-005 · FR-006 · FR-007 · US5-AC1)", async () => {
+    // Presupuesto de recuperación de `design.md`: pregunta → candidatos ≤ 500 ms (red local).
+    const inicioBusqueda = performance.now();
+    const { error: errorBusqueda } = await ana.client.rpc("search_knowledge_fragments", {
+      p_query: `¿Cómo habituar de forma zurdísima ${termino}?`,
+      p_limit: 25,
+    });
+    expect(errorBusqueda).toBeNull();
+    expect(performance.now() - inicioBusqueda).toBeLessThan(500);
+
     const inicio = performance.now();
     const { answer } = await consultKnowledge(ana.client, {
       clinicId: ana.clinicId,

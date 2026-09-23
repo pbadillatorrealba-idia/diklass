@@ -55,7 +55,8 @@ ajuste de la enumeración de funciones del test 23 de `supabase/tests/004_functi
   segmentos de respuesta con el vocabulario `Provenance` reutilizado de 002 y su mapeo
   evidencia→`recuperada`, inferencia→`inferida`, ficha→`reportada`/`desconocida` (FR-021 ·
   US5-AC3), cobertura y avisos (`sin_respaldo_documental`, `cobertura_parcial`, `fuentes_multiples`,
-  `sin_paciente_seleccionado`, `fuente_retirada`) y forma persistida
+  `sin_paciente_seleccionado`, `fuente_retirada`, `evidencia_truncada`, `cita_irresoluble`,
+  `ficha_no_disponible`) y forma persistida
   de `knowledge_queries` (FR-020 · US5-AC5). Verificación: `bun test tests/unit` en rojo por los
   esquemas inexistentes; luego verde.
 - [x] 2.2 Escribir en rojo `tests/unit/conocimiento/answer.test.ts` y luego implementar

@@ -58,8 +58,10 @@ function parsearEntero(valor: string): number | null {
   const recortado = valor.trim();
   if (recortado === "") return null;
   const numero = Number.parseInt(recortado, 10);
-  return Number.isFinite(numero) && numero > 0 ? numero : Number.NaN;
+  return Number.isFinite(numero) && numero > 0 && String(numero) === recortado ? numero : null;
 }
+
+const ERROR_ANIO = "Año de publicación inválido.";
 
 /**
  * Formulario de ingesta de una fuente clínica (FR-028 · FR-030 · US5-AC6/AC9): bibliografía
@@ -82,29 +84,34 @@ export function FormularioFuente({
   errors: Record<string, string>;
 }) {
   const fragmentos = splitIntoFragments(values.texto);
+  const anio = parsearEntero(values.anio);
+  const errorAnio = values.anio.trim() !== "" && anio === null ? ERROR_ANIO : null;
 
   return (
     <VStack className="gap-4">
-      {CAMPOS.map(({ field, label, testID }) => (
-        <FormControl isInvalid={Boolean(errors[field])} key={field}>
-          <FormControlLabel>
-            <FormControlLabelText>{label}</FormControlLabelText>
-          </FormControlLabel>
-          <Input>
-            <InputField
-              accessibilityLabel={label}
-              onChangeText={(texto) => onChange({ ...values, [field]: texto })}
-              testID={testID}
-              value={values[field]}
-            />
-          </Input>
-          {errors[field] ? (
-            <FormControlError>
-              <FormControlErrorText>{errors[field]}</FormControlErrorText>
-            </FormControlError>
-          ) : null}
-        </FormControl>
-      ))}
+      {CAMPOS.map(({ field, label, testID }) => {
+        const mensaje = field === "anio" ? (errors[field] ?? errorAnio) : errors[field];
+        return (
+          <FormControl isInvalid={Boolean(mensaje)} key={field}>
+            <FormControlLabel>
+              <FormControlLabelText>{label}</FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                accessibilityLabel={label}
+                onChangeText={(texto) => onChange({ ...values, [field]: texto })}
+                testID={testID}
+                value={values[field]}
+              />
+            </Input>
+            {mensaje ? (
+              <FormControlError>
+                <FormControlErrorText>{mensaje}</FormControlErrorText>
+              </FormControlError>
+            ) : null}
+          </FormControl>
+        );
+      })}
 
       <FormControl isInvalid={Boolean(errors.texto)}>
         <FormControlLabel>
@@ -141,9 +148,8 @@ export function FormularioFuente({
       </Box>
 
       <Button
-        isDisabled={isSaving}
+        isDisabled={isSaving || errorAnio !== null}
         onPress={() => {
-          const anio = parsearEntero(values.anio);
           const candidato = {
             bibliografia: {
               titulo: values.titulo,
@@ -151,7 +157,7 @@ export function FormularioFuente({
                 .split(",")
                 .map((autor) => autor.trim())
                 .filter((autor) => autor !== ""),
-              anio: Number.isNaN(anio as number) ? (anio as number) : anio,
+              anio,
               revista: values.revista,
               editorial: values.editorial,
               edicion: values.edicion,

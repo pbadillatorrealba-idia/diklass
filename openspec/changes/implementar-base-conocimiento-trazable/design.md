@@ -212,6 +212,13 @@ Las reglas del contrato (todas unit-testeadas):
   sigue resolviéndose (bibliografía + fragmento) y se marca con el aviso `fuente_retirada`.
 - **FR-020 · US5-AC5**: cada segmento de ficha lleva `fichaRef` y snapshot del valor usado; cada
   evidencia, su cita. Lo persistido (D6) **es** la reconstrucción.
+- **Reglas añadidas en la revisión de la PR**: el tope de 5 referencias nunca descarta en silencio
+  evidencia calificada (aviso `evidencia_truncada`, FR-052); una cita que ya no resuelve contra la
+  colección se marca (`cita_irresoluble`) en vez de heredar el estado guardado (FR-020 · SC-003 ·
+  SC-010); y un paciente seleccionado con ficha ilegible conserva su contexto y se declara con
+  `ficha_no_disponible`, sin degradarse a «sin paciente» (FR-051 · FR-020). Además, el contexto de
+  la conversación —con el snapshot de ficha de cada turno— se limpia al cerrar o expirar la sesión
+  de acceso (Constitución V).
 
 Preguntas sin términos consultables (la pregunta son solo palabras vacías para el diccionario
 español): se tratan como `sin_evidencia` con el mismo aviso `sin_respaldo_documental`, que es
@@ -241,6 +248,13 @@ Sin columnas de atribución: la spec exceptúa las preguntas de la atribución (
 asistente no requieren atribución»; solo la gestión del corpus la exige, FR-069). *Alternativa*:
 registrar `asked_by`; queda como decisión dura reversible (HD5) con cambio acotado a la tabla y al
 servicio.
+
+*Endurecimiento (revisión de la PR)*: `answer` exige por CHECK SQL la forma mínima del contrato
+(`pregunta`, `segmentos`, `cobertura`, `avisos`): un cliente no puede fabricar por PostgREST una
+respuesta vacía. **Riesgo residual y su reverso**: la validación semántica completa del `answer`
+vive en Zod (frontera de cliente); si se exige cerrarla en el servidor, el reverso es una RPC de
+registro de consultas con la misma validación trasladada a SQL de forma — cambio acotado a una
+función y su suite.
 
 ### D7. Contexto de paciente: contratos de 002, sin reinvención
 
@@ -419,7 +433,7 @@ expresa del orquestador y se re-verifica sin diff tras cada merge.
 | HD1 | Respuesta **extractiva sin modelo generativo** (D5) | LLM en Edge Function con proveedor externo | Nueva función Edge + secreto + validación de anclaje; el contrato `KnowledgeAnswer` y las citas se conservan; SC-010 deja de ser «por construcción» y exige validación de respaldo por afirmación |
 | HD2 | Recuperación **léxica FTS** española (D4) | pgvector + embeddings (o híbrida) | Extensión + proveedor de embeddings + reescritura de `search_knowledge_fragments`; tablas y citas intactas |
 | HD3 | Fuentes **inmutables**: la corrección es retirar + incorporar fuente nueva (D3) | Edición de metadatos/fragmentos con historia | Amplía el trigger de ciclo de vida y exige definir historia de versiones del fragmento citado |
-| HD4 | Atribución del corpus **solo en columnas de fila**, sin `clinical_audit_events` (D3) | Trigger que inserte eventos con `entity_type` nuevo | Trigger nuevo + decisión sobre la enumeración de FR-063 (¿extenderla o aceptar eventos no enumerados?) |
+| HD4 | Atribución del corpus **solo en columnas de fila**, sin `clinical_audit_events` (D3) — aceptada con la condición de la revisión: la superficie de revisión muestra quién retiró y cuándo completo | Trigger que inserte eventos con `entity_type` nuevo | Trigger nuevo + decisión sobre la enumeración de FR-063 (¿extenderla o aceptar eventos no enumerados?) |
 | HD5 | `knowledge_queries` **sin actor** (supuesto de la spec) (D6) | Columna `asked_by` + guarda | Columna + trigger + consulta de «quién preguntó» en la reconstrucción |
 | HD6 | Cobertura por **lemas** (`ts_debug`) para FR-022/FR-023/SC-025 (D4/D5) | Clasificador semántico de cobertura | Sustituye el análisis de cobertura de `composeAnswer`; el resto del contrato no cambia |
 | HD7 | Corpus y conjunto anotado **sintéticos** como sustitutos provisionales (D9) | Esperar al corpus real y al conjunto del equipo clínico | Reemplazo de fixtures; el loader y el arnés de evaluación (formato) se conservan |
