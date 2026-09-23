@@ -1,9 +1,6 @@
 import { z } from "zod";
 import {
-  type AvisoRespuesta,
   avisoRespuestaSchema,
-  type Cita,
-  type Cobertura,
   citaSchema,
   coberturaSchema,
 } from "@/features/conocimiento/schema";
