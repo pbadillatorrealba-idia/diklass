@@ -114,10 +114,19 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
       segmentText: tramo0.transcripcion,
       drafts: propuestas0.map((propuesta) => ({ ...propuesta, contradiction: null })),
     });
+    const guardado1 = await saveTranscriptSegment(ana.client, {
+      listenSessionId: sessionId,
+      clinicId: ana.clinicId,
+      seq: 1,
+      startedAt: new Date().toISOString(),
+      endedAt: new Date().toISOString(),
+      text: tramo1.transcripcion,
+      quality: tramo1.calidad,
+    });
     await createAudioFactDrafts(ana.client, {
       clinicId: ana.clinicId,
       consultationId,
-      transcriptSegmentId: guardado0.id,
+      transcriptSegmentId: guardado1.id,
       segmentSeq: 1,
       segmentText: tramo1.transcripcion,
       drafts: extractClinicalFacts({ text: tramo1.transcripcion, quality: tramo1.calidad }).map(
@@ -132,7 +141,9 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
       expect(hecho.content.confirmationState).toBe("pending");
       expect(hecho.content.provenance).toBe("inferida");
       expect(hecho.content.transcriptExcerpt.length).toBeGreaterThan(0);
-      expect(hecho.content.transcriptSegmentId).toBe(guardado0.id);
+      // SC-027 · US6-AC6: la traza apunta al tramo REAL que originó cada hecho.
+      const tramoOrigen = hecho.content.segmentSeq === 0 ? guardado0.id : guardado1.id;
+      expect(hecho.content.transcriptSegmentId).toBe(tramoOrigen);
     }
   });
 

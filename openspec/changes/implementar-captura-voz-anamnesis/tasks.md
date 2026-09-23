@@ -115,7 +115,7 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   sin sobrescritura (FR-032 · US6-AC8), marca de tramo no confiable sin derivar hechos
   (FR-031 · US6-AC7) y acciones Confirmar / Corregir / Descartar por antecedente (FR-017 ·
   US6-AC3). Verificación: ídem 4.1 más `bun test tests/unit/voz` en verde.
-- [ ] 4.3 Documentar el montaje mínimo como requisito de integración R2 (una importación y
+- [x] 4.3 Documentar el montaje mínimo como requisito de integración R2 (una importación y
   `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx`, no
   tocado por estar compartido) y dejar expedito el registro manual de anamnesis de 002 con la
   escucha caída (FR-054 · US6-AC10). Verificación: snippet exacto en `quickstart.md` y

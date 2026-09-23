@@ -37,6 +37,7 @@ export class ListenModeController {
   #state: ListenModeState = "inactivo";
   #abort = new AbortController();
   #decision: "processed" | "discarded" = "discarded";
+  #interrupted = false;
 
   constructor(deps: ListenModeDeps) {
     this.#deps = deps;
@@ -44,6 +45,11 @@ export class ListenModeController {
 
   get state(): ListenModeState {
     return this.#state;
+  }
+
+  /** Interrupción a mitad de tramo (≠ detención normal): US6-AC12 · FR-055. */
+  get wasInterrupted(): boolean {
+    return this.#interrupted;
   }
 
   /** Recorre el flujo completo: disponibilidad, ventanas y cierre (fin natural o detención). */
@@ -61,6 +67,7 @@ export class ListenModeController {
       if (signal.aborted) {
         // FR-055 · US6-AC12: el tramo interrumpido se resuelve explícitamente, con su
         // transcripción ya disponible: se procesa o se descarta, nunca a medio camino.
+        this.#interrupted = true;
         await this.#deps.settlePartialWindow?.(window, result, this.#decision);
         break;
       }

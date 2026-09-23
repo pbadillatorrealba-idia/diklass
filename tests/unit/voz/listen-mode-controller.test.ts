@@ -147,5 +147,39 @@ describe("ListenModeController", () => {
     expect(procesados).toEqual([0]);
     expect(parciales).toEqual([{ seq: 1, decision: "discarded" }]);
     expect(controlador.state).toBe("detenido");
+    expect(controlador.wasInterrupted).toBe(true);
+  });
+
+  test("US6-AC12: la decisión del tramo interrumpido puede ser 'processed' (explícita, nunca a medio camino)", async () => {
+    const fuente = new FuenteFija(2);
+    const decisiones: string[] = [];
+    let controlador: ListenModeController;
+    const transcripcion = new TranscripciónFija((window) => {
+      if (window.seq === 0) {
+        void controlador?.stop("processed");
+      }
+    });
+    controlador = new ListenModeController({
+      source: fuente,
+      transcription: transcripcion,
+      processWindow: () => Promise.resolve(),
+      settlePartialWindow: (_window, _result, decision) => {
+        decisiones.push(decision);
+        return Promise.resolve();
+      },
+    });
+    await controlador.run();
+    expect(decisiones).toEqual(["processed"]);
+    expect(controlador.wasInterrupted).toBe(true);
+  });
+
+  test("el fin natural de la captura NO es una interrupción (detención normal ≠ interrupción)", async () => {
+    const controlador = new ListenModeController({
+      source: new FuenteFija(2),
+      transcription: new TranscripciónFija(),
+      processWindow: () => Promise.resolve(),
+    });
+    await controlador.run();
+    expect(controlador.wasInterrupted).toBe(false);
   });
 });

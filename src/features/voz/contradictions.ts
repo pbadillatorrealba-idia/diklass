@@ -1,4 +1,5 @@
 import { normalizeSpanish } from "@/features/voz/extraction";
+import type { ExtractedFactDraft } from "@/features/voz/schema";
 
 /**
  * Detección determinista de contradicciones como SEÑAL (D4 · FR-032 · US6-AC8).
@@ -58,6 +59,29 @@ function compartenSujeto(nuevo: string, existente: string): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Marca las contradicciones de un lote de propuestas acumulándolas en un contexto local: cada
+ * propuesta ve las anteriores del MISMO tramo (FR-032 · US6-AC8) — la autocorrección del tutor
+ * dentro de una frase dispara su insignia — sin mutar el contexto del llamador (función pura).
+ */
+export function flagContradictions(
+  propuestas: ExtractedFactDraft[],
+  contexto: ContextoContradicciones,
+): ExtractedFactDraft[] {
+  const previos = [...contexto.previos];
+  return propuestas.map((propuesta, indice) => {
+    const candidato: HechoComparable = {
+      id: `propuesta-${indice}`,
+      field: propuesta.field,
+      text: propuesta.text,
+      negation: false,
+    };
+    const señales = detectContradictions(candidato, { ...contexto, previos });
+    previos.push(candidato);
+    return { ...propuesta, contradiction: señales[0] ?? propuesta.contradiction ?? null };
+  });
 }
 
 export function detectContradictions(

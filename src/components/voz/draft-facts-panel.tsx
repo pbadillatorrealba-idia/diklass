@@ -47,7 +47,13 @@ export function DraftFactsPanel({
         const editando = editId === fact.record.id;
         return (
           <Box
-            accessibilityLabel={`Antecedente en borrador: ${fact.content.text}`}
+            accessibilityLabel={`Antecedente ${
+              fact.content.confirmationState === "pending"
+                ? "pendiente de confirmación"
+                : fact.content.confirmationState === "confirmed"
+                  ? "confirmado"
+                  : "descartado"
+            }, procedencia ${PROVENANCE_LABELS[fact.content.provenance]}: ${fact.content.text}`}
             className="rounded-xl border border-border bg-white p-3"
             key={fact.record.id}
             testID="draft-fact-card"

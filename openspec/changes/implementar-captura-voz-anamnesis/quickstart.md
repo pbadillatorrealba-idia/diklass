@@ -102,6 +102,18 @@ La única transición enumerada de `audio_fact` es el paso a `confirmationState 
 `audio_fact_confirmed`, que ocurre exactamente una vez (los estados terminales quedan sellados por
 `guard_audio_fact_lifecycle`).
 
+## Correcciones de revisión (PR #29, veredicto «Con correcciones»)
+
+| Hallazgo | Fij | Evidencia |
+|---|---|---|
+| 1 [Importante] FR-025 · US6-AC5: el botón quedaba deshabilitado durante toda la captura y `stop()` era inalcanzable | `toggleListenMode` (módulo propio sin React Native) con prioridad de DETENER cuando hay captura y `pending` solo durante la activación; `start()` resuelve en cuanto la sesión existe y la captura corre en segundo plano | `tests/unit/voz/toggle-listen-mode.test.ts` (3 tests: detener sin bloqueo, ocupación transitoria, estados que activan) |
+| 2 [Importante] FR-032 · US6-AC8: las propuestas de un tramo no se veían entre sí (autocorrección intra-tramo sin insignia) | `flagContradictions`: el lote se acumula en un contexto LOCAL (función pura) y cada propuesta detecta contra las anteriores del mismo tramo | `tests/unit/voz/contradictions.test.ts` — caso del guion («de noche» vs «en realidad es de día…») + pureza del contexto |
+| 3 [Menor] sesión sin cerrar al fin natural y estados `interrupted`/`processed` inalcanzables | el fin del ciclo cierra la sesión con `stopped`, o `interrupted` si hubo tramo interrumpido (`wasInterrupted`); `stop(decision)` lleva la decisión explícita del tramo en curso | `tests/unit/voz/listen-mode-controller.test.ts` (interrupción `processed`, `wasInterrupted` true/false) |
+| 4 [Menor] traza inconsistente en la integración (`segmentSeq: 1` sobre el tramo 0) | cada lote de borradores se ata al tramo REAL guardado (`guardado1`) y el assert verifica `transcriptSegmentId` por `segmentSeq` | `tests/integration/voz/captura-voz.test.ts` — re-corrida viva **6 pass / 0 fail** |
+| 5 [Nitpick] rechazos de UI con `void` sin manejar | `setSubmitError` (patrón del `login-form`) en las cuatro acciones con el motivo visible (`testID="listen-mode-error"`) | `bun run typecheck` verde; flujo cubierto por las pruebas de los servicios que ahora se capturan |
+| 6 [Nitpick] tarea 4.3 sin marcar | marcada `[x]` en `tasks.md` (snippet de montaje y manual expedito documentados) | `tasks.md` |
+| Nota del revisor (etiquetas de tarjeta sin estado ni procedencia) | `accessibilityLabel` de `draft-fact-card` ahora nombra estado y procedencia | revisión estática de `draft-facts-panel.tsx` |
+
 ## Requisitos de integración (archivos compartidos, fuera de esta rama)
 
 | ID | Requisito | Comando / acción |

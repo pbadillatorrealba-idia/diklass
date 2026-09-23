@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { detectContradictions } from "@/features/voz/contradictions";
+import { detectContradictions, flagContradictions } from "@/features/voz/contradictions";
+import { extractClinicalFacts } from "@/features/voz/extraction";
 
 // Tasks.md 2.4 — contradicciones como señal, nunca como resolución (D4 · FR-032 · US6-AC8 ·
 // edge de contradicción intraconversación).
@@ -115,6 +116,30 @@ describe("detectContradictions", () => {
     const antes = JSON.stringify(contexto);
     detectContradictions(
       { id: "borrador-7", field: "frecuencia", text: "mejor dicho, nunca", negation: true },
+      contexto,
+    );
+    expect(JSON.stringify(contexto)).toBe(antes);
+  });
+});
+
+describe("flagContradictions (lote de propuestas de un tramo)", () => {
+  test("FR-032: la autocorrección del tutor DENTRO del mismo tramo dispara la insignia (regresión del hallazgo 2 de la revisión)", () => {
+    const propuestas = extractClinicalFacts({
+      text: "Al principio era solo de noche, no, perdón, en realidad es de día cuando salgo a trabajar.",
+      quality: "ok",
+    }).filter((propuesta) => propuesta.field === "contexto");
+    expect(propuestas.length).toBe(2);
+    const marcadas = flagContradictions(propuestas, { previos: [], anamnesis: [], ficha: [] });
+    expect(marcadas.some((propuesta) => propuesta.contradiction?.refKind === "borrador")).toBe(
+      true,
+    );
+  });
+
+  test("el contexto del llamador no se muta: el lote se acumula en local (función pura)", () => {
+    const contexto = { previos: [], anamnesis: [], ficha: [] };
+    const antes = JSON.stringify(contexto);
+    flagContradictions(
+      [{ field: "frecuencia", text: "todos los días", excerptStart: 0, excerptEnd: 11 }],
       contexto,
     );
     expect(JSON.stringify(contexto)).toBe(antes);

@@ -12,7 +12,7 @@ import {
   listAudioFacts,
 } from "@/features/voz/audio-fact-service";
 import { SyntheticCaptureSource } from "@/features/voz/capture-source";
-import { type ContextoContradicciones, detectContradictions } from "@/features/voz/contradictions";
+import { type ContextoContradicciones, flagContradictions } from "@/features/voz/contradictions";
 import { extractClinicalFacts } from "@/features/voz/extraction";
 import { guionDemo } from "@/features/voz/guion-demo";
 import { ListenModeController, type ListenModeState } from "@/features/voz/listen-mode-controller";
@@ -28,7 +28,8 @@ import {
   SimulatedTranscriptionAdapter,
   type TranscriptResult,
 } from "@/features/voz/transcription-port";
-import { supabase } from "@/lib/supabase/client";
+import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 
 /**
@@ -44,7 +45,7 @@ export type ListenModeApi = {
   segments: TranscriptSegmentEntry[];
   isBusy: boolean;
   start: () => Promise<void>;
-  stop: () => Promise<void>;
+  stop: (decision?: "processed" | "discarded") => Promise<void>;
   confirmFact: (factId: string) => Promise<void>;
   discardFact: (factId: string) => Promise<void>;
   editFact: (factId: string, text: string) => Promise<void>;
@@ -131,18 +132,9 @@ export function useListenMode(consultationId: string): ListenModeApi {
       const propuestas = extractClinicalFacts({ text: result.text, quality: result.quality });
       if (propuestas.length > 0) {
         const contexto = await cargarContextoContradicciones(consultationId);
-        const drafts = propuestas.map((propuesta, indice) => {
-          const señales = detectContradictions(
-            {
-              id: `propuesta-${window.seq}-${indice}`,
-              field: propuesta.field,
-              text: propuesta.text,
-              negation: false,
-            },
-            contexto,
-          );
-          return { ...propuesta, contradiction: señales[0] ?? null };
-        });
+        // FR-032 · US6-AC8: cada propuesta del tramo ve a las anteriores del mismo lote
+        // (flagContradictions), de modo que la autocorrección intra-tramo dispara su insignia.
+        const drafts = flagContradictions(propuestas, contexto);
         await createAudioFactDrafts(supabase, {
           clinicId,
           consultationId,
@@ -188,15 +180,32 @@ export function useListenMode(consultationId: string): ListenModeApi {
       transcription: new SimulatedTranscriptionAdapter(guionDemo),
     });
     controllerRef.current = controller;
-    await controller.run();
+    // FR-025 · US6-AC5: la activación resuelve en cuanto la sesión existe; la captura corre en
+    // segundo plano y el botón sigue habilitado para DETENER en cualquier momento. Al terminar
+    // (fin natural o interrupción) la sesión de escucha se cierra con su estado terminal:
+    // 'interrupted' si hubo tramo interrumpido a mitad, 'stopped' si no (US6-AC12 · D8).
+    void controller.run().then(
+      async () => {
+        await endListenSession(supabase, {
+          sessionId: sesión.id,
+          state: controller.wasInterrupted ? "interrupted" : "stopped",
+        });
+      },
+      (error: unknown) => {
+        void captureClientError(errorReporter, {
+          error,
+          operation: "useListenMode.run",
+          requestId: makeRequestId(),
+        });
+      },
+    );
   }, [clinicId, consultationId, processWindow, queryClient]);
 
-  const stop = useCallback(async () => {
-    controllerRef.current?.stop("discarded");
-    if (sessionId) {
-      await endListenSession(supabase, { sessionId, state: "stopped" });
-    }
-  }, [sessionId]);
+  const stop = useCallback(async (decision: "processed" | "discarded" = "discarded") => {
+    // US6-AC12: la decisión del tramo en curso ('processed' | 'discarded') es explícita; el
+    // cierre de la sesión lo resuelve el fin del ciclo (arriba) con su estado terminal.
+    controllerRef.current?.stop(decision);
+  }, []);
 
   const confirmFact = useCallback(
     async (factId: string) => {
