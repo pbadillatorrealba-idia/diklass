@@ -52,7 +52,7 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
               key={entry.record.id}
               testID="feedback-timeline-item"
             >
-              <Text bold testID="feedback-registered-at">
+              <Text bold testID="feedback-timeline-registered-at">
                 Entrada registrada el {registradoEl}
               </Text>
               <Text>
@@ -73,18 +73,18 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
               <Text>Adherencia: {ADHERENCE_LABELS[entry.content.adherence]}</Text>
               <Text>Evolución: {EVOLUTION_LABELS[entry.content.evolution]}</Text>
               {entry.content.evolutionNote !== null ? (
-                <Text testID="feedback-evolution-note">{entry.content.evolutionNote}</Text>
+                <Text testID="feedback-timeline-evolution-note">{entry.content.evolutionNote}</Text>
               ) : null}
-              <Text testID="feedback-treatment-applied">
+              <Text testID="feedback-timeline-treatment-applied">
                 Tratamiento aplicado:{" "}
                 {entry.content.treatmentApplied ?? "sin tratamiento aplicado registrado"}
               </Text>
-              <Text testID="feedback-treatment-modification">
+              <Text testID="feedback-timeline-treatment-modification">
                 Modificación del tratamiento:{" "}
                 {entry.content.treatmentModification ?? "sin modificación registrada"}
               </Text>
               {entry.content.revisedDiagnosis !== null ? (
-                <Text testID="feedback-revised-diagnosis">
+                <Text testID="feedback-timeline-revised-diagnosis">
                   Cambio de diagnóstico registrado: {entry.content.revisedDiagnosis} (el diagnóstico
                   original permanece sin cambios)
                 </Text>
@@ -99,7 +99,7 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
                   bold={evento.severity === "grave"}
                   className={evento.severity === "grave" ? "text-red-700" : undefined}
                   key={`${entry.record.id}-adverse-${index}`}
-                  testID="feedback-adverse-event"
+                  testID="feedback-timeline-adverse-event"
                 >
                   Evento adverso ({ADVERSE_EVENT_SEVERITY_LABELS[evento.severity]}):{" "}
                   {evento.description}

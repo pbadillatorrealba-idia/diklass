@@ -175,7 +175,7 @@ end;
 $$;
 
 -- Nombres de trigger deliberados: orden alfabético de disparo —
--- guard_attribution < guard_approval < guard_feedback < guard_sealed < stamp_update <
+-- guard_approval < guard_attribution < guard_feedback < guard_sealed < stamp_update <
 -- validate_feedback. Así un UPDATE de retroalimentación responde
 -- CLINICAL_FEEDBACK_IMMUTABLE (su garantía propia) antes que el sello genérico de 009.
 create trigger clinical_records_guard_feedback

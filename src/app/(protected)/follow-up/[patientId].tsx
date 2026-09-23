@@ -185,6 +185,9 @@ export default function FollowUpPanelScreen() {
       setCorrectionTargetId(null);
       setFormValues(emptyFeedbackFormValues);
       setStatus("Retroalimentación registrada.");
+    } else if (desenlace === "expired") {
+      // El diálogo de sesión expirada ya lo abrió el guard; el formulario se conserva tal cual.
+      setStatus("La sesión ya no es válida: la evolución NO se registró. Lo escrito se conserva.");
     } else if (desenlace === "error") {
       setStatus("No pudimos registrar la evolución. Vuelve a intentarlo.");
     }

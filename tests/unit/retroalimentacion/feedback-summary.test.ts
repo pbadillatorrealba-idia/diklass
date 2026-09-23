@@ -200,6 +200,26 @@ describe("collectAdverseEvents — diferenciados del resto de la evolución (FR-
     expect(eventos[1]?.effective).toBe(true);
     expect(eventos[1]?.event.severity).toBe("leve");
   });
+
+  test("los eventos con la misma descripción conservan identidad estable y distinta (FR-041 · SC-035)", () => {
+    const timeline = buildFeedbackTimeline([
+      entrada("fb-1", {
+        consultationId: "c-1",
+        adverseEvents: [
+          { severity: "leve", description: "Somnolencia leve" },
+          { severity: "grave", description: "Somnolencia leve" },
+        ],
+      }),
+    ]);
+
+    const eventos = collectAdverseEvents(timeline);
+
+    expect(eventos.map((item) => item.eventIndex)).toEqual([0, 1]);
+    expect(eventos.map((item) => `${item.feedbackRecordId}-evento-${item.eventIndex}`)).toEqual([
+      "fb-1-evento-0",
+      "fb-1-evento-1",
+    ]);
+  });
 });
 
 describe("aggregateFeedback — categóricos agregados sin texto libre (FR-043 · SC-023 · US10-AC9)", () => {

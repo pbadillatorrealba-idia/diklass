@@ -32,7 +32,7 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
                     ? "rounded-lg border border-red-300 bg-red-50 p-3 gap-1"
                     : "rounded-lg border border-border bg-white p-3 gap-1"
                 }
-                key={`${entry.feedbackRecordId}-${entry.event.description}`}
+                key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                 testID="adverse-event-item"
               >
                 <Text bold={esGrave} className={esGrave ? "text-red-700" : undefined}>

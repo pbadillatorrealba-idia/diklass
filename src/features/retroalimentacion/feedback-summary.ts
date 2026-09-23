@@ -38,6 +38,8 @@ export type AdverseEventReportEntry = {
   registeredAt: string;
   /** Indica si su entrada sigue vigente o fue sustituida por una corrección. */
   effective: boolean;
+  /** Posición del evento dentro de su entrada: identidad estable aunque las descripciones se repitan. */
+  eventIndex: number;
   event: AdverseEvent;
 };
 
@@ -143,11 +145,12 @@ export function buildFeedbackTimeline(
  */
 export function collectAdverseEvents(timeline: FeedbackTimelineEntry[]): AdverseEventReportEntry[] {
   return timeline.flatMap((entry) =>
-    entry.content.adverseEvents.map((event) => ({
+    entry.content.adverseEvents.map((event, eventIndex) => ({
       feedbackRecordId: entry.record.id,
       consultationId: entry.content.consultationId,
       registeredAt: entry.record.created_at,
       effective: entry.effective,
+      eventIndex,
       event,
     })),
   );

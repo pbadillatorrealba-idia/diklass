@@ -187,14 +187,21 @@ select results_eq(
   'FR-070 · SC-049: created_by lo fija el servidor con la identidad de quien registra'
 );
 
-select ok(
-  (select (feedback.created_at is not null) and (consulta.created_at is not null)
-     and (feedback.id <> consulta.id)
-   from public.clinical_records feedback
-   join public.clinical_records consulta
-     on consulta.id = 'd5d5d5d5-0000-0000-0000-000000000002'
-   where feedback.id = 'd5d5d5d5-0000-0000-0000-000000000005'),
-  'FR-039 · US10-AC7: la fecha de registro y la fecha de la consulta referida viven en filas y columnas distintas y son recuperables por separado'
+select results_eq(
+  $$select
+      registro.content ->> 'consultationId' = 'd5d5d5d5-0000-0000-0000-000000000002',
+      registro.created_at is not null and consulta.created_at is not null,
+      registro.id <> consulta.id
+        and registro.record_type = 'clinical_feedback'
+        and consulta.record_type = 'consultation',
+      (select referida.created_at from public.clinical_records referida
+       where referida.id = (registro.content ->> 'consultationId')::uuid) = consulta.created_at
+    from public.clinical_records registro
+    join public.clinical_records consulta
+      on consulta.id = 'd5d5d5d5-0000-0000-0000-000000000002'
+    where registro.id = 'd5d5d5d5-0000-0000-0000-000000000005'$$,
+  $$values (true::boolean, true::boolean, true::boolean, true::boolean)$$,
+  'FR-039 · US10-AC7: la entrada quedó asociada a su consulta y las dos fechas —la de registro y la de la consulta referida, resuelta por la referencia— son recuperables por separado y ancladas a su fila'
 );
 
 select is(

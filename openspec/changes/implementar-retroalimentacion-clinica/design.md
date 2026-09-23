@@ -232,8 +232,10 @@ el mismo criterio de orden que 002 (`created_at` ascendente, `id` como desempate
   con su consulta, fecha y severidad; `grave` destacable (FR-041 · SC-035 · US10-AC2).
 - `aggregateFeedback(timeline)` → recuentos por categoría de `adherence` y `evolution` y por
   severidad de `adverseEvents`, sin interpretar texto libre (FR-043 · SC-023 · US10-AC9).
-- `buildFeedbackAntecedents(timeline, beforeConsultationId?)` → la evolución previa en forma de
-  antecedentes presentables (FR-042 · US10-AC6); ver D9.
+- `buildFeedbackAntecedents({ timeline, consultations, excludeConsultationId? })` → la evolución
+  previa en forma de antecedentes presentables (FR-042 · US10-AC6); recibe también las filas de
+  consulta para distinguir en cada antecedente la fecha de registro de la fecha de la consulta
+  referida (FR-039 · US10-AC7). Ver D9.
 
 Las consultas Supabase son lecturas simples: entradas por `content->>'consultationId'` (índice
 existente) y, para el agregado por paciente, las consultas por `content->>'patientId'` (índice
@@ -256,7 +258,8 @@ posterior (SC-036). Este cambio entrega:
 
 **Requisito de integración (para el orquestador)**: extender `buildFollowUpSummary`
 (`src/features/registro/summaries.ts`) y el resumen previo de `src/app/(protected)/consultations/[id].tsx`
-para incluir `buildFeedbackAntecedents(feedbackDelPaciente)`. Hasta esa integración, SC-036 queda
+para incluir `buildFeedbackAntecedents({ timeline: buildFeedbackTimeline(feedbackDelPaciente), consultations: consultasDelPaciente, excludeConsultationId })`.
+Hasta esa integración, SC-036 queda
 **parcialmente verificado** (superficie de seguimiento) y se declara pendiente en su parte de
 «al iniciar una consulta posterior» — declararlo no lo convierte en compuerta cumplida.
 

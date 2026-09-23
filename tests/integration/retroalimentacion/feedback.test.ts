@@ -156,6 +156,19 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
 
     await cerrar(primeraConsultaId);
     await cerrar(segundaConsultaId);
+
+    // Fixture de lectura para los tests de agregación y antecedentes (convención de 002: el
+    // estado que los tests solo LEEN se arma aquí; cada test muta únicamente su propio sujeto).
+    await createFeedbackEntry(ana.client, {
+      clinicId: ana.clinicId,
+      content: contenido(segundaConsultaId, {
+        adherence: "desconocida",
+        evolution: "desconocida",
+        treatmentApplied: null,
+        treatmentModification: null,
+        adverseEvents: [{ severity: "grave", description: "Convulsión aislada" }],
+      }),
+    });
   });
 
   test("registra la evolución sobre la consulta cerrada, atribuida a quien la registra (FR-018 · US10-AC1 · FR-070 · SC-049 · US10-AC13)", async () => {
@@ -189,7 +202,7 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
     expect(epicrisis).toEqual(epicrisisPrevia);
   });
 
-  test("el servidor rechaza el registro sobre una consulta aún abierta (D3)", async () => {
+  test("el servicio rechaza registrar sobre una consulta aún abierta, sin escribir nada (D3; el gate del servidor lo verifica el assert 20 de la suite 011)", async () => {
     await expect(
       createFeedbackEntry(ana.client, {
         clinicId: ana.clinicId,
@@ -257,17 +270,6 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
   });
 
   test("varias entradas conviven en orden cronológico y los categóricos se agregan sin texto libre (FR-056 · FR-043 · SC-023 · US10-AC9/AC11)", async () => {
-    await createFeedbackEntry(ana.client, {
-      clinicId: ana.clinicId,
-      content: contenido(segundaConsultaId, {
-        adherence: "desconocida",
-        evolution: "desconocida",
-        treatmentApplied: null,
-        treatmentModification: null,
-        adverseEvents: [{ severity: "grave", description: "Convulsión aislada" }],
-      }),
-    });
-
     const entradas = await listFeedbackByPatient(ana.client, patientId);
     expect(entradas.length).toBeGreaterThanOrEqual(3);
 
