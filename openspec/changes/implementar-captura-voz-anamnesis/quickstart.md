@@ -118,18 +118,19 @@ La única transición enumerada de `audio_fact` es el paso a `confirmationState 
 
 | ID | Requisito | Comando / acción |
 |---|---|---|
-| R1 | Regenerar los tipos generados tras la migración 011 | `supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts` (añade `listening_sessions` y `transcript_segments`). Hasta entonces la compuerta «Generated database types match the migrations» está en rojo en esta rama y `src/features/voz/db-types.ts` (seam `asVozClient`) mantiene `bun run typecheck` limpio; **eliminar ese módulo** al aplicar R1 |
+| R1 | **APLICADA** (autorización RI-1 del orquestador, fix post-cierre) — tipos regenerados y seam eliminado | `bun run db:types` (`supabase gen types --lang=typescript --local`, añade `listening_sessions` y `transcript_segments`, 472 → 571 líneas) + eliminación de `src/features/voz/db-types.ts` (`asVozClient`) con los servicios usando el cliente tipado directo. Cerraba el único fallo del CI run [#35803072019](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35803072019) (diff de tipos); batería mínima: typecheck limpio, biome sin diagnósticos, unidades 51/51 |
 | R2 | Montar `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx` | ver snippet de arriba |
 | R3 | Actualizar la nota de transiciones del quickstart de 002 | su «INSERT cubre los 12 `record_type` salvo `epicrisis`» ya no incluye `audio_fact` (D6) |
 
-No se ha tocado `src/features/registro/*`, `src/lib/attribution/*`, `src/lib/storage/*`,
-`src/lib/supabase/*`, `supabase/tests/001-008*`, `supabase/migrations/001-009*` ni `seed.sql`.
+Solo se ha tocado, de los archivos compartidos, `src/lib/supabase/database.types.ts`
+(regeneración autorizada como RI-1). El resto sigue intocado: `src/features/registro/*`,
+`src/lib/attribution/*`, `src/lib/storage/*`, el resto de `src/lib/supabase/*`,
+`supabase/tests/001-008*`, `supabase/migrations/001-009*` y `seed.sql`.
 
 ## Pendientes explícitos (declarados, no cumplidos)
 
-- **Compuerta de tipos de CI** (rojo hasta R1) y la **corrida del job `database` de CI** con el
-  diff de tipos ya aplicado: ambos bloqueados por R1 (archivo compartido); el paso exacto de
-  desbloqueo está arriba. La integración viva local ya corrió en verde (arriba).
+- **Compuerta de tipos de CI**: resuelta con R1 aplicada (regen de `database.types.ts` + seam
+  eliminado, autorización RI-1). La integración viva local corrió en verde (arriba).
 - **Verificación visual/e2e de la UI**: sin Playwright en esta ejecución; queda la revisión
   estática WCAG y falta una pasada manual/e2e cuando el entorno lo permita.
 - **Micrófono real y ASR real**: extensiones documentadas del diseño (D2 · D3), sin implementar y

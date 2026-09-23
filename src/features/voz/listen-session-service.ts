@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getConsultation } from "@/features/registro/consultation-service";
-import { asVozClient, type ListeningSessionRow } from "@/features/voz/db-types";
+
 import { listeningSessionSchema } from "@/features/voz/schema";
 import {
   captureClientError,
@@ -9,6 +9,9 @@ import {
 } from "@/lib/observability/client-error-reporter";
 import { logEvent } from "@/lib/observability/logger";
 import type { Database } from "@/lib/supabase/database.types";
+
+/** Fila tipada de `listening_sessions` (tipos regenerados tras la migración 011, R1 aplicada). */
+type ListeningSessionRow = Database["public"]["Tables"]["listening_sessions"]["Row"];
 
 /**
  * Sesiones de escucha clínica (D8 del diseño, FR-014 · FR-025 · FR-068).
@@ -40,7 +43,7 @@ function aSesiónDeEscucha(fila: ListeningSessionRow): ListeningSessionEntry {
     startedBy: fila.started_by,
     startedAt: fila.started_at,
     endedAt: fila.ended_at,
-    state: fila.state,
+    state: listeningSessionSchema.shape.state.parse(fila.state),
   };
   return sesión;
 }
@@ -60,7 +63,7 @@ export async function startListenSession(
     if (consulta?.content.status !== "open") {
       throw new Error("La escucha clínica requiere una consulta abierta (FR-014 · US6-AC14).");
     }
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("listening_sessions")
       .insert({ clinic_id: planeada.clinicId, consultation_id: planeada.consultationId })
       .select()
@@ -89,7 +92,7 @@ export async function endListenSession(
 ): Promise<ListeningSessionEntry> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("listening_sessions")
       .update({ state: input.state, ended_at: new Date().toISOString() })
       .eq("id", input.sessionId)
@@ -119,7 +122,7 @@ export async function listListenSessions(
 ): Promise<ListeningSessionEntry[]> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("listening_sessions")
       .select("*")
       .eq("consultation_id", consultationId)

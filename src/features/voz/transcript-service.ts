@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { asVozClient, type TranscriptSegmentRow } from "@/features/voz/db-types";
+
 import { transcriptSegmentSchema } from "@/features/voz/schema";
 import {
   captureClientError,
@@ -9,6 +9,9 @@ import {
 } from "@/lib/observability/client-error-reporter";
 import { logEvent } from "@/lib/observability/logger";
 import type { Database } from "@/lib/supabase/database.types";
+
+/** Fila tipada de `transcript_segments` (tipos regenerados tras la migración 011, R1 aplicada). */
+type TranscriptSegmentRow = Database["public"]["Tables"]["transcript_segments"]["Row"];
 
 /**
  * Tramos de transcripción del modo de escucha (D10 del diseño, FR-031 · FR-055 · US6-AC12).
@@ -46,8 +49,8 @@ function aTramo(fila: TranscriptSegmentRow): TranscriptSegmentEntry {
     startedAt: fila.started_at,
     endedAt: fila.ended_at,
     text: fila.text,
-    quality: fila.quality,
-    processingState: fila.processing_state,
+    quality: transcriptSegmentSchema.shape.quality.parse(fila.quality),
+    processingState: transcriptSegmentSchema.shape.processingState.parse(fila.processing_state),
     createdAt: fila.created_at,
   };
   return tramo;
@@ -60,7 +63,7 @@ export async function saveTranscriptSegment(
   const requestId = makeRequestId();
   try {
     const tramo = transcriptSegmentSchema.parse({ ...input, processingState: "pending" });
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("transcript_segments")
       .insert({
         listening_session_id: tramo.listenSessionId,
@@ -98,7 +101,7 @@ export async function settleTranscriptSegment(
   const requestId = makeRequestId();
   try {
     const resuelto = settleStateSchema.parse(input.processingState);
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("transcript_segments")
       .update({ processing_state: resuelto })
       .eq("id", input.segmentId)
@@ -128,7 +131,7 @@ export async function listTranscriptSegments(
 ): Promise<TranscriptSegmentEntry[]> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await asVozClient(client)
+    const { data, error } = await client
       .from("transcript_segments")
       .select("*")
       .eq("listening_session_id", listenSessionId)
