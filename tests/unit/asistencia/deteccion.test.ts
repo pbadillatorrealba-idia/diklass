@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import type { CandidatoFragmento } from "@/features/conocimiento/answer";
-import type { AnamnesisContent, PatientContent } from "@/features/registro/schema";
-import type { EntradaAnamnesis } from "@/features/asistencia/schema";
 import {
   composeFundamento,
+  type DecisionRegistrada,
   detectMissingInformation,
   mergeSuggestionStates,
-  type DecisionRegistrada,
 } from "@/features/asistencia/deteccion";
+import type { EntradaAnamnesis } from "@/features/asistencia/schema";
+import type { CandidatoFragmento } from "@/features/conocimiento/answer";
+import type { AnamnesisContent, PatientContent } from "@/features/registro/schema";
 
 /**
  * Detección de información faltante y registro de decisiones (D3/D4 de design.md · tasks.md 2.2).
@@ -45,7 +45,11 @@ function fichaBase(): PatientContent {
   };
 }
 
-function candidato(texto: string, lemasPregunta: string[], lemasCubiertos: string[]): CandidatoFragmento {
+function candidato(
+  texto: string,
+  lemasPregunta: string[],
+  lemasCubiertos: string[],
+): CandidatoFragmento {
   return {
     documentoId: "doc-1",
     fragmentoOrdinal: 1,
@@ -134,9 +138,9 @@ describe("detección de información faltante (US7)", () => {
     const alone = estados.find((sugerencia) => sugerencia.key === "aloneContext");
     expect(alone?.estado).toBe("formulada");
     expect(alone?.decisionRecordId).toBe("m-1");
-    expect(estados.filter((sugerencia) => sugerencia.estado === "pendiente").map((s) => s.key)).not.toContain(
-      "aloneContext",
-    );
+    expect(
+      estados.filter((sugerencia) => sugerencia.estado === "pendiente").map((s) => s.key),
+    ).not.toContain("aloneContext");
   });
 
   test("US7-AC2 · HD3: una decisión cuya sugerencia ya no se detecta sigue visible como registro de la consulta", () => {
@@ -173,7 +177,8 @@ describe("detección de información faltante (US7)", () => {
   });
 
   test("FR-033 · US7-AC3: con respaldo documental calificado el fundamento es la cita con su texto verbatim", () => {
-    const texto = "Registrar la conducta cuando el animal queda solo es el primer paso del protocolo.";
+    const texto =
+      "Registrar la conducta cuando el animal queda solo es el primer paso del protocolo.";
     const fundamento = composeFundamento("protocolo ansiedad por separación", [
       candidato(texto, ["ansiedad", "separacion"], ["ansiedad", "separacion"]),
     ]);

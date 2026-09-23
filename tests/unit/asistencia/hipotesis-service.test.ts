@@ -33,9 +33,13 @@ type FakeQuery = Promise<FakeResult> & {
 function fakeClient(queues: Partial<Record<string, FakeQueue>> = {}) {
   const calls: FakeCall[] = [];
   const restantes = new Map(
-    Object.entries(queues).map(([clave, cola]) => [clave, Array.isArray(cola) ? [...cola] : [cola]]),
+    Object.entries(queues).map(([clave, cola]) => [
+      clave,
+      Array.isArray(cola) ? [...cola] : [cola],
+    ]),
   );
-  const take = (key: string): FakeResult => restantes.get(key)?.shift() ?? { data: null, error: null };
+  const take = (key: string): FakeResult =>
+    restantes.get(key)?.shift() ?? { data: null, error: null };
 
   const from = (table: string): FakeQuery => {
     let settle: (value: FakeResult) => void = () => {};
@@ -230,7 +234,10 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
       ],
     });
 
-    const resultado = await generateDifferentialSupport(client, { consultationId: "consulta-1" });
+    const resultado = await generateDifferentialSupport(client, {
+      clinicId: "clinica-1",
+      consultationId: "consulta-1",
+    });
     expect(resultado.suficiencia.estado).toBe("insuficiente");
     expect(resultado.suficiencia.faltantes.length).toBeGreaterThan(0);
     expect(resultado.hipotesis).toHaveLength(0);
@@ -257,20 +264,28 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
     });
 
     const { suficiencia, hipotesis } = await generateDifferentialSupport(client, {
+      clinicId: "clinica-1",
       consultationId: "consulta-1",
     });
     expect(suficiencia.estado).toBe("suficiente");
     expect(hipotesis.length).toBeGreaterThan(0);
     const presentada = hipotesis[0];
+    expect(presentada).toBeDefined();
     expect(presentada?.analisis.aFavor.items.length).toBeGreaterThan(0);
-    expect(presentada?.analisis.enContra.ausencia === null || presentada?.analisis.enContra.items.length >= 0).toBe(true);
     expect(presentada?.descargo).toContain("no constituye un diagnóstico");
     expect(presentada?.insumos.terminosMatch.length).toBeGreaterThan(0);
 
-    const insercion = calls.find((llamada) => llamada.table === "clinical_records" && llamada.method === "insert");
+    const insercion = calls.find(
+      (llamada) => llamada.table === "clinical_records" && llamada.method === "insert",
+    );
     const payload = insercion?.args[0] as {
       record_type: string;
-      content: { decision: string; origen: string; reglaId: string; insumos: { terminosMatch: string[] } };
+      content: {
+        decision: string;
+        origen: string;
+        reglaId: string;
+        insumos: { terminosMatch: string[] };
+      };
     };
     expect(payload.record_type).toBe("hypothesis");
     expect(payload.content.decision).toBe("added");
@@ -322,7 +337,10 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
       ],
     });
 
-    const { hipotesis } = await generateDifferentialSupport(client, { consultationId: "consulta-1" });
+    const { hipotesis } = await generateDifferentialSupport(client, {
+      clinicId: "clinica-1",
+      consultationId: "consulta-1",
+    });
     expect(hipotesis.map((hipotesisItem) => hipotesisItem.decision)).toContain("accepted");
     expect(calls.some((llamada) => llamada.method === "insert")).toBe(false);
   });
@@ -364,7 +382,9 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
       decision: "accepted",
     });
     expect(resultado.attribution.action).toBe("hypothesis_accepted");
-    const actualizacion = calls.find((llamada) => llamada.table === "clinical_records" && llamada.method === "update");
+    const actualizacion = calls.find(
+      (llamada) => llamada.table === "clinical_records" && llamada.method === "update",
+    );
     const payload = actualizacion?.args[0] as { content: { decision: string; texto: string } };
     expect(payload.content.decision).toBe("accepted");
     expect(payload.content.texto).toBe("Ansiedad por separación");
@@ -393,7 +413,9 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
       texto: "Hipótesis propia del veterinario",
     });
     expect(resultado.attribution.action).toBe("hypothesis_added");
-    const insercion = calls.find((llamada) => llamada.table === "clinical_records" && llamada.method === "insert");
+    const insercion = calls.find(
+      (llamada) => llamada.table === "clinical_records" && llamada.method === "insert",
+    );
     const payload = insercion?.args[0] as {
       content: { origen: string; respaldo: { avisos: string[] } };
     };
@@ -420,7 +442,13 @@ describe("hipotesis-service: soporte diferencial (US8)", () => {
               papel: "aFavor",
             },
           ],
-          ficha: [{ fichaRef: "antecedentes.behavioralHistory[0]", valor: "Ansiedad previa", papel: "aFavor" }],
+          ficha: [
+            {
+              fichaRef: "antecedentes.behavioralHistory[0]",
+              valor: "Ansiedad previa",
+              papel: "aFavor",
+            },
+          ],
           faltante: ["frecuencia"],
           terminosMatch: ["solo"],
         },

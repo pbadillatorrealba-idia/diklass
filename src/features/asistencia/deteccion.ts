@@ -31,10 +31,7 @@ export type SugerenciaDetectada = {
 
 /** Comparación sin distinguir mayúsculas ni acentos (reglas de `reglas.ts`). */
 export function normalizar(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+  return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 /**

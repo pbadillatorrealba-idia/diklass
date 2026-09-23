@@ -144,7 +144,7 @@ escritura, trigger de base inmutable (D8) y pruebas de integración.
 | `record_type` | `content` |
 |---|---|
 | `missing_information` | `{ consultationId, suggestionKey, pregunta, estado: 'formulada' \| 'ignorada' \| 'no_aplicable', fundamento: { kind: 'fuente', cita: Cita } \| { kind: 'criterio_general' }, camposRelacionados: string[] }` |
-| `hypothesis` | `{ consultationId, texto, decision: 'added' \| 'accepted' \| 'discarded', origen: 'sistema' \| 'veterinario', reglaId: string \| null, insumos: { anamnesis: [{ recordId, field, text, provenance, papel: 'aFavor' \| 'enContra' }], ficha: [{ fichaRef, valor }], faltante: string[], terminosMatch: string[] }, respaldo: { knowledgeQueryId: string \| null, citas: Cita[], avisos: string[], cobertura: { cubiertos: string[], noCubiertos: string[], estado } \| null } }` |
+| `hypothesis` | `{ consultationId, texto, decision: 'added' \| 'accepted' \| 'discarded', origen: 'sistema' \| 'veterinario', reglaId: string \| null, insumos: { anamnesis: [{ recordId, field, text, provenance, papel: 'aFavor' \| 'enContra' }], ficha: [{ fichaRef, valor, papel: 'aFavor' \| 'enContra' }], faltante: string[], terminosMatch: string[] }, respaldo: { knowledgeQueryId: string \| null, citas: Cita[], avisos: string[], cobertura: { cubiertos: string[], noCubiertos: string[], estado } \| null } }` |
 
 - `Cita` es la cita documento+fragmento de 003 (`{ documentoId, ordinal, textoCitado }`), con el
   texto citado verbatim: una cita hacia una fuente posteriormente retirada sigue resolviéndose
@@ -294,16 +294,26 @@ reescribir `pregunta`/`fundamento` tras registrar la decisión. Invariantes (tod
 | INSERT de ambos tipos | `status = 'draft'` (la asistencia nunca nace como registro definitivo ni correctivo: FR-010) | `ASSISTANCE_STATUS_INVALID` |
 | INSERT de `hypothesis` | `decision = 'added'` (nacer aceptado emitiría `hypothesis_added` mintiendo el contenido), `texto` no vacío y `origen` en enum | `HYPOTHESIS_DECISION_INVALID` / `ASSISTANCE_CONTENT_INVALID` |
 | INSERT de `missing_information` | `estado` decidido en enum y `pregunta` no vacía | `MISSING_INFORMATION_STATE_INVALID` / `ASSISTANCE_CONTENT_INVALID` |
+| INSERT de ambos tipos | el `consultationId` resuelve a una consulta cerrada | `CLINICAL_RECORD_SEALED` |
+| UPDATE de ambos tipos | el `consultationId` de `old` resuelve a una consulta cerrada (sello sobre `old`, como 002) | `CLINICAL_RECORD_SEALED` |
 | UPDATE de `hypothesis` | solo puede cambiar `decision` (comparación `new.content - 'decision' = old.content - 'decision'`): `texto`, `origen`, `reglaId`, `insumos`, `respaldo`, `consultationId` son base inmutable | `HYPOTHESIS_BASIS_IMMUTABLE` |
 | UPDATE de `missing_information` | solo puede cambiar `estado`: `pregunta`, `suggestionKey`, `fundamento`, `camposRelacionados`, `consultationId` son base inmutable | `MISSING_INFORMATION_BASIS_IMMUTABLE` |
 | UPDATE de `hypothesis` | transiciones de D7; volver a `added` | `HYPOTHESIS_DECISION_IRREVERSIBLE` / `HYPOTHESIS_DECISION_INVALID` |
 
 Corregir la base de una hipótesis o de una decisión = crear una fila nueva (convención de HD3 de
 003: la corrección es un registro adicional, no una reescritura). Heredado y **no duplicado**:
-`consultationId` inmutable y sellado por consulta cerrada (002, D5), atribución inamovible y
+`consultationId` inmutable (002/009, `CONSULTATION_LINK_IMMUTABLE`), atribución inamovible y
 `update (content)` como única concesión de actualización (001/004), aprobación solo por RPC y solo
 de epicrisis (001): una hipótesis o sugerencia **no puede** convertirse jamás en `approved` — la
 aserción correspondiente vive en la suite 012.
+
+**Corrección de alcance sobre lo heredado (detectada en la suite 012, tarea 1.1)**: el sellado por
+consulta cerrada NO hereda para estas entidades — `guard_consultation_sealed` (009) acota su sello
+a `('anamnesis', 'diagnosis', 'epicrisis')`, el set de registros de trabajo que fija SC-009 de la
+spec 002—. Por eso el trigger 013 implementa el sello de `missing_information`/`hypothesis` con la
+misma semántica (evaluado sobre `old`, mismo error `CLINICAL_RECORD_SEALED`, alcance INSERT+UPDATE):
+las decisiones de sugerencias e hipótesis son de la consulta en curso (supuesto de la spec 006) y el
+conjunto de una consulta cerrada no crece ni se modifica.
 
 ### D9. Toda mutación cruza el contrato de atribución
 

@@ -5,10 +5,7 @@ import { fragmentoRecuperadoSchema } from "@/features/conocimiento/schema";
 import { listAnamnesisEntries } from "@/features/registro/anamnesis-service";
 import { getConsultation } from "@/features/registro/consultation-service";
 import { getPatient } from "@/features/registro/ficha-service";
-import {
-  createClinicalRecord,
-  updateClinicalContent,
-} from "@/lib/attribution/clinical-mutations";
+import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
 import {
   captureClientError,
@@ -62,18 +59,21 @@ async function recuperarCandidatos(
   if (error) {
     throw error;
   }
-  return z.array(fragmentoRecuperadoSchema).parse(data ?? []).map((fila) => ({
-    documentoId: fila.documento_id,
-    fragmentoOrdinal: fila.fragmento_ordinal,
-    texto: fila.texto,
-    seccion: fila.seccion,
-    bibliografia: fila.bibliografia,
-    licencia: fila.licencia,
-    estado: fila.estado,
-    lemasCubiertos: fila.lemas_cubiertos,
-    lemasPregunta: fila.lemas_pregunta,
-    rankCd: fila.rank_cd,
-  }));
+  return z
+    .array(fragmentoRecuperadoSchema)
+    .parse(data ?? [])
+    .map((fila) => ({
+      documentoId: fila.documento_id,
+      fragmentoOrdinal: fila.fragmento_ordinal,
+      texto: fila.texto,
+      seccion: fila.seccion,
+      bibliografia: fila.bibliografia,
+      licencia: fila.licencia,
+      estado: fila.estado,
+      lemasCubiertos: fila.lemas_cubiertos,
+      lemasPregunta: fila.lemas_pregunta,
+      rankCd: fila.rank_cd,
+    }));
 }
 
 /**
@@ -87,9 +87,9 @@ export async function listSuggestions(
   const requestId = makeRequestId();
   try {
     const consulta = await getConsultation(client, input.consultationId);
-    const anamnesis: EntradaAnamnesis[] = (await listAnamnesisEntries(client, input.consultationId)).map(
-      (entrada) => ({ recordId: entrada.record.id, content: entrada.content }),
-    );
+    const anamnesis: EntradaAnamnesis[] = (
+      await listAnamnesisEntries(client, input.consultationId)
+    ).map((entrada) => ({ recordId: entrada.record.id, content: entrada.content }));
     const paciente =
       consulta === null ? null : await getPatient(client, consulta.content.patientId);
     const { data: filas, error } = await client
@@ -152,7 +152,6 @@ export async function listSuggestions(
     logEvent("asistencia.suggestions_listed", {
       requestId,
       operation: "listSuggestions",
-      sugerencias: presentadas.length,
     });
     return presentadas;
   } catch (error) {
@@ -203,10 +202,9 @@ export async function decideMissingInformation(
         estado: input.estado,
       });
       const actualizada = await updateClinicalContent(client, existente.id, content);
-      logEvent("asistencia.suggestion_decided", {
+      logEvent("asistencia.suggestion_revised", {
         requestId,
         operation: "decideMissingInformation",
-        revision: true,
       });
       return actualizada;
     }
@@ -225,10 +223,9 @@ export async function decideMissingInformation(
       content,
       status: "draft",
     });
-    logEvent("asistencia.suggestion_decided", {
+    logEvent("asistencia.suggestion_recorded", {
       requestId,
       operation: "decideMissingInformation",
-      revision: false,
     });
     return creada;
   } catch (error) {

@@ -1,6 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
-import type { AnamnesisContent, PatientContent } from "@/features/registro/schema";
 import type { EntradaAnamnesis } from "@/features/asistencia/schema";
 import {
   composeHipotesisConsideradas,
@@ -11,6 +9,8 @@ import {
   MAX_HIPOTESIS_PRESENTADAS,
   MIN_CAMPOS_SUFICIENCIA,
 } from "@/features/asistencia/soporte-diferencial";
+import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
+import type { AnamnesisContent, PatientContent } from "@/features/registro/schema";
 
 /**
  * Soporte al diagnóstico diferencial (D5/D6/D7 de design.md · tasks.md 2.3).
@@ -152,7 +152,10 @@ describe("soporte diferencial (US8)", () => {
         faltante: ["frecuencia"],
         terminosMatch: ["solo"],
       },
-      respaldo: extraerRespaldo(respuestaConEvidencia("La conducta en ausencia del tutor es el criterio clave."), "q-1"),
+      respaldo: extraerRespaldo(
+        respuestaConEvidencia("La conducta en ausencia del tutor es el criterio clave."),
+        "q-1",
+      ),
     });
 
     expect(presentada.analisis.aFavor.items.length).toBe(1);
@@ -216,7 +219,9 @@ describe("soporte diferencial (US8)", () => {
       respaldo: extraerRespaldo(null, null),
     });
     expect(presentada.descargo).toContain("no constituye un diagnóstico");
-    expect(JSON.stringify(presentada).toLowerCase()).not.toContain("diagnóstico definitivo del sistema");
+    expect(JSON.stringify(presentada).toLowerCase()).not.toContain(
+      "diagnóstico definitivo del sistema",
+    );
   });
 
   test("FR-020 · US8-AC8: la presentación conserva los insumos que la produjeron (referencias y términos)", () => {
@@ -236,7 +241,13 @@ describe("soporte diferencial (US8)", () => {
             papel: "aFavor",
           },
         ],
-        ficha: [{ fichaRef: "antecedentes.behavioralHistory[0]", valor: "Ansiedad previa", papel: "aFavor" }],
+        ficha: [
+          {
+            fichaRef: "antecedentes.behavioralHistory[0]",
+            valor: "Ansiedad previa",
+            papel: "aFavor",
+          },
+        ],
         faltante: ["frecuencia"],
         terminosMatch: ["solo"],
       },

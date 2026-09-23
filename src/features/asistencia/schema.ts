@@ -1,15 +1,15 @@
 import { z } from "zod";
 import {
-  avisoRespuestaSchema,
   type AvisoRespuesta,
-  citaSchema,
+  avisoRespuestaSchema,
   type Cita,
-  coberturaSchema,
   type Cobertura,
+  citaSchema,
+  coberturaSchema,
 } from "@/features/conocimiento/schema";
 import {
-  anamnesisContentSchema,
   type AnamnesisContent,
+  anamnesisContentSchema,
   type Provenance,
 } from "@/features/registro/schema";
 

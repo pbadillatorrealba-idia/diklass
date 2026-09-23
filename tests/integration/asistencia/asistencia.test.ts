@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import { decideMissingInformation, listSuggestions } from "@/features/asistencia/asistencia-service";
+import {
+  decideMissingInformation,
+  listSuggestions,
+} from "@/features/asistencia/asistencia-service";
 import { incorporateSource } from "@/features/conocimiento/coleccion-service";
 import type { FuenteContent } from "@/features/conocimiento/schema";
 import { recordAnamnesisEntry } from "@/features/registro/anamnesis-service";
@@ -91,8 +94,12 @@ describe.skipIf(!isLiveSupabase)("información faltante (US7)", () => {
     expect(alone?.estado).toBe("pendiente");
     if (alone?.fundamento.kind === "fuente") {
       expect(performance.now() - inicio).toBeLessThan(500);
-      expect(alone.fundamento.cita.textoCitado).toContain(termino);
-      expect(alone.fundamento.cita.bibliografia.titulo).toContain("Protocolo de anamnesis");
+      // FR-033 · US7-AC3: la cita es documento+fragmento con su texto verbatim de la colección
+      // compartida (la recuperación puede citar cualquier fuente calificada cargada).
+      expect(alone.fundamento.cita.textoCitado.length).toBeGreaterThan(0);
+      expect(alone.fundamento.cita.documentoId.length).toBeGreaterThan(0);
+      expect(alone.fundamento.cita.fragmentoOrdinal).toBeGreaterThanOrEqual(1);
+      expect(alone.fundamento.cita.bibliografia.titulo.length).toBeGreaterThan(0);
     } else {
       expect(alone?.fundamento).toEqual({ kind: "criterio_general" });
     }
@@ -116,9 +123,9 @@ describe.skipIf(!isLiveSupabase)("información faltante (US7)", () => {
     const alone = posteriores.find((sugerencia) => sugerencia.key === "aloneContext");
     expect(alone?.estado).toBe("formulada");
     expect(alone?.decisionRecordId).toBe(resultado.record.id);
-    expect(posteriores.filter((sugerencia) => sugerencia.estado === "pendiente").map((s) => s.key)).not.toContain(
-      "aloneContext",
-    );
+    expect(
+      posteriores.filter((sugerencia) => sugerencia.estado === "pendiente").map((s) => s.key),
+    ).not.toContain("aloneContext");
   });
 
   test("D3 · D7: revisar la decisión reemite la acción y conserva la base", async () => {

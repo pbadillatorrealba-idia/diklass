@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { decideMissingInformation, listSuggestions } from "@/features/asistencia/asistencia-service";
+import {
+  decideMissingInformation,
+  listSuggestions,
+} from "@/features/asistencia/asistencia-service";
 import type { Database } from "@/lib/supabase/database.types";
 
 /**
@@ -27,9 +30,13 @@ type FakeQuery = Promise<FakeResult> & {
 function fakeClient(queues: Partial<Record<string, FakeQueue>> = {}) {
   const calls: FakeCall[] = [];
   const restantes = new Map(
-    Object.entries(queues).map(([clave, cola]) => [clave, Array.isArray(cola) ? [...cola] : [cola]]),
+    Object.entries(queues).map(([clave, cola]) => [
+      clave,
+      Array.isArray(cola) ? [...cola] : [cola],
+    ]),
   );
-  const take = (key: string): FakeResult => restantes.get(key)?.shift() ?? { data: null, error: null };
+  const take = (key: string): FakeResult =>
+    restantes.get(key)?.shift() ?? { data: null, error: null };
 
   const from = (table: string): FakeQuery => {
     let settle: (value: FakeResult) => void = () => {};
@@ -250,7 +257,9 @@ describe("asistencia-service: información faltante (US7)", () => {
       fundamento: { kind: "criterio_general" },
     });
     expect(resultado.attribution.action).toBe("missing_information_decided");
-    const insercion = calls.find((llamada) => llamada.table === "clinical_records" && llamada.method === "insert");
+    const insercion = calls.find(
+      (llamada) => llamada.table === "clinical_records" && llamada.method === "insert",
+    );
     const payload = insercion?.args[0] as { record_type: string; content: { estado: string } };
     expect(payload.record_type).toBe("missing_information");
     expect(payload.content.estado).toBe("formulada");
@@ -293,12 +302,16 @@ describe("asistencia-service: información faltante (US7)", () => {
       estado: "ignorada",
       fundamento: { kind: "criterio_general" },
     });
-    const actualizacion = calls.find((llamada) => llamada.table === "clinical_records" && llamada.method === "update");
+    const actualizacion = calls.find(
+      (llamada) => llamada.table === "clinical_records" && llamada.method === "update",
+    );
     const payload = actualizacion?.args[0] as {
       content: { estado: string; pregunta: string; suggestionKey: string };
     };
     expect(payload.content.estado).toBe("ignorada");
-    expect(payload.content.pregunta).toBe(decision.content.pregunta ?? "");
+    expect(payload.content.pregunta).toBe(
+      "¿El comportamiento ocurre solo cuando el animal queda solo?",
+    );
     expect(payload.content.suggestionKey).toBe("aloneContext");
   });
 

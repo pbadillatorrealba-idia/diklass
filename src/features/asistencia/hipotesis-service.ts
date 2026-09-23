@@ -4,10 +4,7 @@ import { listAnamnesisEntries } from "@/features/registro/anamnesis-service";
 import { getConsultation } from "@/features/registro/consultation-service";
 import { getPatient } from "@/features/registro/ficha-service";
 import type { AnamnesisField } from "@/features/registro/schema";
-import {
-  createClinicalRecord,
-  updateClinicalContent,
-} from "@/lib/attribution/clinical-mutations";
+import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
 import {
   captureClientError,
@@ -17,18 +14,18 @@ import {
 import { logEvent } from "@/lib/observability/logger";
 import type { Database } from "@/lib/supabase/database.types";
 import {
+  type EntradaAnamnesis,
+  type HipotesisSoportada,
+  type HypothesisContent,
+  hypothesisContentSchema,
+} from "./schema";
+import {
   evaluarReglas,
   evaluateSuficiencia,
   extraerRespaldo,
   presentarHipotesis,
   type Suficiencia,
 } from "./soporte-diferencial";
-import {
-  type EntradaAnamnesis,
-  type HipotesisSoportada,
-  type HypothesisContent,
-  hypothesisContentSchema,
-} from "./schema";
 
 /**
  * Servicio de soporte diferencial (D5/D6/D7/D9 del diseño del cambio): genera bajo petición
@@ -97,7 +94,6 @@ export async function generateDifferentialSupport(
       logEvent("asistencia.support_insufficient", {
         requestId,
         operation: "generateDifferentialSupport",
-        faltantes: suficiencia.faltantes.length,
       });
       return { suficiencia, hipotesis: [] };
     }
@@ -141,7 +137,6 @@ export async function generateDifferentialSupport(
     logEvent("asistencia.support_generated", {
       requestId,
       operation: "generateDifferentialSupport",
-      hipotesis: presentadas.length,
     });
     return { suficiencia, hipotesis: presentadas };
   } catch (error) {
@@ -183,11 +178,12 @@ export async function decideHypothesis(
       decision: input.decision,
     });
     const actualizada = await updateClinicalContent(client, input.hypothesisId, content);
-    logEvent("asistencia.hypothesis_decided", {
-      requestId,
-      operation: "decideHypothesis",
-      decision: input.decision,
-    });
+    logEvent(
+      input.decision === "accepted"
+        ? "asistencia.hypothesis_accepted"
+        : "asistencia.hypothesis_discarded",
+      { requestId, operation: "decideHypothesis" },
+    );
     return actualizada;
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
@@ -258,7 +254,6 @@ export async function listHypotheses(
     logEvent("asistencia.hypotheses_listed", {
       requestId,
       operation: "listHypotheses",
-      hipotesis: filas.length,
     });
     return filas.map((fila) => presentarHipotesis(fila.recordId, fila.content));
   } catch (error) {

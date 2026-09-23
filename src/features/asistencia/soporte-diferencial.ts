@@ -9,8 +9,8 @@ import { computeMissingFichaFields } from "@/features/registro/summaries";
 import { matchearTerminos } from "./deteccion";
 import { REGLAS_HIPOTESIS, type ReglaHipotesis, SUGERENCIAS } from "./reglas";
 import {
-  DESCARGO_ASISTENCIA,
   type AnalisisHipotesis,
+  DESCARGO_ASISTENCIA,
   type DecisionHipotesis,
   type EntradaAnamnesis,
   type HipotesisSoportada,
@@ -20,7 +20,6 @@ import {
   type InsumosHipotesis,
   type ItemAnalisis,
   type OrigenHipotesis,
-  type PapelInsumo,
   type RespaldoHipotesis,
   type RespaldoPresentado,
 } from "./schema";
@@ -298,7 +297,8 @@ export function composeHipotesisSoportada(input: {
   const respaldo: RespaldoPresentado = {
     ...input.respaldo,
     sinRespaldo:
-      input.respaldo.avisos.includes("sin_respaldo_documental") || input.respaldo.citas.length === 0,
+      input.respaldo.avisos.includes("sin_respaldo_documental") ||
+      input.respaldo.citas.length === 0,
   };
   return {
     key: input.key,
@@ -324,11 +324,16 @@ export function presentarHipotesis(
   return composeHipotesisSoportada({ key: recordId, ...content });
 }
 
-const ESTADO_EPICRISIS: Record<DecisionHipotesis, string> = {
+const ETIQUETA_ESTADO_HIPOTESIS: Record<DecisionHipotesis, string> = {
   added: "propuesta",
   accepted: "aceptada",
   discarded: "descartada",
 };
+
+/** Etiqueta del estado derivado (vocabulario de FR-049) para la interfaz y la epicrisis. */
+export function etiquetaEstadoHipotesis(decision: DecisionHipotesis): string {
+  return ETIQUETA_ESTADO_HIPOTESIS[decision];
+}
 
 /**
  * Hipótesis consideradas para el campo de la epicrisis (FR-049 · US8-AC6 · D7): de la marca
@@ -340,6 +345,6 @@ export function composeHipotesisConsideradas(
 ): { texto: string; estado: string }[] {
   return hipotesis.map((content) => ({
     texto: content.texto,
-    estado: ESTADO_EPICRISIS[content.decision],
+    estado: etiquetaEstadoHipotesis(content.decision),
   }));
 }

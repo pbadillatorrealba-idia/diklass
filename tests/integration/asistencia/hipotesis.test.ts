@@ -128,13 +128,18 @@ describe.skipIf(!isLiveSupabase)("soporte diferencial (US8)", () => {
     expect(suficiencia.estado).toBe("suficiente");
     expect(hipotesis.length).toBeGreaterThan(0);
 
-    const separacion = hipotesis.find((hipotesisItem) => hipotesisItem.reglaId === "separationAnxiety");
+    const separacion = hipotesis.find(
+      (hipotesisItem) => hipotesisItem.reglaId === "separationAnxiety",
+    );
     expect(separacion).toBeDefined();
     expect(separacion?.analisis.aFavor.items.length).toBeGreaterThan(0);
     expect(separacion?.analisis.faltante.campos.length).toBeGreaterThan(0);
     expect(separacion?.respaldo.citas.length).toBeGreaterThan(0);
     if (separacion && separacion.respaldo.citas.length > 0) {
-      expect(separacion.respaldo.citas[0]?.textoCitado).toContain(termino);
+      // FR-007 · US8-AC10: el fragmento concreto, no solo su título — cita documento+fragmento
+      // con texto verbatim de la colección compartida (cualquier fuente calificada es válida).
+      expect(separacion.respaldo.citas[0]?.textoCitado.length).toBeGreaterThan(0);
+      expect(separacion.respaldo.citas[0]?.documentoId.length).toBeGreaterThan(0);
     }
     expect(separacion?.descargo).toContain("no constituye un diagnóstico");
 

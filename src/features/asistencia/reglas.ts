@@ -36,7 +36,8 @@ export type SugerenciaRegla = {
 export const SUGERENCIAS: readonly SugerenciaRegla[] = [
   {
     key: "aloneContext",
-    pregunta: "¿El comportamiento ocurre solo cuando el animal queda solo, o también en presencia del tutor?",
+    pregunta:
+      "¿El comportamiento ocurre solo cuando el animal queda solo, o también en presencia del tutor?",
     camposRelacionados: ["contexto"],
     cobertura: { anamnesis: ["contexto"], ficha: [] },
     terminosCobertura: ["queda solo", "en ausencia del tutor", "cuando se queda solo"],
@@ -164,7 +165,12 @@ export const REGLAS_HIPOTESIS: readonly ReglaHipotesis[] = [
       },
       { campo: "antecedentes", terminos: ["acompañado"] },
     ],
-    discriminatorios: ["frecuencia", "duracion", "tratamientos_anteriores", "respuesta_tratamientos"],
+    discriminatorios: [
+      "frecuencia",
+      "duracion",
+      "tratamientos_anteriores",
+      "respuesta_tratamientos",
+    ],
   },
   {
     id: "noisePhobia",
@@ -187,7 +193,10 @@ export const REGLAS_HIPOTESIS: readonly ReglaHipotesis[] = [
     consultaRecuperacion: "agresividad territorial perros protocolo diagnóstico diferencial",
     soporte: [
       { campo: "comportamiento_problematico", terminos: ["muerde", "mordisca", "agrede", "ladr"] },
-      { campo: "contexto", terminos: ["visita", "extrañ", "territorio", "cerca de casa", "puerta"] },
+      {
+        campo: "contexto",
+        terminos: ["visita", "extrañ", "territorio", "cerca de casa", "puerta"],
+      },
       { campo: "antecedentes", terminos: ["agresividad", "territorial"] },
     ],
     contra: [{ campo: "contexto", terminos: ["sin visitas", "no territorial"] }],

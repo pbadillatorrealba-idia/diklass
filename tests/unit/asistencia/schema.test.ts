@@ -20,7 +20,8 @@ const fundamentoFuente = {
   cita: {
     documentoId: "doc-1",
     fragmentoOrdinal: 2,
-    textoCitado: "El protocolo de ansiedad por separación exige registrar la conducta cuando el animal queda solo.",
+    textoCitado:
+      "El protocolo de ansiedad por separación exige registrar la conducta cuando el animal queda solo.",
     bibliografia: {
       titulo: "Protocolo de modificación de conducta (ficticio)",
       autores: ["Equipo clínico sintético"],
@@ -97,9 +98,9 @@ describe("schema de la asistencia (D2)", () => {
   test("FR-033 · US7-AC5: el criterio general no lleva cita ni se confunde con una fuente", () => {
     const fundamento = fundamentoSchema.parse(fundamentoCriterio);
     expect(fundamento).toEqual({ kind: "criterio_general" });
-    expect(fundamentoSchema.safeParse({ kind: "criterio_general", cita: fundamentoFuente.cita }).success).toBe(
-      false,
-    );
+    expect(
+      fundamentoSchema.safeParse({ kind: "criterio_general", cita: fundamentoFuente.cita }).success,
+    ).toBe(false);
   });
 
   test("FR-029 · US8-AC2: la hipótesis nace con decision=added y transiciona a accepted|discarded", () => {
@@ -160,7 +161,13 @@ describe("schema de la asistencia (D2)", () => {
             papel: "aFavor",
           },
         ],
-        ficha: [{ fichaRef: "antecedentes.behavioralHistory[0]", valor: "Ansiedad previa", papel: "enContra" }],
+        ficha: [
+          {
+            fichaRef: "antecedentes.behavioralHistory[0]",
+            valor: "Ansiedad previa",
+            papel: "enContra",
+          },
+        ],
         faltante: ["frecuencia", "duracion"],
         terminosMatch: ["solo"],
       },
