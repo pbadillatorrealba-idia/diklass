@@ -69,10 +69,10 @@ export async function consultKnowledge(
 
     let paciente: ContextoPaciente = null;
     if (input.patientId !== null) {
+      // Paciente seleccionado: el contexto se conserva aunque la ficha no sea legible (se
+      // declara con `ficha_no_disponible`), nunca se degrada a «sin paciente» (FR-051 · FR-020).
       const ficha = await getPatient(client, input.patientId);
-      if (ficha !== null) {
-        paciente = { id: input.patientId, content: ficha.content };
-      }
+      paciente = { id: input.patientId, content: ficha?.content ?? null };
     }
 
     const answer = composeAnswer({
@@ -85,7 +85,9 @@ export async function consultKnowledge(
     const registro: KnowledgeQueryInsert = {
       clinic_id: input.clinicId,
       question: pregunta,
-      patient_id: input.patientId,
+      // La fila y la respuesta comparten la misma verdad sobre el contexto de paciente (D6):
+      // imposible que la reconstrucción muestre un paciente distinto del registrado.
+      patient_id: answer.patientId,
       answer: answer as never,
     };
     const { data: fila, error: errorRegistro } = await client

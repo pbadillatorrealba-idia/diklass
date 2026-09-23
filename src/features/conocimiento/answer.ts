@@ -32,8 +32,12 @@ export type CandidatoFragmento = {
   rankCd: number;
 };
 
-/** Contexto de paciente tal como se usa para responder: identidad y ficha leída (002). */
-export type ContextoPaciente = { id: string; content: PatientContent } | null;
+/**
+ * Contexto de paciente tal como se usa para responder (FR-051 · FR-020): `null` es «sin
+ * paciente seleccionado»; `{ id, content: null }` es paciente seleccionado cuya ficha no pudo
+ * leerse (se conserva el contexto y se declara aparte); `{ id, content }` es el caso normal.
+ */
+export type ContextoPaciente = { id: string; content: PatientContent | null } | null;
 
 /** Un fragmento califica como respaldo si cubre al menos la mitad de los lemas (D4). */
 const UMBRAL_COBERTURA_LEMAS = 0.5;
@@ -170,7 +174,7 @@ export function composeAnswer(input: {
     },
   }));
 
-  if (input.paciente !== null) {
+  if (input.paciente?.content != null) {
     segmentos.push(...segmentosDeFicha(input.paciente.content));
   }
 
@@ -190,7 +194,12 @@ export function composeAnswer(input: {
   if (new Set(referencias.map((candidato) => candidato.documentoId)).size >= 2) {
     avisos.push("fuentes_multiples");
   }
-  if (input.paciente === null) avisos.push("sin_paciente_seleccionado");
+  if (input.paciente === null) {
+    avisos.push("sin_paciente_seleccionado");
+  } else if (input.paciente.content === null) {
+    avisos.push("ficha_no_disponible");
+  }
+  if (calificados.length > referencias.length) avisos.push("evidencia_truncada");
   if (referencias.some((candidato) => candidato.estado === "withdrawn")) {
     avisos.push("fuente_retirada");
   }
@@ -213,17 +222,23 @@ export function resolveCitations(
   estados: Record<string, "available" | "withdrawn">,
 ): KnowledgeAnswer {
   let hayRetirada = false;
+  let hayIrresoluble = false;
   const segmentos = answer.segmentos.map((segmento) => {
     if (segmento.kind !== "evidencia") return segmento;
-    const estado = estados[segmento.cita.documentoId] ?? segmento.cita.estado;
+    const estado = estados[segmento.cita.documentoId];
+    if (estado === undefined) {
+      // La cita ya no resuelve contra la colección actual: no se camufla con el estado
+      // guardado, se marca (FR-020 · SC-003 · SC-010).
+      hayIrresoluble = true;
+      return segmento;
+    }
     if (estado === "withdrawn") hayRetirada = true;
     return { ...segmento, cita: { ...segmento.cita, estado } };
   });
 
-  const avisos: AvisoRespuesta[] =
-    hayRetirada && !answer.avisos.includes("fuente_retirada")
-      ? [...answer.avisos, "fuente_retirada"]
-      : answer.avisos;
+  const avisos = [...answer.avisos];
+  if (hayRetirada && !avisos.includes("fuente_retirada")) avisos.push("fuente_retirada");
+  if (hayIrresoluble && !avisos.includes("cita_irresoluble")) avisos.push("cita_irresoluble");
 
   return { ...answer, segmentos, avisos };
 }
@@ -237,7 +252,8 @@ export type ContextoFragmento = {
 
 /**
  * Fragmento citado dentro de su documento (FR-007 · US5-AC7): cabecera bibliográfica más
- * los fragmentos vecinos, con el citado resaltado.
+ * los fragmentos vecinos, con el citado resaltado. Sin fragmento citado (`null`), el documento
+ * se muestra desde el inicio y completo.
  */
 export function buildFragmentContext(
   documento: {
@@ -246,17 +262,20 @@ export function buildFragmentContext(
     estado: "available" | "withdrawn";
     fragmentos: Fragmento[];
   },
-  fragmentoOrdinal: number,
+  fragmentoCitado: number | null,
   ventana = 1,
 ): ContextoFragmento {
   const fragmentos = documento.fragmentos
-    .filter((fragmento) => Math.abs(fragmento.ordinal - fragmentoOrdinal) <= ventana)
+    .filter(
+      (fragmento) =>
+        fragmentoCitado === null || Math.abs(fragmento.ordinal - fragmentoCitado) <= ventana,
+    )
     .sort((a, b) => a.ordinal - b.ordinal)
     .map((fragmento) => ({
       ordinal: fragmento.ordinal,
       seccion: fragmento.seccion,
       texto: fragmento.texto,
-      citado: fragmento.ordinal === fragmentoOrdinal,
+      citado: fragmentoCitado !== null && fragmento.ordinal === fragmentoCitado,
     }));
 
   return {

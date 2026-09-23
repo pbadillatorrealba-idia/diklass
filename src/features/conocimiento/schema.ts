@@ -160,14 +160,18 @@ export const AvisoRespuesta = [
   "fuentes_multiples",
   "sin_paciente_seleccionado",
   "fuente_retirada",
+  "evidencia_truncada",
+  "cita_irresoluble",
+  "ficha_no_disponible",
 ] as const;
 
 export const avisoRespuestaSchema = z.enum(AvisoRespuesta);
 
 /**
  * Avisos explícitos de la respuesta (FR-022, FR-023, FR-051, FR-052 y FR-053): ausencia de
- * respaldo documental, cobertura parcial, fuentes sin arbitraje, modo sin paciente y cita
- * hacia fuente retirada.
+ * respaldo documental, cobertura parcial, fuentes sin arbitraje, modo sin paciente, cita hacia
+ * fuente retirada, evidencia calificada omitida por el tope de referencias (FR-052: el descarte
+ * nunca es silencioso), cita que ya no resuelve en la colección y ficha del paciente no legible.
  */
 export type AvisoRespuesta = z.infer<typeof avisoRespuestaSchema>;
 

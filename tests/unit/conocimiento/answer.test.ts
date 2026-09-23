@@ -236,7 +236,7 @@ describe("composeAnswer múltiples fuentes (FR-052 · US5-AC11)", () => {
   });
 });
 
-describe("composeAnswer sin paciente seleccionado (FR-051 · US5-AC10)", () => {
+describe("composeAnswer sin paciente seleccionado (FR-051 · FR-020 · US5-AC10)", () => {
   test("no atribuye datos de ningún paciente y lo declara", () => {
     const answer = composeAnswer({
       pregunta,
@@ -249,10 +249,24 @@ describe("composeAnswer sin paciente seleccionado (FR-051 · US5-AC10)", () => {
     expect(answer.segmentos.filter((s) => s.kind === "ficha")).toHaveLength(0);
     expect(answer.avisos).toContain("sin_paciente_seleccionado");
   });
+
+  test("paciente seleccionado sin ficha legible conserva el contexto y lo declara aparte", () => {
+    const answer = composeAnswer({
+      pregunta,
+      lemasPregunta: ["ansied", "separ"],
+      candidatos: [candidato()],
+      paciente: { id: "patient-1", content: null },
+    });
+
+    expect(answer.patientId).toBe("patient-1");
+    expect(answer.segmentos.filter((s) => s.kind === "ficha")).toHaveLength(0);
+    expect(answer.avisos).toContain("ficha_no_disponible");
+    expect(answer.avisos).not.toContain("sin_paciente_seleccionado");
+  });
 });
 
-describe("composeAnswer top-5 y presupuesto (SC-002 · D4)", () => {
-  test("muestra como máximo cinco referencias, en orden de ranking", () => {
+describe("composeAnswer top-5 y presupuesto (SC-002 · FR-052 · D4)", () => {
+  test("muestra como máximo cinco referencias, en orden de ranking, y declara el descarte", () => {
     const candidatos = Array.from({ length: 7 }, (_, i) =>
       candidato({
         documentoId: `doc-${i + 1}`,
@@ -277,6 +291,8 @@ describe("composeAnswer top-5 y presupuesto (SC-002 · D4)", () => {
       "doc-4",
       "doc-5",
     ]);
+    // FR-052 · US5-AC11: el descarte de evidencia calificada no puede ser silencioso.
+    expect(answer.avisos).toContain("evidencia_truncada");
   });
 
   test("compone 25 candidatos dentro del presupuesto de 200 ms", () => {
@@ -323,6 +339,22 @@ describe("resolveCitations (FR-053 · US5-AC12)", () => {
       "fuente_retirada",
     );
   });
+
+  test("una cita que ya no resuelve en la colección se marca explícitamente (FR-020 · SC-003 · SC-010)", () => {
+    const guardada = composeAnswer({
+      pregunta,
+      lemasPregunta: ["ansied", "separ"],
+      candidatos: [candidato()],
+      paciente: null,
+    });
+
+    const resuelta = resolveCitations(guardada, {});
+    expect(resuelta.avisos).toContain("cita_irresoluble");
+    expect(guardada.avisos).not.toContain("cita_irresoluble");
+    expect(resolveCitations(guardada, { "doc-1": "available" }).avisos).not.toContain(
+      "cita_irresoluble",
+    );
+  });
 });
 
 describe("buildFragmentContext (FR-007 · US5-AC7)", () => {
@@ -345,6 +377,12 @@ describe("buildFragmentContext (FR-007 · US5-AC7)", () => {
     expect(contexto.fragmentos.map((f) => f.ordinal)).toEqual([1, 2, 3]);
     expect(contexto.fragmentos.find((f) => f.citado)?.texto).toContain("el citado");
     expect(contexto.fragmentos.filter((f) => f.citado)).toHaveLength(1);
+  });
+
+  test("sin fragmento citado muestra el documento desde el inicio, completo (FR-007 · US5-AC7)", () => {
+    const contexto = buildFragmentContext(documento, null);
+    expect(contexto.fragmentos.map((f) => f.ordinal)).toEqual([1, 2, 3, 4]);
+    expect(contexto.fragmentos.filter((f) => f.citado)).toHaveLength(0);
   });
 });
 

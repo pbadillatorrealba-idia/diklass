@@ -39,7 +39,13 @@ create table public.knowledge_queries (
   clinic_id uuid not null references public.clinics(id),
   question text not null check (length(btrim(question)) > 0),
   patient_id uuid references public.clinical_records(id),
-  answer jsonb not null default '{}'::jsonb,
+  answer jsonb not null check (
+    jsonb_typeof(answer) = 'object'
+    and answer ? 'pregunta'
+    and answer ? 'segmentos'
+    and answer ? 'cobertura'
+    and answer ? 'avisos'
+  ),
   created_at timestamptz not null default timezone('utc', now())
 );
 
@@ -115,6 +121,7 @@ begin
   -- fracasa: la corrección de una fuente es retirarla e incorporar una nueva (HD3).
   if old.status is distinct from 'available'
      or new.status is distinct from 'withdrawn'
+     or new.id is distinct from old.id
      or new.content is distinct from old.content
      or new.clinic_id is distinct from old.clinic_id
      or new.created_by is distinct from old.created_by

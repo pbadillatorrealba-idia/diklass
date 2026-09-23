@@ -12,6 +12,12 @@ const TEXTO_AVISO: Record<AvisoRespuesta, string> = {
     "Sin paciente seleccionado: respuesta sobre conocimiento general, sin datos de ningún paciente.",
   fuente_retirada:
     "Una cita apunta a una fuente retirada de la colección; la referencia sigue identificable.",
+  evidencia_truncada:
+    "Había más evidencia recuperada que el tope de referencias mostradas: no se muestra todo lo recuperado.",
+  cita_irresoluble:
+    "Una o más citas de esta respuesta ya no resuelven contra la colección actual; se conservan tal como se registraron.",
+  ficha_no_disponible:
+    "El paciente está seleccionado, pero su ficha no pudo leerse: la respuesta no incluye datos de ficha.",
 };
 
 /**

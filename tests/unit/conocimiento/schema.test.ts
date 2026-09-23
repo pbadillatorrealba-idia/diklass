@@ -209,13 +209,16 @@ describe("segmentoRespuestaSchema (FR-007 · FR-021 · US5-AC3 · D5)", () => {
 });
 
 describe("knowledgeAnswerSchema (FR-020 · FR-022 · FR-023 · US5-AC5 · D5/D6)", () => {
-  test("define los cinco avisos del contrato", () => {
+  test("define los ocho avisos del contrato", () => {
     expect([...AvisoRespuesta]).toEqual([
       "sin_respaldo_documental",
       "cobertura_parcial",
       "fuentes_multiples",
       "sin_paciente_seleccionado",
       "fuente_retirada",
+      "evidencia_truncada",
+      "cita_irresoluble",
+      "ficha_no_disponible",
     ]);
     for (const aviso of AvisoRespuesta) {
       expect(avisoRespuestaSchema.safeParse(aviso).success).toBe(true);

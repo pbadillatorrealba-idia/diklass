@@ -120,6 +120,25 @@ Estas métricas verifican el **mecanismo** sobre datos sintéticos; no aceptan S
 captura de voz), volverá a hacer falta `bun run db:types` sobre el esquema combinado: lo ejecuta
 quien integre, al cerrar el conjunto.
 
+## Correcciones de la revisión (PR #30, veredicto «Con correcciones»)
+
+| # | Hallazgo | Fix | Evidencia |
+|---|---|---|---|
+| 1 | El contexto conversacional sobrevivía al cierre/expiración de sesión | `conversation-store.ts` se suscribe al ciclo de `useSessionStore` y hace `reset()` al dejar de haber sesión activa | tests de unidad «ciclo de sesión» (expiración y logout): 58 pass / 0 fail |
+| 2 | La superficie de revisión no mostraba quién retiró la fuente ni cuándo | `sources/index.tsx` y el visor muestran `AttributionBadge` del retiro (`withdrawn_by`/`withdrawn_at` con fecha y hora completas) | `bun run typecheck` + `expo export` verdes; los datos ya se exponían por `listSources`/`getSource` (integración viva) |
+| 3 | «Ver documento» sin cita mostraba solo el fragmento 1 | `buildFragmentContext(documento, null)` devuelve el documento completo desde el inicio | test de unidad «sin fragmento citado…» (rojo→verde) |
+| 4 | El top-5 descartaba evidencia calificada en silencio | aviso `evidencia_truncada` cuando hay más calificados que referencias mostradas | test de unidad «declara el descarte» (rojo→verde) |
+| 5 | La retirada podía reescribir la PK de la fuente | la guarda compara también `id` (`KNOWLEDGE_SOURCE_IMMUTABLE`) | assert pgTap: «la retirada no puede reescribir la identidad» — rojo «caught: no exception» (y corrompió el fixture aguas abajo, demostrando el alcance) → verde 33/33 |
+| 6 | Citas irresolubles al reconstruir; `answer` fabricable por cliente | aviso `cita_irresoluble` (sin heredar estado guardado) + CHECK SQL de forma mínima de `answer` con su riesgo residual y reverso declarados en `design.md` D6 | test de unidad «cita que ya no resuelve…» + assert pgTap «una respuesta sin la forma del contrato no se registra» (rojo «no exception» → verde) |
+| 7 | Faltaba el presupuesto de recuperación ≤ 500 ms | aserción temporal sobre `search_knowledge_fragments` en `consulta.test.ts` | integración viva: 14 pass / 0 fail (92 `expect()`) |
+| 8 | Ternario no-op de `anio`, NaN posible, mensaje de Zod en inglés | `parsearEntero` sin NaN + error derivado en español («Año de publicación inválido.») que deshabilita el envío | `bun run typecheck` + `expo export` verdes |
+| 9 | Ficha ilegible ⇒ aviso `sin_paciente_seleccionado` con `patient_id` no nulo | el contexto se conserva (`ficha_no_disponible`) y fila/respuesta comparten `answer.patientId` como única verdad | test de unidad «paciente seleccionado sin ficha legible…» (rojo→verde) |
+
+Verificación global tras las correcciones: pgTap **170 asserts «All tests successful»** (suite `009`
+con 33), unidad 58 pass / 0 fail, integración viva 14 pass / 0 fail con el arnés estable
+(SC-002 100%, SC-025 100%, 0 incumplimientos sobre 16 citas), `bun run typecheck` limpio y
+`bunx biome check` sin advertencias sobre los archivos propios.
+
 ## Transiciones sin acción enumerada (D3 · tarea 1.3)
 
 Las transiciones de fuente (incorporar/retirar) devuelven `Attribution.action = null`: la

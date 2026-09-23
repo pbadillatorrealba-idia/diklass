@@ -290,7 +290,7 @@ export type Database = {
           question: string
         }
         Insert: {
-          answer?: Json
+          answer: Json
           clinic_id: string
           created_at?: string
           id?: string

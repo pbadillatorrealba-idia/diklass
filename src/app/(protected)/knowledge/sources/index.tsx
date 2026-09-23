@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaView, ScrollView } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -91,6 +92,20 @@ export default function KnowledgeCollectionScreen() {
                   action: null,
                 }}
               />
+              {fuente.record.status === "withdrawn" &&
+              fuente.record.withdrawn_by !== null &&
+              fuente.record.withdrawn_at !== null ? (
+                <Box className="gap-1">
+                  <Text className="text-foreground/70 text-xs">Retiro de la colección:</Text>
+                  <AttributionBadge
+                    attribution={{
+                      actorId: fuente.record.withdrawn_by,
+                      occurredAt: fuente.record.withdrawn_at,
+                      action: null,
+                    }}
+                  />
+                </Box>
+              ) : null}
               <Button
                 className="self-start"
                 onPress={() =>

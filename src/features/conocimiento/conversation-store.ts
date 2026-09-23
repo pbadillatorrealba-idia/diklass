@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useSessionStore } from "@/stores/session-store";
 import type { KnowledgeAnswer } from "./schema";
 
 /**
@@ -30,3 +31,12 @@ export const useConversationStore = create<ConversationState>()((set) => ({
   addTurno: (turno) => set((state) => ({ turnos: [...state.turnos, turno] })),
   reset: () => set({ patientId: null, turnos: [] }),
 }));
+
+// El contexto conversacional —incluido el snapshot de ficha de cada turno— no sobrevive al
+// cierre ni a la expiración de la sesión de acceso (FR-026 · US5-AC4 · Constitución V): al
+// dejar de haber sesión activa se limpia, sea cual sea la pantalla en uso.
+useSessionStore.subscribe((estado, anterior) => {
+  if (anterior.accessState === "active" && estado.accessState !== "active") {
+    useConversationStore.getState().reset();
+  }
+});

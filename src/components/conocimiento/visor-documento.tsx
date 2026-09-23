@@ -1,3 +1,4 @@
+import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -23,7 +24,7 @@ export function VisorDocumento({
       estado: fuente.record.status === "withdrawn" ? "withdrawn" : "available",
       fragmentos: fuente.content.fragmentos,
     },
-    fragmentoCitado ?? 0,
+    fragmentoCitado,
   );
 
   return (
@@ -42,12 +43,26 @@ export function VisorDocumento({
         <Text className="text-foreground/70 text-sm">
           Incorporada el {new Date(fuente.record.created_at).toLocaleString("es-CL")}
         </Text>
-        {fuente.record.status === "withdrawn" && fuente.record.withdrawn_at !== null ? (
-          <Text className="text-destructive text-sm" testID="visor-fuente-retirada">
-            Fuente retirada de la colección el{" "}
-            {new Date(fuente.record.withdrawn_at).toLocaleString("es-CL")}; sus citas previas siguen
-            siendo identificables.
-          </Text>
+        {fuente.record.status === "withdrawn" &&
+        fuente.record.withdrawn_by !== null &&
+        fuente.record.withdrawn_at !== null ? (
+          <Box className="gap-1">
+            <Text className="text-destructive text-sm" testID="visor-fuente-retirada">
+              Fuente retirada de la colección el{" "}
+              {new Date(fuente.record.withdrawn_at).toLocaleString("es-CL", {
+                dateStyle: "medium",
+                timeStyle: "medium",
+              })}
+              ; sus citas previas siguen siendo identificables.
+            </Text>
+            <AttributionBadge
+              attribution={{
+                actorId: fuente.record.withdrawn_by,
+                occurredAt: fuente.record.withdrawn_at,
+                action: null,
+              }}
+            />
+          </Box>
         ) : null}
       </Box>
 
