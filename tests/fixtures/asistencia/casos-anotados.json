@@ -1,0 +1,45 @@
+{
+  "nota": "Casos sintéticos anotados para el arnés de evaluación de 006 (HD8): sustituto provisional del conjunto del equipo clínico. Miden el mecanismo (SC-029, SC-019, SC-030, SC-031), no aceptan los criterios.",
+  "casos": [
+    {
+      "clave": "separacion-incompleta",
+      "descripcion": "Ansiedad por separación con anamnesis deliberadamente incompleta",
+      "anamnesis": [
+        { "field": "motivo_consulta", "text": "Destroza objetos y ladra cuando se queda solo" },
+        { "field": "contexto", "text": "En ausencia del tutor" },
+        { "field": "frecuencia", "text": "Diaria" }
+      ],
+      "faltantesEsperados": ["duracion", "tratamientos_anteriores", "respuesta_tratamientos"],
+      "hipotesisEsperadas": ["separationAnxiety"]
+    },
+    {
+      "clave": "ruidos-moderada",
+      "descripcion": "Miedo a ruidos con anamnesis parcial",
+      "anamnesis": [
+        { "field": "motivo_consulta", "text": "Se esconde y tiembla con las tormentas" },
+        { "field": "desencadenantes", "text": "Truenos y fuegos artificiales" },
+        { "field": "ambiente", "text": "Vive en departamento con patio" }
+      ],
+      "faltantesEsperados": ["frecuencia", "duracion", "contexto"],
+      "hipotesisEsperadas": ["noisePhobia"]
+    },
+    {
+      "clave": "agresividad-visitas",
+      "descripcion": "Agresividad territorial con antecedentes contradictorios",
+      "anamnesis": [
+        { "field": "motivo_consulta", "text": "Muerde a las visitas cerca de la puerta" },
+        { "field": "contexto", "text": "Solo con extraños; con la familia es tranquilo" },
+        { "field": "convivencia", "text": "Vive con otro perro" }
+      ],
+      "faltantesEsperados": ["frecuencia", "tratamientos_anteriores", "duracion"],
+      "hipotesisEsperadas": ["territorialAggression"]
+    },
+    {
+      "clave": "anamnesia-vacia",
+      "descripcion": "Anamnesis vacía: nunca se proponen hipótesis (caso límite)",
+      "anamnesis": [],
+      "faltantesEsperados": ["motivo_consulta", "contexto", "frecuencia"],
+      "hipotesisEsperadas": []
+    }
+  ]
+}
