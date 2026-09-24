@@ -110,7 +110,6 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
   let ana: LiveVeterinarian;
   let tutorId = "";
   let pacienteId = "";
-  let segundoId = "";
   let caso: { consultationId: string; patientId: string; tutorId: string };
 
   beforeAll(async () => {
@@ -125,12 +124,11 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     });
     tutorId = compartida.tutorId;
     pacienteId = compartida.record.id;
-    const segundoCompartido = await createPatientFicha(ana.client, {
+    await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: fichaBase("Simón compartida"),
       tutor: { existingTutorId: compartida.tutorId },
     });
-    segundoId = segundoCompartido.record.id;
   });
 
   test("alta con tutor nuevo y segundo paciente sin duplicar tutor (FR-001 · US1-AC1, FR-027 · US1-AC4)", async () => {
