@@ -2,6 +2,8 @@
 
 Guía común para agentes (Claude, Codex, Oh My Pi u otros) que trabajan en este repositorio.
 Este archivo está subordinado a `docs/constitution.md`, que prevalece ante cualquier conflicto.
+El arranque del entorno está en [README.md](README.md) y el detalle en [SETUP.md](SETUP.md); aquí
+solo viven las reglas de trabajo.
 
 ## Antes de trabajar
 
@@ -9,6 +11,9 @@ Este archivo está subordinado a `docs/constitution.md`, que prevalece ante cual
 2. Lee `docs/brief-poc-cdss.md` — documento canónico de producto.
 3. Lee el cambio seleccionado bajo `openspec/changes/` (proposal, specs y, si existen, design y
    tasks) antes de tocar código o artefactos.
+4. Comprueba que las dependencias locales coinciden con `bun.lock`
+   (`bun install --frozen-lockfile`). Un `node_modules` desfasado produce errores de herramientas
+   (por ejemplo, un esquema de `biome.json` que el CLI instalado no reconoce) que no son del código.
 
 ## openspec/changes/ frente a openspec/specs/
 
@@ -17,6 +22,8 @@ Este archivo está subordinado a `docs/constitution.md`, que prevalece ante cual
   acepta y sincroniza.
 - `openspec/specs/`: capacidades ya aceptadas y sincronizadas. Está vacío al inicio: ninguna
   capability está publicada todavía.
+- La deuda de tests (casos pendientes, cobertura que falta, suites omitidas) se registra como
+  tareas de un cambio OpenSpec activo, no como TODOs sueltos en el código ni en comentarios.
 
 ## Reglas
 
@@ -28,24 +35,74 @@ Este archivo está subordinado a `docs/constitution.md`, que prevalece ante cual
   checklists acreditan revisión documental, no implementación.
 - Diferencia pendiente / implementado / aceptado en cada afirmación que escribas.
 
+## Seguridad y secretos
+
+- **Falla cerrado.** Si falta configuración de autenticación, de RLS o de entorno, el sistema niega
+  el acceso o se detiene con un error explícito; nunca queda abierto por omisión. Una variable
+  olvidada en un despliegue no puede traducirse en datos clínicos expuestos.
+- **Los atajos de desarrollo son explícitos.** Todo bypass (saltar un control, apuntar a un
+  entorno remoto, sembrar datos) se activa a propósito con un flag o variable dedicada, avisa por
+  consola cuando está activo y, si vive en el cliente, depende además de `__DEV__`. Referencia:
+  `provision:veterinarians` rechaza cualquier Supabase no local salvo que se pase `--allow-remote`.
+  Ningún bypass se configura en un entorno accesible desde internet.
+- **Ningún secreto en el bundle.** Expo inlinea toda variable `EXPO_PUBLIC_*` en el código del
+  cliente, así que solo pueden llevar valores públicos (URL de Supabase y anon key). La
+  `SUPABASE_SERVICE_ROLE_KEY` y cualquier clave de proveedor viven únicamente en scripts de
+  servidor y en Edge Functions (`supabase/functions/`).
+- **`.env` nunca se commitea** ni se copian sus valores en issues, PRs, logs o artefactos. Toda
+  variable nueva se añade a `.env.example` con un valor de ejemplo no sensible y se documenta en
+  `SETUP.md`.
+- **Tras cambiar cualquier `EXPO_PUBLIC_*`, limpia la caché de Metro** (`bun run start -- -c` o
+  `bunx expo export --clear`). Metro cachea la transformación que inlinea el valor y, sin limpiar,
+  el bundle sale con el valor anterior sin avisar.
+
 ## Comandos
 
-Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager):
+Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager; la versión
+queda fijada en `.bun-version`):
 
-```sh
-bun run start              # Expo dev server
-bun run web                # Expo web dev server
-bun run typecheck          # tsc --noEmit
-bun run lint               # biome check .
-bun run format             # biome format --write .
-bun run test               # bun test tests/unit tests/integration
-bun run test:integration   # bun test tests/integration
-bun run test:e2e:web       # Playwright
-bun run test:e2e:native    # Maestro
-bun run provision:veterinarians
-```
+| Comando | Descripción | En CI |
+|---|---|---|
+| `bun install --frozen-lockfile` | Instala exactamente lo que fija `bun.lock`. | Sí |
+| `bun run start` | Servidor de desarrollo de Expo (Metro). | — |
+| `bun run android` / `bun run ios` | Expo abriendo el emulador o simulador correspondiente. | — |
+| `bun run web` | Expo en el navegador. | — |
+| `bun run typecheck` | `tsc --noEmit` sobre todo el proyecto. | Sí |
+| `bun run lint` | `biome check .` en local. | — |
+| `bunx biome ci --error-on-warnings .` | Biome en modo CI: los warnings también fallan. | Sí |
+| `bun run format` | Formatea con Biome. | — |
+| `bun run test` | Tests unitarios y de integración (`bun test`). Sin Supabase, las suites vivas se omiten. | Sí |
+| `bun run test:integration` | Solo integración; con `SUPABASE_LIVE_TESTS=1` y Supabase local ejecuta las suites vivas. | Sí |
+| `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. | Sí |
+| `bun run db:types` | Regenera `src/lib/supabase/database.types.ts` desde el Supabase local. CI falla si difiere de las migraciones. | Sí (diff) |
+| `bun run provision:veterinarians` | Provisiona veterinarios sintéticos en el Supabase local. | Sí |
+| `bun run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). | Sí |
+| `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | Nightly |
+
+Antes de hacer push, reproduce al menos los pasos de CI que toca tu cambio: `typecheck`,
+`biome ci --error-on-warnings` y `test`; si tocas migraciones, también `supabase test db` y
+`db:types`. La definición completa está en `.github/workflows/ci.yml`.
 
 No añadas scripts ni dependencias sin justificarlos conforme al Principio III de la constitución.
+
+## Skills de agentes
+
+- `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
+  Codex y Oh My Pi. Cualquier alta, baja o edición se aplica en ambos directorios en el mismo
+  commit. Las skills `openspec-*` las genera OpenSpec por herramienta y pueden diferir entre ambos.
+- Uso esperado:
+  - `test-driven-development`: al implementar cualquier funcionalidad o corrección.
+  - `systematic-debugging`: ante un bug, un test roto o un comportamiento inesperado, antes de
+    proponer un arreglo.
+  - `verification-before-completion`: antes de declarar algo terminado, hacer commit o abrir un PR.
+  - `requesting-code-review` / `receiving-code-review`: al cerrar un bloque de trabajo y al
+    procesar comentarios de revisión.
+  - `security-best-practices` / `security-threat-model`: cuando se pida explícitamente una
+    revisión de seguridad o un modelo de amenazas.
+  - `playwright`: para automatizar el navegador desde terminal (depurar flujos de UI, capturas).
+  - `frontend-design`: al crear o rediseñar UI.
+  - `using-git-worktrees`: cuando un cambio necesita aislarse del espacio de trabajo actual.
+  - `openspec-*`: flujo de propuestas, aplicación, sincronización y archivo de cambios.
 
 ## Idioma
 
