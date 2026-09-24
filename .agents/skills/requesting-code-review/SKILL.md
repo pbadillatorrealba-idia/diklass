@@ -9,13 +9,6 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **Core principle:** Review early, review often.
 
-## Idioma obligatorio
-
-Todos los resultados de revisión, resúmenes y respuestas al usuario se escriben
-en español, incluidos los encabezados, las severidades y el veredicto. No traduzcas
-símbolos, rutas, comandos ni mensajes de error citados como evidencia.
-Pasa esta exigencia explícitamente al reviewer usando [code-reviewer.md](code-reviewer.md).
-
 ## When to Request Review
 
 **Mandatory:**
@@ -46,45 +39,10 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
-
-**3. Publicar automáticamente el resultado en la PR:**
-
-El agente coordinador es el único responsable de publicar; el reviewer devuelve
-el informe y no escribe en GitHub. La publicación es obligatoria al ejecutar esta
-skill, sin pedir confirmación, incluso cuando no hay hallazgos. Esto no instala
-un bot de CI ni dispara revisiones por cada push.
-
-1. Guarda el reporte completo en español en un archivo temporal UTF-8 fuera del
-   repositorio. Incluye el SHA base y el SHA revisado, el alcance, las verificaciones
-   realmente ejecutadas y las limitaciones. Nunca publiques secretos ni datos sensibles.
-2. Comprueba `gh auth status`. Resuelve el repositorio y la rama revisada explícitamente;
-   no uses la primera PR del repositorio ni una PR inferida desde otra rama.
-   Usa `gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number,url,headRefOid,headRepositoryOwner`
-   y confirma también el propietario de la rama en caso de forks. Si hay varias
-   coincidencias, resuelve la PR por su rama base y contexto antes de publicar.
-3. Si todavía no existe una PR, conserva el reporte como pendiente y publícalo
-   inmediatamente después de crearla. No crees una PR solo para publicar sin que
-   se haya solicitado. Si hay cambios sin commit, identifica el alcance local;
-   antes de publicarlo, confirma que esos mismos cambios están en el commit remoto.
-4. Antes de publicar, consulta `gh pr view "$PR_NUMBER" --repo "$REPO" --json state,headRefOid,url`.
-   Publica solo en la PR abierta correcta. Si su HEAD difiere del SHA revisado,
-   actualiza la revisión para ese HEAD; nunca presentes un reporte viejo como vigente.
-5. Publica el informe completo como comentario, no como aprobación de la propia PR:
-   ```bash
-   gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "$REPORT_FILE"
-   ```
-   Conserva la URL devuelta y verifica que el comentario existe con
-   `gh pr view "$PR_NUMBER" --repo "$REPO" --json comments`. No dupliques una
-   publicación ya confirmada del mismo reporte; revisa los comentarios antes de
-   repetir un comando cuyo resultado sea incierto.
-6. Si falta `gh`, autenticación, permisos o conectividad, entrega el reporte en
-   español e indica que la publicación sigue pendiente y por qué. No afirmes
-   que se publicó ni pierdas el archivo. Tras confirmar la publicación, elimina
-   el archivo temporal y devuelve la URL del comentario al usuario.
-**4. Actuar sobre el resultado:**
-- Corregir problemas Críticos inmediatamente.
-- Corregir problemas Importantes antes de continuar.
-- Registrar problemas Menores para su consideración.
+**3. Act on feedback:**
+- Fix Critical issues immediately
+- Fix Important issues before proceeding
+- Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
 ## Example
@@ -104,15 +62,14 @@ HEAD_SHA=$(git rev-parse HEAD)
   HEAD_SHA: 3df7661
 
 [Subagent returns]:
-  Fortalezas: Arquitectura clara, pruebas de comportamiento
-  Problemas:
-    Importante: No se informa el progreso de una operación prolongada
-    Menor: Número mágico (100) en el intervalo de reporte
-  Veredicto: Con correcciones
+  Strengths: Clean architecture, real tests
+  Issues:
+    Important: Missing progress indicators
+    Minor: Magic number (100) for reporting interval
+  Assessment: Ready to proceed
 
-Coordinador: [Publica el reporte completo en la PR y conserva la URL]
-Coordinador: [Corrige los problemas y solicita una revisión del nuevo SHA]
-[Continúa con la tarea 3]
+You: [Fix progress indicators]
+[Continue to Task 3]
 ```
 
 ## Common Rationalizations

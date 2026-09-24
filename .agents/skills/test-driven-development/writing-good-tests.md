@@ -48,7 +48,7 @@ retried 5 times and the 6th attempt never happens."
 contains an exact line proves only that the source is the source. Run
 scripts against controlled inputs and assert outputs, side effects, or
 exit codes. Documents that instruct agents are tested by the consuming
-agent's behavior (superpowers:writing-skills); prose for humans earns no
+agent's behavior; prose for humans earns no
 test at all.
 
 **Your code, not the framework.** Test the contract your code makes at
@@ -103,12 +103,12 @@ implementation first and observe what actually needs to happen.
 
 ```typescript
 // ❌ The mock swallows the config write that duplicate detection reads
-vi.mock('ToolCatalog', () => ({
-  discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
+jest.mock('ToolCatalog', () => ({
+  discoverAndCacheTools: jest.fn().mockResolvedValue(undefined)
 }));
 
 // ✅ Mock only the slow server startup; the config write stays real
-vi.mock('MCPServerManager');
+jest.mock('MCPServerManager');
 ```
 
 **Make doubles specific.** When arguments, call counts, or ordering are
