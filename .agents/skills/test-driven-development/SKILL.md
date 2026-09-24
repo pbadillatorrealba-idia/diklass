@@ -93,6 +93,8 @@ Clear name, tests real behavior, one thing
 
 <Bad>
 ```typescript
+import { mock, test, expect } from 'bun:test';
+
 test('retry works', async () => {
   const operation = mock()
     .mockRejectedValueOnce(new Error())

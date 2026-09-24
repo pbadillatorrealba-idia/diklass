@@ -64,8 +64,8 @@ solo viven las reglas de trabajo.
 ## Comandos
 
 Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager; la versión
-queda fijada en `.bun-version`). Las filas que no empiezan por `bun run` son comandos directos de
-la herramienta, no scripts:
+queda fijada en `.bun-version`). Las filas que no invocan un script de `package.json`
+(`bun install`, `bunx biome`, `supabase test db`) son comandos directos de la herramienta:
 
 | Comando | Descripción | En CI |
 |---|---|---|
@@ -82,7 +82,7 @@ la herramienta, no scripts:
 | `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. | Sí |
 | `bun run db:types` | Regenera `src/lib/supabase/database.types.ts` desde el Supabase local. CI falla si difiere de las migraciones. | Sí (diff) |
 | `bun run provision:veterinarians` | Provisiona veterinarios sintéticos en el Supabase local. | Sí |
-| `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. | Sí |
+| `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. CI ejecuta `bun run test:e2e:web` y pasa las variables por `GITHUB_ENV`. | Sí |
 | `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | `main`, nightly y a demanda (Maestro Cloud) |
 
 Antes de hacer push, reproduce al menos los pasos de CI que toca tu cambio: `typecheck`,

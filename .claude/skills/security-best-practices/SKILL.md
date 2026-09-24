@@ -43,7 +43,7 @@ While these references contain the security best practices for languages and fra
 
 # Report Format
 
-When producing a report, you should write the report as a markdown file in `security_best_practices_report.md` or some other location if provided by the user. You can ask the user where they would like the report to be written to.
+When producing a report, write it in Spanish as a markdown file named `security_best_practices_report.md` outside the repository (for example, in a temporary directory), or in another location provided by the user. Per `AGENTS.md`, security reports are never committed.
 
 The report should have a short executive summary at the top.
 

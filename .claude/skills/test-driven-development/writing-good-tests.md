@@ -87,10 +87,10 @@ are checking, unmock it or delete the assertion.
 
 ```typescript
 // ✅ Real behavior
-expect(screen.getByRole('navigation')).toBeInTheDocument();
+expect(screen.getByRole('navigation')).toBeTruthy();
 
 // ❌ Mock existence
-expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
+expect(screen.getByTestId('sidebar-mock')).toBeTruthy();
 ```
 
 **your human partner's correction:** "Are we testing the behavior of a
@@ -102,6 +102,8 @@ the test depends on real. When unsure, run the test against the real
 implementation first and observe what actually needs to happen.
 
 ```typescript
+import { mock } from 'bun:test';
+
 // ❌ The mock swallows the config write that duplicate detection reads
 mock.module('./tool-catalog', () => ({
   discoverAndCacheTools: mock().mockResolvedValue(undefined)

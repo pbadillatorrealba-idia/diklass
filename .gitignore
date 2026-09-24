@@ -243,3 +243,7 @@ expo-env.d.ts
 
 # Salidas de skills de agentes (capturas de Playwright, etc.)
 output/
+
+# Reportes de las skills de seguridad: nunca se commitean
+security_best_practices_report.md
+*-threat-model.md

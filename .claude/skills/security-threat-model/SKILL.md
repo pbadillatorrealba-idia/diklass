@@ -65,7 +65,7 @@ Deliver an actionable AppSec-grade threat model that is specific to the reposito
 - Confirm user clarifications (or explicit non-responses) are reflected.
 - Confirm assumptions and open questions are explicit.
 - Confirm that the format of the report matches closely the required output format defined in prompt template: `references/prompt-template.md`
-- Write the final Markdown to a file named `<repo-or-dir-name>-threat-model.md` (use the basename of the repo root, or the in-scope directory if you were asked to model a subpath).
+- Write the final Markdown, in Spanish, to a file named `<repo-or-dir-name>-threat-model.md` outside the repository (for example, in a temporary directory) unless the user provides another location (use the basename of the repo root, or the in-scope directory if you were asked to model a subpath). Per `AGENTS.md`, security reports are never committed.
 
 
 ## Risk prioritization guidance (illustrative, not exhaustive)
