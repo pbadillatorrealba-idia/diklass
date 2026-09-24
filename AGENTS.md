@@ -22,8 +22,10 @@ solo viven las reglas de trabajo.
   acepta y sincroniza.
 - `openspec/specs/`: capacidades ya aceptadas y sincronizadas. Está vacío al inicio: ninguna
   capability está publicada todavía.
-- La deuda de tests (casos pendientes, cobertura que falta, suites omitidas) se registra como
-  tareas de un cambio OpenSpec activo, no como TODOs sueltos en el código ni en comentarios.
+- La deuda de tests (casos pendientes o cobertura que falta) se registra como tareas de un cambio
+  OpenSpec activo, no como TODOs sueltos en el código ni en comentarios. Omitir un test para
+  obtener verde sigue prohibido; solo se admiten omisiones condicionadas al entorno, como las
+  suites vivas que requieren Supabase.
 
 ## Reglas
 
@@ -42,16 +44,19 @@ solo viven las reglas de trabajo.
   olvidada en un despliegue no puede traducirse en datos clínicos expuestos.
 - **Los atajos de desarrollo son explícitos.** Todo bypass (saltar un control, apuntar a un
   entorno remoto, sembrar datos) se activa a propósito con un flag o variable dedicada, avisa por
-  consola cuando está activo y, si vive en el cliente, depende además de `__DEV__`. Referencia:
+  consola cuando está activo y, si vive en el cliente, depende además de `__DEV__`. Ningún bypass
+  se configura en un entorno accesible desde internet. Ejemplo de fallo cerrado:
   `provision:veterinarians` rechaza cualquier Supabase no local salvo que se pase `--allow-remote`.
-  Ningún bypass se configura en un entorno accesible desde internet.
 - **Ningún secreto en el bundle.** Expo inlinea toda variable `EXPO_PUBLIC_*` en el código del
   cliente, así que solo pueden llevar valores públicos (URL de Supabase y anon key). La
   `SUPABASE_SERVICE_ROLE_KEY` y cualquier clave de proveedor viven únicamente en scripts de
-  servidor y en Edge Functions (`supabase/functions/`).
+  servidor, en Edge Functions (`supabase/functions/`) y en los tests que preparan datos.
 - **`.env` nunca se commitea** ni se copian sus valores en issues, PRs, logs o artefactos. Toda
   variable nueva se añade a `.env.example` con un valor de ejemplo no sensible y se documenta en
   `SETUP.md`.
+- **Los reportes de seguridad no se commitean.** Las skills `security-best-practices` y
+  `security-threat-model` escriben sus informes fuera del repositorio (por ejemplo, en un
+  directorio temporal), en español, y se comparten solo por el canal que indique el responsable.
 - **Tras cambiar cualquier `EXPO_PUBLIC_*`, limpia la caché de Metro** (`bun run start -- -c` o
   `bunx expo export --clear`). Metro cachea la transformación que inlinea el valor y, sin limpiar,
   el bundle sale con el valor anterior sin avisar.
@@ -59,7 +64,8 @@ solo viven las reglas de trabajo.
 ## Comandos
 
 Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager; la versión
-queda fijada en `.bun-version`):
+queda fijada en `.bun-version`). Las filas que no empiezan por `bun run` son comandos directos de
+la herramienta, no scripts:
 
 | Comando | Descripción | En CI |
 |---|---|---|
@@ -76,8 +82,8 @@ queda fijada en `.bun-version`):
 | `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. | Sí |
 | `bun run db:types` | Regenera `src/lib/supabase/database.types.ts` desde el Supabase local. CI falla si difiere de las migraciones. | Sí (diff) |
 | `bun run provision:veterinarians` | Provisiona veterinarios sintéticos en el Supabase local. | Sí |
-| `bun run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). | Sí |
-| `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | Nightly |
+| `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. | Sí |
+| `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | `main`, nightly y a demanda (Maestro Cloud) |
 
 Antes de hacer push, reproduce al menos los pasos de CI que toca tu cambio: `typecheck`,
 `biome ci --error-on-warnings` y `test`; si tocas migraciones, también `supabase test db` y

@@ -20,8 +20,8 @@ normativa, en [docs/constitution.md](docs/constitution.md).
 ```bash
 bun install --frozen-lockfile
 cp .env.example .env
-supabase start                      # imprime la API URL y la anon key locales
-# Copia la anon key y la service role key en .env
+supabase start
+supabase status -o env              # copia API_URL, ANON_KEY y SERVICE_ROLE_KEY en .env (ver SETUP.md)
 bun run provision:veterinarians     # veterinarios sintéticos para entrar
 bun run start                       # o: bun run web
 ```

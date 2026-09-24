@@ -86,37 +86,44 @@ Subagent (general-purpose):
     If you find issues with the plan itself rather than the implementation,
     say so.
 
-    ## Output Format
+    ## Idioma y entrega
 
-    ### Strengths
-    [What's well done? Be specific.]
+    Escribe TODO el reporte en español, incluidos encabezados, hallazgos y
+    veredicto. Conserva nombres de símbolos, rutas y comandos sin traducir.
+    Devuelve el reporte completo al agente coordinador; él lo publicará
+    automáticamente en la PR según SKILL.md. No publiques comentarios desde
+    este subagente: debe existir un único responsable de la publicación.
 
-    ### Issues
+    ## Formato de salida
 
-    #### Critical (Must Fix)
-    [Bugs, security issues, data loss risks, broken functionality]
+    ### Fortalezas
+    [¿Qué está bien hecho? Sé específico.]
 
-    #### Important (Should Fix)
-    [Architecture problems, missing features, poor error handling, test gaps]
+    ### Problemas
 
-    #### Minor (Nice to Have)
-    [Code style, optimization opportunities, documentation polish]
+    #### Crítico (Debe corregirse)
+    [Bugs, problemas de seguridad, riesgos de pérdida de datos, funcionalidad rota]
 
-    For each issue:
-    - File:line reference
-    - What's wrong
-    - Why it matters
-    - How to fix (if not obvious)
+    #### Importante (Debería corregirse)
+    [Problemas de arquitectura, funcionalidad faltante, manejo de errores deficiente, huecos de pruebas]
 
-    ### Recommendations
-    [Improvements for code quality, architecture, or process]
+    #### Menor (Deseable)
+    [Estilo de código, oportunidades de optimización, pulido de documentación]
 
-    ### Assessment
+    Para cada problema:
+    - Referencia archivo:línea
+    - Qué está mal
+    - Por qué importa
+    - Cómo corregirlo (si no es obvio)
 
-    **Ready to merge?** [Yes | No | With fixes]
+    ### Recomendaciones
+    [Mejoras de calidad de código, arquitectura o proceso]
 
-    **Reasoning:** [1-2 sentence technical assessment]
+    ### Veredicto
 
+    **¿Listo para fusionar?** [Sí | No | Con correcciones]
+
+    **Justificación:** [Evaluación técnica de 1-2 oraciones]
     ## Critical Rules
 
     **DO:**
@@ -140,42 +147,34 @@ Subagent (general-purpose):
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**El reviewer devuelve:** Fortalezas, Problemas (Crítico / Importante / Menor), Recomendaciones y Veredicto, siempre en español.
 
-## Example Output
+## Ejemplo de salida
 
-```
-### Strengths
-- Clean database schema with proper migrations (db.ts:15-42)
-- Comprehensive test coverage (18 tests, all edge cases)
-- Good error handling with fallbacks (summarizer.ts:85-92)
+```markdown
+### Fortalezas
+- La migración conserva los datos existentes (db.ts:15-42).
 
-### Issues
+### Problemas
 
-#### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
+#### Crítico (Debe corregirse)
+- Ninguno identificado.
 
-2. **Date validation missing**
-   - File: search.ts:25-27
-   - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
+#### Importante (Debería corregirse)
+1. **Falta validar las fechas**
+   - Archivo: search.ts:25-27.
+   - Problema: las fechas inválidas devuelven resultados vacíos sin explicar el error.
+   - Impacto: el usuario no puede distinguir una entrada inválida de una búsqueda sin resultados.
+   - Corrección: validar el formato y devolver un error con un ejemplo válido.
 
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
+#### Menor (Deseable)
+- Ninguno identificado.
 
-### Recommendations
-- Add progress reporting for user experience
-- Consider config file for excluded projects (portability)
+### Recomendaciones
+- Verificar el caso de fecha inválida después de corregirlo.
 
-### Assessment
+### Veredicto
+**¿Listo para fusionar?** Con correcciones.
 
-**Ready to merge: With fixes**
-
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
+**Justificación:** La migración conserva los datos, pero falta validar las fechas.
 ```

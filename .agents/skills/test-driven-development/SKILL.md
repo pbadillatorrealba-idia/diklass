@@ -94,12 +94,12 @@ Clear name, tests real behavior, one thing
 <Bad>
 ```typescript
 test('retry works', async () => {
-  const mock = jest.fn()
+  const operation = mock()
     .mockRejectedValueOnce(new Error())
     .mockRejectedValueOnce(new Error())
     .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
+  await retryOperation(operation);
+  expect(operation).toHaveBeenCalledTimes(3);
 });
 ```
 Vague name, tests mock not code
@@ -115,7 +115,7 @@ Vague name, tests mock not code
 **MANDATORY. Never skip.**
 
 ```bash
-pnpm exec jest --runInBand path/to/test.test.ts
+bun test path/to/test.test.ts
 ```
 
 Confirm:
@@ -170,7 +170,7 @@ Don't add features, refactor other code, or "improve" beyond the test.
 **MANDATORY.**
 
 ```bash
-pnpm exec jest --runInBand path/to/test.test.ts
+bun test path/to/test.test.ts
 ```
 
 Confirm:
@@ -257,7 +257,7 @@ test('rejects empty email', async () => {
 
 **Verify RED**
 ```bash
-$ pnpm exec jest --runInBand path/to/test.test.ts
+$ bun test path/to/test.test.ts
 FAIL: expected 'Email required', got undefined
 ```
 
@@ -273,7 +273,7 @@ function submitForm(data: FormData) {
 
 **Verify GREEN**
 ```bash
-$ pnpm exec jest --runInBand path/to/test.test.ts
+$ bun test path/to/test.test.ts
 PASS
 ```
 

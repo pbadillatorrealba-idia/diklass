@@ -104,12 +104,12 @@ cd "$path"
 
 Read the repository's `AGENTS.md` or `README.md` before choosing a package manager or setup
 command. Use the manager, lockfile, and install command documented by the project; check
-`package.json` scripts when applicable. For Fitu, run `pnpm install --frozen-lockfile`.
+`package.json` scripts when applicable. In this repository, run `bun install --frozen-lockfile`.
 
 ## Step 3: Verify Clean Baseline
 
-Run the project's documented non-watch test command to ensure the workspace starts clean. For
-Fitu, use `pnpm run test:ci`. Narrow the check to the planned area when that gives a meaningful
+Run the project's documented non-watch test command to ensure the workspace starts clean. In
+this repository, use `bun run test`. Narrow the check to the planned area when that gives a meaningful
 baseline.
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.

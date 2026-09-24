@@ -103,12 +103,14 @@ implementation first and observe what actually needs to happen.
 
 ```typescript
 // ❌ The mock swallows the config write that duplicate detection reads
-jest.mock('ToolCatalog', () => ({
-  discoverAndCacheTools: jest.fn().mockResolvedValue(undefined)
+mock.module('./tool-catalog', () => ({
+  discoverAndCacheTools: mock().mockResolvedValue(undefined)
 }));
 
 // ✅ Mock only the slow server startup; the config write stays real
-jest.mock('MCPServerManager');
+mock.module('./mcp-server-manager', () => ({
+  startServer: mock().mockResolvedValue(undefined)
+}));
 ```
 
 **Make doubles specific.** When arguments, call counts, or ordering are

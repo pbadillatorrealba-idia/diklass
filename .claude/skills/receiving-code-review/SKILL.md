@@ -11,6 +11,15 @@ Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
 
+## Idioma de las respuestas
+
+Escribe en español todas las respuestas de revisión, explicaciones técnicas,
+resúmenes de correcciones y desacuerdos, también en los hilos de GitHub.
+Conserva símbolos, rutas, comandos y errores citados como evidencia sin traducir.
+Los ejemplos en inglés de esta skill ilustran el razonamiento, no el idioma de salida.
+Cuando generes una nueva revisión, usa `requesting-code-review` para publicar
+automáticamente el reporte completo en la PR; no dupliques ese reporte en cada hilo.
+
 ## The Response Pattern
 
 ```

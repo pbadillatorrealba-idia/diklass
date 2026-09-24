@@ -240,3 +240,6 @@ expo-env.d.ts
 !src/lib/**
 !scripts/lib/
 !scripts/lib/**
+
+# Salidas de skills de agentes (capturas de Playwright, etc.)
+output/

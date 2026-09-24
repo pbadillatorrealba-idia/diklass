@@ -23,9 +23,9 @@ Copia `.env.example` a `.env`. `.env` está en `.gitignore` y no se commitea.
 |---|---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | Cliente (bundle) | Sí |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Cliente (bundle) | Sí: la protegen las políticas RLS |
-| `EXPO_PUBLIC_APP_ENV` | Cliente (bundle) | Sí |
-| `SUPABASE_URL` | Scripts de servidor y tests de integración | — |
-| `SUPABASE_SERVICE_ROLE_KEY` | Scripts de servidor y tests de integración | **No**: nunca como `EXPO_PUBLIC_*` |
+| `EXPO_PUBLIC_APP_ENV` | Reservada: la define `eas.json`, pero todavía no la lee el código | Sí |
+| `SUPABASE_URL` | Scripts de servidor, tests de integración y e2e | — |
+| `SUPABASE_SERVICE_ROLE_KEY` | Scripts de servidor, tests de integración y e2e | **No**: nunca como `EXPO_PUBLIC_*` |
 | `SUPABASE_LIVE_TESTS` | `bun run test:integration`: `1` activa las suites contra Supabase | — |
 | `PLAYWRIGHT_BASE_URL` | Playwright (opcional) | — |
 
@@ -41,11 +41,16 @@ bunx expo export --clear -p web     # al exportar
 ## Supabase local
 
 ```bash
-supabase start           # levanta la pila local; `supabase status` muestra URL y claves
+supabase start           # levanta la pila local
+supabase status -o env   # API_URL, ANON_KEY y SERVICE_ROLE_KEY para .env
 supabase db reset        # aplica migraciones y seed.sql desde cero
 supabase test db         # pgTap: RLS, triggers, caducidad de sesión y atribución
 bun run db:types         # regenera src/lib/supabase/database.types.ts
 ```
+
+En `.env`, `EXPO_PUBLIC_SUPABASE_URL` y `SUPABASE_URL` toman `API_URL`,
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` toma `ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` toma
+`SERVICE_ROLE_KEY`, igual que en CI.
 
 Después de tocar una migración, regenera los tipos y commitéalos: CI falla si
 `database.types.ts` no coincide con las migraciones.
@@ -67,8 +72,11 @@ El script falla cerrado: rechaza cualquier `SUPABASE_URL` que no sea local, salv
 | Unitarios e integración | `bun run test` | Ninguno; las suites vivas se omiten |
 | Integración viva | `SUPABASE_LIVE_TESTS=1 bun run test:integration` | Supabase local y veterinarios provisionados |
 | Base de datos | `supabase test db` | Supabase local |
-| E2E web | `bun run test:e2e:web` | Supabase local y navegadores de Playwright |
+| E2E web | `bun --env-file=.env run test:e2e:web` | Supabase local, veterinarios provisionados y navegadores de Playwright |
 | E2E nativo | `bun run test:e2e:native` | Build nativo instalado; ver `tests/e2e/native/README.md` |
+
+Playwright corre con Node, que no carga `.env`. Sin `--env-file=.env`, los escenarios de login y la
+compuerta de accesibilidad con sesión se omiten y la ejecución sale verde sin haberlos probado.
 
 ## CI
 
