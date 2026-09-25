@@ -286,7 +286,14 @@ test.describe("auth against the local backend", () => {
       await expect(page.getByTestId("consultation-status")).toHaveText(
         "Antecedente de anamnesis registrado.",
       );
-      await expect(page.getByTestId("attribution-badge")).toContainText(ANA.displayName);
+      // Desde la 002 hay dos insignias tras registrar: la de lo recién guardado y la del
+      // antecedente en la lista (llega con la recarga del workspace). Se acota a la entrada
+      // registrada para que la aserción no dependa de qué recarga llegue antes.
+      const registrada = page
+        .getByTestId("anamnesis-entry")
+        .filter({ visible: true, hasText: notes });
+      await expect(registrada).toHaveCount(1);
+      await expect(registrada.getByTestId("attribution-badge")).toContainText(ANA.displayName);
       await expect
         .poll(() =>
           page.evaluate(() =>

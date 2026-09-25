@@ -121,6 +121,18 @@ servidor.
 
 ### D4. Aprobación y cierre de consulta son atómicos, en este orden
 
+**El cierre solo ocurre por la aprobación** (migración 013, tarea 7.10): el trigger
+`guard_consultation_close` exige que una consulta nazca `open` y que su estado pertenezca a
+{`open`, `closed`} (`CONSULTATION_STATUS_INVALID`). La transición `open → closed` solo se admite
+dentro de `approve_clinical_record`, que marca la consulta que cierra con
+`diklass.closing_consultation` (local a la transacción, mismo patrón que `diklass.approving`);
+fuera de ahí falla con `CONSULTATION_CLOSE_REQUIRES_APPROVAL`. La marca es el uuid ya resuelto por
+la función, así que no depende de la forma textual de `consultationId`, y una epicrisis aprobada
+antes de existir su consulta no habilita un cierre por UPDATE (revisión de la PR #33). Un UPDATE
+de una consulta ya cerrada lo sigue rechazando el sellado (D5.4), sin depender del orden de los
+triggers. La migración falla si encuentra datos que ya incumplen la regla. Los fixtures pgTap de
+004 y 005 cierran sus consultas aprobando una epicrisis, como la aplicación.
+
 `approve_clinical_record` se extiende (`create or replace`, misma firma y respuesta) para que, al
 aprobar una epicrisis con `content.consultationId`, cierre en la misma transacción la consulta
 vinculada (`content.status = 'closed'`). Así US3-AC2 (almacena versión aprobada con aprobador y
@@ -348,11 +360,6 @@ especialistas: quedan como **pendiente de aceptación**, no como verificados.
   rootless) y Playwright corren en el entorno de desarrollo, y `registro-epicrisis.spec.ts` cubre
   dos recorridos (D12). El e2e funcional web del recorrido clínico completo sigue **pendiente y
   declarado**; la verificación visual manual, también.
-- **Cierre de consulta sin epicrisis por la Data API**: el sellado impide reabrir una consulta
-  cerrada (D5.4), pero un `UPDATE` directo aún puede pasar una consulta `open` a `closed` sin
-  aprobar su epicrisis, lo que rompería SC-014 (toda consulta cerrada con su epicrisis). Restringir
-  el cierre a `approve_clinical_record` rompe los fixtures pgTap de las specs 004 y 005, que
-  insertan consultas ya cerradas; se aborda junto con esas specs.
 - **`jsonb` sin FK** (D1/D6): un cliente que escriba fuera de los servicios puede dejar referencias
   huérfanas; RLS no lo impide. Mitigación: servicios únicos de escritura, pruebas de integración y
   este registro explícito. Es el coste de no crear una segunda convención de persistencia.

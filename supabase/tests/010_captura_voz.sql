@@ -75,6 +75,7 @@ select set_config('request.jwt.claims',
 set local role authenticated;
 
 -- Consulta abierta (contenedora de toda la captura, FR-014) y una ya cerrada (US6-AC4).
+-- La cerrada se cierra por el único camino que admite la 013: aprobando su epicrisis (D4).
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values
   ('11111111-0000-0000-0000-000000000001', 'e4e4e4e4-0000-0000-0000-00000000000e',
@@ -82,7 +83,11 @@ values
    '{"patientId":"22222222-0000-0000-0000-000000000002","status":"open"}', 'draft'),
   ('11111111-0000-0000-0000-000000000002', 'e4e4e4e4-0000-0000-0000-00000000000e',
    'consultation',
-   '{"patientId":"22222222-0000-0000-0000-000000000002","status":"closed"}', 'draft');
+   '{"patientId":"22222222-0000-0000-0000-000000000002","status":"open"}', 'draft'),
+  ('11111111-0000-0000-0000-0000000000e2', 'e4e4e4e4-0000-0000-0000-00000000000e',
+   'epicrisis',
+   '{"consultationId":"11111111-0000-0000-0000-000000000002","motivoConsulta":"Control"}', 'draft');
+select public.approve_clinical_record('11111111-0000-0000-0000-0000000000e2');
 
 -- Borradores extraídos del audio (D1): todos nacen 'pending', con procedencia 'inferida'
 -- y su traza al fragmento de transcripción (SC-027).

@@ -107,6 +107,20 @@ Nota sobre el e2e: `auth.spec.ts` «unsaved notes survive an expired session…�
 también sobre el commit anterior a esta tanda (`6b04a5d`), cuyo job `Web E2E` de CI pasó. Es un
 fallo del entorno local, no de estos cambios; el job de CI de la rama es la referencia.
 
+## Evidencia del cierre solo por aprobación (2026-09-25, tarea 7.10)
+
+Migración `013_cierre_consulta.sql`, en local con Supabase local:
+
+| Compuerta | Resultado |
+|---|---|
+| `supabase/tests/013_cierre_consulta.sql` sin la 013 | 7 de 8 en rojo (y 4 más en rojo con la primera versión de la 013, revisión de la PR #33) |
+| `supabase db reset && supabase test db` con la 013 | 288/288 en 15 suites |
+| Chequeo de datos existentes de la 013 | aborta con `CONSULTATION_DATA_VIOLATES_013` ante una consulta cerrada sin epicrisis |
+| `bun run db:types` | sin diff (solo un trigger) |
+| `bun run test` con las suites vivas | 450 pass, 0 fail |
+| `bun run test:integration` | 69 pass, 0 fail |
+| `bunx playwright test --project=chromium` | 25 pass, 1 fail (el `auth.spec.ts` que solo falla en local) |
+
 ## Transiciones sin acción enumerada (D4 · tarea 1.3)
 
 `clinical_record_action` devuelve `null` (sin evento de auditoría propio) en exactamente tres
@@ -143,6 +157,5 @@ aquí.
   teclado + viewport). Queda una pasada visual/aceptación cuando el entorno lo permita.
 - **Flujo e2e funcional web completo** del recorrido clínico. `registro-epicrisis.spec.ts` cubre
   dos recorridos acotados (tareas 7.4 y 7.7); el resto lo cargan pgTap y la integración viva.
-- **Cierre de consulta solo por aprobación** (tarea 7.10, riesgo en `design.md`).
 - **Aceptación humana** de SC-012 (registro de ficha < 3 min sin asistencia) y SC-013 (utilidad de
   la epicrisis: ≥ 3 especialistas sobre ≥ 5 casos, ≥ 3/5 en promedio).
