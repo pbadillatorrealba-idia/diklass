@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Locator, type Page } from "@playwright/test";
 
 export const test = base;
 export { expect };
@@ -23,9 +23,10 @@ export const ANA = {
 export async function submitLogin(page: Page, credentials: { email: string; password: string }) {
   await page.goto("/login");
   const emailField = page.getByLabel("Correo de acceso");
-  const passwordField = page.getByLabel("Contraseña");
-  // The fields stay read-only until React hydrates; keystrokes sent earlier would be lost.
-  await expect(emailField).toBeEditable();
+  const passwordField = page.getByLabel("Contraseña", { exact: true });
+  // Se escribe con React ya hidratado (el botón se habilita entonces): así cada tecla pasa por
+  // el estado del formulario (sistema-visual D16).
+  await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
   await emailField.click();
   await page.keyboard.type(credentials.email, { delay: 15 });
   await expect(emailField).toHaveValue(credentials.email);
@@ -52,4 +53,13 @@ export async function readSupabaseSession(
     throw new Error("Captured session is missing an access token or user id.");
   }
   return { accessToken: parsed.access_token, userId: parsed.user.id };
+}
+
+/**
+ * Texto de un `Callout` sin el glifo de su icono: `@expo/vector-icons` pinta el icono como un
+ * carácter de uso privado dentro del mismo nodo (sistema-visual FR-075).
+ */
+export async function calloutText(locator: Locator): Promise<string> {
+  const text = (await locator.textContent()) ?? "";
+  return text.replace(/[\uE000-\uF8FF\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}]/gu, "").trim();
 }

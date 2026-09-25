@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { TextInput, type TextInputProps, View, type ViewProps } from "react-native";
 import { useFormControl } from "@/components/ui/form-control";
 import { useThemeColors } from "@/theme/use-theme-colors";
@@ -18,7 +19,9 @@ export function Input({ className, style, ...props }: InputProps) {
   );
 }
 
-export type InputFieldProps = TextInputProps & { className?: string };
+// `ref` como prop (React 19): el acceso pasa el foco del correo a la contraseña (D16).
+type InputFieldHandle = TextInput;
+export type InputFieldProps = TextInputProps & { className?: string; ref?: Ref<InputFieldHandle> };
 
 export function InputField({ className, style, ...props }: InputFieldProps) {
   const { isInvalid } = useFormControl();
@@ -27,7 +30,8 @@ export function InputField({ className, style, ...props }: InputFieldProps) {
     <TextInput
       aria-invalid={isInvalid}
       // `focus:` keeps a visible focus ring on web (WCAG 2.2 AA 2.4.7), same contract as Button.
-      className={`min-h-touch flex-1 px-4 py-3 font-sans text-base focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+      // `min-w-0`: en web el `<input>` tiene ancho intrínseco y no dejaba sitio a un control al lado.
+      className={`min-h-touch min-w-0 flex-1 px-4 py-3 font-sans text-base focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
         className ?? ""
       }`.trim()}
       placeholderTextColor={colors["muted-foreground"]}

@@ -133,6 +133,16 @@ test.describe("WCAG 2.2 AA gate", () => {
     await expectNoViolations(page);
   });
 
+  // sistema-visual FR-090 · US15-AC3: la tarjeta de acceso no desborda desde 320 px.
+  test("el acceso no desborda horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    await expectNoHorizontalOverflow(page, {
+      name: "acceso",
+      url: "/login",
+      readyTestID: "login-submit",
+      keyboardTestIDs: [],
+    });
+  });
+
   test("the login error state has no automatically detectable violations", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: "Iniciar sesión" }).click();

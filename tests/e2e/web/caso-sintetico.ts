@@ -296,7 +296,8 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
     {
       name: "ficha del paciente",
       url: `/patients/${caseIds.patientId}`,
-      readyTestID: "missing-fields-panel",
+      // El historial se lee después de la ficha (sistema-visual 8.4): «listo» es cuando ya está.
+      readyTestID: "history-open",
       keyboardTestIDs: [
         "patient-edit",
         "antecedent-add-text",

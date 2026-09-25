@@ -1,9 +1,10 @@
-import { createContext, use } from "react";
+import { createContext, use, useEffect, useRef } from "react";
 import {
   Pressable,
   type PressableProps,
   Text as RNText,
   type TextProps as RNTextProps,
+  type View,
 } from "react-native";
 import { CONTINUOUS_CURVE } from "./border-curve";
 
@@ -35,6 +36,12 @@ export type ButtonProps = Omit<PressableProps, "disabled"> & {
   isDisabled?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /**
+   * Solo web: `submit` envía el `<form>` que lo contiene (design.md D16). RNW siempre pinta
+   * `type="button"` y no reenvía `type`, así que se fija en el nodo al montar. En nativo no tiene
+   * efecto: el envío va por `onPress`.
+   */
+  type?: "button" | "submit";
 };
 
 export function Button({
@@ -43,9 +50,15 @@ export function Button({
   isDisabled = false,
   size = "md",
   style,
+  type = "button",
   variant = "primary",
   ...props
 }: ButtonProps) {
+  const submitRef = useRef<View>(null);
+  useEffect(() => {
+    if (process.env.EXPO_OS !== "web" || type !== "submit") return;
+    (submitRef.current as unknown as HTMLElement | null)?.setAttribute("type", "submit");
+  }, [type]);
   return (
     <ButtonContext.Provider value={{ size, variant }}>
       <Pressable
@@ -57,6 +70,8 @@ export function Button({
           VARIANTS[variant].surface
         } ${isDisabled ? "opacity-50" : "active:opacity-80"} ${className ?? ""}`.trim()}
         disabled={isDisabled}
+        // Sin `type="submit"`, la ref queda libre para quien la pase (`Link asChild`).
+        ref={type === "submit" ? submitRef : undefined}
         role="button"
         // La curva solo existe en iOS. En web, un `style` compuesto hace que NativeWind acumule
         // las clases de renders anteriores (un botón ya habilitado seguía con `opacity-50`).

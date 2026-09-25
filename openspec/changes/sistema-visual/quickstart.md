@@ -740,3 +740,47 @@ Resultado local en `chromium`:
   - el ancho por tipo de pantalla, el texto copiable y el estilo de código;
   - las desviaciones de D15.
 
+## Grupo 9 — Acceso con gestor de contraseñas y tarjeta (D16)
+
+- **9.1:** `login.spec.ts`, en rojo por cada caso:
+  - `form` con `method="post"`, `action="/login"`, `name`/`id`/`autocomplete` de credenciales y
+    sin `readonly`;
+  - «Mostrar contraseña» con `aria-pressed`;
+  - Intro envía un único `submit` sin recargar;
+  - un valor escrito antes de la hidratación (`addInitScript` en `readystatechange`) se conserva
+    y permite entrar;
+  - tras un error se conserva el correo y se vacía la contraseña.
+- **9.2:**
+  - `auth-form.web.tsx` es un `<form>` real con `preventDefault`, y `auth-form.tsx` un `View`.
+  - RNW no reenvía `name` en `TextInput`: el formulario web asigna `name` = `id` al montar.
+  - RNW siempre pinta `type="button"`: `Button` gana `type="submit"`, que en web se fija en el
+    nodo al montar. En web el envío llega por el `submit` del formulario; en nativo, por `onPress`
+    y por `onSubmitEditing`.
+  - Se retira `editable={isHydrated}`. Lo escrito antes de hidratar se lee del DOM en el primer
+    render del cliente y se adopta al montar, y el botón sigue deshabilitado hasta hidratar.
+  - `InputField` acepta `ref` (React 19), para pasar el foco del correo a la contraseña.
+- **9.3:**
+  - `Card max-w-form` con la huella de marca, `Heading` y descripción; el error va en
+    `Callout tone="error"`.
+  - `PasswordToggle` (`password-toggle.test.tsx`, 4 casos en rojo primero): nombre
+    «Mostrar/Ocultar contraseña», `aria-pressed`, `min-h-touch`/`min-w-touch` e icono decorativo.
+  - Regresión encontrada en la captura de 320 px: el ojo se salía del campo, porque el `<input>`
+    web tiene ancho intrínseco. Tiene prueba roja en `login.spec.ts` y se corrige con `min-w-0`
+    en `InputField`.
+  - Axe: `chromium` 11 y `chromium-dark` 11, incluido el nuevo reflujo de `/login` a
+    320/375/1280 px.
+  - Capturas: `evidencia/9.3-login-{320,1280}-{claro,oscuro}.png`.
+- **Ajustes de pruebas existentes:**
+  - `getByLabel("Contraseña")` pasa a ser exacto, porque «Mostrar contraseña» también coincide.
+  - En el recorrido por teclado, el control nuevo va entre la contraseña y el envío.
+  - El texto de un `Callout` incluye el glifo del icono: `calloutText()` en `fixtures.ts`.
+  - La espera de hidratación pasa de «campo editable» a «botón habilitado».
+- **Verde:** `login` y `auth` en `chromium`, `firefox` (13) y `webkit` (13). En `webkit`, el caso
+  del control fallaba al pulsar Intro antes de la hidratación: ahora la espera.
+- **Causa del fallo intermitente del recorrido por teclado (8.2/8.4):**
+  - El mensaje ampliado lo mostró en la ficha: el recorrido empezaba con el historial aún
+    cargando (`missing-fields-panel` aparece antes).
+  - El `readyTestID` de la ficha pasa a `history-open`.
+  - `accessibility` + `navegacion`: 18 de 18. El fallo anterior en `/knowledge` queda a observar
+    en 5.2.
+

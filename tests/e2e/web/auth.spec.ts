@@ -1,6 +1,7 @@
 import { request as apiRequest } from "@playwright/test";
 import {
   ANA,
+  calloutText,
   expect,
   hasBackend,
   readSupabaseSession,
@@ -18,7 +19,7 @@ test.describe("auth web shell", () => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Diklass" })).toBeVisible();
     await expect(page.getByLabel("Correo de acceso")).toBeVisible();
-    await expect(page.getByLabel("Contraseña")).toBeVisible();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
     await expect(page.getByText(/registr/i)).toHaveCount(0);
   });
@@ -28,7 +29,7 @@ test.describe("auth web shell", () => {
     const submit = page.getByRole("button", { name: "Iniciar sesión" });
     await expect(submit).toBeEnabled();
     await submit.click();
-    await expect(page.getByTestId("login-error")).toHaveText(
+    await expect(page.getByTestId("login-error")).toContainText(
       "Revisa los campos marcados antes de continuar.",
     );
   });
@@ -39,18 +40,20 @@ test.describe("auth web shell", () => {
   }) => {
     await page.goto("/login");
     const emailField = page.getByLabel("Correo de acceso");
-    // The fields stay read-only until React hydrates; a click before that lands on a
-    // non-focusable input and Tab starts from body instead of moving to the password field.
-    await expect(emailField).toBeEditable();
+    // Tab desde el correo solo es fiable con React ya hidratado (el botón se habilita entonces).
+    await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await emailField.click();
     await page.keyboard.press("Tab");
-    await expect(page.getByLabel("Contraseña")).toBeFocused();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeFocused();
+    // sistema-visual FR-090: «Mostrar contraseña» va dentro del campo, antes del envío.
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Mostrar contraseña" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeFocused();
 
     await page.keyboard.press("Enter");
     const error = page.getByTestId("login-error");
-    await expect(error).toHaveText("Revisa los campos marcados antes de continuar.");
+    await expect(error).toContainText("Revisa los campos marcados antes de continuar.");
     await expect(error).toHaveAttribute("aria-live", "polite");
   });
 
@@ -91,7 +94,7 @@ test.describe("auth against the local backend", () => {
         status: response.status(),
         errorCode: body.error_code,
         providerMessage: body.msg,
-        shownMessage: await error.textContent(),
+        shownMessage: await calloutText(error),
       };
     };
 
