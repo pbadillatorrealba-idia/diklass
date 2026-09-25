@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SafeAreaView, ScrollView } from "react-native";
 import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conocimiento";
 import { SelectorPacienteContexto } from "@/components/conocimiento/selector-paciente-contexto";
@@ -11,6 +11,7 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { consultKnowledge, getQuery } from "@/features/conocimiento/consulta-service";
 import { useConversationStore } from "@/features/conocimiento/conversation-store";
+import { PACIENTES_CONTEXTO_QUERY_KEY } from "@/features/conocimiento/query-cache";
 import { listPatients } from "@/features/registro/ficha-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
@@ -36,9 +37,12 @@ export default function KnowledgeConversationScreen() {
   const [isConsulting, setIsConsulting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [respaldoAbierto, setRespaldoAbierto] = useState<string | null>(null);
+  // Candado síncrono: `isConsulting` no cambia hasta el siguiente render, y un segundo Enter
+  // en ese intervalo registraría otra fila append-only (revisión de la PR #30).
+  const consultando = useRef(false);
 
   const pacientesQuery = useQuery({
-    queryKey: ["conocimiento", "patients"],
+    queryKey: PACIENTES_CONTEXTO_QUERY_KEY,
     queryFn: () => listPatients(supabase),
   });
   const respaldoQuery = useQuery({
@@ -58,9 +62,11 @@ export default function KnowledgeConversationScreen() {
   };
 
   const consultar = async () => {
-    if (!clinicId) {
+    // Mismas condiciones que el botón deshabilitado: Enter no puede saltárselas.
+    if (!clinicId || consultando.current || pregunta.trim() === "") {
       return;
     }
+    consultando.current = true;
     setIsConsulting(true);
     setStatus(null);
     try {
@@ -74,6 +80,7 @@ export default function KnowledgeConversationScreen() {
     } catch (error) {
       manejarError(error, "consultKnowledge");
     } finally {
+      consultando.current = false;
       setIsConsulting(false);
     }
   };

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { SafeAreaView, ScrollView } from "react-native";
@@ -11,6 +12,7 @@ import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { incorporateSource } from "@/features/conocimiento/coleccion-service";
+import { invalidateConocimiento } from "@/features/conocimiento/query-cache";
 import type { FuenteInput } from "@/features/conocimiento/schema";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
@@ -37,6 +39,7 @@ const CAMPO_POR_RUTA: Record<string, string> = {
  */
 export default function NewKnowledgeSourceScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const clinicId = useSessionStore((state) => state.clinicId);
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
@@ -54,6 +57,8 @@ export default function NewKnowledgeSourceScreen() {
     setErrors({});
     try {
       await incorporateSource(supabase, { clinicId, fuente });
+      // La colección en caché no incluye la fuente nueva (revisión de la PR #30).
+      await invalidateConocimiento(queryClient);
       router.replace("/knowledge/sources");
     } catch (error) {
       if (isAuthenticationRequired(error)) {
