@@ -57,14 +57,67 @@ Cada tarea de este grupo:
 ## 5. Compuertas de accesibilidad y adaptabilidad
 
 - [x] 5.1 Escribir en rojo el caso de reflujo en `accessibility.spec.ts` (viewport 320×640 en todas las rutas cubiertas; `scrollWidth <= clientWidth`) antes de terminar el grupo 4. Debe fallar en al menos una pantalla sin migrar, o documentar que ya pasa (FR-079 · SC-052). Verificación: rojo→verde registrado.
-- [ ] 5.2 Ejecutar la compuerta axe completa en `chromium` y `chromium-dark` y los proyectos `firefox`/`webkit` requeridos por la constitución, de uno en uno (SC-050). Verificación: 0 violaciones, con resultados y URLs de CI en `quickstart.md`.
+- [ ] 5.2 Ejecutar la compuerta axe completa en `chromium` y `chromium-dark` y los proyectos `firefox`/`webkit` requeridos por la constitución, de uno en uno (SC-050). Verificación: 0 violaciones, con resultados y URLs de CI en `quickstart.md`. Primera ejecución (2026-09-25): chromium 29/29 y webkit 29/29 en verde; `chromium-dark` y `firefox` fallan un caso cada uno por defectos reales, que se corrigen en 5.5 y 5.6. Se repite tras el grupo 8, con la navegación montada.
 - [ ] 5.3 Revisión en escala de grises (emulación `forced-colors`/grayscale de Chromium) de `/knowledge`, `/consultations/[id]` y `/follow-up/[patientId]`: sugerido vs validado y severidades distinguibles sin color (US13-AC2/AC3). Verificación: capturas en `quickstart.md`.
 - [ ] 5.4 Prueba de texto ampliado: zoom del navegador al 200 % y, si hay dispositivo, Dynamic Type al máximo en `/patients` y `/consultations/[id]`, sin recortes (FR-074 · escenario "Texto ampliado"). Verificación: capturas o pendiente explícito en `quickstart.md`.
+- [ ] 5.5 Superficies tintadas sin transparencia (D4, corrección de 5.2):
+  - Primero, en rojo: la guarda de `tema.test.ts` prohíbe `bg-<token>/<n>` salvo `scrim`. Debe fallar en `attribution-badge.tsx`, `segmento-respuesta.tsx` y `visor-documento.tsx`.
+  - En `PAIRS`, añadir `muted-foreground` y `foreground` sobre `primary-surface` y `secondary-surface` y sobre `background`, en ambos esquemas.
+  - Después: añadir los tokens a `global.css`, `colors.ts` y `tailwind.config.js`, subir la luminosidad de `muted-foreground` en oscuro y migrar los tres componentes (`AttributionBadge` → `bg-muted`).
+  - FR-072 · SC-053.
+  - Verificación: rojo→verde registrado, `chromium-dark` de `accessibility.spec.ts` en verde y capturas claro/oscuro de `/knowledge` y del historial de correcciones en `quickstart.md`.
+- [ ] 5.6 Foco visible en contenedores de desplazamiento (D3, corrección de 5.2):
+  - Reproducir en rojo el fallo de `firefox` en «recorrido por teclado».
+  - Después, ampliar la regla `:focus-visible` de `global.css` a todo elemento enfocable.
+  - FR-080.
+  - Verificación: el caso pasa en `firefox`, `chromium` y `webkit`, y una captura de Firefox con el contenedor enfocado queda en `quickstart.md`.
 
 ## 6. Limpieza y cierre
+
+Las tareas 6.4 y 6.5 se ejecutan al final, después de los grupos 7 y 8 y de repetir 5.2–5.4.
 
 - [x] 6.1 Confirmar con grep que no quedan `text-foreground/70`, `text-xs`, `max-w-[`, `min-h-[`, `rounded-2xl` ni `gap-1.5` en `src/` (D5–D6), y añadir esos patrones a `sin-literales.test.ts`. Verificación: prueba verde, y roja al reintroducir cualquiera de ellos.
 - [x] 6.2 Actualizar `AGENTS.md` con una sección breve sobre el sistema visual: dónde viven los tokens, qué primitiva usar para cada caso y la prohibición de literales. Verificación: sección presente y revisada.
 - [x] 6.3 Retirar los alias deprecados (`Text size`/`bold`, `Heading size`). Verificación: `typecheck`, `bun test` y Biome en verde.
 - [ ] 6.4 Ejecutar las compuertas locales (`bun run typecheck`, `bunx biome check`, `bun test`) y dejar CI en verde; consolidar `quickstart.md` sin dar por aceptado nada que no lo esté, con los pendientes explícitos (verificación nativa si faltó y aceptación conjunta de FR-076/FR-077 con 003–005). Verificación: documento completo y URLs de CI.
 - [ ] 6.5 Generar el reporte de revisión en español con `requesting-code-review` sobre el rango completo de la rama. Verificación: reporte existente y su ubicación registrada.
+
+## 7. Navegación global adaptable (D12 · US14)
+
+Cada tarea conserva las URLs y los `testID` existentes y se verifica con `typecheck`, `bun test` y
+las suites e2e afectadas en verde (`--workers=1`). Las verificaciones nativas sin dispositivo quedan
+como pendiente explícito en `quickstart.md`.
+
+- [ ] 7.1 Escribir en rojo `tests/e2e/web/navegacion.spec.ts`:
+  - a 1280 px, la barra lateral (`app-sidebar`) está en `/patients` con Pacientes marcada `aria-current="page"` y el cierre de sesión al pie;
+  - a 375 px, la barra de pestañas (`app-tabbar`) está en `/knowledge`;
+  - desde `/consultations/<id>` se llega a `/follow-up` en 1 activación;
+  - «Volver» en `/follow-up/<id>` abierto por URL directa lleva a `/follow-up`;
+  - todas las rutas de `syntheticScreens` siguen resolviendo.
+  FR-082 · FR-083 · SC-054. Verificación: rojo por la navegación ausente, y el caso de rutas en verde antes de mover archivos.
+- [ ] 7.2 Reorganizar `src/app/(protected)/` en los grupos `(home)`, `(patients)`, `(follow-up)` y `(knowledge)`, cada uno con un `_layout.tsx` de `Stack`, y retirar los archivos de ruta antiguos. `consultations/[id]` va dentro de `(patients)` (D12). Verificación: el caso de rutas de 7.1 y todas las suites e2e web en verde, sin cambiar ninguna URL de los tests.
+- [ ] 7.3 Añadir el token `width.sidebar` (D6) y escribir en rojo la prueba de componente de la variante web de `app-navigation`: 4 enlaces con icono y nombre, `aria-current` en la sección actual, indicador que no es solo color, enlace «Saltar al contenido» primero y cierre de sesión al pie. Después, implementar `src/components/navigation/app-navigation.web.tsx` con `expo-router/ui` (lateral en `lg` y pestañas inferiores por debajo) (FR-082). Verificación: prueba verde y casos de 1280/375 px de 7.1 en verde.
+- [ ] 7.4 Implementar `src/components/navigation/app-navigation.tsx` con `NativeTabs`: 4 disparadores con `sf` y `md` y etiqueta, y colores de `useThemeColors()` (FR-082 · D15). Verificación: `typecheck` verde; en dispositivo, capturas iOS/Android claro/oscuro, o pendiente explícito.
+- [ ] 7.5 Montar la navegación en `(protected)/_layout.tsx` por debajo del diálogo de sesión expirada, que debe seguir encima y bloquear la navegación (caso límite de la spec). Verificación: `auth.spec.ts` en verde y un caso nuevo en `navegacion.spec.ts`: con el diálogo abierto, la barra lateral no recibe foco ni clics.
+- [ ] 7.6 Escribir en rojo y después implementar en `Screen` las props `title` (web: `h1` + `<title>`; nativo: `Stack.Screen options.title` sin `h1`) y `back={{ href, label }}` (web: `Link` «‹ Volver a …»), y `contentInsetAdjustmentBehavior="automatic"` con cabecera nativa. Luego sustituir los `Head` sueltos por `title` en todas las pantallas y añadir `back` a las de detalle (FR-083 · D12). Verificación: pruebas de `Screen` verdes, axe (`document-title`, `heading-order`) en verde y el caso «Volver» de 7.1 en verde.
+- [ ] 7.7 Configurar las cabeceras nativas de cada `Stack` de sección: `headerShown` solo en nativo, título grande en la raíz iOS, `headerBackButtonDisplayMode: "minimal"` y colores del tema (FR-083). Verificación: `typecheck` verde; capturas nativas o pendiente explícito.
+- [ ] 7.8 Rehacer `/home` como panel de entrada con enlaces a las 4 secciones: se conservan `home-patients`/`home-knowledge` y se añade `home-follow-up`. El cierre de sesión se oculta en `lg` web, donde vive en la barra lateral. Revisar `tests/e2e/native/*.yaml` con las rutas nuevas (FR-082 · D12). Verificación: `conocimiento.spec.ts`, `auth.spec.ts` y `navegacion.spec.ts` en verde, y los flujos de Maestro actualizados o marcados pendientes de dispositivo.
+
+## 8. Patrones nativos de interacción (D13–D15)
+
+- [ ] 8.1 Escribir en rojo pruebas de componente para `Link asChild` + `Button` (rol `link` y `href` en web) y para `LinkText`, e implementar `LinkText` (FR-084). Verificación: pruebas rojo→verde.
+- [ ] 8.2 Migrar a `Link` toda navegación que hoy es `router.push`/`router.replace` dentro de un `onPress` sin operación previa, pantalla por pantalla, y añadir a `accessibility.spec.ts` un caso que falla si un control con `data-testid` de navegación («Ver ficha», «Ver seguimiento», «Ver documento», los de `/home») tiene rol `button` (FR-084 · SC-055). Verificación: el caso nuevo pasa de rojo a verde y las suites e2e siguen en verde.
+- [ ] 8.3 Escribir en rojo y después implementar `QueryState` (orden de precedencia de D13, reintento con `refetch`, `aria-busy` en carga y sin vacío mientras `isPending`) (FR-085). Verificación: pruebas de componente para los 4 estados, incluido «nunca vacío durante la carga».
+- [ ] 8.4 Adoptar `QueryState` en `/patients`, `/follow-up`, `/knowledge/sources` y `/knowledge/sources/[id]`, y en `patient-history`/`feedback-timeline`, con estados vacíos redactados y su acción, por ejemplo «Incorporar fuente clínica» (FR-085 · SC-056). Verificación: e2e en verde, más un caso e2e de vacío (`/knowledge/sources` con una clínica sin fuentes) y uno de error con reintento (red interceptada con `page.route`).
+- [ ] 8.5 Pasar `/patients`, `/follow-up` y `/knowledge/sources` a `FlatList`, con `Screen scroll={false}`, cabecera en `ListHeaderComponent`, vacío en `ListEmptyComponent` y `contentInsetAdjustmentBehavior="automatic"` (FR-086). Verificación: e2e en verde y la prueba de reflujo a 320 px de 5.1 en verde, sin doble contenedor de desplazamiento.
+- [ ] 8.6 Añadir `selectable` a `Text` y activarlo en los datos clínicos y en `Callout tone="error"` según D14, con una prueba de componente en rojo primero para `Callout` (FR-087). Verificación: prueba verde; en web, el texto se puede seleccionar (e2e con triple clic y `getSelection`).
+- [ ] 8.7 `KeyboardAvoidingView` en `Screen` según D14 (FR-088). Verificación: `typecheck` verde; en dispositivo, captura de `/patients/new` con el teclado abierto y el botón de guardar visible, o pendiente explícito.
+- [ ] 8.8 Estilo de código de D15: `process.env.EXPO_OS` en los 4 usos de `Platform.OS`, `React.use` en los 4 de `useContext` y `borderCurve: "continuous"` en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock`. Añadir `Platform.OS` y `useContext(` a la guarda de `tema.test.ts` (rojo primero). Verificación: guarda roja→verde, `typecheck` y `bun test` verdes.
+- [ ] 8.9 Actualizar la sección «Sistema visual» de `AGENTS.md`:
+  - navegación y títulos: `Screen title`/`back`;
+  - `Link` para navegar;
+  - `QueryState`;
+  - `FlatList` para listas no acotadas;
+  - `selectable`;
+  - las desviaciones de D15.
+  Verificación: sección revisada.

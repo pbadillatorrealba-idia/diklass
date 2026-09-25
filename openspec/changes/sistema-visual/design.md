@@ -25,6 +25,29 @@ distinción sistema/profesional con borde lateral y etiqueta, severidad de 4 niv
 automático sin cambios, iconos con `@expo/vector-icons` y layout adaptable según el caso
 (escritorio y tablet/móvil).
 
+**Segunda revisión (2026-09-25)**, con las guías `expo-native-ui` y `expo-router`, tras completar
+los grupos 1–4:
+
+- **Navegación:** no hay navegación global. `src/app/_layout.tsx` y `(protected)/_layout.tsx`
+  usan `Stack` con `headerShown: false`, así que no hay barra lateral, pestañas ni cabecera. En
+  iOS, una pantalla de detalle no tiene retroceso. `/home` enlaza a Pacientes y Conocimiento con
+  botones, y `/follow-up` no tiene entrada.
+- **Enlaces:** la navegación usa `router.push` dentro de `Button`, así que el lector de pantalla
+  la anuncia como botón y en web no hay `href`.
+- **Estados de datos:** `/knowledge/sources` no muestra carga, error ni vacío, y `/follow-up` no
+  tiene vacío. Las listas se construyen con `.map` dentro del `ScrollView` de `Screen`.
+- **Texto:** ningún `Text` es `selectable`.
+- **Estilo de código:** `Platform.OS` aparece en 4 sitios y `useContext` en 4.
+- **Compuerta 5.2 (dos fallos reales):**
+  - En `chromium-dark`, `muted-foreground` sobre `bg-secondary/15` da 3.77:1 (historial de
+    correcciones); las mismas mezclas con `primary/15` y `accent/20` dan 3.39 y 3.36.
+  - En `firefox`, el `ScrollView` de `Screen` (un `div` con `overflow: auto`, que Firefox hace
+    enfocable) recibe foco sin indicador, porque la regla `:focus-visible` de `global.css` solo
+    cubre elementos con `tabindex` o con rol interactivo.
+
+Decisiones del usuario: navegación **adaptable** (barra lateral en escritorio, pestañas en
+compacto y nativo) y todas las mejoras de `expo-native-ui` **dentro de este cambio**.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -32,8 +55,15 @@ automático sin cambios, iconos con `@expo/vector-icons` y layout adaptable seg�
 - Una sola rampa tipográfica, primitivas `Screen`/`Card`/`Callout`/`SuggestedBlock`/
   `SeverityBadge`/`Icon`, tokens de estado y una prueba que impida la deriva (D4–D10).
 - Migrar todas las pantallas existentes sin cambiar su comportamiento funcional ni sus `testID`.
+- Navegación global adaptable, cabeceras con retroceso, enlaces para navegar, cuatro estados de
+  datos, listas virtualizadas, texto copiable y formularios compatibles con el teclado (D12–D15),
+  sin cambiar las URLs.
 
 **Non-Goals:**
+- Previsualizaciones de enlace y menús contextuales (`Link.Preview`, `Link.Menu`), transiciones de
+  zoom y hápticos. Son mejoras exclusivas de iOS o añaden una dependencia (`expo-haptics`) sin
+  requisito que las pida.
+- Búsqueda en la cabecera (`Stack.SearchBar`): no hay requisito de búsqueda.
 - Cambiar la marca, añadir un selector de tema o cambiar vocabularios de datos.
 - Animaciones, hojas nativas o sustituir `Modal` por hojas. Queda fuera; el diálogo de sesión
   expirada es una confirmación consecuente y se mantiene como modal.
@@ -70,6 +100,10 @@ Cuatro pesos (400/500/600/700), OFL 1.1.
 - `:focus-visible` global con `--ring` (FR-080).
 - El proyecto Playwright `chromium-dark` repite `accessibility.spec.ts` con
   `colorScheme: "dark"` (SC-050).
+- **Corrección (tarea 5.6):** la regla `:focus-visible` se amplía a cualquier elemento enfocable,
+  en vez de enumerar selectores. Así cubre los contenedores de desplazamiento que Firefox hace
+  enfocables (el `ScrollView` de `Screen`). No se les quita el foco (`tabindex="-1"`): desplazar
+  con el teclado un contenedor sin controles es el comportamiento accesible esperado.
 
 ### D4 — Tokens nuevos y reglas de color
 
@@ -109,6 +143,24 @@ Así se evitan 4×3 tokens y la escala sigue siendo legible en escala de grises 
 etiqueta y relleno. El vocabulario de datos `AdverseEventSeverity` no cambia: `critico` solo se
 muestra cuando una feature lo emita.
 
+**Superficies tintadas sin transparencia (corrección de la tarea 5.5).** Los tintes `bg-x/NN`
+componen el color en tiempo de pintado, así que `tema.test.ts` no puede medirlos. En oscuro,
+`muted-foreground` queda en 3.36–3.78:1 sobre ellos, y ni un tinte del 6 % sobre `card` llega a
+4.5:1 con el valor oscuro actual (4.18–4.35, medido).
+
+- **Tokens nuevos (canales opacos):**
+  - `primary-surface`: evidencia documental y fragmento citado.
+  - `secondary-surface`: dato de la ficha.
+  Cada uno se deriva como mezcla fija del ~8–12 % sobre `card` y se escribe en claro y en oscuro.
+- **Ajuste de paleta:** se sube la luminosidad de `muted-foreground` en oscuro. Es el único cambio
+  de paleta, solo de luminosidad y sin cambio de tono, hasta que cumpla ≥ 4.5:1 sobre `card`,
+  `muted`, `background` y las dos superficies nuevas.
+- **`AttributionBadge`:** pasa a `bg-muted`, porque la atribución es un metadato neutro y no un
+  origen.
+- **Regla nueva:** toda superficie que pueda alojar `tone="muted"` entra en `PAIRS` con
+  `muted-foreground` y con `foreground`.
+- **Guarda de D10:** prohíbe `bg-<token>/<n>` salvo `bg-scrim/<n>`, que no aloja texto.
+
 ### D5 — Rampa tipográfica y tono
 
 `Text` recibe dos props que reemplazan a `size`/`bold`:
@@ -134,6 +186,7 @@ se conservan `size` y `bold` como alias deprecados; se eliminan en la tarea 6.3.
 
 - `maxWidth`: `content` (720 px, una columna de lectura), `wide` (1200 px, consulta a dos
   columnas), `dialog` (440 px, diálogos) y `form` (480 px, formulario de acceso);
+- `width.sidebar` (240 px, barra lateral de navegación en `lg`, D12);
 - `minHeight`: `touch` (44 px) y `textarea` (120 px).
 
 Esto sustituye `max-w-[720px]`, `min-h-[44px]`, `min-h-[120px]` y `min-h-[96px]`.
@@ -234,6 +287,125 @@ componentes. En lugar de añadir `@testing-library/react-native` y Jest, un prel
 `data-testid` y las clases de variante. Límite asumido: no se ejecutan estilos nativos; el
 aspecto final lo verifican la compuerta axe y las capturas.
 
+### D12 — Navegación global adaptable (FR-082 · FR-083)
+
+**Estructura de rutas.** Los grupos no cambian las URLs.
+
+```
+src/app/(protected)/
+  _layout.tsx            guarda de sesión + diálogo expirado (sin cambios) → <AppNavigation/>
+  (home)/_layout.tsx     Stack · home.tsx
+  (patients)/_layout.tsx Stack · patients/index, patients/new, patients/[id], consultations/[id]
+  (follow-up)/_layout.tsx Stack · follow-up/index, follow-up/[patientId]
+  (knowledge)/_layout.tsx Stack · knowledge/index, knowledge/sources/{index,new,[id]}
+```
+
+`consultations/[id]` vive en `(patients)`: se llega a una consulta desde la ficha, y así la
+pestaña Pacientes queda marcada.
+
+**Navegador de secciones.** Un componente con variante por plataforma (`app-navigation.tsx` y
+`app-navigation.web.tsx`) en `src/components/navigation/`, fuera de `src/app`, como pide
+`expo-router`:
+
+- **iOS/Android:** `NativeTabs` (`expo-router/unstable-native-tabs`), con 4 disparadores. Cada
+  uno lleva icono `sf` (SF Symbols en iOS) y `md` (Material Symbols en Android) y una etiqueta. Es
+  la barra de pestañas nativa de cada plataforma (HIG/Material 3, ≤ 5 entradas). La API es
+  `unstable`, así que el riesgo se acota abajo.
+- **Web:** pestañas sin estilo de `expo-router/ui` (`Tabs`, `TabList`, `TabTrigger`, `TabSlot`),
+  estilizadas con los tokens:
+  - Desde `lg`: `TabList` vertical fija a la izquierda (`w-sidebar`, token nuevo de D6 = 240 px)
+    con el nombre de la app arriba y, al pie, el nombre del profesional y el botón «Cerrar
+    sesión», que sale de `/home`.
+  - Por debajo de `lg`: `TabList` fija abajo, con icono y etiqueta.
+  - Sección actual: `aria-current="page"`, texto `font-semibold`, barra indicadora `bg-primary`
+    y fondo `bg-muted`. El indicador nunca es solo el color (FR-082).
+  - El orden del DOM es navegación y después contenido, con un enlace «Saltar al contenido» como
+    primer elemento enfocable (WCAG 2.4.1).
+- **Iconos:** `Icon` (MaterialCommunityIcons) en web y SF/Material Symbols en nativo. Se desvía de
+  `expo-native-ui` solo en web y en los iconos dentro de pantalla (ver D15).
+- **Cierre de sesión en nativo:** la pantalla Inicio conserva el botón «Cerrar sesión», porque en
+  la barra de pestañas no cabe una acción que no es una sección.
+
+**Cabeceras y retroceso (FR-083).**
+
+- **iOS/Android:** cada `Stack` de sección muestra la cabecera nativa (`headerShown: true`) con
+  `headerBackButtonDisplayMode: "minimal"`. La raíz de la sección usa título grande en iOS. Los
+  colores salen de `useThemeColors()`.
+- **Web:** los `Stack` ocultan la cabecera, porque la barra lateral o las pestañas ya dan el
+  contexto y el navegador ya tiene su botón atrás. En su lugar, `Screen` recibe dos props nuevas:
+  - `title`: pinta `Heading level={1}` y el `<title>` del documento, sustituyendo los `Head`
+    sueltos de cada pantalla.
+  - `back={{ href, label }}`: pinta un `Link` «‹ Volver a …» antes del título. `href` es explícito
+    (la raíz de la sección o la pantalla padre), no `router.back()`, para que la entrada por URL
+    directa funcione (escenario de FR-083).
+- **Nativo:** `Screen` con `title` fija `Stack.Screen options={{ title }}` y no pinta el
+  `Heading level={1}`, para no duplicar el título de la cabecera (regla de `expo-native-ui`).
+- **Área segura:** con cabecera nativa, el `ScrollView` de `Screen` usa
+  `contentInsetAdjustmentBehavior="automatic"` y el `SafeAreaView` deja de aplicar el borde
+  superior. La barra de pestañas gestiona el inferior.
+
+**`/home`.** Pasa a ser un panel de entrada: la identidad de la sesión y accesos a las cuatro
+secciones como enlaces. Se conservan `home-patients`/`home-knowledge` y se añaden `home-follow-up`.
+El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en la barra lateral.
+
+### D13 — Enlaces, estados de datos y listas (FR-084 · FR-085 · FR-086)
+
+- **Enlaces:**
+  - Toda navegación pasa a `<Link href asChild>` con la primitiva existente: `Button` para
+    acciones con aspecto de botón y un `LinkText` nuevo (texto `text-primary underline`) para
+    enlaces en línea.
+  - `router.push` queda solo tras una operación, por ejemplo al guardar una ficha y abrirla.
+  - `Button` bajo `Link asChild` debe conservar el rol `link`. Una prueba de componente lo fija
+    (rojo primero).
+- **Estados:** una primitiva `QueryState` (`src/components/ui/query-state.tsx`) recibe
+  `{ isPending, error, isEmpty, onRetry, empty, children }`:
+  - Pinta, en este orden de precedencia, `Text` «Cargando…» con `aria-busy`, un `Callout error`
+    con un botón «Reintentar» que llama a `refetch`, el nodo `empty`, o `children`.
+  - `isPending` (TanStack Query v5) evita el vacío durante la primera carga.
+  - La usan `/patients`, `/follow-up`, `/knowledge/sources`, `/knowledge/sources/[id]` y los
+    historiales.
+- **Listas:**
+  - `/patients`, `/follow-up` y `/knowledge/sources` renderizan `FlatList` como contenedor de
+    desplazamiento, con cabecera (título y acciones) en `ListHeaderComponent`, el vacío en
+    `ListEmptyComponent` y `contentInsetAdjustmentBehavior="automatic"`.
+  - `Screen` gana `scroll={false}` para esas pantallas y no anida el `ScrollView`.
+  - Las listas acotadas dentro de una ficha (antecedentes, historial de una consulta) siguen con
+    `.map`, porque son cortas y viven dentro del desplazamiento de su pantalla.
+
+### D14 — Texto copiable y teclado (FR-087 · FR-088)
+
+- **Texto copiable:** `Text` acepta `selectable` (lo pasa a RN). Se activa en:
+  - los nombres y valores de la ficha;
+  - los hechos de anamnesis;
+  - los fragmentos y citas de fuentes;
+  - el texto de las epicrisis;
+  - todo `Callout tone="error"`, que lo pone por defecto.
+  No se activa en etiquetas ni en botones.
+- **Teclado:**
+  - `Screen` envuelve su `ScrollView` en `KeyboardAvoidingView` de React Native: `behavior`
+    `"padding"` en iOS y sin comportamiento en Android, donde `softwareKeyboardLayoutMode:
+    "resize"` en `app.json` ya redimensiona.
+  - `keyboardShouldPersistTaps="handled"` ya está en `Screen`.
+  - `expo-native-ui` recomienda `react-native-keyboard-controller` para seguir el marco real del
+    teclado. Se descarta por ahora, porque es una dependencia nueva y no hay animaciones ligadas
+    al teclado (ver Complexity Tracking).
+  - La verificación es nativa y depende de un dispositivo. Sin uno, queda como pendiente explícito.
+
+### D15 — Adopción y desviaciones de `expo-native-ui`
+
+| Guía | Decisión | Motivo |
+|---|---|---|
+| Estilos inline, sin Tailwind | **Se desvía** | NativeWind es el sistema existente (D1). `expo-design-system` prohíbe un segundo sistema al lado del existente |
+| `Color` de `expo-router` (colores semánticos del SO) | **Se desvía** | La paleta de marca debe coincidir entre web y nativo, y está verificada AA en ambos esquemas. Los colores del SO no pasan por `tema.test.ts` |
+| SF Symbols (`expo-symbols`) | **Solo en la barra de pestañas nativa** (`sf`/`md` de `NativeTabs`, sin dependencia) | Dentro de pantalla se mantiene `@expo/vector-icons` (decisión del usuario, D8), igual en las tres plataformas |
+| `process.env.EXPO_OS` en vez de `Platform.OS` | **Se adopta** | Permite eliminar código por plataforma en el bundle. 4 usos |
+| `React.use` en vez de `useContext` | **Se adopta** | React 19. 4 usos |
+| `borderCurve: "continuous"` | **Se adopta** en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock` vía `style` | Sin efecto en web; esquinas nativas en iOS |
+| Sombras con `boxShadow` | Sin acción | No hay sombras: las superficies se separan con borde y fondo (D4) |
+| Modal propio para confirmaciones | **Se mantiene** el diálogo de sesión expirada | Es una confirmación consecuente que bloquea la sesión; la guía admite alertas para estas. El retiro de fuentes ya confirma en línea |
+| `Text selectable`, cuatro estados, `FlatList`, `keyboardShouldPersistTaps` | **Se adoptan** | D13–D14 |
+| Hápticos, `Link.Preview`, menús contextuales | **Fuera de alcance** | Non-Goals |
+
 ## Risks / Trade-offs
 
 - **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
@@ -249,6 +421,19 @@ aspecto final lo verifican la compuerta axe y las capturas.
   `testID` y se migra una pantalla por tarea, con su suite e2e.
 - **[Riesgo] Cambiar `--background` en claro altera pares ya verificados.** → `tema.test.ts`
   vuelve a medirlos todos. No se integra en rojo.
+- **[Riesgo] `NativeTabs` es `unstable` en SDK 57 y puede cambiar su API.** → Queda encapsulado
+  en `app-navigation.tsx`: un cambio de API toca un solo archivo. El respaldo son las pestañas JS
+  de `expo-router` (`Tabs`), ya incluidas.
+- **[Riesgo] Reorganizar las rutas en grupos rompe los e2e o los flujos de Maestro.** → Las URLs
+  no cambian. La tarea 7.1 comprueba con un e2e en rojo que todas las rutas de la compuerta
+  siguen resolviendo antes de mover archivos. Los flujos `tests/e2e/native/*.yaml` se revisan en
+  7.8.
+- **[Riesgo] La barra lateral reduce el ancho útil de la consulta en `lg`.** → Con 240 px, a
+  1280 px quedan 1040 px de contenido, suficientes para las dos columnas de D9 (`max-w-wide`
+  1200 limita, no fuerza). La prueba de dos columnas de 4.6 se repite con la navegación montada.
+- **[Trade-off] En web el título está dentro de la página y no en una cabecera.** → Es
+  intencionado: la barra lateral da el contexto, el `h1` estructura el documento para los lectores
+  de pantalla, y una cabecera extra solo repetiría el título.
 
 ## Performance budgets
 
@@ -267,6 +452,10 @@ aspecto final lo verifican la compuerta axe y las capturas.
 | Espejo `src/theme/colors.ts` | Props de color que no aceptan `className` (D1) | Leer las variables CSS en tiempo de ejecución: no es posible en nativo |
 | 6 primitivas nuevas | Cada una tiene ≥ 2 usos reales (tabla de D7) | Clases repetidas: 30+ copias con deriva ya medida |
 | Nivel visual `critico` | Decisión de producto para 006/007; es una fila en `SeverityBadge` | Añadirlo con 006: aceptable, pero el usuario lo pidió ahora |
+| Navegación de secciones con variante por plataforma (`app-navigation.tsx` + `.web.tsx`) | FR-082: la convención de cada plataforma difiere (pestañas nativas frente a barra lateral en escritorio). Usa solo APIs de `expo-router` ya instalado | Un único `Tabs` JS en todas las plataformas: no es la barra nativa de iOS/Android y en escritorio desaprovecha el ancho. Un drawer: requiere `@react-navigation/drawer` y oculta las secciones en móvil |
+| 4 layouts de grupo (`(home)`, `(patients)`, `(follow-up)`, `(knowledge)`) | Un `Stack` por sección, para que cada pestaña conserve su historial y su retroceso (FR-083) | Un único `Stack`: al cambiar de sección se pierde la posición en la anterior |
+| Primitivas `QueryState` y `LinkText` | FR-084/085, con ≥ 4 y ≥ 3 usos | Repetir en cada pantalla los ternarios de carga/error/vacío: es la deriva que se midió |
+| `KeyboardAvoidingView` (React Native) en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen |
 
 ## Migration Plan
 
@@ -274,6 +463,13 @@ aspecto final lo verifican la compuerta axe y las capturas.
 2. Migrar pantalla por pantalla (tarea 4), cada una con su e2e verde.
 3. Retirar los alias deprecados (`size`/`bold` en `Text`, `size` en `Heading`) y activar la prueba
    anti-deriva sin excepciones (tarea 6).
+4. Corregir los dos fallos de la compuerta (5.5, 5.6) y cerrar 5.2.
+5. Navegación (grupo 7): primero la prueba de rutas en rojo, después los grupos de rutas, el
+   navegador de secciones y las cabeceras, y al final `/home`.
+6. Enlaces, estados, listas, texto copiable, teclado y estilo de código (grupo 8), pantalla por
+   pantalla.
+7. Repetir la compuerta completa, la revisión en escala de grises y la de texto ampliado con la
+   navegación montada (5.2–5.4), y cerrar con 6.4–6.5.
 
 Reversión: cada pantalla migra en su propio commit, así que se puede revertir por separado.
 
@@ -286,3 +482,5 @@ Resueltas con el usuario el 2026-09-25:
 - Resumen de seguimiento en la consulta a partir de `lg`: **columna lateral**, junto con los
   antecedentes y el historial de correcciones; la principal lleva anamnesis, diagnóstico y
   epicrisis.
+- Patrón de navegación: **adaptable** (barra lateral ≥ 1024 px en web; pestañas inferiores en
+  compacto y en nativo). Alcance de las mejoras de `expo-native-ui`: **dentro de este cambio**.

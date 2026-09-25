@@ -52,6 +52,33 @@ Pendiente (se planifica en este cambio):
 - Migración incremental pantalla por pantalla y una prueba que impide la reintroducción de colores
   literales fuera del tema.
 
+Añadido tras revisar la app con las guías `expo-native-ui` y `expo-router` (2026-09-25):
+
+- **Navegación global adaptable.** Hoy no hay barra lateral, ni barra de pestañas, ni cabecera:
+  ambos `_layout.tsx` usan `Stack` con `headerShown: false`, `/home` es una columna de botones y
+  `/follow-up` solo es alcanzable por URL. Se añade:
+  - barra lateral fija en web desde 1024 px, con Inicio, Pacientes, Seguimiento y Conocimiento, y
+    la cuenta y el cierre de sesión al pie;
+  - barra de pestañas inferior en móvil, tablet y web angosta (`NativeTabs` en iOS/Android);
+  - un `Stack` por sección, con cabecera, título y botón atrás.
+- **Retroceso en nativo.** Sin cabecera, iOS no tiene ninguna forma de volver atrás. Cada pantalla
+  de detalle tendrá atrás: la cabecera nativa en iOS/Android y un enlace «Volver» en web.
+- **Enlaces en vez de botones para navegar.** Todo lo que cambia de ruta es un `Link`: en web es un
+  `<a>` real y el lector de pantalla anuncia «enlace».
+- **Cuatro estados de datos** (cargando, error con reintento, vacío y contenido) en toda pantalla
+  que carga datos. El estado vacío nunca aparece durante la primera carga.
+- **Datos y listas:**
+  - listas de longitud desconocida virtualizadas (`FlatList`);
+  - datos clínicos y mensajes de error copiables (`selectable`);
+  - la acción principal de un formulario nunca queda bajo el teclado.
+- **Estilo de código de Expo:** `process.env.EXPO_OS` en vez de `Platform.OS`, `React.use` en vez
+  de `useContext` y `borderCurve: "continuous"` en las superficies redondeadas.
+- **Correcciones de la compuerta de la tarea 5.2:**
+  - En oscuro, el texto atenuado no llega a AA sobre los tintes translúcidos (`bg-primary/15`,
+    `bg-secondary/15`, `bg-accent/20`): queda en 3.4–3.8:1. Se sustituyen por tokens de
+    superficie verificados.
+  - En Firefox, el contenedor de desplazamiento de `Screen` recibe foco sin indicador visible.
+
 No hay cambios incompatibles de datos ni de API: el vocabulario `AdverseEventSeverity`
 (`leve`/`moderado`/`grave`) no cambia.
 
@@ -61,7 +88,9 @@ No hay cambios incompatibles de datos ni de API: el vocabulario `AdverseEventSev
 
 - `sistema-visual`: tema de tokens, tipografía, primitivas de UI, estados semánticos,
   distinción de autoría (sistema/profesional), severidad clínica e iconografía, con layout
-  adaptable y conformidad WCAG 2.2 AA en claro y oscuro.
+  adaptable y conformidad WCAG 2.2 AA en claro y oscuro. Incluye la navegación global adaptable,
+  las cabeceras con retroceso y los patrones de interacción comunes: enlaces, estados de datos,
+  listas y teclado.
 
 ### Modified Capabilities
 
@@ -75,8 +104,15 @@ primitivas de esta capacidad.
 - Código: `src/global.css`, `tailwind.config.js`, `src/theme/`, `src/components/ui/`, todas las
   pantallas de `src/app/(protected)/` y `(auth)/`, y los componentes de feature que hoy usan
   `text-foreground/70`, `bg-secondary/15`, `bg-accent/20` o estilos inline.
+- Rutas: `src/app/(protected)/` se reorganiza en grupos por sección (`(home)`, `(patients)`,
+  `(follow-up)`, `(knowledge)`), cada uno con su `Stack`. Los grupos no cambian las URLs
+  (`/home`, `/patients`, `/consultations/[id]`, `/follow-up`, `/knowledge`…), así que las rutas
+  de los e2e y los enlaces documentados siguen siendo válidos. Cambia `home.tsx`: la navegación
+  sale de sus botones, pero se conservan los `testID` `home-patients`/`home-knowledge`, que
+  `conocimiento.spec.ts` usa.
 - Dependencias: `expo-font` (el config plugin ya se usaba; pasa a dependencia directa, antes solo
-  transitiva) y `@expo/vector-icons` (nueva).
+  transitiva) y `@expo/vector-icons` (nueva). La navegación usa solo APIs de `expo-router` ya
+  instalado (`expo-router/ui` y `expo-router/unstable-native-tabs`): no añade dependencias.
 - Pruebas: `tests/unit/theme/`, compuerta axe en `tests/e2e/web/accessibility.spec.ts` (claro y
   oscuro) y una comprobación nueva de reflujo a 320 px.
 - Dependencias de construcción: `identidad-y-acceso` (pantallas protegidas y diálogo de sesión).

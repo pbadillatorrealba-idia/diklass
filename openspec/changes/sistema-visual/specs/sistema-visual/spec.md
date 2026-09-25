@@ -50,6 +50,38 @@ con la compuerta axe y una revisión en escala de grises.
 6. **Given** la primera carga de la app web, **When** se pinta la pantalla, **Then** el texto usa
    la fuente del tema sin un salto de maquetación visible al terminar de cargarla.
 
+### User Story 14 - Moverse por la app sin perderse (Priority: P2)
+
+Durante la jornada, el veterinario salta entre la ficha de un paciente, la consulta en curso, el
+seguimiento de otro paciente y la base de conocimiento. Desde cualquier pantalla ve en qué sección
+está, llega a cualquier otra con una sola acción y vuelve a la pantalla anterior sin depender del
+botón del navegador. Esto vale en el computador, en la tablet y en el teléfono, siguiendo las
+convenciones de cada plataforma.
+
+**Why this priority**: hoy no hay navegación global. `/follow-up` solo se alcanza por URL y, en
+iOS, una pantalla de detalle no tiene forma de volver atrás. Es una barrera de uso que afecta a
+todas las features.
+
+**Independent Test**: desde una consulta abierta, llegar al seguimiento de otro paciente y volver,
+con ratón, con teclado y con lector de pantalla, a 1280 px y a 375 px.
+
+**Acceptance Scenarios**:
+
+1. **Given** una ventana de 1280 px, **When** se abre cualquier pantalla protegida, **Then** una
+   barra lateral fija muestra las secciones Inicio, Pacientes, Seguimiento y Conocimiento, marca la
+   sección actual con algo más que el color y ofrece la cuenta y el cierre de sesión.
+2. **Given** una ventana de 375 px o un dispositivo iOS/Android, **When** se abre cualquier
+   pantalla protegida, **Then** una barra de pestañas inferior da acceso a las cuatro secciones con
+   icono y nombre.
+3. **Given** una pantalla de detalle (ficha, consulta, fuente, seguimiento de un paciente),
+   **When** el usuario quiere volver, **Then** dispone de una acción de retroceso en la propia
+   interfaz: la cabecera nativa en iOS/Android o el enlace «Volver» en web.
+4. **Given** un elemento que lleva a otra pantalla, **When** lo anuncia un lector de pantalla,
+   **Then** se anuncia como enlace; en web se puede abrir en una pestaña nueva.
+5. **Given** una pantalla que carga datos, **When** la carga está en curso, falla o no devuelve
+   nada, **Then** muestra respectivamente un estado de carga, un error con reintento o un estado
+   vacío explicativo, nunca el vacío antes de que termine la primera carga.
+
 ### Edge Cases
 
 - Texto ampliado por el sistema (Dynamic Type / zoom del navegador al 200 %): las filas crecen y el
@@ -60,6 +92,14 @@ con la compuerta axe y una revisión en escala de grises.
   atribución, sin el tratamiento de sugerido.
 - La severidad `critico` no existe hoy en ningún vocabulario de datos; se muestra solo cuando una
   feature la emita (006/007).
+- Abrir por URL directa una pantalla de detalle (sin historial previo): el retroceso de la
+  interfaz lleva a la raíz de su sección, no fuera de la app.
+- Sesión expirada con la navegación visible: el diálogo de sesión queda por encima de la barra
+  lateral y de las pestañas, y estas no son operables mientras está abierto.
+- Nombres largos (paciente, fuente) en el título de la cabecera: se truncan en la cabecera con el
+  nombre completo disponible en el contenido y en la etiqueta accesible.
+- Texto ampliado con la barra de pestañas: las etiquetas pueden ajustarse o reducirse según la
+  plataforma, pero cada pestaña conserva su nombre accesible.
 
 ### Trazabilidad de requisitos
 
@@ -76,6 +116,13 @@ con la compuerta axe y una revisión en escala de grises.
 | FR-079 Layout adaptable | US13-AC4/AC5 | Pendiente |
 | FR-080 Foco visible | — | Implementado (sin aceptar) |
 | FR-081 Fuente única de valores visuales | — | Parcial |
+| FR-082 Navegación global adaptable | US14-AC1/AC2 | Pendiente |
+| FR-083 Cabecera y retroceso | US14-AC3 | Pendiente |
+| FR-084 Navegar es un enlace | US14-AC4 | Pendiente |
+| FR-085 Cuatro estados de datos | US14-AC5 | Pendiente |
+| FR-086 Listas virtualizadas | — | Pendiente |
+| FR-087 Datos clínicos copiables | — | Pendiente |
+| FR-088 Formularios con teclado | — | Pendiente (verificación nativa sujeta a dispositivo) |
 
 ## Success Criteria
 
@@ -87,7 +134,14 @@ con la compuerta axe y una revisión en escala de grises.
   en `src/` fuera de los archivos del tema.
 - **SC-052**: 0 pantallas con desplazamiento horizontal a 320 px CSS.
 - **SC-053**: todos los pares texto/superficie del tema, incluidos los de estado, sugerido y
-  severidad, cumplen ≥ 4.5:1; los bordes de control y el indicador de foco, ≥ 3:1.
+  severidad, cumplen ≥ 4.5:1; los bordes de control y el indicador de foco, ≥ 3:1. Esto incluye
+  el texto atenuado sobre cada superficie tintada, y ningún texto se apoya en un tinte
+  translúcido que el test no mida.
+- **SC-054**: desde cualquier pantalla protegida, cada sección principal queda a 1 activación y la
+  pantalla anterior a 1 activación, a 1280 px y a 375 px.
+- **SC-055**: 0 elementos que cambian de ruta expuestos con rol de botón en las pantallas cubiertas
+  por la compuerta.
+- **SC-056**: 0 pantallas que cargan datos sin sus estados de carga, error y vacío.
 
 ## Assumptions
 
@@ -260,3 +314,124 @@ literales de color.
 - **GIVEN** un componente con un color hex escrito a mano
 - **WHEN** se ejecuta la suite de pruebas
 - **THEN** la suite falla indicando el archivo y la línea
+
+### Requirement: FR-082
+
+Toda pantalla protegida MUST ofrecer navegación global a las secciones Inicio, Pacientes,
+Seguimiento y Conocimiento:
+
+- En web, desde 1024 px CSS, MUST ser una barra lateral fija que incluya la cuenta y el cierre de
+  sesión.
+- Por debajo de ese ancho, y en iOS/Android, MUST ser una barra de pestañas inferior con la
+  convención de la plataforma: la barra de pestañas en iOS y la barra de navegación de Material 3
+  en Android.
+
+La sección actual MUST indicarse con algo más que el color (peso, indicador y `aria-current`/estado
+seleccionado). Cada entrada MUST tener icono y nombre visible. La navegación MUST NOT ser operable
+mientras el diálogo de sesión expirada está abierto.
+
+#### Scenario: US14-AC1
+
+- **GIVEN** una ventana de 1280 px con la sesión iniciada
+- **WHEN** se abre `/patients`
+- **THEN** la barra lateral muestra las cuatro secciones con Pacientes marcada como actual y el
+  cierre de sesión al pie
+
+#### Scenario: US14-AC2
+
+- **GIVEN** una ventana de 375 px con la sesión iniciada
+- **WHEN** se abre `/knowledge`
+- **THEN** la barra de pestañas inferior muestra las cuatro secciones con icono y nombre, y
+  Conocimiento está seleccionada
+
+### Requirement: FR-083
+
+Toda pantalla que no sea la raíz de su sección MUST ofrecer una acción de retroceso en la propia
+interfaz: en iOS/Android, la cabecera nativa del `Stack` con el título de la pantalla; en web, un
+enlace «Volver a <sección o pantalla anterior>» antes del título. Al abrir una pantalla por URL
+directa, el retroceso MUST llevar a la raíz de su sección. El título de la pantalla MUST coincidir
+con el título del documento en web.
+
+#### Scenario: US14-AC3
+
+- **GIVEN** la consulta abierta desde la ficha de un paciente
+- **WHEN** el usuario activa el retroceso de la interfaz
+- **THEN** vuelve a la ficha del paciente
+
+#### Scenario: Entrada por URL directa
+
+- **GIVEN** `/follow-up/<id>` abierto directamente en una pestaña nueva
+- **WHEN** el usuario activa «Volver»
+- **THEN** llega a `/follow-up`
+
+### Requirement: FR-084
+
+Todo elemento cuya acción sea cambiar de ruta MUST exponerse como enlace (`Link` de Expo Router;
+un `<a>` con `href` en web). Los botones MUST reservarse a acciones que no navegan o que navegan
+solo como consecuencia de una operación (por ejemplo, tras guardar).
+
+#### Scenario: US14-AC4
+
+- **GIVEN** la lista de pacientes en web
+- **WHEN** se inspecciona «Ver ficha» con el árbol de accesibilidad
+- **THEN** su rol es `link` y tiene un `href` a `/patients/<id>`
+
+### Requirement: FR-085
+
+Toda pantalla que carga datos MUST distinguir cuatro estados:
+
+- **Cargando.**
+- **Error:** con un mensaje y una acción de reintento.
+- **Vacío:** con un texto que explica qué falta y, si existe, la acción para crearlo.
+- **Contenido.**
+
+El estado vacío MUST NOT mostrarse mientras la primera carga no ha terminado.
+
+#### Scenario: US14-AC5
+
+- **GIVEN** una clínica sin fuentes incorporadas
+- **WHEN** se abre `/knowledge/sources`
+- **THEN** se muestra «Cargando…» y después un estado vacío que ofrece «Incorporar fuente
+  clínica», nunca el vacío durante la carga
+
+#### Scenario: Error con reintento
+
+- **GIVEN** la lectura de pacientes falla
+- **WHEN** se abre `/follow-up`
+- **THEN** se muestra un error con «Reintentar», y al reintentar con éxito aparece la lista
+
+### Requirement: FR-086
+
+Las listas de longitud no acotada (pacientes, fuentes y líneas de seguimiento) MUST renderizarse
+virtualizadas (`FlatList`) y MUST NOT anidarse dentro de otro contenedor de desplazamiento
+vertical.
+
+#### Scenario: Lista larga de pacientes
+
+- **GIVEN** 200 pacientes en la clínica
+- **WHEN** se abre `/patients`
+- **THEN** la lista se desplaza sin cargar todas las filas a la vez y sin doble barra de
+  desplazamiento
+
+### Requirement: FR-087
+
+El texto que muestra datos clínicos (nombres, identificadores, valores de la ficha, citas de las
+fuentes) y los mensajes de error MUST poder seleccionarse y copiarse en todas las plataformas.
+
+#### Scenario: Copiar una cita
+
+- **GIVEN** un fragmento citado en `/knowledge/sources/<id>`
+- **WHEN** el usuario mantiene pulsado o selecciona el texto
+- **THEN** puede copiarlo
+
+### Requirement: FR-088
+
+En los formularios, la acción principal y el campo con foco MUST NOT quedar ocultos por el teclado
+en pantalla. Los formularios desplazables MUST aceptar el primer toque sobre un control con el
+teclado abierto.
+
+#### Scenario: Guardar con el teclado abierto
+
+- **GIVEN** el formulario de nuevo paciente en un teléfono con el teclado abierto
+- **WHEN** el foco está en el último campo
+- **THEN** el botón de guardar sigue visible o alcanzable desplazando, y responde al primer toque

@@ -409,3 +409,14 @@ un archivo con los seis patrones da 6 hallazgos `archivo:línea` y rojo; al quit
 
 Sección «Sistema visual»: dónde viven los tokens, qué primitiva usar para cada caso, jerarquía de
 botones, reglas de layout y prohibición de literales. Revisión humana: pendiente en la PR.
+
+## 5.2 — Compuerta completa (primera ejecución, 2026-09-25, local, `--workers=1`)
+
+| Proyecto | Resultado |
+|---|---|
+| `chromium` | 29 passed |
+| `chromium-dark` | 6 passed, **1 failed**: `color-contrast` en el historial de correcciones (`muted-foreground` sobre `bg-secondary/15` = 3.77:1) → tarea 5.5 |
+| `firefox` | 28 passed, **1 failed**: «recorrido por teclado», un `DIV` (el `ScrollView` de `Screen`) recibe foco sin indicador → tarea 5.6 |
+| `webkit` | 29 passed |
+
+Estado: 5.2 **pendiente**. Se repite tras 5.5/5.6 y tras los grupos 7–8.
