@@ -83,6 +83,30 @@ de desarrollo `#error-toast` de `@expo/log-box` en el escaneo axe (solo existe c
 US11/AC5 de la 001 sobre la superficie 002 conservando todas sus aserciones de contrato
 (provisionando ficha y consulta reales con el token de ANA).
 
+## Evidencia de la segunda revisión de la PR #27 (2026-09-24, tareas 7.x)
+
+Ejecutado en local sobre la rama con Supabase local (`DOCKER_HOST` al socket rootless de podman) y
+los veterinarios sintéticos provisionados con `bun run provision:veterinarians -- --fixture
+tests/fixtures/veterinarians.json`:
+
+| Compuerta | Comando | Resultado |
+|---|---|---|
+| Lint estricto | `bunx biome ci --error-on-warnings .` | verde |
+| Tipos | `bun run typecheck` | verde |
+| pgTap | `supabase db reset && supabase test db` | 140/140 en 9 suites (008: 31 aserciones) |
+| Unidad | `bun run test` | 195 pass, 38 skip (vivas), 0 fail |
+| Integración viva | `SUPABASE_LIVE_TESTS=1 bun run test:integration` | 37 pass, 0 fail |
+| Web e2e (Chromium) | `bunx playwright test --project=chromium` | 17 pass, 1 fail (ver nota) |
+
+Rojos observados antes de cada arreglo: 3 aserciones pgTap nuevas (7.1–7.2), la carrera con dos
+sesiones (7.3: 1 fila frente a 0), el e2e de la epicrisis (7.4), las dos pruebas vivas de
+concurrencia (7.5, 3 de 3 corridas), las dos unitarias de atribución (7.6) y el e2e del historial
+(7.7).
+
+Nota sobre el e2e: `auth.spec.ts` «unsaved notes survive an expired session…» falla en local
+también sobre el commit anterior a esta tanda (`6b04a5d`), cuyo job `Web E2E` de CI pasó. Es un
+fallo del entorno local, no de estos cambios; el job de CI de la rama es la referencia.
+
 ## Transiciones sin acción enumerada (D4 · tarea 1.3)
 
 `clinical_record_action` devuelve `null` (sin evento de auditoría propio) en exactamente tres
@@ -117,7 +141,8 @@ aquí.
 - **Verificación visual**: no hubo inspección visual humana ni del navegador del orquestador sobre
   las pantallas nuevas en esta tanda; la verificación de superficie es la suite web de CI (axe +
   teclado + viewport). Queda una pasada visual/aceptación cuando el entorno lo permita.
-- **Flujo e2e funcional web completo** del recorrido clínico (solo se amplió la compuerta de
-  accesibilidad; la verificación funcional la cargan pgTap e integración viva en CI).
+- **Flujo e2e funcional web completo** del recorrido clínico. `registro-epicrisis.spec.ts` cubre
+  dos recorridos acotados (tareas 7.4 y 7.7); el resto lo cargan pgTap y la integración viva.
+- **Cierre de consulta solo por aprobación** (tarea 7.10, riesgo en `design.md`).
 - **Aceptación humana** de SC-012 (registro de ficha < 3 min sin asistencia) y SC-013 (utilidad de
   la epicrisis: ≥ 3 especialistas sobre ≥ 5 casos, ≥ 3/5 en promedio).
