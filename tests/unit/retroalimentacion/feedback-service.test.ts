@@ -4,7 +4,7 @@ import {
   correctFeedbackEntry,
   createFeedbackEntry,
   listFeedbackByConsultation,
-  listFeedbackByPatient,
+  listFeedbackByConsultations,
 } from "@/features/retroalimentacion/feedback-service";
 import type { FeedbackContent } from "@/features/retroalimentacion/schema";
 import type { Database } from "@/lib/supabase/database.types";
@@ -240,9 +240,7 @@ describe("correctFeedbackEntry — corrección como registro nuevo (FR-024 · SC
             error: null,
           },
         ],
-        clinical_audit_events: [
-          { data: [{ id: "evento-1", action: "clinical_feedback_recorded" }], error: null },
-        ],
+        clinical_audit_events: [{ data: { id: "evento-1" }, error: null }],
       },
     });
 
@@ -250,6 +248,15 @@ describe("correctFeedbackEntry — corrección como registro nuevo (FR-024 · SC
     const resultado = await correctFeedbackEntry(client, "fb-1", corregido);
 
     expect(resultado.record.id).toBe("fb-corr");
+    // Revisión de la PR #28 (hallazgo 9): la lectura del evento usa la columna líder del
+    // índice (entity_type, entity_id, occurred_at) y trae una sola fila, ya filtrada.
+    const filtrosTraza = calls
+      .filter((llamada) => llamada.table === "clinical_audit_events")
+      .map((llamada) => [llamada.method, ...llamada.args]);
+    expect(filtrosTraza).toContainEqual(["eq", "entity_type", "clinical_feedback"]);
+    expect(filtrosTraza).toContainEqual(["eq", "entity_id", "fb-1"]);
+    expect(filtrosTraza).toContainEqual(["eq", "action", "clinical_feedback_recorded"]);
+    expect(filtrosTraza).toContainEqual(["limit", 1]);
     const insercion = calls.find((llamada) => llamada.method === "insert");
     expect(insercion?.args[0]).toEqual({
       clinic_id: "clinica-1",
@@ -408,28 +415,11 @@ describe("listFeedbackByConsultation — cadena de correcciones en la lectura (F
   });
 });
 
-describe("listFeedbackByPatient — retroalimentación de varias consultas (FR-043 · SC-023 · US10-AC9 · FR-042)", () => {
-  test("reúne las entradas de todas las consultas del paciente, con sus fechas por separado", async () => {
-    const { client } = makeClient({
+describe("listFeedbackByConsultations — retroalimentación de varias consultas (FR-043 · SC-023 · US10-AC9 · FR-042)", () => {
+  test("reúne las entradas de las consultas dadas sin volver a leer las consultas del paciente", async () => {
+    const { client, calls } = makeClient({
       results: {
         clinical_records: [
-          {
-            data: [
-              registro({
-                id: "consulta-1",
-                record_type: "consultation",
-                content: { patientId: "paciente-1", status: "closed" },
-                created_at: "2026-09-01T10:00:00.000Z",
-              }),
-              registro({
-                id: "consulta-2",
-                record_type: "consultation",
-                content: { patientId: "paciente-1", status: "closed" },
-                created_at: "2026-10-01T10:00:00.000Z",
-              }),
-            ],
-            error: null,
-          },
           {
             data: [
               registro({
@@ -449,12 +439,31 @@ describe("listFeedbackByPatient — retroalimentación de varias consultas (FR-0
       },
     });
 
-    const entradas = await listFeedbackByPatient(client, "paciente-1");
+    const entradas = await listFeedbackByConsultations(client, ["consulta-1", "consulta-2"]);
 
     expect(entradas.map((entrada) => entrada.record.id)).toEqual(["fb-1", "fb-2"]);
     expect(entradas.map((entrada) => entrada.content.consultationId)).toEqual([
       "consulta-1",
       "consulta-2",
     ]);
+    // Revisión de la PR #28 (hallazgo 8): la pantalla ya tiene las consultas del paciente;
+    // el servicio no repite esa lectura.
+    expect(calls).not.toContainEqual({
+      table: "clinical_records",
+      method: "eq",
+      args: ["record_type", "consultation"],
+    });
+    expect(calls).toContainEqual({
+      table: "clinical_records",
+      method: "in",
+      args: ["content->>consultationId", ["consulta-1", "consulta-2"]],
+    });
+  });
+
+  test("sin consultas no consulta nada", async () => {
+    const { client, calls } = makeClient({});
+
+    expect(await listFeedbackByConsultations(client, [])).toEqual([]);
+    expect(calls).toHaveLength(0);
   });
 });

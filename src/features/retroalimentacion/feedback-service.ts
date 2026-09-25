@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { listConsultationsByPatient } from "@/features/registro/consultation-service";
 import { consultationContentSchema } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import type { FeedbackEntry } from "@/features/retroalimentacion/feedback-summary";
@@ -110,17 +109,20 @@ export async function correctFeedbackEntry(
     // es una correctiva, su `supersedes_event_id` es ese mismo evento (D8 de 002).
     let supersedesEventId = original.supersedes_event_id;
     if (supersedesEventId === null) {
-      const { data: eventos, error: errorEventos } = await client
+      // Columna líder del índice (entity_type, entity_id, occurred_at) y una sola fila: el
+      // registro de un original emite exactamente un `clinical_feedback_recorded`.
+      const { data: evento, error: errorEvento } = await client
         .from("clinical_audit_events")
-        .select("id, action")
+        .select("id")
+        .eq("entity_type", "clinical_feedback")
         .eq("entity_id", feedbackRecordId)
-        .order("occurred_at", { ascending: false });
-      if (errorEventos) {
-        throw errorEventos;
+        .eq("action", "clinical_feedback_recorded")
+        .limit(1)
+        .maybeSingle();
+      if (errorEvento) {
+        throw errorEvento;
       }
-      supersedesEventId =
-        (eventos ?? []).find((evento) => evento.action === "clinical_feedback_recorded")?.id ??
-        null;
+      supersedesEventId = evento?.id ?? null;
     }
     if (supersedesEventId === null) {
       throw new Error("No se encontró el evento de registro de la entrada de retroalimentación.");
@@ -254,23 +256,21 @@ export async function listFeedbackByConsultation(
 }
 
 /**
- * Retroalimentación de todas las consultas de un paciente (FR-043 · SC-023 · US10-AC9 ·
- * FR-042): es el insumo del agregado por categoría y de los antecedentes de seguimiento. Las
- * consultas del paciente se resuelven por su índice de expresión y las entradas por el de
- * `consultationId` (D8: sin índices nuevos).
+ * Retroalimentación de varias consultas —las de un paciente— (FR-043 · SC-023 · US10-AC9 ·
+ * FR-042): es el insumo del agregado por categoría y de los antecedentes de seguimiento. Recibe
+ * los ids de consulta que la pantalla ya leyó (revisión de la PR #28: sin repetir
+ * `listConsultationsByPatient`) y resuelve las entradas por el índice de `consultationId` (D8:
+ * sin índices nuevos).
  */
-export async function listFeedbackByPatient(
+export async function listFeedbackByConsultations(
   client: SupabaseClient<Database>,
-  patientId: string,
+  consultationIds: string[],
 ): Promise<FeedbackEntry[]> {
+  if (consultationIds.length === 0) {
+    return [];
+  }
   const requestId = makeRequestId();
   try {
-    const consultas = await listConsultationsByPatient(client, patientId);
-    const consultationIds = consultas.map((entrada) => entrada.record.id);
-    if (consultationIds.length === 0) {
-      return [];
-    }
-
     const { data, error } = await client
       .from("clinical_records")
       .select("*")
@@ -285,17 +285,17 @@ export async function listFeedbackByPatient(
     const entradas = componerEntradas(
       rows,
       await resolverOriginales(client, rows),
-      "listFeedbackByPatient",
+      "listFeedbackByConsultations",
     );
     logEvent("retroalimentacion.feedback_listed", {
       requestId,
-      operation: "listFeedbackByPatient",
+      operation: "listFeedbackByConsultations",
     });
     return entradas;
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
-      operation: "listFeedbackByPatient",
+      operation: "listFeedbackByConsultations",
       requestId,
     });
     throw error;

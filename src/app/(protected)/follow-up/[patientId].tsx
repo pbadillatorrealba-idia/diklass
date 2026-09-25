@@ -28,7 +28,7 @@ import {
 import {
   correctFeedbackEntry,
   createFeedbackEntry,
-  listFeedbackByPatient,
+  listFeedbackByConsultations,
 } from "@/features/retroalimentacion/feedback-service";
 import {
   aggregateFeedback,
@@ -68,9 +68,16 @@ export default function FollowUpPanelScreen() {
     queryKey: ["registro", "patient-consultations", patientId],
     queryFn: () => listConsultationsByPatient(supabase, patientId),
   });
+  // Las entradas se leen sobre las consultas que ya trajo `consultationsQuery` (revisión de la
+  // PR #28): la clave lleva sus ids, así que una consulta nueva o cerrada relee lo suyo.
+  const consultationIds = useMemo(
+    () => (consultationsQuery.data ?? []).map((entry) => entry.record.id),
+    [consultationsQuery.data],
+  );
   const feedbackQuery = useQuery({
-    queryKey: ["retroalimentacion", "patient-feedback", patientId],
-    queryFn: () => listFeedbackByPatient(supabase, patientId),
+    queryKey: ["retroalimentacion", "patient-feedback", patientId, consultationIds],
+    queryFn: () => listFeedbackByConsultations(supabase, consultationIds),
+    enabled: consultationsQuery.isSuccess,
   });
   const epicrisisQuery = useQuery({
     queryKey: ["registro", "epicrisis", selectedConsultationId],

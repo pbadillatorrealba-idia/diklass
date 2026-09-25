@@ -5,7 +5,7 @@ import {
   correctFeedbackEntry,
   createFeedbackEntry,
   listFeedbackByConsultation,
-  listFeedbackByPatient,
+  listFeedbackByConsultations,
 } from "@/features/retroalimentacion/feedback-service";
 import {
   aggregateFeedback,
@@ -270,7 +270,11 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
   });
 
   test("varias entradas conviven en orden cronológico y los categóricos se agregan sin texto libre (FR-056 · FR-043 · SC-023 · US10-AC9/AC11)", async () => {
-    const entradas = await listFeedbackByPatient(ana.client, patientId);
+    const consultas = await listConsultationsByPatient(ana.client, patientId);
+    const entradas = await listFeedbackByConsultations(
+      ana.client,
+      consultas.map((entrada) => entrada.record.id),
+    );
     expect(entradas.length).toBeGreaterThanOrEqual(3);
 
     const timeline = buildFeedbackTimeline(entradas);
@@ -288,7 +292,10 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
   test("los eventos adversos se recuperan diferenciados y la evolución previa como antecedente con ambas fechas (FR-041 · SC-035 · FR-042 · US10-AC6 · FR-039 · US10-AC7)", async () => {
     const inicio = performance.now();
     const consultas = await listConsultationsByPatient(ana.client, patientId);
-    const entradas = await listFeedbackByPatient(ana.client, patientId);
+    const entradas = await listFeedbackByConsultations(
+      ana.client,
+      consultas.map((entrada) => entrada.record.id),
+    );
     const timeline = buildFeedbackTimeline(entradas);
     const eventos = collectAdverseEvents(timeline);
     const antecedentes = buildFeedbackAntecedents({
