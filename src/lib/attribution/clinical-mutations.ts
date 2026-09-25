@@ -6,10 +6,23 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type ClinicalRecord = Database["public"]["Tables"]["clinical_records"]["Row"];
 
+/** El registro cambió desde que se leyó: quien llama debe releer antes de volver a escribir. */
+export class ClinicalWriteConflictError extends Error {
+  constructor(readonly recordId: string) {
+    super("El registro cambió desde que se leyó.");
+    this.name = "ClinicalWriteConflictError";
+  }
+}
+
 /**
  * Relectura de la atribución real desde la traza (FR-063): la acción la enumera el evento que
  * escribió el trigger, no una suposición del cliente. Sin evento aún, la atribución de reserva
  * sale de las columnas de atribución de la propia fila.
+ *
+ * Tras un UPDATE, un evento anterior a `updated_at` describe otra escritura (por ejemplo el
+ * alta): no todos los UPDATE emiten evento, y atribuir ese evento a la edición nombraría al
+ * autor original (revisión de la PR #27). El evento del propio UPDATE comparte `now()` con
+ * `updated_at`, porque ambos se escriben en la misma transacción.
  */
 async function readAttribution(
   client: SupabaseClient<Database>,
@@ -26,19 +39,32 @@ async function readAttribution(
     throw eventError;
   }
 
-  return event
-    ? {
-        actorId: event.actor_id,
-        occurredAt: event.occurred_at,
-        action: event.action,
-        supersedesEventId: event.supersedes_event_id,
-      }
-    : {
-        actorId: record.created_by,
-        occurredAt: record.created_at,
-        action: null,
-        supersedesEventId: record.supersedes_event_id,
-      };
+  const editedAt = record.updated_at;
+  const eventPredatesEdit =
+    event !== null && editedAt !== null && Date.parse(event.occurred_at) < Date.parse(editedAt);
+
+  if (event && !eventPredatesEdit) {
+    return {
+      actorId: event.actor_id,
+      occurredAt: event.occurred_at,
+      action: event.action,
+      supersedesEventId: event.supersedes_event_id,
+    };
+  }
+  if (record.updated_by !== null && editedAt !== null) {
+    return {
+      actorId: record.updated_by,
+      occurredAt: editedAt,
+      action: null,
+      supersedesEventId: record.supersedes_event_id,
+    };
+  }
+  return {
+    actorId: record.created_by,
+    occurredAt: record.created_at,
+    action: null,
+    supersedesEventId: record.supersedes_event_id,
+  };
 }
 
 export async function createClinicalRecord(
@@ -63,21 +89,37 @@ export async function createClinicalRecord(
  * parte de la firma ni del UPDATE: el servidor las fija y el rol de la Data API solo puede
  * escribir `content`. El contenido con campos de control de atribución se rechaza antes de
  * tocar el servidor (FR-063).
+ *
+ * Con `expectedUpdatedAt`, el UPDATE solo se aplica si la fila sigue como se leyó (control
+ * optimista sobre `updated_at`; `null` es una fila nunca editada). Si otro veterinario la
+ * editó entretanto, no se escribe nada y se lanza `ClinicalWriteConflictError`, para que quien
+ * llama relea y reconstruya el contenido en vez de pisar la edición ajena.
  */
 export async function updateClinicalContent(
   client: SupabaseClient<Database>,
   recordId: string,
   content: Record<string, unknown>,
+  options: { expectedUpdatedAt?: string | null } = {},
 ): Promise<ClinicalMutationResult<ClinicalRecord>> {
   assertNoClientAttributionFields(content);
-  const { data, error } = await client
+  let update = client
     .from("clinical_records")
     .update({ content: content as ClinicalRecord["content"] })
-    .eq("id", recordId)
-    .select("*")
-    .single();
-  if (error || !data) {
-    throw error ?? new Error("No se pudo actualizar el contenido del registro clínico.");
+    .eq("id", recordId);
+  const guarded = options.expectedUpdatedAt !== undefined;
+  if (options.expectedUpdatedAt === null) {
+    update = update.is("updated_at", null);
+  } else if (options.expectedUpdatedAt !== undefined) {
+    update = update.eq("updated_at", options.expectedUpdatedAt);
+  }
+  const { data, error } = await update.select("*").maybeSingle();
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    throw guarded
+      ? new ClinicalWriteConflictError(recordId)
+      : new Error("No se pudo actualizar el contenido del registro clínico.");
   }
 
   return { record: data, attribution: await readAttribution(client, data) };
