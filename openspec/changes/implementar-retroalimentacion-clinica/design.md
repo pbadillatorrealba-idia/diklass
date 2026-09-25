@@ -46,7 +46,7 @@ Restricciones de esta rama que el diseño absorbe: **archivos compartidos prohib
 (`src/lib/attribution/*`, `src/lib/storage/*`, `src/lib/supabase/*`,
 `src/app/(protected)/consultations/[id].tsx`, `src/features/registro/*`,
 `supabase/migrations/001-009*`, `supabase/tests/001-008*`, `supabase/seed.sql`); números propios:
-migración `012_retroalimentacion_clinica.sql`, suite pgTap `011_retroalimentacion_clinica.sql`
+migración `012_retroalimentacion_clinica.sql`, suite pgTap `012_retroalimentacion_clinica.sql`
 (los huecos 010/011 de migraciones y 009/010 de tests están reservados a ramas hermanas);
 **sin Playwright** en esta tanda; verificación SQL local con clúster PostgreSQL scratch y shims en
 `/tmp/verify-005/` (patrón del [quickstart de 002](../implementar-registro-clinico-longitudinal/quickstart.md)),

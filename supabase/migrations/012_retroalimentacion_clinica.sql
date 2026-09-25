@@ -30,7 +30,7 @@
 -- se modifican tablas, grants (004/005), policies ni el mapping `clinical_record_action`
 -- (003: el INSERT de 'clinical_feedback' ya emite 'clinical_feedback_recorded' y
 -- status 'corrective' ya emite 'corrective_record_created'). Verificación:
--- supabase/tests/011_retroalimentacion_clinica.sql (pgTap).
+-- supabase/tests/012_retroalimentacion_clinica.sql (pgTap).
 
 -- ---------------------------------------------------------------------------
 -- D5 (FR-040 · FR-043 · SC-023 · FR-041 · D3): el contenido se valida en el servidor.

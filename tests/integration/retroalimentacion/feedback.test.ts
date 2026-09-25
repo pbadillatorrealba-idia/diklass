@@ -202,7 +202,7 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
     expect(epicrisis).toEqual(epicrisisPrevia);
   });
 
-  test("el servicio rechaza registrar sobre una consulta aún abierta, sin escribir nada (D3; el gate del servidor lo verifica el assert 20 de la suite 011)", async () => {
+  test("el servicio rechaza registrar sobre una consulta aún abierta, sin escribir nada (D3; el gate del servidor lo verifica el assert 20 de la suite 012)", async () => {
     await expect(
       createFeedbackEntry(ana.client, {
         clinicId: ana.clinicId,
