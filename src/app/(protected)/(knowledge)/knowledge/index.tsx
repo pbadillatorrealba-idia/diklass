@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conocimiento";
 import { SelectorPacienteContexto } from "@/components/conocimiento/selector-paciente-contexto";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
+import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -51,6 +52,20 @@ export default function KnowledgeConversationScreen() {
     enabled: respaldoAbierto !== null,
   });
 
+  useEffect(() => {
+    if (!pacientesQuery.error) return;
+    if (isAuthenticationRequired(pacientesQuery.error)) {
+      setAccessState("expired");
+      openExpiredDialog();
+      return;
+    }
+    void captureClientError(errorReporter, {
+      error: pacientesQuery.error,
+      operation: "knowledge_patient_context_load",
+      requestId: makeRequestId(),
+    });
+  }, [pacientesQuery.error, openExpiredDialog, setAccessState]);
+
   const manejarError = (error: unknown, operation: string) => {
     if (isAuthenticationRequired(error)) {
       setAccessState("expired");
@@ -92,11 +107,26 @@ export default function KnowledgeConversationScreen() {
         apoya en la colección documental y distingue fuente, ficha e inferencia.
       </Text>
 
-      <SelectorPacienteContexto
-        onChange={setPatient}
-        pacientes={pacientesQuery.data ?? []}
-        patientId={patientId}
-      />
+      <QueryState
+        empty={
+          <VStack className="gap-2" testID="knowledge-patients-empty">
+            <Text>Esta clínica aún no tiene pacientes; puedes consultar conocimiento general.</Text>
+            <SelectorPacienteContexto onChange={setPatient} pacientes={[]} patientId={null} />
+          </VStack>
+        }
+        error={pacientesQuery.error}
+        errorMessage="No pudimos cargar los pacientes para el contexto de la consulta."
+        isEmpty={pacientesQuery.data?.length === 0}
+        isPending={pacientesQuery.isPending}
+        onRetry={() => void pacientesQuery.refetch()}
+        testID="knowledge-patients"
+      >
+        <SelectorPacienteContexto
+          onChange={setPatient}
+          pacientes={pacientesQuery.data ?? []}
+          patientId={patientId}
+        />
+      </QueryState>
 
       <FormControl>
         <FormControlLabel>

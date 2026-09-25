@@ -117,4 +117,45 @@ test.describe("estados de datos", () => {
     await expect(error.getByRole("button", { name: "Reintentar" })).toBeVisible();
     await expect(page.getByTestId("feedback-timeline-loading")).toHaveCount(0);
   });
+
+  test("si falla la ficha en seguimiento, ofrece reintentar la ficha", async ({ page }) => {
+    await page.goto("/follow-up");
+    const abrir = page.getByTestId("follow-up-open").first();
+    await expect(abrir).toBeVisible({ timeout: 15_000 });
+    const href = await abrir.getAttribute("href");
+    if (!href) throw new Error("sin enlace de seguimiento");
+    let fallar = true;
+    await page.route("**/rest/v1/clinical_records?*", (route) => {
+      const url = route.request().url();
+      if (fallar && url.includes("record_type=eq.patient") && url.includes("id=eq.")) {
+        return route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
+      }
+      return route.continue();
+    });
+    await page.goto(href);
+    const error = page.getByTestId("feedback-patient-error");
+    await expect(error).toBeVisible({ timeout: 15_000 });
+    fallar = false;
+    await error.getByRole("button", { name: "Reintentar" }).click();
+    await expect(error).toHaveCount(0);
+    await expect(page.getByTestId("feedback-antecedents")).toBeVisible();
+  });
+
+  test("si falla el selector de pacientes de conocimiento, ofrece reintentar", async ({ page }) => {
+    let fallar = true;
+    await page.route("**/rest/v1/clinical_records?*", (route) => {
+      const url = route.request().url();
+      if (fallar && url.includes("record_type=eq.patient") && !url.includes("id=eq.")) {
+        return route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
+      }
+      return route.continue();
+    });
+    await page.goto("/knowledge");
+    const error = page.getByTestId("knowledge-patients-error");
+    await expect(error).toBeVisible({ timeout: 15_000 });
+    fallar = false;
+    await error.getByRole("button", { name: "Reintentar" }).click();
+    await expect(error).toHaveCount(0);
+    await expect(page.getByTestId("selector-paciente-contexto")).toBeVisible();
+  });
 });

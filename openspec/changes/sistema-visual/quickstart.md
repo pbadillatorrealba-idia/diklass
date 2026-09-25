@@ -977,14 +977,14 @@ equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
   - Dynamic Type (5.4);
   - autocompletado de credenciales en iOS/Android (9.4);
   - `normalize("NFD")` en Hermes.
-- **9.4 (web):** comprobar a mano en Chrome que el gestor ofrece guardar y rellena.
 - **iOS:** el guardado en el llavero exige Associated Domains con un dominio desplegado.
 - **CI:** la matriz `firefox`/`webkit` corre en `push` a `main`; en la PR solo está la
   verificación local.
 - **Aceptación conjunta de FR-076/FR-077 con 003–005:** el sugerido/validado y las severidades se
   usan en esas features.
-- **Menores de la revisión** registrados arriba: el error de página del seguimiento, los estados
-  del selector de `/knowledge`, la señal de reintento y el CSP.
+- **Menores de la revisión** registrados arriba: la señal de reintento y el CSP. Los estados de
+  error y reintento del seguimiento y del selector de `/knowledge` se corrigieron tras la revisión
+  profunda de `85b265f` (detalle abajo).
 
 ### 9.4 — Guardado de credenciales (FR-089 · US15-AC1/AC2)
 
@@ -999,3 +999,25 @@ equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
   - el guardado en el llavero de iOS, que además exige Associated Domains con un dominio
     desplegado.
 
+### Revisión profunda de la PR #38 (2026-09-25)
+
+El informe sobre `eb1f2e1..85b265f` está en el comentario de la PR
+`https://github.com/pbadillatorrealba-idia/diklass/pull/38#issuecomment-5840066178`. El veredicto
+fue «No» por tres incumplimientos de producto y por la verificación nativa pendiente. Tras el
+informe se corrigieron los puntos de código:
+
+- FR-086: la cronología y sus antecedentes usan una sola `FlatList`, con formulario en el pie; las
+  correcciones se agrupan en una pasada.
+- FR-087: el texto clínico de los segmentos de respuesta y la cronología lleva `selectable`.
+- FR-085: un fallo de lectura de la ficha de seguimiento o de los pacientes de Conocimiento muestra
+  error y «Reintentar».
+
+Las pruebas nuevas fallaron antes de cada corrección. Después pasaron `typecheck`, Biome, 790
+pruebas unitarias/de integración (75 pruebas vivas omitidas por entorno), los 17 casos web
+afectados en Chromium (`conocimiento.spec.ts`, `estados.spec.ts`, `retroalimentacion.spec.ts`) y
+los 22 de `estados` y `retroalimentacion` en Firefox/WebKit. La compuerta `accessibility.spec.ts`
+pasó 12/12 en Chromium claro y 12/12 en Chromium oscuro. La primera ejecución conjunta terminó
+tras 19 casos por OOM del servidor Metro (heap de 2 GB); la repetición aislada de oscuro con
+`NODE_OPTIONS=--max-old-space-size=4096` pasó 12/12. No hay `adb` ni simulador iOS disponibles:
+la verificación nativa de la lista de pendientes anterior sigue abierta y no hay aceptación de la
+PR.

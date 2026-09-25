@@ -59,6 +59,22 @@ describe("ScreenList", () => {
     expect(html).not.toContain('data-testid="fila"');
   });
 
+  test("pinta el formulario después de las filas dentro del mismo desplazamiento", () => {
+    const html = renderToStaticMarkup(
+      <ScreenList
+        data={pacientes}
+        empty={<Text>Sin pacientes</Text>}
+        footer={<Text testID="formulario">Registrar evolución</Text>}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <Text testID="fila">{item.name}</Text>}
+        testID="pacientes-list"
+      />,
+    );
+    expect(html.indexOf('data-testid="formulario"')).toBeGreaterThan(
+      html.indexOf('data-testid="fila"'),
+    );
+  });
+
   // design.md D18: listas a lo ancho del escritorio, en 2 columnas desde 1280 px de ventana.
   test("width=wide usa el ancho de escritorio; por defecto, el de lectura", () => {
     const clase = (html: string) => html.match(/data-content-class="([^"]*)"/)?.[1] ?? "";

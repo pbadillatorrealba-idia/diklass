@@ -113,6 +113,8 @@ export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title" | "width"> &
   Pick<FlatListProps<T>, "data" | "keyExtractor" | "renderItem"> & {
     /** Acciones y textos bajo el título, dentro de la lista. */
     header?: ReactNode;
+    /** Contenido después de las filas, dentro del mismo desplazamiento. */
+    footer?: ReactElement;
     /** Lo que se pinta sin filas: carga, error o vacío (`QueryState`). */
     empty: ReactElement;
     testID: string;
@@ -127,6 +129,7 @@ export function ScreenList<T>({
   back,
   data,
   empty,
+  footer,
   header,
   keyExtractor,
   renderItem,
@@ -149,6 +152,7 @@ export function ScreenList<T>({
         // RN no admite cambiar `numColumns` en caliente: otra clave monta una lista nueva.
         key={columns}
         ListEmptyComponent={empty}
+        ListFooterComponent={footer}
         ListHeaderComponent={
           <View className="gap-6 pb-3">
             <ScreenHeading back={back} title={title} />

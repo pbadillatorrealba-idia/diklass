@@ -31,7 +31,7 @@ export function SegmentoRespuestaView({ segmento }: { segmento: SegmentoRespuest
       <Text tone="muted" variant="label">
         {etiqueta}
       </Text>
-      <Text>
+      <Text selectable>
         {segmento.texto}
         {segmento.kind === "ficha" && segmento.provenance !== "desconocida"
           ? ` (${segmento.fichaRef})`

@@ -44,8 +44,10 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
               >
                 {/* Nombre, icono y color de la escala única (FR-077); texto en `foreground`. */}
                 <SeverityBadge level={entry.event.severity} />
-                <Text variant={esGrave ? "strong" : "body"}>{entry.event.description}</Text>
-                <Text tone="muted">
+                <Text selectable variant={esGrave ? "strong" : "body"}>
+                  {entry.event.description}
+                </Text>
+                <Text selectable tone="muted">
                   Registrado el {registradoEl} · Consulta {entry.consultationId}
                 </Text>
               </Box>
@@ -77,11 +79,11 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
                     key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                     testID="adverse-event-superseded-item"
                   >
-                    <Text>
+                    <Text selectable>
                       {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}:{" "}
                       {entry.event.description}
                     </Text>
-                    <Text tone="muted">
+                    <Text selectable tone="muted">
                       Registrado el {new Date(entry.registeredAt).toLocaleString("es-CL")} ·
                       Consulta {entry.consultationId} · en una versión ya corregida; permanece
                       registrado.

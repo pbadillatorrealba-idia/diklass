@@ -6,11 +6,11 @@ import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { AdverseEventReport } from "@/components/retroalimentacion/adverse-event-report";
 import { FeedbackForm } from "@/components/retroalimentacion/feedback-form";
 import { FeedbackTimeline } from "@/components/retroalimentacion/feedback-timeline";
-import { ADHERENCE_LABELS, EVOLUTION_LABELS } from "@/components/retroalimentacion/labels";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -232,160 +232,169 @@ export default function FollowUpPanelScreen() {
     label: `Consulta del ${new Date(entry.record.created_at).toLocaleString("es-CL")}`,
   }));
 
+  if (patientQuery.isPending || patientQuery.error || !patientQuery.data) {
+    return (
+      <Screen
+        title="Seguimiento de este paciente"
+        back={{ href: "/follow-up", label: "Seguimiento" }}
+      >
+        <QueryState
+          empty={
+            <Text testID="feedback-patient-empty">No encontramos la ficha de este paciente.</Text>
+          }
+          error={patientQuery.error}
+          errorMessage="No pudimos cargar la ficha del paciente."
+          isEmpty={!patientQuery.data}
+          isPending={patientQuery.isPending}
+          onRetry={() => void patientQuery.refetch()}
+          testID="feedback-patient"
+        >
+          {null}
+        </QueryState>
+      </Screen>
+    );
+  }
+
   return (
-    <Screen
+    <FeedbackTimeline
+      antecedents={antecedentes}
       title={`Seguimiento de ${patientQuery.data?.content.name ?? "este paciente"}`}
       back={{ href: "/follow-up", label: "Seguimiento" }}
-    >
-      {queryError && !sesionExpirada ? (
-        <Text accessibilityLiveRegion="polite" testID="feedback-load-error">
-          No pudimos cargar la evolución del paciente. Vuelve a intentarlo.
-        </Text>
-      ) : null}
-
-      <Card testID="feedback-antecedents">
-        <VStack className="gap-2">
-          <Heading level={2}>Evolución previa (antecedentes)</Heading>
-          {antecedentes.length === 0 ? (
-            <Text testID="feedback-antecedents-empty">
-              Sin evolución registrada para este paciente.
+      entries={timeline}
+      error={consultationsQuery.error ?? feedbackQuery.error}
+      isPending={
+        consultationsQuery.isPending || (consultationsQuery.isSuccess && feedbackQuery.isPending)
+      }
+      onCorrect={corregirEntrada}
+      onRetry={() =>
+        void (consultationsQuery.error ? consultationsQuery.refetch() : feedbackQuery.refetch())
+      }
+      header={
+        <>
+          {queryError && !sesionExpirada ? (
+            <Text accessibilityLiveRegion="polite" testID="feedback-load-error">
+              No pudimos cargar la evolución del paciente. Vuelve a intentarlo.
             </Text>
-          ) : (
-            antecedentes.map((antecedente) => (
-              <Text key={antecedente.feedbackRecordId} testID="feedback-antecedent-item">
-                Consulta del{" "}
-                {antecedente.consultationDate === null
-                  ? "(fecha no disponible)"
-                  : new Date(antecedente.consultationDate).toLocaleString("es-CL")}
-                , evolución registrada el{" "}
-                {new Date(antecedente.registeredAt).toLocaleString("es-CL")}: adherencia{" "}
-                {ADHERENCE_LABELS[antecedente.adherence]}, evolución{" "}
-                {EVOLUTION_LABELS[antecedente.evolution]}
-                {antecedente.revisedDiagnosis === null
-                  ? ""
-                  : `; cambio de diagnóstico: ${antecedente.revisedDiagnosis}`}
-              </Text>
-            ))
-          )}
-          <Text tone="muted">
-            Este es el antecedente que el resumen de la consulta posterior integrará cuando se
-            extienda `buildFollowUpSummary` (requisito de integración D9).
-          </Text>
-        </VStack>
-      </Card>
+          ) : null}
 
-      <FeedbackTimeline
-        entries={timeline}
-        // La cronología depende de ambas lecturas: consultas y, sobre ellas, las entradas.
-        error={consultationsQuery.error ?? feedbackQuery.error}
-        // `feedbackQuery` espera a las consultas: si estas fallan queda deshabilitada y «pending»
-        // para siempre, y la carga taparía el error (revisión de la PR #38).
-        isPending={
-          consultationsQuery.isPending || (consultationsQuery.isSuccess && feedbackQuery.isPending)
-        }
-        onCorrect={corregirEntrada}
-        onRetry={() =>
-          void (consultationsQuery.error ? consultationsQuery.refetch() : feedbackQuery.refetch())
-        }
-      />
-      <AdverseEventReport events={eventosAdversos} />
-
-      <Card testID="feedback-aggregates">
-        <VStack className="gap-1">
-          <Heading level={2}>Agregado por categoría</Heading>
-          <Text testID="feedback-aggregates-total">Entradas vigentes: {agregados.total}</Text>
-          <Text testID="feedback-aggregates-detail">
-            Adherencia — completa: {agregados.adherence.completa}, parcial:{" "}
-            {agregados.adherence.parcial}, ninguna: {agregados.adherence.ninguna}, desconocida:{" "}
-            {agregados.adherence.desconocida}. Evolución — mejoría: {agregados.evolution.mejoria},
-            mejoría parcial: {agregados.evolution.mejoriaParcial}, sin cambios:{" "}
-            {agregados.evolution.sinCambios}, empeoramiento: {agregados.evolution.empeoramiento},
-            desconocida: {agregados.evolution.desconocida}. Eventos adversos — leve:{" "}
-            {agregados.adverseEvents.leve}, moderado: {agregados.adverseEvents.moderado}, grave:{" "}
-            {agregados.adverseEvents.grave}.
-          </Text>
-        </VStack>
-      </Card>
-
-      <Card testID="feedback-register">
-        <VStack className="gap-4">
-          <Heading level={2}>
-            {correctionTargetId === null
-              ? "Registrar evolución posterior"
-              : "Corregir una entrada registrada"}
-          </Heading>
-          {consultasCerradas.length === 0 ? (
-            <Text testID="feedback-no-closed-consultations">
-              La evolución se registra sobre una consulta cerrada: este paciente aún no tiene
-              ninguna.
-            </Text>
-          ) : (
-            <>
-              <OptionPicker
-                isDisabled={isBusy || correctionTargetId !== null}
-                label="Consulta a la que se refiere la evolución"
-                onChange={(value: string) => setSelectedConsultationId(value)}
-                options={opcionesConsulta}
-                testID="feedback-consultation-picker"
-                value={selectedConsultationId}
-              />
-              {epicrisisIndicada ? (
-                <Box testID="feedback-indicated-treatment">
-                  <Text variant="strong">Tratamiento indicado en esa consulta</Text>
-                  <Text>
-                    Medicamentos aprobados:{" "}
-                    {epicrisisIndicada.medicamentosAprobados.length === 0
-                      ? "ninguno"
-                      : epicrisisIndicada.medicamentosAprobados.join(", ")}
-                  </Text>
-                  <Text>
-                    Intervenciones propuestas:{" "}
-                    {epicrisisIndicada.intervencionesPropuestas.length === 0
-                      ? "ninguna"
-                      : epicrisisIndicada.intervencionesPropuestas.join(", ")}
-                  </Text>
-                </Box>
+          <Card testID="feedback-antecedents">
+            <VStack className="gap-2">
+              <Heading level={2}>Evolución previa (antecedentes)</Heading>
+              {antecedentes.length === 0 ? (
+                <Text testID="feedback-antecedents-empty">
+                  Sin evolución registrada para este paciente.
+                </Text>
               ) : null}
-              <FeedbackForm
-                errors={formErrors}
-                isDisabled={isBusy}
-                onAddAdverseEvent={agregarEvento}
-                onChange={cambiarCampo}
-                onChangeAdverseEvent={cambiarEvento}
-                onRemoveAdverseEvent={quitarEvento}
-                values={formValues}
-              />
-              <Button
-                accessibilityLabel="Guardar la retroalimentación"
-                isDisabled={isBusy || selectedConsultationId === ""}
-                onPress={() => void guardar()}
-                testID="feedback-submit"
-              >
-                <ButtonText>
-                  {correctionTargetId === null
-                    ? "Registrar evolución"
-                    : "Guardar corrección (registro nuevo)"}
-                </ButtonText>
-              </Button>
-              {correctionTargetId === null ? null : (
-                <Button
-                  accessibilityLabel="Cancelar la corrección"
-                  isDisabled={isBusy}
-                  onPress={cancelarCorreccion}
-                  testID="feedback-cancel-correction"
-                >
-                  <ButtonText>Cancelar corrección</ButtonText>
-                </Button>
+              <Text tone="muted">
+                Este es el antecedente que el resumen de la consulta posterior integrará cuando se
+                extienda `buildFollowUpSummary` (requisito de integración D9).
+              </Text>
+            </VStack>
+          </Card>
+        </>
+      }
+      footer={
+        <>
+          <AdverseEventReport events={eventosAdversos} />
+
+          <Card testID="feedback-aggregates">
+            <VStack className="gap-1">
+              <Heading level={2}>Agregado por categoría</Heading>
+              <Text testID="feedback-aggregates-total">Entradas vigentes: {agregados.total}</Text>
+              <Text testID="feedback-aggregates-detail">
+                Adherencia — completa: {agregados.adherence.completa}, parcial:{" "}
+                {agregados.adherence.parcial}, ninguna: {agregados.adherence.ninguna}, desconocida:{" "}
+                {agregados.adherence.desconocida}. Evolución — mejoría:{" "}
+                {agregados.evolution.mejoria}, mejoría parcial: {agregados.evolution.mejoriaParcial}
+                , sin cambios: {agregados.evolution.sinCambios}, empeoramiento:{" "}
+                {agregados.evolution.empeoramiento}, desconocida: {agregados.evolution.desconocida}.
+                Eventos adversos — leve: {agregados.adverseEvents.leve}, moderado:{" "}
+                {agregados.adverseEvents.moderado}, grave: {agregados.adverseEvents.grave}.
+              </Text>
+            </VStack>
+          </Card>
+
+          <Card testID="feedback-register">
+            <VStack className="gap-4">
+              <Heading level={2}>
+                {correctionTargetId === null
+                  ? "Registrar evolución posterior"
+                  : "Corregir una entrada registrada"}
+              </Heading>
+              {consultasCerradas.length === 0 ? (
+                <Text testID="feedback-no-closed-consultations">
+                  La evolución se registra sobre una consulta cerrada: este paciente aún no tiene
+                  ninguna.
+                </Text>
+              ) : (
+                <>
+                  <OptionPicker
+                    isDisabled={isBusy || correctionTargetId !== null}
+                    label="Consulta a la que se refiere la evolución"
+                    onChange={(value: string) => setSelectedConsultationId(value)}
+                    options={opcionesConsulta}
+                    testID="feedback-consultation-picker"
+                    value={selectedConsultationId}
+                  />
+                  {epicrisisIndicada ? (
+                    <Box testID="feedback-indicated-treatment">
+                      <Text variant="strong">Tratamiento indicado en esa consulta</Text>
+                      <Text>
+                        Medicamentos aprobados:{" "}
+                        {epicrisisIndicada.medicamentosAprobados.length === 0
+                          ? "ninguno"
+                          : epicrisisIndicada.medicamentosAprobados.join(", ")}
+                      </Text>
+                      <Text>
+                        Intervenciones propuestas:{" "}
+                        {epicrisisIndicada.intervencionesPropuestas.length === 0
+                          ? "ninguna"
+                          : epicrisisIndicada.intervencionesPropuestas.join(", ")}
+                      </Text>
+                    </Box>
+                  ) : null}
+                  <FeedbackForm
+                    errors={formErrors}
+                    isDisabled={isBusy}
+                    onAddAdverseEvent={agregarEvento}
+                    onChange={cambiarCampo}
+                    onChangeAdverseEvent={cambiarEvento}
+                    onRemoveAdverseEvent={quitarEvento}
+                    values={formValues}
+                  />
+                  <Button
+                    accessibilityLabel="Guardar la retroalimentación"
+                    isDisabled={isBusy || selectedConsultationId === ""}
+                    onPress={() => void guardar()}
+                    testID="feedback-submit"
+                  >
+                    <ButtonText>
+                      {correctionTargetId === null
+                        ? "Registrar evolución"
+                        : "Guardar corrección (registro nuevo)"}
+                    </ButtonText>
+                  </Button>
+                  {correctionTargetId === null ? null : (
+                    <Button
+                      accessibilityLabel="Cancelar la corrección"
+                      isDisabled={isBusy}
+                      onPress={cancelarCorreccion}
+                      testID="feedback-cancel-correction"
+                    >
+                      <ButtonText>Cancelar corrección</ButtonText>
+                    </Button>
+                  )}
+                </>
               )}
-            </>
-          )}
-          {status === null ? null : (
-            <Text accessibilityLiveRegion="polite" testID="feedback-status">
-              {status}
-            </Text>
-          )}
-        </VStack>
-      </Card>
-    </Screen>
+              {status === null ? null : (
+                <Text accessibilityLiveRegion="polite" testID="feedback-status">
+                  {status}
+                </Text>
+              )}
+            </VStack>
+          </Card>
+        </>
+      }
+    />
   );
 }
