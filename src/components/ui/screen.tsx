@@ -1,7 +1,14 @@
 import { Link, Stack } from "expo-router";
 import Head from "expo-router/head";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
-import { FlatList, type FlatListProps, KeyboardAvoidingView, ScrollView, View } from "react-native";
+import {
+  FlatList,
+  type FlatListProps,
+  KeyboardAvoidingView,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "./heading";
 import { Text } from "./text";
@@ -10,7 +17,7 @@ const WIDTHS = { content: "max-w-content", wide: "max-w-wide" } as const;
 
 export type ScreenProps = PropsWithChildren<{
   className?: string;
-  /** `content`: una columna de lectura; `wide`: la consulta a dos columnas (design.md D9). */
+  /** `content`: una columna de lectura; `wide`: consulta, listas y paneles (design.md D9, D18). */
   width?: keyof typeof WIDTHS;
   scroll?: boolean;
   testID?: string;
@@ -111,7 +118,15 @@ export function Screen({
   );
 }
 
-export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title"> &
+/** Ventana a partir de la cual una lista `wide` va a 2 columnas (`xl`, design.md D18). */
+const TWO_COLUMNS_FROM = 1280;
+
+/** Columnas de una `ScreenList` según su ancho y la ventana (design.md D18). */
+export function listColumns(width: keyof typeof WIDTHS, windowWidth: number) {
+  return width === "wide" && windowWidth >= TWO_COLUMNS_FROM ? 2 : 1;
+}
+
+export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title" | "width"> &
   Pick<FlatListProps<T>, "data" | "keyExtractor" | "renderItem"> & {
     /** Acciones y textos bajo el título, dentro de la lista. */
     header?: ReactNode;
@@ -134,16 +149,22 @@ export function ScreenList<T>({
   renderItem,
   testID,
   title,
+  width = "content",
 }: ScreenListProps<T>) {
+  const columns = listColumns(width, useWindowDimensions().width);
   return (
     <ScreenFrame title={title}>
       <FlatList
         className="flex-1"
-        contentContainerClassName={`w-full ${WIDTHS.content} self-center gap-3 p-4 md:p-6`}
+        // `columnWrapperClassName` solo existe con más de una columna.
+        columnWrapperClassName={columns > 1 ? "gap-3" : undefined}
+        contentContainerClassName={`w-full ${WIDTHS[width]} self-center gap-3 p-4 md:p-6`}
         contentInsetAdjustmentBehavior="automatic"
         data={data}
         keyboardShouldPersistTaps="handled"
         keyExtractor={keyExtractor}
+        // RN no admite cambiar `numColumns` en caliente: otra clave monta una lista nueva.
+        key={columns}
         ListEmptyComponent={empty}
         ListHeaderComponent={
           <View className="gap-6 pb-3">
@@ -151,7 +172,13 @@ export function ScreenList<T>({
             {header}
           </View>
         }
-        renderItem={renderItem}
+        numColumns={columns}
+        // En filas de varias columnas, cada tarjeta se reparte el ancho de la fila.
+        renderItem={
+          columns > 1 && renderItem
+            ? (info) => <View className="flex-1">{renderItem(info)}</View>
+            : renderItem
+        }
         testID={testID}
       />
     </ScreenFrame>

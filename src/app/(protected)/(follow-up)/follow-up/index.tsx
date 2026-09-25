@@ -97,6 +97,7 @@ export default function FollowUpIndexScreen() {
       )}
       testID="follow-up-patient-list"
       title="Seguimiento entre consultas"
+      width="wide"
     />
   );
 }

@@ -144,6 +144,7 @@ export default function KnowledgeCollectionScreen() {
       )}
       testID="fuentes-list"
       title="Base de conocimiento · Colección"
+      width="wide"
     />
   );
 }

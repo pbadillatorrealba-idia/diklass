@@ -192,13 +192,13 @@ como pendiente explícito en `quickstart.md`.
 
 ## 11. Ancho por tipo de pantalla (D18 · FR-079)
 
-- [ ] 11.1 Escribir en rojo, en `accessibility.spec.ts`, el escenario «Listas en escritorio»:
+- [x] 11.1 Escribir en rojo, en `accessibility.spec.ts`, el escenario «Listas en escritorio»:
   - a 1280 px, `/patients` muestra dos `patient-item` lado a lado y el contenido mide más de
     720 px;
   - a 1024 px, una sola columna;
   - `/patients/new` sigue en 720 px o menos.
   FR-079. Verificación: rojo por el ancho actual.
-- [ ] 11.2 Añadir a `ScreenList` la prop `width` y las columnas adaptables (`numColumns` según
+- [x] 11.2 Añadir a `ScreenList` la prop `width` y las columnas adaptables (`numColumns` según
   `useWindowDimensions`, con `key` por número de columnas), con prueba de componente en rojo
   primero. Adoptarlo en `/patients`, `/follow-up` y `/knowledge/sources`. Verificación: prueba
   verde y el caso de 11.1 en verde.

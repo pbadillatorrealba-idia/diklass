@@ -705,3 +705,15 @@ Resultado local en `chromium`:
   - Verde: `accessibility` 8, `navegacion` 7, `auth` 8, `tema` 5 y `conocimiento` 5; 757 pruebas
     unitarias.
 
+## Grupo 11 — Ancho por tipo de pantalla (D18)
+
+- **11.1:** nuevo caso en `accessibility.spec.ts` («a 1280 px la lista de pacientes va a 2
+  columnas y el formulario sigue en 720 px»). Rojo: dos tarjetas a 98 px de distancia vertical.
+- **11.2:**
+  - `ScreenList` gana `width` y `listColumns(width, ventana)`: 2 columnas con `wide` y 1280 px o
+    más.
+  - `key` por número de columnas, y cada ítem va en un `View flex-1` cuando hay varias.
+  - `screen-list.test.tsx` en rojo primero: el ancho de `max-w-content`/`max-w-wide` y 4 casos
+    de columnas. El mock expone `contentContainerClassName` como `data-content-class`.
+  - Adoptado en `/patients`, `/follow-up` y `/knowledge/sources`. El caso de 11.1 pasa a verde.
+

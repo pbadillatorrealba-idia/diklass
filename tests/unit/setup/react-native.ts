@@ -23,6 +23,14 @@ mock.module("react-native", () => {
   const web = require("react-native-web");
   return {
     ...web,
+    // `contentContainerClassName` (NativeWind) se reexpone como `data-content-class` (D18).
+    FlatList: forwardRef((props: { contentContainerClassName?: string; dataSet?: object }, ref) =>
+      createElement(web.FlatList, {
+        ...props,
+        ref,
+        dataSet: { ...props.dataSet, contentClass: props.contentContainerClassName },
+      }),
+    ),
     // `behavior` se reexpone como `data-behavior` para comprobarlo en el HTML (D14).
     KeyboardAvoidingView: forwardRef(
       (props: { behavior?: string; dataSet?: object; className?: string }, ref) =>

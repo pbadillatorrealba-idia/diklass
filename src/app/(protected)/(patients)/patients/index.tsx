@@ -107,6 +107,7 @@ export default function PatientsScreen() {
       )}
       testID="patients-list"
       title="Pacientes"
+      width="wide"
     />
   );
 }
