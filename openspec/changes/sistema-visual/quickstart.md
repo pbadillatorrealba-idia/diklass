@@ -857,3 +857,28 @@ Resultado local en `chromium`:
 - **Pendiente de dispositivo:** Dynamic Type al máximo en iOS y el tamaño de fuente máximo en
   Android.
 
+### 5.2 — Compuerta axe completa, repetida tras los grupos 7–11 (SC-050)
+
+- Local, de uno en uno con `--workers=1`, sobre `8990c3e`/`3c12ff4`, con `accessibility.spec.ts`
+  (12 casos):
+
+  | Proyecto | Resultado |
+  |---|---|
+  | `chromium` | 12 passed |
+  | `chromium-dark` | 12 passed |
+  | `firefox` | 12 passed |
+  | `webkit` | 12 passed |
+
+- Los 12 casos incluyen:
+  - axe en `/login`, en su error y en todas las pantallas del caso sintético;
+  - el recorrido por teclado;
+  - los grupos de opciones;
+  - los enlaces de navegación;
+  - las dos columnas de la consulta y de D18;
+  - el reflujo a 320/375/1280 px, también de `/login`.
+- CI (`chromium`, y `firefox`/`webkit` en matriz): verde en `8990c3e`,
+  https://github.com/pbadillatorrealba-idia/diklass/actions/runs/36185078838. `chromium-dark` no
+  corre en CI; su resultado es el local.
+- El fallo intermitente del recorrido por teclado queda explicado y corregido (5.7, 5.8 y la
+  espera de `history-open`).
+
