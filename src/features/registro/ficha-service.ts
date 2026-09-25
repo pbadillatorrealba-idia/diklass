@@ -10,7 +10,11 @@ import {
 } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createTutor } from "@/features/registro/tutor-service";
-import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
+import {
+  ClinicalWriteConflictError,
+  createClinicalRecord,
+  updateClinicalContent,
+} from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
 import {
   captureClientError,
@@ -28,6 +32,9 @@ import type { Database } from "@/lib/supabase/database.types";
  * - La ampliación con `addAntecedentItem` apénda sin tocar los ítems previos ni los demás
  *   campos (FR-001 · US1-AC2); un ítem `negative: true` es un hallazgo negativo registrado y
  *   una lista vacía sigue siendo «sin dato» (FR-044 · SC-024).
+ * - Las dos escrituras sobre una ficha existente releen la fila y la actualizan solo si nadie la
+ *   editó entretanto (`writePatientContent`): dos veterinarios de la clínica editan la misma
+ *   ficha (T055) y ninguno debe pisar lo que el otro añadió.
  * - Todo se valida con Zod en esta frontera antes de tocar el servidor y toda escritura cruza
  *   el contrato de atribución (D9). Los errores viajan sin envolver para que la UI decida con
  *   `isAuthenticationRequired`, y cada operación lleva su `requestId` (Constitución IV).
@@ -51,6 +58,47 @@ const antecedentGroupSchema = z.enum([
 const existingTutorIdSchema = z.string().trim().min(1, "Identifica al tutor del paciente.");
 
 const fichaSinTutorSchema = patientContentSchema.omit({ tutorId: true });
+
+const fichaEditableSchema = patientContentSchema.omit({ tutorId: true, antecedentes: true });
+
+/** Intentos de relectura ante una edición concurrente antes de rendirse con el conflicto. */
+const MAX_WRITE_ATTEMPTS = 3;
+
+/**
+ * Relee la ficha, construye el contenido nuevo sobre esa lectura y lo escribe solo si la fila
+ * no cambió desde entonces. Ante un conflicto vuelve a leer y a construir, así que `build`
+ * debe partir siempre de `actual` y nunca de una lectura previa de quien llama.
+ */
+async function writePatientContent(
+  client: SupabaseClient<Database>,
+  patientId: string,
+  build: (actual: PatientContent) => PatientContent,
+): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
+  for (let attempt = 1; ; attempt += 1) {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("*")
+      .eq("id", patientId)
+      .eq("record_type", "patient")
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    if (!data) {
+      throw new Error("No se encontró la ficha del paciente.");
+    }
+    const content = patientContentSchema.parse(build(patientContentSchema.parse(data.content)));
+    try {
+      return await updateClinicalContent(client, patientId, content, {
+        expectedUpdatedAt: data.updated_at,
+      });
+    } catch (error) {
+      if (!(error instanceof ClinicalWriteConflictError) || attempt >= MAX_WRITE_ATTEMPTS) {
+        throw error;
+      }
+    }
+  }
+}
 
 export async function createPatientFicha(
   client: SupabaseClient<Database>,
@@ -93,33 +141,25 @@ export async function createPatientFicha(
   }
 }
 
+/**
+ * Actualiza los datos de la ficha. Los antecedentes y el tutor no viajan en esta escritura:
+ * se conservan los de la fila recién leída. Los antecedentes crecen solo con
+ * `addAntecedentItem`, y tomarlos de la lectura de quien llama borraría los que otro
+ * veterinario añadió mientras editaba (revisión de la PR #27).
+ */
 export async function updatePatientFicha(
   client: SupabaseClient<Database>,
   patientId: string,
-  ficha: Omit<PatientContent, "tutorId">,
+  ficha: Omit<PatientContent, "tutorId" | "antecedentes">,
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();
   try {
-    const fichaValidada = fichaSinTutorSchema.parse(ficha);
-    const { data, error } = await client
-      .from("clinical_records")
-      .select("*")
-      .eq("id", patientId)
-      .eq("record_type", "patient")
-      .maybeSingle();
-    if (error) {
-      throw error;
-    }
-    if (!data) {
-      throw new Error("No se encontró la ficha del paciente.");
-    }
-
-    // El tutor no viaja en la actualización: se conserva el que ya vincula la ficha (D6).
-    const actual = patientContentSchema.parse(data.content);
-    const actualizada = await updateClinicalContent(client, patientId, {
+    const fichaValidada = fichaEditableSchema.parse(ficha);
+    const actualizada = await writePatientContent(client, patientId, (actual) => ({
       ...fichaValidada,
+      antecedentes: actual.antecedentes,
       tutorId: actual.tutorId,
-    });
+    }));
     logEvent("registro.patient_updated", { requestId, operation: "updatePatientFicha" });
     return actualizada;
   } catch (error) {
@@ -145,27 +185,12 @@ export async function addAntecedentItem(
       throw new Error(`Grupo de antecedentes desconocido: ${String(group)}`);
     }
 
-    const { data, error } = await client
-      .from("clinical_records")
-      .select("*")
-      .eq("id", patientId)
-      .eq("record_type", "patient")
-      .maybeSingle();
-    if (error) {
-      throw error;
-    }
-    if (!data) {
-      throw new Error("No se encontró la ficha del paciente.");
-    }
-
     // Apéndice sobre un solo grupo: los ítems previos y los demás campos quedan intactos.
-    const actual = patientContentSchema.parse(data.content);
-    const antecedentes = {
-      ...actual.antecedentes,
-      [grupoParseado.data]: [...actual.antecedentes[grupoParseado.data], item],
-    };
-    const content = patientContentSchema.parse({ ...actual, antecedentes });
-    const actualizada = await updateClinicalContent(client, patientId, content);
+    const grupo = grupoParseado.data;
+    const actualizada = await writePatientContent(client, patientId, (actual) => ({
+      ...actual,
+      antecedentes: { ...actual.antecedentes, [grupo]: [...actual.antecedentes[grupo], item] },
+    }));
     logEvent("registro.patient_antecedent_added", { requestId, operation: "addAntecedentItem" });
     return actualizada;
   } catch (error) {

@@ -28,6 +28,7 @@ type FakeQuery = Promise<FakeResult> & {
   update: (...args: unknown[]) => FakeQuery;
   select: (...args: unknown[]) => FakeQuery;
   eq: (...args: unknown[]) => FakeQuery;
+  is: (...args: unknown[]) => FakeQuery;
   in: (...args: unknown[]) => FakeQuery;
   order: (...args: unknown[]) => FakeQuery;
   limit: (...args: unknown[]) => FakeQuery;
@@ -72,6 +73,7 @@ function fakeClient(queues: Partial<Record<string, FakeResult[]>> = {}) {
         update: chain("update"),
         select: chain("select"),
         eq: chain("eq"),
+        is: chain("is"),
         in: chain("in"),
         order: chain("order"),
         limit: chain("limit"),
@@ -342,6 +344,60 @@ describe("addAntecedentItem (FR-001 · US1-AC2, FR-044)", () => {
         },
       },
     });
+  });
+
+  test("si otro veterinario editó la ficha entretanto, relee y apénda sobre su versión (revisión de la PR #27)", async () => {
+    const previa = { ...ficha(), tutorId: "tutor-1" };
+    const editadaPorOtro = {
+      ...previa,
+      antecedentes: {
+        ...previa.antecedentes,
+        knownAllergies: [{ text: "Penicilina", negative: false }],
+      },
+    };
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ id: "paciente-1", record_type: "patient", content: previa }), error: null },
+        {
+          data: fila({
+            id: "paciente-1",
+            record_type: "patient",
+            content: editadaPorOtro,
+            updated_at: "2026-09-22T10:00:00.000000+00:00",
+          }),
+          error: null,
+        },
+      ],
+      "clinical_records:update": [
+        { data: null, error: null },
+        {
+          data: fila({ id: "paciente-1", record_type: "patient", content: editadaPorOtro }),
+          error: null,
+        },
+      ],
+    });
+
+    await addAntecedentItem(client, "paciente-1", "preexistingDiseases", {
+      text: "Hipotiroidismo",
+      negative: false,
+    });
+
+    const actualizaciones = calls.filter((call) => call.method === "update");
+    expect(actualizaciones).toHaveLength(2);
+    expect(actualizaciones[1]?.args[0]).toEqual({
+      content: {
+        ...editadaPorOtro,
+        antecedentes: {
+          ...editadaPorOtro.antecedentes,
+          preexistingDiseases: [{ text: "Hipotiroidismo", negative: false }],
+        },
+      },
+    });
+    // Cada UPDATE exige la versión que se acaba de leer.
+    expect(calls.filter((call) => call.method === "is")[0]?.args).toEqual(["updated_at", null]);
+    expect(
+      calls.filter((call) => call.method === "eq" && call.args[0] === "updated_at")[0]?.args,
+    ).toEqual(["updated_at", "2026-09-22T10:00:00.000000+00:00"]);
   });
 
   test("un grupo desconocido se rechaza sin tocar el servidor", async () => {
