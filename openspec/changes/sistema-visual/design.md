@@ -552,43 +552,6 @@ Decisiones del usuario (2026-09-25):
     `react-native-web`.
   - Riesgo: estiliza con un objeto de tema, no con NativeWind. El envoltorio lo contiene.
 
-## Risks / Trade-offs
-
-- **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
-  4.2.** → La tarea 1.2 lo verifica en un build nativo o, si no hay dispositivo, lo deja como
-  pendiente explícito en `quickstart.md`; el mecanismo alternativo es `vars()` + `useColorScheme`
-  en `AppUiProvider`.
-- **[Riesgo] La fuente de iconos pesa ~1.1 MB (ttf/woff).** → Presupuesto abajo; el icono siempre
-  acompaña un texto o una etiqueta, así que una carga tardía no pierde información, y el glifo
-  tiene caja fija (sin salto de maquetación).
-- **[Trade-off] `critico` se define antes de que un dato lo emita.** → Por decisión de producto;
-  cuesta una entrada en una tabla de correspondencia y ningún token (ver Complexity Tracking).
-- **[Riesgo] La migración masiva rompe `testID` o selectores e2e.** → Las primitivas propagan
-  `testID` y se migra una pantalla por tarea, con su suite e2e.
-- **[Riesgo] Cambiar `--background` en claro altera pares ya verificados.** → `tema.test.ts`
-  vuelve a medirlos todos. No se integra en rojo.
-- **[Riesgo] `NativeTabs` es `unstable` en SDK 57 y puede cambiar su API.** → Queda encapsulado
-  en `app-navigation.tsx`: un cambio de API toca un solo archivo. El respaldo son las pestañas JS
-  de `expo-router` (`Tabs`), ya incluidas.
-- **[Riesgo] Reorganizar las rutas en grupos rompe los e2e o los flujos de Maestro.** → Las URLs
-  no cambian. La tarea 7.1 comprueba con un e2e en rojo que todas las rutas de la compuerta
-  siguen resolviendo antes de mover archivos. Los flujos `tests/e2e/native/*.yaml` se revisan en
-  7.8.
-- **[Riesgo] La barra lateral reduce el ancho útil de la consulta en `lg`.** → Con 240 px, a
-  1280 px quedan 1040 px de contenido, suficientes para las dos columnas de D9 (`max-w-wide`
-  1200 limita, no fuerza). La prueba de dos columnas de 4.6 se repite con la navegación montada.
-- **[Trade-off] En web el título está dentro de la página y no en una cabecera.** → Es
-  intencionado: la barra lateral da el contexto, el `h1` estructura el documento para los lectores
-  de pantalla, y una cabecera extra solo repetiría el título.
-
-## Performance budgets
-
-- Fuentes de texto en web: ≤ 100 KB en total en woff2 (hoy 80 KB en 4 archivos). Precarga solo
-  de esos 4 archivos.
-- Fuente de iconos: ≤ 1.2 MB, sin precarga; no bloquea el primer pintado.
-- Sin salto de maquetación atribuible a la fuente de texto en el primer pintado (FR-073). Se
-  verifica con la traza de rendimiento de Playwright en `/login`: CLS ≤ 0.1.
-
 ### D18 — Ancho por tipo de pantalla (FR-079)
 
 Decisión del usuario (2026-09-25): en escritorio web, 720 px dejaban casi la mitad del área útil
@@ -632,6 +595,43 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
   - el recuento («N pacientes coinciden») va en un `Text` con `accessibilityLiveRegion="polite"`.
 - **Alternativa descartada:** un combobox con lista desplegable. Exige más ARIA y más código de
   foco, sin ventaja para una lista ya acotada a 8.
+
+## Risks / Trade-offs
+
+- **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
+  4.2.** → La tarea 1.2 lo verifica en un build nativo o, si no hay dispositivo, lo deja como
+  pendiente explícito en `quickstart.md`; el mecanismo alternativo es `vars()` + `useColorScheme`
+  en `AppUiProvider`.
+- **[Riesgo] La fuente de iconos pesa ~1.1 MB (ttf/woff).** → Presupuesto abajo; el icono siempre
+  acompaña un texto o una etiqueta, así que una carga tardía no pierde información, y el glifo
+  tiene caja fija (sin salto de maquetación).
+- **[Trade-off] `critico` se define antes de que un dato lo emita.** → Por decisión de producto;
+  cuesta una entrada en una tabla de correspondencia y ningún token (ver Complexity Tracking).
+- **[Riesgo] La migración masiva rompe `testID` o selectores e2e.** → Las primitivas propagan
+  `testID` y se migra una pantalla por tarea, con su suite e2e.
+- **[Riesgo] Cambiar `--background` en claro altera pares ya verificados.** → `tema.test.ts`
+  vuelve a medirlos todos. No se integra en rojo.
+- **[Riesgo] `NativeTabs` es `unstable` en SDK 57 y puede cambiar su API.** → Queda encapsulado
+  en `app-navigation.tsx`: un cambio de API toca un solo archivo. El respaldo son las pestañas JS
+  de `expo-router` (`Tabs`), ya incluidas.
+- **[Riesgo] Reorganizar las rutas en grupos rompe los e2e o los flujos de Maestro.** → Las URLs
+  no cambian. La tarea 7.1 comprueba con un e2e en rojo que todas las rutas de la compuerta
+  siguen resolviendo antes de mover archivos. Los flujos `tests/e2e/native/*.yaml` se revisan en
+  7.8.
+- **[Riesgo] La barra lateral reduce el ancho útil de la consulta en `lg`.** → Con 240 px, a
+  1280 px quedan 1040 px de contenido, suficientes para las dos columnas de D9 (`max-w-wide`
+  1200 limita, no fuerza). La prueba de dos columnas de 4.6 se repite con la navegación montada.
+- **[Trade-off] En web el título está dentro de la página y no en una cabecera.** → Es
+  intencionado: la barra lateral da el contexto, el `h1` estructura el documento para los lectores
+  de pantalla, y una cabecera extra solo repetiría el título.
+
+## Performance budgets
+
+- Fuentes de texto en web: ≤ 100 KB en total en woff2 (hoy 80 KB en 4 archivos). Precarga solo
+  de esos 4 archivos.
+- Fuente de iconos: ≤ 1.2 MB, sin precarga; no bloquea el primer pintado.
+- Sin salto de maquetación atribuible a la fuente de texto en el primer pintado (FR-073). Se
+  verifica con la traza de rendimiento de Playwright en `/login`: CLS ≤ 0.1.
 
 ## Complexity Tracking
 
