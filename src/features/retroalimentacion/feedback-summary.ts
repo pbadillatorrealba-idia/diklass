@@ -1,4 +1,4 @@
-import type { ClinicalRecordRow } from "@/features/registro/summaries";
+import { type ClinicalRecordRow, compararFilas } from "@/features/registro/summaries";
 import {
   Adherence,
   type Adherence as AdherenceValue,
@@ -67,18 +67,6 @@ export type FeedbackAntecedent = {
   treatmentModification: string | null;
   revisedDiagnosis: string | null;
 };
-
-function instante(iso: string): number {
-  const parsed = Date.parse(iso);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-/** Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo. */
-function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
-  return (
-    instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  );
-}
 
 function recuentoCero<T extends string>(valores: readonly T[]): Record<T, number> {
   const recuento = {} as Record<T, number>;

@@ -53,8 +53,11 @@ function instante(iso: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-/** Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo. */
-function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
+/**
+ * Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo.
+ * Criterio único de las lecturas clínicas: la retroalimentación (005) lo reutiliza.
+ */
+export function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
   return (
     instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
