@@ -52,4 +52,21 @@ describe("Button", () => {
     expect(pressable).toContain("px-5");
     expect(label).toContain("text-base");
   });
+
+  // sistema-visual 5.3: con `forced-colors` el navegador quita los fondos; un borde transparente
+  // se pinta con el color del sistema y el botón relleno sigue viéndose como botón.
+  test.each(["primary", "destructive"] as const)(
+    "la variante %s tiene borde para el modo de alto contraste",
+    (variant) => {
+      const [pressable] = classesOf(
+        renderToStaticMarkup(
+          <Button variant={variant}>
+            <ButtonText>Guardar</ButtonText>
+          </Button>,
+        ),
+      );
+      expect(pressable).toContain("border");
+      expect(pressable).toContain("border-transparent");
+    },
+  );
 });

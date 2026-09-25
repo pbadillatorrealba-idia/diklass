@@ -9,12 +9,16 @@ import {
 import { CONTINUOUS_CURVE } from "./border-curve";
 
 const VARIANTS = {
-  primary: { surface: "bg-primary", text: "text-primary-foreground" },
+  // Borde transparente en las rellenas: con `forced-colors` se pinta y el botón sigue viéndose.
+  primary: { surface: "border border-transparent bg-primary", text: "text-primary-foreground" },
   outline: { surface: "border border-input bg-card", text: "text-foreground" },
   // Acciones terciarias ("Ver fuente"): texto `primary`, verificado AA sobre card y fondo.
   ghost: { surface: "bg-transparent", text: "text-primary" },
   // Estado activo que detiene algo en curso (escucha clínica grabando).
-  destructive: { surface: "bg-destructive", text: "text-destructive-foreground" },
+  destructive: {
+    surface: "border border-transparent bg-destructive",
+    text: "text-destructive-foreground",
+  },
 } as const;
 
 // Ambos tamaños conservan el área táctil mínima de 44 px (design.md D6).

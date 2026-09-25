@@ -826,3 +826,21 @@ Resultado local en `chromium`:
   - Verde: `conocimiento` 6; `accessibility` 12 en `chromium` y 12 en `chromium-dark` (incluye
     axe de `/knowledge`); 778 pruebas unitarias.
 
+### 5.3 — Escala de grises y `forced-colors` (US13-AC2/AC3)
+
+- **Capturas en `evidencia/`, en `chromium` a 1280 px** (`filter: grayscale(1)` y
+  `emulateMedia({ forcedColors: "active" })`):
+  - `5.3-conocimiento-grises.png` y `5.3-conocimiento-forced-colors.png`: respuesta con fuentes
+    y una inferencia;
+  - `5.3-consulta-grises.png` y `5.3-consulta-forced-colors.png`: consulta cerrada con epicrisis
+    corregida;
+  - `5.3-seguimiento-grises.png` y `5.3-seguimiento-forced-colors.png`: evento adverso grave.
+- **Resultado:**
+  - Lo sugerido se distingue de lo validado sin color: barra lateral, «Sugerencia del sistema»
+    con icono y «Inferencia del sistema», frente a «Fuente documental · recuperada» con la cita.
+  - La severidad «Grave» lleva icono, nombre y negrita en ambos modos.
+- **Hallazgo corregido:** en `forced-colors`, los botones rellenos (`primary`, `destructive`)
+  perdían el fondo y quedaban como texto suelto. En rojo en `button.test.tsx`, y después con
+  `border border-transparent`, que el modo de alto contraste pinta. Axe en `chromium` y
+  `chromium-dark`: 12 de 12 tras el cambio.
+
