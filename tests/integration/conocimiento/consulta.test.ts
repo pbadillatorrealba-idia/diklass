@@ -162,6 +162,36 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
     expect(segmentos.some((s) => s.kind === "evidencia")).toBe(true);
   });
 
+  test("la cobertura parcial nombra palabras de la pregunta, no tallos (FR-022 · US5-AC8 · revisión de la PR #30)", async () => {
+    const pregunta = `¿Cómo habituar de forma zurdísima ${termino} con quimioterapia?`;
+    const { answer } = await consultKnowledge(ana.client, {
+      clinicId: ana.clinicId,
+      pregunta,
+      patientId: null,
+    });
+    expect(answer.cobertura.estado).toBe("parcial");
+    expect(answer.cobertura.noCubiertos).toContain("quimioterapia");
+    const palabras = pregunta.split(/[\s¿?]+/);
+    for (const nombre of [...answer.cobertura.cubiertos, ...answer.cobertura.noCubiertos]) {
+      expect(palabras).toContain(nombre);
+    }
+  });
+
+  test("el contexto de paciente solo admite un paciente de la clínica (Principio V · revisión de la PR #30)", async () => {
+    const ficha = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      tutor: { newTutor: { name: "Sra. Contexto", phone: "+56 9 3333 4444", email: null } },
+      ficha: fichaBase("Toby Contexto"),
+    });
+    await expect(
+      consultKnowledge(ana.client, {
+        clinicId: ana.clinicId,
+        pregunta: `¿Cómo habituar de forma zurdísima ${termino}?`,
+        patientId: ficha.record.content.tutorId,
+      }),
+    ).rejects.toMatchObject({ message: "KNOWLEDGE_QUERY_PATIENT_INVALID" });
+  });
+
   test("una fuente retirada deja la cita identificable y marcada al reconstruir (FR-053 · US5-AC12)", async () => {
     const { queryId } = await consultKnowledge(ana.client, {
       clinicId: ana.clinicId,

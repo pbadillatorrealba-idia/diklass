@@ -297,6 +297,7 @@ describe("fragmentoRecuperadoSchema (D4)", () => {
       rank_cd: 0.32,
       lemas_cubiertos: ["ansied", "separ"],
       lemas_pregunta: ["ansied", "separ"],
+      terminos_pregunta: ["ansiedad", "separación"],
     });
     expect(fila.success).toBe(true);
     expect(fragmentoRecuperadoSchema.safeParse({ ...{}, texto: "sin el resto" }).success).toBe(

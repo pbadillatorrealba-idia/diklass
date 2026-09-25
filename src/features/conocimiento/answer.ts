@@ -113,7 +113,9 @@ function segmentosDeFicha(content: PatientContent): SegmentoRespuesta[] {
  * - Sin candidatos calificados: `sin_evidencia` + aviso `sin_respaldo_documental` y cero
  *   contenido clínico no citado (FR-023 · SC-025 · SC-010 · US5-AC2).
  * - Cobertura parcial de los lemas de la pregunta: aviso `cobertura_parcial` que nombra lo
- *   sin cubrir (FR-022 · US5-AC8).
+ *   sin cubrir (FR-022 · US5-AC8). La cobertura se calcula con los lexemas del stemmer,
+ *   pero se nombra con la palabra de la pregunta que originó cada uno (`terminosPregunta`,
+ *   paralelo a `lemasPregunta`): «ansied» no es legible para el veterinario.
  * - Los datos de ficha solo entran con paciente seleccionado, con `fichaRef` y snapshot
  *   (FR-020 · FR-051 · US5-AC5/AC10).
  * - Varios documentos con evidencia: todo se presenta con su cita y se declara la ausencia
@@ -123,10 +125,18 @@ function segmentosDeFicha(content: PatientContent): SegmentoRespuesta[] {
 export function composeAnswer(input: {
   pregunta: string;
   lemasPregunta: string[];
+  terminosPregunta?: string[];
   candidatos: CandidatoFragmento[];
   paciente: ContextoPaciente;
 }): KnowledgeAnswer {
   const lemas = [...new Set(input.lemasPregunta)].sort();
+  const terminoPorLema = new Map<string, string>();
+  input.lemasPregunta.forEach((lema, indice) => {
+    const termino = input.terminosPregunta?.[indice];
+    if (termino && !terminoPorLema.has(lema)) terminoPorLema.set(lema, termino);
+  });
+  const nombrar = (lemasANombrar: string[]) =>
+    lemasANombrar.map((lema) => terminoPorLema.get(lema) ?? lema);
   const umbral =
     lemas.length === 0
       ? Number.POSITIVE_INFINITY
@@ -155,8 +165,8 @@ export function composeAnswer(input: {
   const cobertura: Cobertura = {
     estado:
       referencias.length === 0 ? "sin_evidencia" : noCubiertos.length === 0 ? "cubre" : "parcial",
-    cubiertos,
-    noCubiertos: referencias.length === 0 ? [] : noCubiertos,
+    cubiertos: nombrar(cubiertos),
+    noCubiertos: referencias.length === 0 ? [] : nombrar(noCubiertos),
   };
 
   const segmentos: SegmentoRespuesta[] = referencias.map((candidato) => ({
@@ -179,12 +189,13 @@ export function composeAnswer(input: {
   }
 
   if (referencias.length > 0) {
-    const detalle = noCubiertos.length > 0 ? `; sin respaldo para «${noCubiertos.join(", ")}»` : "";
+    const detalle =
+      noCubiertos.length > 0 ? `; sin respaldo para «${cobertura.noCubiertos.join(", ")}»` : "";
     segmentos.push({
       id: "inferencia-1",
       kind: "inferencia",
       provenance: PROCEDENCIA_POR_KIND.inferencia,
-      texto: `El sistema asoció la pregunta a los conceptos «${cubiertos.join(", ")}» con respaldo documental${detalle}. Esta asociación es una derivación del sistema, no una afirmación de las fuentes.`,
+      texto: `El sistema asoció la pregunta a los conceptos «${cobertura.cubiertos.join(", ")}» con respaldo documental${detalle}. Esta asociación es una derivación del sistema, no una afirmación de las fuentes.`,
     });
   }
 

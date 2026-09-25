@@ -203,6 +203,23 @@ describe("composeAnswer cobertura parcial (FR-022 · US5-AC8)", () => {
     expect(answer.cobertura.noCubiertos).toEqual(["tratamient"]);
     expect(answer.avisos).toContain("cobertura_parcial");
   });
+
+  test("nombra las palabras de la pregunta, no los tallos del stemmer (revisión de la PR #30)", () => {
+    const answer = composeAnswer({
+      pregunta: "¿Tratamiento de la ansiedad por separación?",
+      lemasPregunta: ["ansied", "separ", "tratamient"],
+      terminosPregunta: ["ansiedad", "separación", "Tratamiento"],
+      candidatos: [candidato({ lemasCubiertos: ["ansied", "separ"] })],
+      paciente: null,
+    });
+
+    expect(answer.cobertura.cubiertos).toEqual(["ansiedad", "separación"]);
+    expect(answer.cobertura.noCubiertos).toEqual(["Tratamiento"]);
+    const inferencia = answer.segmentos.find((segmento) => segmento.kind === "inferencia");
+    expect(inferencia?.texto).toContain("«ansiedad, separación»");
+    expect(inferencia?.texto).toContain("sin respaldo para «Tratamiento»");
+    expect(inferencia?.texto).not.toContain("ansied,");
+  });
 });
 
 describe("composeAnswer múltiples fuentes (FR-052 · US5-AC11)", () => {

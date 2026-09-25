@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento/consulta-service";
 import type { PatientContent } from "@/features/registro/schema";
+import { setLogSink } from "@/lib/observability/logger";
 import type { Database } from "@/lib/supabase/database.types";
 
 /**
@@ -111,6 +112,7 @@ function filaRecuperada(cambios: Record<string, unknown> = {}) {
     rank_cd: 0.5,
     lemas_cubiertos: ["ansied", "separ", "diagnost"],
     lemas_pregunta: ["ansied", "separ", "diagnost"],
+    terminos_pregunta: ["ansiedad", "separación", "diagnostica"],
     ...cambios,
   };
 }
@@ -225,6 +227,63 @@ describe("consultKnowledge (FR-005 · FR-006 · FR-007 · US5-AC1 · D4/D6)", ()
       expect.arrayContaining(["sin_paciente_seleccionado", "sin_respaldo_documental"]),
     );
     expect(calls.some((call) => call.table === "clinical_records")).toBe(false);
+  });
+
+  test("omite el fragmento ilegible con log estructurado en vez de tumbar la consulta (revisión de la PR #30)", async () => {
+    const malformada = filaRecuperada({
+      documento_id: "doc-roto",
+      bibliografia: { ...bibliografia, anio: "2024" },
+    });
+    const { client } = fakeClient({
+      "rpc:search_knowledge_fragments": [{ data: [malformada, filaRecuperada()], error: null }],
+      "knowledge_queries:insert": [{ data: { ...filaConsulta, id: "query-4" }, error: null }],
+    });
+    const eventos: string[] = [];
+    setLogSink((linea) => {
+      eventos.push(linea);
+    });
+    try {
+      const { answer } = await consultKnowledge(client, {
+        clinicId: "clinic-1",
+        pregunta: "¿Cómo se diagnostica la ansiedad por separación?",
+        patientId: null,
+      });
+      const citados = answer.segmentos.flatMap((s) =>
+        s.kind === "evidencia" ? [s.cita.documentoId] : [],
+      );
+      expect(citados).toEqual(["doc-1"]);
+    } finally {
+      setLogSink(null);
+    }
+    expect(eventos.some((linea) => linea.includes("conocimiento.row_content_skipped"))).toBe(true);
+    expect(eventos.some((linea) => linea.includes("doc-roto"))).toBe(true);
+  });
+
+  test("la cobertura nombra las palabras que devuelve la RPC, no sus tallos (FR-022 · US5-AC8)", async () => {
+    const { client } = fakeClient({
+      "rpc:search_knowledge_fragments": [
+        {
+          data: [
+            filaRecuperada({
+              lemas_cubiertos: ["ansied", "separ"],
+              lemas_pregunta: ["ansied", "separ", "tratamient"],
+              terminos_pregunta: ["ansiedad", "separación", "tratamiento"],
+            }),
+          ],
+          error: null,
+        },
+      ],
+      "knowledge_queries:insert": [{ data: { ...filaConsulta, id: "query-5" }, error: null }],
+    });
+
+    const { answer } = await consultKnowledge(client, {
+      clinicId: "clinic-1",
+      pregunta: "¿Tratamiento de la ansiedad por separación?",
+      patientId: null,
+    });
+
+    expect(answer.cobertura.noCubiertos).toEqual(["tratamiento"]);
+    expect(answer.cobertura.cubiertos).toEqual(["ansiedad", "separación"]);
   });
 
   test("rechaza una pregunta vacía sin invocar el servidor (Principio V)", async () => {
