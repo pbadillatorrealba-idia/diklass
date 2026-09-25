@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { linesToItems, visibleListText } from "@/components/registro/list-lines";
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -163,15 +163,15 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
         </FormControl>
       ))}
       <VStack className="w-full gap-2">
-        <Text bold>Hipótesis consideradas con su estado</Text>
+        <Text variant="strong">Hipótesis consideradas con su estado</Text>
         {content.hipotesis.length === 0 ? (
           <Text testID="epicrisis-hipotesis-empty">
             Sin hipótesis consideradas: ese campo lo aporta otra funcionalidad.
           </Text>
         ) : (
           content.hipotesis.map((hipotesis, index) => (
-            <Box
-              className="rounded-xl border border-border bg-card p-4 gap-2"
+            <Card
+              className="gap-2"
               // biome-ignore lint/suspicious/noArrayIndexKey: filas controladas por el contenido, sin estado interno; dos hipótesis pueden repetir texto y estado.
               key={`hipotesis-${index}`}
               testID="epicrisis-hipotesis"
@@ -234,7 +234,7 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
                   <ButtonText>Quitar hipótesis</ButtonText>
                 </Button>
               ) : null}
-            </Box>
+            </Card>
           ))
         )}
         {isEditable ? (

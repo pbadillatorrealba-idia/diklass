@@ -195,12 +195,14 @@ ventana: `md` = 768 px (tablet) y `lg` = 1024 px (escritorio).
 
 - **Compacto (< 768):** una columna, `p-4`, botones de ancho completo en acciones principales.
 - **`md`:** una columna centrada en `max-w-content`, `p-6`.
-- **`lg` en `/consultations/[id]`:** `Screen width="wide"` con dos columnas (`lg:flex-row`).
-  - Principal (≈ 60 %): anamnesis, diagnóstico y epicrisis.
-  - Lateral (≈ 40 %, `lg:sticky` en web): resumen de seguimiento, antecedentes, historial de
-    correcciones y, cuando exista, la asistencia de 006.
+- **`lg` en `/consultations/[id]`:** `Screen width="wide"` con dos columnas.
+  - Principal (`lg:flex-1`): anamnesis, diagnóstico y epicrisis.
+  - Lateral (`lg:w-2/5`): resumen de seguimiento, historial de correcciones y, cuando exista, la
+    asistencia de 006 (decisión del usuario).
 
-  El orden del DOM se mantiene (principal primero) para el teclado y los lectores de pantalla.
+  La lateral va **primero en el DOM**, como iba el resumen antes de la migración: en móvil da el
+  contexto antes del registro. En escritorio `lg:flex-row-reverse` la muestra a la derecha. Es de
+  solo lectura, así que el orden de foco del teclado sobre los controles del registro no cambia.
 - Las listas (pacientes, fuentes) siguen en una columna. A partir de `lg`, las tarjetas de
   paciente ponen la acción a la derecha (`lg:flex-row`) en vez de debajo.
 - Se respeta el escalado de texto: nada de `allowFontScaling={false}` y las alturas son mínimas

@@ -2,7 +2,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { type AnamnesisEntryView, AnamnesisSection } from "@/components/registro/anamnesis-section";
@@ -15,7 +14,11 @@ import {
 } from "@/components/registro/use-clinical-guard";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
+import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
+import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { flushDraft, useDraftPreserver } from "@/features/clinical/draft-preserver";
@@ -501,38 +504,52 @@ export default function ConsultationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen width="wide">
       <Head>
         <title>Consulta · Diklass</title>
       </Head>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="2xl">Consulta</Heading>
-          {workspaceQuery.isLoading ? (
-            <Text testID="consultation-loading">Cargando la consulta…</Text>
-          ) : null}
-          {workspaceQuery.isSuccess && data === null ? (
-            <Text testID="consultation-not-found">No encontramos esta consulta.</Text>
-          ) : null}
-          {queryError ? (
-            <Text accessibilityLiveRegion="polite" testID="consultation-load-error">
-              No pudimos cargar la consulta. Vuelve a intentarlo.
-            </Text>
-          ) : null}
-          {data ? (
-            <>
-              <Text accessibilityLiveRegion="polite" testID="consultation-status">
-                {status ?? (data.isClosed ? "Consulta cerrada." : "Consulta abierta.")}
-              </Text>
-              {savedAttribution ? <AttributionBadge attribution={savedAttribution} /> : null}
-              <Button
-                accessibilityLabel="Ver ficha del paciente"
-                onPress={() => router.push(`/patients/${data.consultation.content.patientId}`)}
-                testID="consultation-patient"
-              >
-                <ButtonText>Ver ficha del paciente</ButtonText>
-              </Button>
+      <Heading level={1}>Consulta</Heading>
+      {workspaceQuery.isLoading ? (
+        <Text testID="consultation-loading">Cargando la consulta…</Text>
+      ) : null}
+      {workspaceQuery.isSuccess && data === null ? (
+        <Text testID="consultation-not-found">No encontramos esta consulta.</Text>
+      ) : null}
+      {queryError ? (
+        <Callout testID="consultation-load-error" tone="error">
+          No pudimos cargar la consulta. Vuelve a intentarlo.
+        </Callout>
+      ) : null}
+      {data ? (
+        <>
+          <Text accessibilityLiveRegion="polite" testID="consultation-status">
+            {status ?? (data.isClosed ? "Consulta cerrada." : "Consulta abierta.")}
+          </Text>
+          {savedAttribution ? <AttributionBadge attribution={savedAttribution} /> : null}
+          <Button
+            accessibilityLabel="Ver ficha del paciente"
+            className="self-start"
+            onPress={() => router.push(`/patients/${data.consultation.content.patientId}`)}
+            testID="consultation-patient"
+            variant="outline"
+          >
+            <ButtonText>Ver ficha del paciente</ButtonText>
+          </Button>
+          {/*
+           * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
+           * DOM —como en móvil, donde precede a la anamnesis— y a la derecha en escritorio. Al no
+           * tener controles, no altera el orden de foco del registro.
+           */}
+          <Box className="gap-6 lg:flex-row-reverse lg:items-start">
+            <VStack className="gap-6 lg:w-2/5" testID="consultation-aside">
               {followUpQuery.data ? <FollowUpSummaryPanel summary={followUpQuery.data} /> : null}
+              {data.isClosed && effectiveEntry !== null && correctionChain.length > 0 ? (
+                <Card testID="epicrisis-correction-history">
+                  <CorrectionHistory entries={correctionChain} />
+                </Card>
+              ) : null}
+            </VStack>
+            <VStack className="gap-6 lg:flex-1" testID="consultation-main">
               <AnamnesisSection
                 entries={anamnesisViews}
                 field={composerField}
@@ -559,33 +576,22 @@ export default function ConsultationScreen() {
                 textError={diagnosisError}
               />
               <VStack className="w-full gap-4" testID="epicrisis-section">
-                <Heading size="lg">Epicrisis</Heading>
+                <Heading level={2}>Epicrisis</Heading>
                 {data.isClosed ? (
                   effectiveEntry === null ? (
                     <Text testID="epicrisis-empty">Sin epicrisis aprobada para esta consulta.</Text>
                   ) : (
                     <>
-                      <Box
-                        className="rounded-xl border border-border bg-card p-4 gap-2"
-                        testID="epicrisis-effective"
-                      >
-                        <Text bold>Epicrisis efectiva — registro definitivo</Text>
+                      <Card className="gap-2" testID="epicrisis-effective">
+                        <Text variant="strong">Epicrisis efectiva — registro definitivo</Text>
                         {effectiveEntry.record.status === "corrective" ? (
                           <Text>
                             Corrige una versión anterior, que permanece registrada y recuperable.
                           </Text>
                         ) : null}
                         <AttributionBadge attribution={attributionFromRow(effectiveEntry.record)} />
-                      </Box>
+                      </Card>
                       <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
-                      {correctionChain.length > 0 ? (
-                        <Box
-                          className="rounded-xl border border-border bg-card p-4"
-                          testID="epicrisis-correction-history"
-                        >
-                          <CorrectionHistory entries={correctionChain} />
-                        </Box>
-                      ) : null}
                       {correctionContent === null ? (
                         <Button
                           accessibilityLabel="Corregir epicrisis"
@@ -597,8 +603,8 @@ export default function ConsultationScreen() {
                         </Button>
                       ) : (
                         <VStack className="w-full gap-4">
-                          <Text bold>Corrección de la epicrisis</Text>
-                          <Text className="text-foreground/70">
+                          <Text variant="strong">Corrección de la epicrisis</Text>
+                          <Text tone="muted">
                             La corrección crea un registro adicional: la versión original permanece
                             legible e intocable.
                           </Text>
@@ -620,6 +626,7 @@ export default function ConsultationScreen() {
                             isDisabled={isBusy}
                             onPress={() => setCorrectionContent(null)}
                             testID="epicrisis-correct-cancel"
+                            variant="outline"
                           >
                             <ButtonText>Cancelar</ButtonText>
                           </Button>
@@ -629,7 +636,7 @@ export default function ConsultationScreen() {
                   )
                 ) : draftEntry === null ? (
                   <>
-                    <Text className="text-foreground/70">
+                    <Text tone="muted">
                       El borrador se arma con lo registrado en la sesión y en la ficha. No forma
                       parte del historial clínico hasta que lo apruebes.
                     </Text>
@@ -644,16 +651,14 @@ export default function ConsultationScreen() {
                   </>
                 ) : draftContent === null ? null : (
                   <>
-                    <Box
-                      className="rounded-xl border border-border bg-card p-4 gap-2"
-                      testID="consultation-draft-label"
-                    >
-                      <Text bold>Borrador de epicrisis</Text>
-                      <Text className="text-foreground/70">
+                    {/* Lo arma el sistema y no está validado (FR-076). */}
+                    <SuggestedBlock testID="consultation-draft-label">
+                      <Text variant="strong">Borrador de epicrisis</Text>
+                      <Text tone="muted">
                         No es un registro definitivo: nada entra al historial sin tu validación
                         explícita.
                       </Text>
-                    </Box>
+                    </SuggestedBlock>
                     <EpicrisisFields
                       content={draftContent}
                       isEditable
@@ -664,6 +669,7 @@ export default function ConsultationScreen() {
                       isDisabled={isBusy}
                       onPress={() => void saveEpicrisisDraft()}
                       testID="epicrisis-save-draft"
+                      variant="outline"
                     >
                       <ButtonText>Guardar borrador</ButtonText>
                     </Button>
@@ -678,10 +684,10 @@ export default function ConsultationScreen() {
                   </>
                 )}
               </VStack>
-            </>
-          ) : null}
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+            </VStack>
+          </Box>
+        </>
+      ) : null}
+    </Screen>
   );
 }

@@ -451,6 +451,42 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     }
   });
 
+  // sistema-visual FR-079 · US13-AC5 (design.md D9): registro y apoyo lado a lado en escritorio,
+  // una sola columna en móvil con el contexto de solo lectura antes del registro.
+  test("la consulta usa dos columnas a 1280 px y una a 375 px", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const cajas = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/consultations/${caso.closedConsultationId}`);
+      await expect(page.getByTestId("epicrisis-correction-history")).toBeVisible({
+        timeout: 15_000,
+      });
+      // El resumen de seguimiento llega después: se mide con la red en reposo y ambas cajas a la
+      // vez, para no comparar una columna antes y otra después de que crezca.
+      await page.waitForLoadState("networkidle");
+      return page.evaluate(() => {
+        const caja = (id: string) => {
+          const el = document.querySelector(`[data-testid="${id}"]`);
+          if (!el) throw new Error(`Falta ${id}`);
+          const { x, y, width, height } = el.getBoundingClientRect();
+          return { x, y, width, height };
+        };
+        return { principal: caja("consultation-main"), lateral: caja("consultation-aside") };
+      });
+    };
+
+    const ancho = await cajas(1280);
+    expect(ancho.lateral.x, "la columna lateral va a la derecha").toBeGreaterThan(
+      ancho.principal.x + ancho.principal.width - 1,
+    );
+    expect(Math.abs(ancho.lateral.y - ancho.principal.y)).toBeLessThan(2);
+
+    const angosto = await cajas(375);
+    expect(angosto.lateral.y + angosto.lateral.height).toBeLessThanOrEqual(angosto.principal.y + 1);
+    expect(Math.abs(angosto.lateral.x - angosto.principal.x)).toBeLessThan(2);
+  });
+
   test("las pantallas nuevas no desbordan horizontalmente a 375 px ni a 1280 px", async ({
     page,
   }) => {

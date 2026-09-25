@@ -315,3 +315,27 @@ $ node_modules/.cache/gates.sh (biome ci, typecheck, bun test tests/unit) → OK
 **Pendiente explícito:** `ListenModeSection` no está montada en ninguna pantalla (integración
 pendiente de la 004), así que no hay e2e ni capturas en la app; la verificación es por render en
 `tests/unit/voz/voz-ui.test.tsx`.
+
+### 4.6 — Consulta a dos columnas (FR-079 · US13-AC5)
+
+`Screen width="wide"`; desde `lg`, principal (anamnesis, diagnóstico, epicrisis) y lateral
+(resumen de seguimiento e historial de correcciones, que sale de la epicrisis). La lateral va
+primero en el DOM y a la derecha con `lg:flex-row-reverse` (D9 actualizado). Además:
+- `missing-fields-panel`: la lista de campos sin información → `Callout warning`.
+- Borrador de epicrisis → `SuggestedBlock` (lo arma el sistema y no está validado, FR-076).
+- Error de carga → `Callout error`; "Ver ficha del paciente", "Guardar borrador" y "Cancelar" →
+  `outline`; "Aprobar y cerrar consulta" queda como única acción principal.
+- `follow-up-summary`: título `Heading level={3}`.
+
+Prueba nueva en `accessibility.spec.ts`: «la consulta usa dos columnas a 1280 px y una a 375 px».
+Roja sobre el código anterior (`waiting for getByTestId('consultation-main')`); la primera
+versión verde tuvo una carrera, porque el resumen llega después y agranda la lateral entre dos
+mediciones. Se corrigió midiendo ambas cajas en un solo `evaluate` con la red en reposo (dos
+ejecuciones seguidas en verde).
+
+```
+$ … accessibility.spec.ts --project=chromium --workers=1        → 7 passed
+$ … registro-epicrisis.spec.ts --project=chromium --workers=1   → 2 passed
+$ … auth.spec.ts / attribution.spec.ts                           → 8 / 2 passed
+```
+Capturas (consulta cerrada): [1280 px oscuro](evidencia/4.6-consulta-1280-oscuro.png) · [320 px claro](evidencia/4.6-consulta-320-claro.png).
