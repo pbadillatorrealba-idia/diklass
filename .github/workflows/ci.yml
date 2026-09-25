@@ -32,7 +32,7 @@ jobs:
             echo "::error::bun.lock is out of sync with package.json. Run 'bun install' with the pinned Bun (.bun-version) and commit bun.lock."
             exit 1
           }
-      - run: bunx biome ci .
+      - run: bunx biome ci --error-on-warnings .
       - run: bun run typecheck
 
   unit:

@@ -145,7 +145,8 @@ aprobación, y el UPDATE de la fila de consulta emite `null`).
 
 Trigger `guard_consultation_sealed` (`BEFORE INSERT OR UPDATE` sobre `clinical_records`;
 tras el Problema 2 de la revisión de la PR #27 el sellado también cubre el INSERT —salvo la
-epicrisis correctiva de D8—):
+epicrisis correctiva de D8—, y tras la segunda revisión sella también la fila de la consulta y
+serializa con el cierre, puntos 4 y 5):
 
 1. Evalúa el sellado sobre **`old.content->>'consultationId'`**: si esa referencia resuelve a una
    consulta `closed`, todo `UPDATE` fracasa con `CLINICAL_RECORD_SEALED` (SQLSTATE 23514).
@@ -158,9 +159,11 @@ epicrisis correctiva de D8—):
 
 3. **Cubre también el INSERT** (corrección de la revisión de la PR #27): una fila de trabajo
    cuyo `content.consultationId` resuelve a una consulta `closed` no puede crearse por el
-   camino directo de PostgREST (premisa de amenaza T055), salvo `status='corrective'` — la
-   epicrisis correctiva de D8 se anexa legítimamente a la consulta cerrada. Los `consultationId`
-   que no resuelven a ninguna consulta se toleran (huérfanos: riesgo documentado de D1/D6).
+   camino directo de PostgREST (premisa de amenaza T055), salvo la **epicrisis** con
+   `status='corrective'` — la correctiva de D8 se anexa legítimamente a la consulta cerrada. La
+   exención es solo de la epicrisis (segunda revisión de la PR #27): una anamnesis o un
+   diagnóstico `corrective` haría crecer el workspace sellado. Los `consultationId` que no
+   resuelven a ninguna consulta se toleran (huérfanos: riesgo documentado de D1/D6).
 
    **Alcance: el conjunto de registros de TRABAJO** (`record_type` en `anamnesis`, `diagnosis`,
    `epicrisis` — el set que fija SC-009). Los registros longitudinales que solo referencian la
@@ -168,6 +171,18 @@ epicrisis correctiva de D8—):
    sobre una consulta cerrada (US10-AC1), y en general datos nuevos de specs futuras— no quedan
    sellados por esta 002: su inmutabilidad y vocabulario los fija su propia spec (D4/D5 de 005).
    El guard de inmutabilidad del vínculo (`consultationId` inmutable) sí se aplica a TODO tipo.
+
+4. **La fila de la consulta cerrada también es inmutable** (segunda revisión de la PR #27): todo
+   `UPDATE` de una fila `consultation` cuyo `old.content->>'status'` es `closed` fracasa con
+   `CLINICAL_RECORD_SEALED`. Sin esto, un `UPDATE` directo por PostgREST devolvía el estado a
+   `open` (RLS lo permite: la consulta no tiene `approved_at`) y los puntos 1–3 dejaban de
+   aplicar. Cerrar es irreversible; `approve_clinical_record` solo cierra consultas `open`, así
+   que ningún camino legítimo actualiza una consulta ya cerrada.
+5. **Serializa con el cierre**: la lectura del estado de la consulta se hace con `FOR SHARE`. Bajo
+   READ COMMITTED, sin el bloqueo, un INSERT concurrente con la aprobación leía el `open` ya
+   confirmado y entraba en una consulta que se estaba cerrando. Con él espera al cierre y, tras
+   su confirmación, ve `closed` y fracasa. Verificado con dos sesiones concurrentes contra
+   Supabase local (sin el bloqueo entra 1 fila; con él, 0).
 
 Cumple FR-024, SC-009 y US4-AC2 («los registros de la consulta anterior permanecen idénticos»)
 también sobre anamnesis y diagnósticos, no solo sobre epicrisis, y con ello el conjunto del
@@ -186,6 +201,14 @@ formulario ofrece buscar/crear tutor. Sin FK posible dentro de `jsonb`, la integ
 el servicio de fichas (única puerta de escritura) y una prueba de integración que verifica dos
 pacientes apuntando a un único `tutor` (la deduplicación es de UI/servicio, no de constraint; ver
 Riesgos).
+
+**Edición compartida sin pérdida (T055, segunda revisión de la PR #27).** Dos veterinarios de la
+clínica editan la misma ficha. `updatePatientFicha` actualiza solo los datos de la ficha: el tutor
+y los antecedentes se toman de la fila recién leída, porque los antecedentes crecen solo con
+`addAntecedentItem` y tomarlos de la lectura de quien llama borraba los añadidos entretanto. Las
+dos escrituras releen la ficha y la actualizan solo si `updated_at` no cambió (control optimista,
+hasta 3 intentos): dos antecedentes añadidos a la vez se conservan los dos. Los datos escalares
+de la ficha (nombre, peso…) siguen siendo «gana la última edición».
 
 ### D7. Corrección de procedencia en anamnesis: corrección recuperable
 
@@ -218,6 +241,12 @@ Los servicios de `src/features/registro/` escriben solo vía `src/lib/attributio
 [`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../implementar-identidad-y-acceso/contracts/clinical-attribution.md):
 respuesta verificable sin estado efímero de la UI).
 
+Tras un `UPDATE`, un evento de la traza anterior a `updated_at` describe otra escritura (el alta):
+no todos los `UPDATE` emiten evento (editar el borrador de la epicrisis emite `null`), así que la
+atribución de reserva es `updated_by`/`updated_at` y no el creador. `updateClinicalContent` acepta
+`expectedUpdatedAt` para el control optimista de D6 y lanza `ClinicalWriteConflictError` si la
+fila cambió.
+
 ### D10. Lecturas como funciones puras + consultas simples
 
 `buildPatientHistory` (FR-002/US4-AC4, orden cronológico), `buildFollowUpSummary`
@@ -226,7 +255,10 @@ señalados, a partir de las epicrisis efectivas), `effectiveEpicrisis` (approved
 la superseden) y `computeMissingFichaFields` (FR-044/SC-024) son funciones puras unit-testeadas.
 Las consultas Supabase son lecturas por `content->>` con índices de expresión (`patientId`,
 `consultationId`) agregados en la migración; el listado de fichas de la pantalla `/patients` usa
-`listPatients` (con presupuesto de rendimiento verificado en 3.1).
+`listPatients` (con presupuesto de rendimiento verificado en 3.1). El historial de la ficha usa
+`listPatientTimeline`, que lee las epicrisis de todas las consultas en una sola consulta (`in`), no
+una por consulta. Las listas comparten una frontera de lectura tolerante, `parseRows`: una fila
+fuera de contrato se omite con log `registro.row_content_skipped` en vez de tumbar la lista.
 
 ### D11. Interfaz: rutas nuevas, componentes de `src/components/registro`, WCAG 2.2 AA
 
@@ -240,6 +272,13 @@ visible y contraste del paletín vigente; `testID` estables para la suite web. R
 transición `discard` al ciclo del borrador local que la 001 dejó anticipada en
 `src/lib/storage/drafts.ts`. Se conserva el `testID` `authenticated-identity` de `/home`, que la
 suite e2e de 001 consulta.
+
+Tras cada escritura, las pantallas invalidan todo el prefijo `['registro']` de React Query
+(`invalidateRegistro`): una escritura cambia a la vez la ficha, los tutores, el historial y el
+workspace, y el `staleTime` global de 30 s los dejaba desfasados al navegar. Los campos de lista
+de la epicrisis (un ítem por línea) conservan el texto tal como se escribe y entregan al contenido
+la lista limpia; si mostraran la lista recortada, cada pulsación borraría el espacio o el salto de
+línea recién escrito.
 
 ### D12. Sin dependencias nuevas; alcance de e2e acotado y declarado
 
@@ -256,6 +295,11 @@ las pruebas de integración viva en CI, y el aplazamiento queda como pendiente d
 (no como compuerta cumplida). La aceptación de SC-012 y SC-013 es humana y queda explícitamente
 pendiente.
 
+Tras la segunda revisión de la PR #27 se añade `tests/e2e/web/registro-epicrisis.spec.ts` con dos
+recorridos funcionales acotados, los que delataron defectos que las otras suites no veían:
+escribir exámenes de varias palabras en varias líneas y guardarlos, y volver a la ficha tras
+cerrar la consulta y ver el historial al día. El recorrido clínico completo sigue pendiente.
+
 ## Seguimiento de complejidad (Principio III)
 
 | Complejidad nueva | Justificación exigida por el requisito | Se elimina cuando |
@@ -266,6 +310,7 @@ pendiente.
 | `provenanceHistory` en el contenido | US2-AC5: corrección recuperable | Si se exige registro adicional para anamnesis (ver Riesgos) |
 | `discard` en el ciclo del borrador | Cierre explícito de consulta; la 001 lo dejó anticipado | No aplica |
 | Capa `src/features/registro` | FR-063: una sola puerta de escritura con guardas de atribución | No aplica |
+| Control optimista en escrituras de ficha (`expectedUpdatedAt`) | T055 + FR-001 · US1-AC2: edición compartida sin perder antecedentes | Si los antecedentes pasan a filas propias o a un apéndice en el servidor |
 
 Dependencias de ejecución nuevas: **ninguna**. Capas arquitectónicas nuevas: **ninguna** (servicios
 y pantallas sobre los patrones de `features/auth`, `features/clinical` y `lib/attribution`).
@@ -299,11 +344,15 @@ especialistas: quedan como **pendiente de aceptación**, no como verificados.
 
 ## Risks / Trade-offs
 
-- **Verificación visual y e2e funcional local imposibles** (sin Supabase local ni Playwright en el
-  entorno de desarrollo): las pantallas se verifican por typecheck, lint, compilación, axe +
-  teclado/foco/viewport en CI; el flujo funcional lo cubre la integración viva de CI. El e2e
-  funcional web completo queda **aplazado y declarado pendiente** (D12): declararlo no lo convierte
-  en compuerta cumplida. Falta una pasada manual/e2e cuando el entorno lo permita.
+- **E2E funcional parcial**: desde la segunda revisión de la PR #27, Supabase local (vía podman
+  rootless) y Playwright corren en el entorno de desarrollo, y `registro-epicrisis.spec.ts` cubre
+  dos recorridos (D12). El e2e funcional web del recorrido clínico completo sigue **pendiente y
+  declarado**; la verificación visual manual, también.
+- **Cierre de consulta sin epicrisis por la Data API**: el sellado impide reabrir una consulta
+  cerrada (D5.4), pero un `UPDATE` directo aún puede pasar una consulta `open` a `closed` sin
+  aprobar su epicrisis, lo que rompería SC-014 (toda consulta cerrada con su epicrisis). Restringir
+  el cierre a `approve_clinical_record` rompe los fixtures pgTap de las specs 004 y 005, que
+  insertan consultas ya cerradas; se aborda junto con esas specs.
 - **`jsonb` sin FK** (D1/D6): un cliente que escriba fuera de los servicios puede dejar referencias
   huérfanas; RLS no lo impide. Mitigación: servicios únicos de escritura, pruebas de integración y
   este registro explícito. Es el coste de no crear una segunda convención de persistencia.
@@ -314,6 +363,6 @@ especialistas: quedan como **pendiente de aceptación**, no como verificados.
   pgTap.
 - **Lectura de US2-AC5** (D7): si la revisión exige que toda corrección —incluida la de
   procedencia— cree registro adicional, el cambio se acota a `anamnesis-service` (+ pgTap).
-- **Ciclos TDD lentos para SQL** (rojo/verde por CI): se mitigan con suites pequeñas y enfocadas;
-  las URLs de las ejecuciones quedan como evidencia.
+- **Ciclos TDD para SQL**: el rojo/verde de pgTap y de la integración viva ya se observa en local
+  (`supabase test db`, `SUPABASE_LIVE_TESTS=1`); CI sigue siendo la evidencia de referencia.
 - **SC-012 y SC-013** requieren evaluación humana: no se afirman como cumplidos.

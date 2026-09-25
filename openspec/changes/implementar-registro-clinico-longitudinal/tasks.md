@@ -42,3 +42,20 @@ final en 5.3). Cada tarea indica su criterio observable de terminación y su tra
 - [x] 6.1 Publicar en la PR el reporte de revisión en español generado con `requesting-code-review` (subagente) sobre el rango completo de la rama. Verificación: comentario existente en la PR (URL registrada).
 - [x] 6.2 Aplicar los hallazgos con `receiving-code-review` (verificación técnica por ítem, respuestas en los hilos de la PR), pushear los cambios y comentar el resultado. Verificación: hilos respondidos, commits pusheados y comentario de cambios publicado.
 - [x] 6.3 Si la implementación desvía `design.md` o estas tareas, actualizar los artefactos con `openspec-update-change` antes del merge. Verificación: artefactos coherentes entre sí.
+
+## 7. Segunda revisión de la PR #27 (2026-09-24)
+
+Hallazgos de `/code-review` publicados en la PR (10 comentarios en línea sobre `f4cc1a0`). Desde
+esta tanda, pgTap, la integración viva y Playwright corren también en local (Supabase vía podman
+rootless), así que cada rojo se observó antes del arreglo.
+
+- [x] 7.1 Sellar la fila de la consulta cerrada: reabrirla o alterarla por PostgREST fracasa con `CLINICAL_RECORD_SEALED` (FR-024 · SC-009 · US4-AC2, D5.4). Verificación: dos aserciones nuevas en `supabase/tests/008_registro_clinico.sql`, rojas con la 009 anterior y verdes con la nueva.
+- [x] 7.2 Limitar la exención `corrective` del INSERT sellado a la epicrisis (FR-024 · US3-AC4, D5.3/D8). Verificación: aserción pgTap nueva (anamnesis `corrective` sobre consulta cerrada) roja→verde.
+- [x] 7.3 Serializar el sellado con el cierre leyendo la consulta con `FOR SHARE` (FR-024 · SC-009, D5.5). Verificación: dos sesiones concurrentes contra Supabase local; sin el bloqueo entra 1 fila en la consulta cerrada, con él 0 y `CLINICAL_RECORD_SEALED`.
+- [x] 7.4 Campos de lista de la epicrisis que admiten espacios y varias líneas (FR-011 · US3-AC1, D11). Verificación: `tests/unit/registro/list-lines.test.ts` y `tests/e2e/web/registro-epicrisis.spec.ts` (el e2e reprodujo `hemogramacompletoperfilbioquímico` antes del arreglo).
+- [x] 7.5 Edición compartida de la ficha sin pérdida de antecedentes: `updatePatientFicha` conserva los de la fila recién leída y ambas escrituras usan control optimista sobre `updated_at` (FR-001 · US1-AC2 · T055, D6). Verificación: dos pruebas vivas con dos veterinarios en `tests/integration/registro/ficha.test.ts`, rojas 3/3 antes del arreglo, y prueba unitaria de la relectura.
+- [x] 7.6 Atribución tras un UPDATE sin evento propio: quien editó, no quien creó (FR-004 · FR-063, D9). Verificación: dos pruebas nuevas en `tests/unit/registro/clinical-mutations.test.ts` rojo→verde.
+- [x] 7.7 Invalidar la caché `['registro']` tras cada escritura (FR-002 · US4-AC4, D11). Verificación: e2e ficha → abrir consulta → aprobar → volver a la ficha con la consulta cerrada en el historial, rojo→verde.
+- [x] 7.8 Historial de la ficha con `listPatientTimeline` (sin N+1), lecturas independientes con `Promise.all` y `parseRows` como única frontera de lectura tolerante (D10). Verificación: suites unitarias y vivas verdes.
+- [x] 7.9 Actualizar `design.md` (D5, D6, D9, D10, D11, D12, complejidad y riesgos), este archivo y `quickstart.md`. Verificación: artefactos coherentes con el código de la rama.
+- [ ] 7.10 Restringir el cierre de consultas a `approve_clinical_record` (SC-014). Pendiente declarado en los riesgos de `design.md`: rompe fixtures pgTap de las specs 004 y 005, que insertan consultas ya cerradas.

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseRows } from "@/features/registro/read-rows";
 import {
   type AnamnesisContent,
   type AnamnesisField,
@@ -83,18 +84,7 @@ export async function listAnamnesisEntries(
     if (error) {
       throw error;
     }
-    return (data ?? []).flatMap((row) => {
-      const legible = anamnesisContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listAnamnesisEntries", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    return parseRows(data, anamnesisContentSchema, "listAnamnesisEntries");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,

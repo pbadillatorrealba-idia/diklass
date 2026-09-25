@@ -124,6 +124,7 @@ Subagent (general-purpose):
     **¿Listo para fusionar?** [Sí | No | Con correcciones]
 
     **Justificación:** [Evaluación técnica de 1-2 oraciones]
+
     ## Critical Rules
 
     **DO:**
