@@ -71,6 +71,19 @@ Cada tarea de este grupo:
   - Después, ampliar la regla `:focus-visible` de `global.css` a todo elemento enfocable.
   - FR-080.
   - Verificación: el caso pasa en `firefox`, `chromium` y `webkit`, y una captura de Firefox con el contenedor enfocado queda en `quickstart.md`.
+- [ ] 5.7 `OptionPicker` con tabindex itinerante (D19 · FR-080):
+  - primero, en rojo, un e2e en el que Tab entra en un grupo por la opción elegida, la flecha
+    cambia la selección y el foco, y el siguiente Tab sale del grupo;
+  - después, la implementación;
+  - ajustar los `keyboardTestIDs` del caso sintético a una parada por grupo.
+  Verificación: el e2e nuevo y el recorrido por teclado en verde en `chromium`, `firefox` y
+  `webkit`.
+- [ ] 5.8 Selector de paciente con búsqueda (D19 · FR-095 · US14-AC6):
+  - prueba unitaria en rojo de `filtrarPacientes` (tildes, mayúsculas, raza/especie, máximo 8 y
+    el elegido siempre presente);
+  - después, el componente;
+  - e2e en `conocimiento.spec.ts`: buscar, elegir y anuncio del recuento.
+  Verificación: pruebas verdes y axe en `/knowledge`.
 
 ## 6. Limpieza y cierre
 

@@ -212,6 +212,7 @@ clínica futura sin comprometer todavía un modelo de citas.
 | FR-092 Avatar del profesional | US16-AC3 | Pendiente (foto real: fuera de alcance) |
 | FR-093 Sección Configuración | US16-AC4 | Pendiente (edición de perfil en `perfil-profesional`) |
 | FR-094 Calendario en Inicio | US16-AC5 | Pendiente (eventos: fuera de alcance) |
+| FR-095 Selector de paciente con búsqueda | US14-AC6 | Pendiente |
 
 ## Success Criteria
 
@@ -413,6 +414,16 @@ token de foco del tema y un contraste ≥ 3:1, en ambos esquemas.
 - **GIVEN** la pantalla de pacientes
 - **WHEN** el usuario recorre los controles con Tab
 - **THEN** cada control enfocado muestra el indicador de foco
+
+Un grupo de opciones excluyentes MUST ser una sola parada de Tab: la opción elegida o, sin
+selección, la primera. Las flechas MUST mover la selección y el foco dentro del grupo, según el
+patrón ARIA *radio group*.
+
+#### Scenario: Grupo de opciones por teclado
+
+- **GIVEN** un grupo de opciones con una opción elegida
+- **WHEN** el usuario llega al grupo con Tab y pulsa la flecha derecha o abajo
+- **THEN** el foco y la selección pasan a la opción siguiente, y el siguiente Tab sale del grupo
 
 ### Requirement: FR-081
 
@@ -687,3 +698,23 @@ agendados». MUST NOT mostrar datos de ejemplo.
 - **THEN** aparece «septiembre de 2026» con la semana desde el lunes, hoy destacado, «Sin eventos
   agendados», y los botones de mes anterior y siguiente operables por teclado, con 0 violaciones
   axe
+
+### Requirement: FR-095
+
+El contexto de paciente de `/knowledge` MUST ofrecer un campo «Buscar paciente» que filtre por
+nombre, raza o especie, sin distinguir mayúsculas ni tildes. Las opciones MUST limitarse a:
+
+- «Conocimiento general (sin paciente)»;
+- el paciente ya elegido, aunque no coincida con la búsqueda;
+- como máximo 8 coincidencias.
+
+El número de coincidencias MUST anunciarse en una región viva. Sin búsqueda, MUST mostrarse la
+misma lista acotada: las 8 primeras fichas.
+
+#### Scenario: US14-AC6
+
+- **GIVEN** una clínica con cientos de pacientes y `/knowledge` abierto
+- **WHEN** el usuario escribe parte del nombre de un paciente en «Buscar paciente»
+- **THEN** solo aparecen sus coincidencias (como máximo 8), se anuncia cuántas hay, y elegir una
+  fija el contexto de la conversación como antes
+

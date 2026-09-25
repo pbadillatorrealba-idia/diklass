@@ -612,6 +612,27 @@ vacía junto a la barra lateral. El ancho pasa a depender del tipo de pantalla.
 - Los formularios conservan 720 px: las líneas largas y los campos anchos dificultan la lectura y
   el llenado (WCAG 1.4.8, orientativo).
 
+### D19 — Grupos de opciones por teclado y selector de paciente con búsqueda (FR-080 · FR-095)
+
+Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
+
+- **El problema:** `OptionPicker` hacía de cada opción una parada de Tab. En `/knowledge`, el
+  selector de paciente pintaba una por ficha: con más de 250 fichas en la base local, el
+  recorrido por teclado de la compuerta agotaba su tope antes de llegar a la pregunta. Esa era la
+  causa del fallo intermitente.
+- **`OptionPicker` con tabindex itinerante (solo web):**
+  - `tabIndex` 0 en la opción elegida (o en la primera, si no hay ninguna) y -1 en el resto;
+  - `onKeyDown` en el grupo: flechas derecha/abajo e izquierda/arriba (con vuelta), Inicio y Fin,
+    que eligen la opción y le mueven el foco;
+  - en nativo el lector de pantalla recorre el grupo por sí mismo y no hay cambios.
+- **`SelectorPacienteContexto`:**
+  - un `Input` «Buscar paciente» y un `OptionPicker` con las opciones de FR-095;
+  - el filtro es una función pura (`filtrarPacientes`), sin tildes ni mayúsculas, probada
+    aparte;
+  - el recuento («N pacientes coinciden») va en un `Text` con `accessibilityLiveRegion="polite"`.
+- **Alternativa descartada:** un combobox con lista desplegable. Exige más ARIA y más código de
+  foco, sin ventaja para una lista ya acotada a 8.
+
 ## Complexity Tracking
 
 | Elemento | Por qué hace falta | Alternativa más simple descartada |
