@@ -280,6 +280,48 @@ export type Database = {
           },
         ]
       }
+      knowledge_fragments: {
+        Row: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion: string | null
+          texto: string
+          vector: unknown
+        }
+        Insert: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion?: string | null
+          texto: string
+          vector?: unknown
+        }
+        Update: {
+          clinic_id?: string
+          documento_id?: string
+          ordinal?: number
+          seccion?: string | null
+          texto?: string
+          vector?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_fragments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_fragments_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_queries: {
         Row: {
           answer: Json
@@ -419,6 +461,7 @@ export type Database = {
           licencia: Json
           rank_cd: number
           seccion: string
+          terminos_pregunta: string[]
           texto: string
         }[]
       }

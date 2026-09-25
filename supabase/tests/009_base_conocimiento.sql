@@ -385,8 +385,8 @@ select throws_ok(
     values ('f0f0f0f0-0000-4000-8000-000000000002', '11111111-0000-4000-8000-000000000001',
       'pregunta con paciente fantasma', '99999999-9999-4999-8999-999999999999',
       '{"pregunta":"pregunta con paciente fantasma","patientId":null,"segmentos":[],"cobertura":{"estado":"sin_evidencia","cubiertos":[],"noCubiertos":[]},"avisos":[]}')$$,
-  '23503',
-  null,
+  '23514',
+  'KNOWLEDGE_QUERY_PATIENT_INVALID',
   'FR-020: el contexto de paciente referenciado existe o la consulta no se registra'
 );
 
