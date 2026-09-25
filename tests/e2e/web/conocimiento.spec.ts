@@ -162,6 +162,19 @@ test.describe("base de conocimiento web", () => {
       await api.dispose();
     }
   });
+  // RI-2: la base de conocimiento se alcanza desde el panel clínico, no solo por URL.
+  test("el panel clínico enlaza con la base de conocimiento", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 10_000 });
+
+    await page.getByTestId("home-knowledge").click();
+
+    await expect(page).toHaveURL(/\/knowledge$/);
+    await expect(
+      page.getByLabel("Tu pregunta al asistente").filter({ visible: true }),
+    ).toBeVisible();
+  });
+
   // Tarea 7.12: con la sesión de acceso caducada la RLS devuelve cero filas, no un error, y el
   // visor mostraba «no encontrada» en vez de pedir que se vuelva a iniciar sesión.
   test("con la sesión de acceso caducada el visor pide reautenticación, no «no encontrada»", async ({

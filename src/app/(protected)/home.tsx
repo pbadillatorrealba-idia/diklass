@@ -37,6 +37,13 @@ export default function HomeScreen() {
             >
               <ButtonText>Pacientes</ButtonText>
             </Button>
+            <Button
+              accessibilityLabel="Ir a la base de conocimiento"
+              onPress={() => router.push("/knowledge")}
+              testID="home-knowledge"
+            >
+              <ButtonText>Base de conocimiento</ButtonText>
+            </Button>
           </VStack>
           <LogoutButton onLogout={signOut} />
         </VStack>
