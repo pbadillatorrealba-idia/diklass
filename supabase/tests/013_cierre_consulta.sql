@@ -7,7 +7,7 @@
 -- supabase/tests/008_registro_clinico.sql.
 
 begin;
-select plan(8);
+select plan(12);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -106,6 +106,55 @@ select throws_ok(
     where id = 'd13d13d1-0000-4000-8000-000000000003'$$,
   '23514', 'CONSULTATION_CLOSE_REQUIRES_APPROVAL',
   'SC-014: la epicrisis aprobada de otra consulta no habilita el cierre'
+);
+
+-- Revisión de la PR #33, hallazgo 1: approve_clinical_record resuelve consultationId como uuid
+-- (acepta mayúsculas, llaves o sin guiones). El cierre no puede depender de su forma textual.
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values
+  ('d13d13d1-0000-4000-8000-000000000004', 'c13c13c1-0000-4000-8000-00000000000c',
+   'consultation', '{"patientId":"d13d13d1-0000-4000-8000-0000000000aa","status":"open"}', 'draft'),
+  ('d13d13d1-0000-4000-8000-000000000005', 'c13c13c1-0000-4000-8000-00000000000c',
+   'epicrisis', '{"consultationId":"D13D13D1-0000-4000-8000-000000000004","motivoConsulta":"Control"}',
+   'draft');
+
+select lives_ok(
+  $$select public.approve_clinical_record('d13d13d1-0000-4000-8000-000000000005')$$,
+  'Revisión PR #33 (1): una epicrisis con consultationId en mayúsculas se aprueba'
+);
+
+select results_eq(
+  $$select content ->> 'status' from public.clinical_records
+    where id = 'd13d13d1-0000-4000-8000-000000000004'$$,
+  $$values ('closed'::text)$$,
+  'Revisión PR #33 (1): y su consulta queda cerrada'
+);
+
+-- Hallazgo 4: una epicrisis aprobada ANTES de que existiera la consulta no habilita un cierre
+-- por UPDATE directo: el cierre solo ocurre dentro de approve_clinical_record.
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values ('d13d13d1-0000-4000-8000-000000000007', 'c13c13c1-0000-4000-8000-00000000000c',
+        'epicrisis', '{"consultationId":"d13d13d1-0000-4000-8000-000000000006","motivoConsulta":"Control"}',
+        'draft');
+select public.approve_clinical_record('d13d13d1-0000-4000-8000-000000000007');
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values ('d13d13d1-0000-4000-8000-000000000006', 'c13c13c1-0000-4000-8000-00000000000c',
+        'consultation', '{"patientId":"d13d13d1-0000-4000-8000-0000000000aa","status":"open"}', 'draft');
+
+select throws_ok(
+  $$update public.clinical_records set content = content || '{"status":"closed"}'
+    where id = 'd13d13d1-0000-4000-8000-000000000006'$$,
+  '23514', 'CONSULTATION_CLOSE_REQUIRES_APPROVAL',
+  'Revisión PR #33 (4): una epicrisis aprobada antes que su consulta no habilita el cierre por UPDATE'
+);
+
+-- Hallazgo 2: un UPDATE sobre una consulta cerrada lo rechaza el sellado de 009 (D5.4), sea
+-- cual sea el cambio y el orden de los triggers.
+select throws_ok(
+  $$update public.clinical_records set content = content - 'status'
+    where id = 'd13d13d1-0000-4000-8000-000000000001'$$,
+  '23514', 'CLINICAL_RECORD_SEALED',
+  'Revisión PR #33 (2): quitar el estado de una consulta cerrada falla con CLINICAL_RECORD_SEALED'
 );
 
 reset role;

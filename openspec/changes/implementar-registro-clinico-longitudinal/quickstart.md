@@ -113,8 +113,9 @@ Migración `013_cierre_consulta.sql`, en local con Supabase local:
 
 | Compuerta | Resultado |
 |---|---|
-| `supabase/tests/013_cierre_consulta.sql` sin la 013 | 7 de 8 en rojo |
-| `supabase db reset && supabase test db` con la 013 | 284/284 en 15 suites |
+| `supabase/tests/013_cierre_consulta.sql` sin la 013 | 7 de 8 en rojo (y 4 más en rojo con la primera versión de la 013, revisión de la PR #33) |
+| `supabase db reset && supabase test db` con la 013 | 288/288 en 15 suites |
+| Chequeo de datos existentes de la 013 | aborta con `CONSULTATION_DATA_VIOLATES_013` ante una consulta cerrada sin epicrisis |
 | `bun run db:types` | sin diff (solo un trigger) |
 | `bun run test` con las suites vivas | 450 pass, 0 fail |
 | `bun run test:integration` | 69 pass, 0 fail |

@@ -122,13 +122,16 @@ servidor.
 ### D4. Aprobación y cierre de consulta son atómicos, en este orden
 
 **El cierre solo ocurre por la aprobación** (migración 013, tarea 7.10): el trigger
-`guard_consultation_close` exige que una consulta nazca `open`, que su estado pertenezca a
-{`open`, `closed`} (`CONSULTATION_STATUS_INVALID`) y que la transición `open → closed` encuentre una
-epicrisis `approved` de esa misma consulta y clínica (`CONSULTATION_CLOSE_REQUIRES_APPROVAL`). Como
-`approve_clinical_record` aprueba la epicrisis antes de cerrar la consulta, la condición se cumple
-por ese camino sin tocar la función, y un `UPDATE` o `INSERT` directo por la Data API ya no puede
-dejar una consulta cerrada sin epicrisis (SC-014). Los fixtures pgTap de 004 y 005 cierran sus
-consultas aprobando una epicrisis, como la aplicación.
+`guard_consultation_close` exige que una consulta nazca `open` y que su estado pertenezca a
+{`open`, `closed`} (`CONSULTATION_STATUS_INVALID`). La transición `open → closed` solo se admite
+dentro de `approve_clinical_record`, que marca la consulta que cierra con
+`diklass.closing_consultation` (local a la transacción, mismo patrón que `diklass.approving`);
+fuera de ahí falla con `CONSULTATION_CLOSE_REQUIRES_APPROVAL`. La marca es el uuid ya resuelto por
+la función, así que no depende de la forma textual de `consultationId`, y una epicrisis aprobada
+antes de existir su consulta no habilita un cierre por UPDATE (revisión de la PR #33). Un UPDATE
+de una consulta ya cerrada lo sigue rechazando el sellado (D5.4), sin depender del orden de los
+triggers. La migración falla si encuentra datos que ya incumplen la regla. Los fixtures pgTap de
+004 y 005 cierran sus consultas aprobando una epicrisis, como la aplicación.
 
 `approve_clinical_record` se extiende (`create or replace`, misma firma y respuesta) para que, al
 aprobar una epicrisis con `content.consultationId`, cierre en la misma transacción la consulta
