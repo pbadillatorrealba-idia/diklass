@@ -459,6 +459,88 @@ Decisión:
   login dejaría de compartir la primitiva `Input` (tema, foco, invalidez), y el `<form>`
   envolvente basta para que los gestores asocien los campos.
 
+### D17 — Tema manual, avatar, Configuración y calendario (FR-091 – FR-094)
+
+Decisiones del usuario (2026-09-25):
+
+- El calendario usa `react-native-calendars` (Wix).
+- Editar el nombre muestra el nombre actual en la atribución, con cada cambio auditado; se
+  especifica en `perfil-profesional`.
+- La UI va en este cambio y el perfil en un cambio aparte.
+
+**Tema manual (FR-091).**
+
+- `tailwind.config.js` pasa a `darkMode: "class"`, que NativeWind 4.2 exige para fijar el esquema
+  en web; `colorScheme.set` delega en `Appearance.setColorScheme` en nativo.
+- `global.css` define los tokens oscuros una sola vez, en `:root.dark`, y los repite bajo
+  `@media (prefers-color-scheme: dark) { :root:not(.light) }` para el modo `system`.
+  `tema.test.ts` extrae ambos bloques y exige que sean idénticos.
+- La preferencia vive en `src/stores/theme-store.ts` (zustand, ya instalado):
+  - `setPreference` llama a `colorScheme.set`;
+  - se persiste en `localStorage` en web y en `expo-secure-store` en nativo, ambos ya presentes,
+    envueltos en `try/catch` y con `system` como valor por defecto.
+- `+html.tsx` incluye un script en línea de 3 líneas que lee la preferencia y pone la clase `dark`
+  o `light` en `<html>` antes del primer pintado (caso límite «sin destello»).
+- `useThemeColors()` sigue a `useColorScheme()`, que refleja el valor fijado.
+- El botón rápido es un `Button variant="ghost"` con `Icon`: `weather-night` para
+  «Cambiar a modo oscuro» y `white-balance-sunny` para «Cambiar a modo claro».
+
+**Avatar (FR-092).**
+
+- Primitiva `src/components/ui/avatar.tsx`: círculo `rounded-full` (cápsula, sin `borderCurve`) con
+  `bg-primary-surface` e iniciales `text-primary font-semibold`. Las iniciales son la primera letra
+  de las dos primeras palabras, ignorando títulos como «Dr.»/«Dra.».
+- Prop futura `uri`, con `expo-image` cuando se añada la foto: fuera de alcance. Por eso no se
+  instala ahora.
+- El par `primary` sobre `primary-surface` entra en `PAIRS`.
+
+**Configuración (FR-093).**
+
+- Grupo `(settings)` con `settings/index.tsx` y `settings/profile.tsx` (la vista la entrega
+  `perfil-profesional`). `SECTIONS` suma `{ name: "(settings)", href: "/settings", label:
+  "Configuración", icon: "cog-outline", sf: "gearshape", md: "settings" }`.
+- Web `lg`: la barra lateral lista las 5 secciones y su pie pasa a ser avatar + nombre (enlace a
+  Configuración), el botón de tema y «Cerrar sesión».
+- Web por debajo de `lg`:
+  - barra superior compacta (`app-topbar`) con «Diklass», el botón de tema y el avatar-enlace a
+    Configuración;
+  - la barra inferior conserva las 4 secciones clínicas.
+  - Medido a 320 px: 4 pestañas dan 80 px cada una, y «Conocimiento» ocupa 89 px a 14 px. Cinco
+    pestañas no caben con el nombre visible.
+- Etiquetas de la barra inferior:
+  - nueva variante de `Text` `nav` (12 px, `font-medium`), exclusiva de la navegación. Las barras
+    de pestañas de iOS/Material usan 10–12 px, y el mínimo de 14 px de D5 es para metadatos
+    clínicos;
+  - con ella, «Conocimiento» ocupa 76 px y cabe en los 78 px útiles;
+  - `numberOfLines` se retira: nada se recorta.
+- Nativo: `NativeTabs` con 5 pestañas; el sistema ajusta las etiquetas.
+
+**Calendario (FR-094).**
+
+- `react-native-calendars` `Calendar`, envuelto en `src/components/calendar/month-calendar.tsx`
+  para aislar la dependencia. El envoltorio recibe `events: CalendarEvent[]` y traduce a
+  `markedDates`.
+- `theme` se construye con `useThemeColors()` y la fuente Atkinson.
+- `LocaleConfig` en español (`es`), con `firstDay={1}`.
+- `renderArrow` con `Icon` y nombres accesibles.
+- `CalendarEvent` (`src/features/agenda/calendar-event.ts`) sigue RFC 5545:
+  - `uid`, `title`;
+  - `start`/`end` ISO 8601 con desfase, `timeZone` IANA y `allDay`;
+  - `rrule?`, `location?`, `patientId?`, `status: "confirmed" | "tentative" | "cancelled"`.
+- Así se podrá, sin reescribir el modelo:
+  - exportar `.ics`;
+  - sincronizar con los calendarios del dispositivo (`expo-calendar`, iOS/Android), que no se
+    instala ahora;
+  - usar vistas de día y semana más adelante.
+- **Paquetes evaluados:**
+  - `@marceloterreiro/flash-calendar`: el más rápido y fácil de estilizar, pero solo mes.
+  - `@howljs/calendar-kit`: día/semana con arrastrar; requiere Reanimated y Gesture Handler, y el
+    soporte web es menor.
+  - `react-native-big-calendar`: estilo Google.
+  - Se elige Wix por madurez, por cubrir mes, semana y agenda, y por funcionar en web con
+    `react-native-web`.
+  - Riesgo: estiliza con un objeto de tema, no con NativeWind. El envoltorio lo contiene.
+
 ## Risks / Trade-offs
 
 - **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
@@ -508,6 +590,8 @@ Decisión:
 | Navegación de secciones con variante por plataforma (`app-navigation.tsx` + `.web.tsx`) | FR-082: la convención de cada plataforma difiere (pestañas nativas frente a barra lateral en escritorio). Usa solo APIs de `expo-router` ya instalado | Un único `Tabs` JS en todas las plataformas: no es la barra nativa de iOS/Android y en escritorio desaprovecha el ancho. Un drawer: requiere `@react-navigation/drawer` y oculta las secciones en móvil |
 | 4 layouts de grupo (`(home)`, `(patients)`, `(follow-up)`, `(knowledge)`) | Un `Stack` por sección, para que cada pestaña conserve su historial y su retroceso (FR-083) | Un único `Stack`: al cambiar de sección se pierde la posición en la anterior |
 | Primitivas `QueryState` y `LinkText` | FR-084/085, con ≥ 4 y ≥ 3 usos | Repetir en cada pantalla los ternarios de carga/error/vacío: es la deriva que se midió |
+| `react-native-calendars` (dependencia nueva, MIT, JS puro; arrastra `xdate`, `lodash`, `recyclerlistview`, `memoize-one`, `prop-types`, `hoist-non-react-statics`, `react-native-swipe-gestures`) | FR-094: calendario mensual accesible y localizable hoy, con semana y agenda disponibles cuando existan citas (decisión del usuario, D17) | Vista de mes propia con `Intl`: sin dependencias, pero habría que reescribirla al llegar semana y agenda |
+| `darkMode: "class"` y bloque oscuro duplicado en `global.css` | FR-091: NativeWind solo permite fijar el esquema en web con la estrategia `class` | Solo la media query: no admite preferencia manual. La duplicación la vigila `tema.test.ts` |
 | `KeyboardAvoidingView` (React Native) en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen |
 
 ## Migration Plan
@@ -535,6 +619,9 @@ Resueltas con el usuario el 2026-09-25:
 - Resumen de seguimiento en la consulta a partir de `lg`: **columna lateral**, junto con los
   antecedentes y el historial de correcciones; la principal lleva anamnesis, diagnóstico y
   epicrisis.
+- Tema manual, avatar, Configuración y calendario (2026-09-25): calendario con
+  `react-native-calendars`; edición de nombre con nombre actual y auditoría, en el cambio
+  `perfil-profesional` (D17).
 - Login (2026-09-25): el usuario pide que el acceso permita guardar contraseñas y que el
   formulario vaya en una tarjeta. Se incorpora a este cambio como US15 (D16).
 - Patrón de navegación: **adaptable** (barra lateral ≥ 1024 px en web; pestañas inferiores en

@@ -79,6 +79,14 @@ Añadido tras revisar la app con las guías `expo-native-ui` y `expo-router` (20
   - vive en una tarjeta separada del fondo, con «Mostrar contraseña», Intro para enviar y el error
     en un `Callout`.
   - La app sigue sin guardar credenciales propias.
+- **Apariencia, cuenta y agenda (pedido del usuario, 2026-09-25):**
+  - botón para cambiar entre modo claro y oscuro, con la preferencia guardada en el dispositivo
+    (Sistema por defecto);
+  - avatar con iniciales como marcador de la foto del profesional;
+  - quinta sección, Configuración, con perfil, apariencia y cierre de sesión;
+  - calendario mensual vacío en Inicio (`react-native-calendars`), con un modelo de evento
+    compatible con iCalendar para llenarlo más adelante.
+  - La edición de datos personales se especifica en el cambio nuevo `perfil-profesional`.
 - **Correcciones de la compuerta de la tarea 5.2:**
   - En oscuro, el texto atenuado no llega a AA sobre los tintes translúcidos (`bg-primary/15`,
     `bg-secondary/15`, `bg-accent/20`): queda en 3.4–3.8:1. Se sustituyen por tokens de
@@ -117,7 +125,7 @@ primitivas de esta capacidad.
   sale de sus botones, pero se conservan los `testID` `home-patients`/`home-knowledge`, que
   `conocimiento.spec.ts` usa.
 - Dependencias: `expo-font` (el config plugin ya se usaba; pasa a dependencia directa, antes solo
-  transitiva) y `@expo/vector-icons` (nueva). La navegación usa solo APIs de `expo-router` ya
+  transitiva) `@expo/vector-icons` (nueva) y `react-native-calendars` (nueva, D17). La navegación usa solo APIs de `expo-router` ya
   instalado (`expo-router/ui` y `expo-router/unstable-native-tabs`): no añade dependencias.
 - Pruebas: `tests/unit/theme/`, compuerta axe en `tests/e2e/web/accessibility.spec.ts` (claro y
   oscuro) y una comprobación nueva de reflujo a 320 px.

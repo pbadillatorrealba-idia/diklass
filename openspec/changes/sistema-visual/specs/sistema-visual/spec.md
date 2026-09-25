@@ -116,6 +116,40 @@ el teclado ofrece las credenciales guardadas.
    anunciado a lectores de pantalla, y el foco o la lectura llega a él sin perder lo escrito en el
    correo.
 
+### User Story 16 - Mi espacio: apariencia, cuenta y agenda (Priority: P3)
+
+Como veterinario, quiero elegir modo claro u oscuro sin depender del sistema operativo, reconocer
+mi sesión por mi foto o iniciales, tener una sección de Configuración donde gestionar mis datos, y
+ver en Inicio un calendario que más adelante mostrará mis citas y controles, para trabajar
+cómodo en turnos largos y con luz variable.
+
+**Why this priority**: hoy el modo sigue siempre al sistema operativo, la sesión solo se identifica
+por un texto y no existe ningún lugar para los ajustes personales. El calendario prepara la agenda
+clínica futura sin comprometer todavía un modelo de citas.
+
+**Independent Test**:
+
+- Cambiar a oscuro desde el botón rápido y recargar: la app sigue en oscuro. Volver a «Usar el
+  del sistema» en Configuración.
+- Abrir Configuración desde la navegación a 1280 px y a 375 px.
+- Ver en Inicio el calendario del mes actual, vacío, navegable por teclado.
+
+**Acceptance Scenarios**:
+
+1. **Given** cualquier pantalla protegida, **When** el usuario activa el botón de tema, **Then** la
+   app pasa de claro a oscuro (o al revés) sin recargar, el botón anuncia el modo resultante, y la
+   elección persiste en ese dispositivo tras recargar o reabrir.
+2. **Given** Configuración › Apariencia, **When** el usuario elige «Sistema», «Claro» u «Oscuro»,
+   **Then** la app aplica esa preferencia; con «Sistema», sigue los cambios del sistema operativo.
+3. **Given** un profesional sin foto, **When** se muestra su identidad (barra lateral,
+   Configuración), **Then** aparece un avatar con sus iniciales sobre un fondo del tema, con su
+   nombre como texto (el avatar es decorativo).
+4. **Given** la navegación global, **When** el usuario busca sus ajustes, **Then** la sección
+   Configuración está a 1 activación, con su perfil, la apariencia y el cierre de sesión.
+5. **Given** Inicio, **When** se abre, **Then** muestra el calendario del mes actual en español
+   (semana desde el lunes, hoy destacado con algo más que el color), navegable entre meses, y un
+   estado vacío «Sin eventos agendados» sin inventar datos.
+
 ### Edge Cases
 
 - Texto ampliado por el sistema (Dynamic Type / zoom del navegador al 200 %): las filas crecen y el
@@ -138,6 +172,14 @@ el teclado ofrece las credenciales guardadas.
   adopta como valor del formulario, no se borra.
 - Credenciales incorrectas guardadas: el error se muestra igual que con credenciales tecleadas, y
   la contraseña se limpia sin borrar el correo.
+- Web a 320 px con la sección Configuración: la barra inferior mantiene las 4 secciones con nombre
+  visible, y Configuración se alcanza con el avatar de la barra superior compacta. Ninguna etiqueta
+  se recorta.
+- Preferencia de tema guardada que el almacenamiento no puede leer (modo privado, almacenamiento
+  bloqueado): la app usa «Sistema» sin error visible.
+- Primer pintado en web con preferencia «Oscuro»: no hay destello del tema claro antes de hidratar.
+- Nombre de una sola palabra o con caracteres acentuados: las iniciales usan las dos primeras letras
+  o la inicial disponible, normalizadas en mayúscula.
 - En iOS, ofrecer *guardar* en el llavero requiere Associated Domains (`webcredentials:`) con un
   dominio publicado. Sin despliegue, en nativo se cubre el relleno, y el guardado queda como
   pendiente de despliegue.
@@ -166,6 +208,10 @@ el teclado ofrece las credenciales guardadas.
 | FR-088 Formularios con teclado | — | Pendiente (verificación nativa sujeta a dispositivo) |
 | FR-089 Login compatible con gestores de contraseñas | US15-AC1/AC2 | Pendiente (guardado en iOS sujeto a dominio desplegado) |
 | FR-090 Login en tarjeta con controles completos | US15-AC3/AC4/AC5 | Pendiente |
+| FR-091 Selector de tema persistente | US16-AC1/AC2 | Pendiente |
+| FR-092 Avatar del profesional | US16-AC3 | Pendiente (foto real: fuera de alcance) |
+| FR-093 Sección Configuración | US16-AC4 | Pendiente (edición de perfil en `perfil-profesional`) |
+| FR-094 Calendario en Inicio | US16-AC5 | Pendiente (eventos: fuera de alcance) |
 
 ## Success Criteria
 
@@ -188,11 +234,16 @@ el teclado ofrece las credenciales guardadas.
 - **SC-057**: en web, un inicio de sesión válido produce 1 envío de formulario con los campos
   `username`/`current-password` identificables por el gestor, y 0 campos de acceso con `readOnly`
   cuando el gestor intenta rellenarlos.
+- **SC-058**: el cambio de tema se aplica en 1 activación, en ≤ 100 ms sin recarga, y persiste
+  tras 1 recarga; 0 violaciones axe en claro y oscuro forzados.
+- **SC-059**: 0 etiquetas de navegación recortadas y 0 desbordamientos horizontales a 320 px con
+  las 5 secciones.
 
 ## Assumptions
 
 - La paleta de marca vigente (verde azulado primario, azul secundario, ámbar de acento) se
-  mantiene. El modo sigue al sistema operativo, sin selector manual.
+  mantiene. El modo sigue al sistema operativo por defecto; desde US16 el profesional puede fijar
+  claro u oscuro por dispositivo (la preferencia no viaja con la cuenta).
 - La severidad visual `critico` se define ahora por decisión de producto para 006/007; el
   vocabulario de eventos adversos de 005 sigue siendo `leve`/`moderado`/`grave`.
 
@@ -539,3 +590,86 @@ contraseña MUST vaciarse y el correo MUST conservarse.
 - **GIVEN** credenciales incorrectas
 - **WHEN** se envía el formulario
 - **THEN** aparece un `Callout` de error anunciado, el correo se conserva y la contraseña queda vacía
+
+### Requirement: FR-091
+
+La app MUST ofrecer una preferencia de tema con tres valores (`system`, `light`, `dark`), con
+`system` por defecto. MUST existir un botón de tema accesible en la navegación global (barra
+lateral en web `lg`, barra superior compacta en web angosta, y Configuración en nativo) que
+alterne entre claro y oscuro, anunciando el modo resultante, y un selector de los tres valores en
+Configuración › Apariencia. La preferencia MUST persistir en el dispositivo (almacenamiento local
+del navegador en web, `expo-secure-store` en nativo), MUST NOT enviarse al servidor y MUST degradar
+a `system` si no puede leerse. En web, MUST aplicarse antes del primer pintado. Los tokens de
+`global.css` MUST resolver igual con el modo forzado que con la media query, y `tema.test.ts` MUST
+verificar ambos caminos.
+
+#### Scenario: US16-AC1
+
+- **GIVEN** la app en claro con preferencia `system` y un sistema en claro
+- **WHEN** el usuario activa «Cambiar a modo oscuro»
+- **THEN** la app pasa a oscuro sin recarga, el botón pasa a «Cambiar a modo claro», y tras
+  recargar la app sigue en oscuro
+
+#### Scenario: US16-AC2
+
+- **GIVEN** la preferencia `dark`
+- **WHEN** el usuario elige «Sistema» en Configuración › Apariencia con el sistema en claro
+- **THEN** la app vuelve a claro y sigue al sistema desde entonces
+
+### Requirement: FR-092
+
+La identidad del profesional MUST mostrarse con un `Avatar`. Sin foto, muestra sus iniciales en
+`text-primary` sobre `bg-primary-surface`, con `min-h-touch` de diámetro y forma circular. El avatar
+MUST ser decorativo, con el nombre siempre presente como texto o como nombre accesible del control
+que lo contiene. El componente MUST aceptar a futuro una `uri` de foto con respaldo a las
+iniciales si la imagen falla; la carga y el almacenamiento de fotos quedan fuera de este cambio.
+
+#### Scenario: US16-AC3
+
+- **GIVEN** la sesión de «Dra. Ana Torres» sin foto
+- **WHEN** se abre la barra lateral o Configuración
+- **THEN** aparece un avatar con «AT» y el nombre completo como texto junto a él
+
+### Requirement: FR-093
+
+La navegación global MUST incluir una quinta sección, Configuración (`/settings`), con icono y
+nombre, y con los mismos patrones de FR-082/FR-083. En la barra lateral es un elemento más; en la
+barra inferior web angosta, Configuración MUST alcanzarse desde el avatar de una barra superior
+compacta (nombre accesible «Configuración»), para que ninguna etiqueta se recorte (SC-059). En
+nativo es la quinta pestaña. La sección MUST contener:
+
+- el perfil (avatar, nombre, identificador de acceso de solo lectura, y un enlace «Editar datos
+  personales» a `/settings/profile`);
+- la apariencia (FR-091);
+- el cierre de sesión.
+
+La edición de datos personales y su persistencia se especifican en el cambio
+`perfil-profesional`.
+
+#### Scenario: US16-AC4
+
+- **GIVEN** `/consultations/<id>` a 1280 px y a 375 px
+- **WHEN** el usuario quiere cambiar sus ajustes
+- **THEN** llega a `/settings` en 1 activación, desde la barra lateral o desde el avatar
+
+### Requirement: FR-094
+
+Inicio MUST mostrar un calendario mensual (`react-native-calendars`, design.md D17):
+
+- en español, con la semana empezando el lunes;
+- con los colores de `useThemeColors()` en claro y oscuro;
+- con «hoy» marcado con algo más que el color (peso y anillo);
+- con navegación entre meses por botones con nombre accesible («Mes anterior», «Mes siguiente»).
+
+El calendario MUST recibir sus eventos por una prop con un tipo `CalendarEvent` compatible con
+iCalendar (RFC 5545: `uid`, `start`/`end` en ISO 8601 con zona horaria, `allDay`, `title`, `rrule`
+opcional), vacía en este cambio. Sin eventos, MUST mostrar el estado vacío «Sin eventos
+agendados». MUST NOT mostrar datos de ejemplo.
+
+#### Scenario: US16-AC5
+
+- **GIVEN** Inicio en septiembre de 2026, en claro y en oscuro
+- **WHEN** se muestra
+- **THEN** aparece «septiembre de 2026» con la semana desde el lunes, hoy destacado, «Sin eventos
+  agendados», y los botones de mes anterior y siguiente operables por teclado, con 0 violaciones
+  axe

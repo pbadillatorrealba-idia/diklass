@@ -151,3 +151,41 @@ como pendiente explícito en `quickstart.md`.
   - el guardado en el llavero de iOS queda como pendiente de dominio desplegado (Associated
     Domains).
   FR-089. Verificación: evidencia o pendientes explícitos en `quickstart.md`.
+
+## 10. Apariencia, cuenta y agenda (D17 · US16)
+
+- [ ] 10.1 Tema manual (FR-091):
+  - Primero, en rojo: `tema.test.ts` exige un bloque `:root.dark` idéntico al de la media query
+    `:root:not(.light)`, y la prueba de `theme-store` cubre la persistencia con `system` por defecto
+    y la degradación si el almacenamiento falla.
+  - Después: `darkMode: "class"`, reorganizar `global.css`, `theme-store`, el script de `+html.tsx`
+    y el botón de tema.
+  - Verificación: pruebas rojo→verde, y un e2e nuevo (`tema.spec.ts`) donde el botón cambia a
+    oscuro, persiste tras recargar y no hay destello (captura del primer pintado). Axe verde con
+    `chromium` forzado a oscuro sobre sistema claro.
+- [ ] 10.2 `Avatar` con iniciales, con prueba de componente en rojo primero (iniciales con «Dra.»,
+  una palabra y acentos; decorativo; `min-h-touch`), y el par `primary`/`primary-surface` en
+  `PAIRS` (FR-092). Verificación: pruebas verdes.
+- [ ] 10.3 Sección Configuración (FR-093):
+  - `(settings)` con `settings/index.tsx` (perfil, apariencia, cerrar sesión) y la entrada en
+    `SECTIONS`;
+  - barra lateral con 5 secciones y pie con avatar;
+  - `app-topbar` en web angosta;
+  - variante `nav` de `Text`;
+  - `NativeTabs` con 5.
+  Verificación: casos nuevos en `navegacion.spec.ts` (Configuración a 1 activación a 1280 y 375 px),
+  y el reflujo a 320 px de 5.1 en verde, sin etiquetas recortadas (SC-059).
+- [ ] 10.4 Calendario en Inicio (FR-094):
+  - instalar `react-native-calendars` con `bunx expo install` y justificarlo en `quickstart.md`
+    (Principio III);
+  - prueba de componente en rojo para `MonthCalendar` (estado vacío, hoy marcado, flechas con
+    nombre) y para la traducción `CalendarEvent` → `markedDates`;
+  - implementar el envoltorio, `LocaleConfig` y el tipo `CalendarEvent`.
+  Verificación: pruebas verdes; en e2e, `/home` con el mes actual, «Sin eventos agendados» y axe
+  verde en claro y en oscuro; capturas a 320/1280 px.
+- [ ] 10.5 Actualizar `AGENTS.md` (sección «Sistema visual»):
+  - `Avatar`;
+  - la variante `nav` exclusiva de la navegación;
+  - la preferencia de tema;
+  - el envoltorio `MonthCalendar` como único punto de uso del paquete.
+  Verificación: sección revisada.
