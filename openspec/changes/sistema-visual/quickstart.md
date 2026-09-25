@@ -481,3 +481,16 @@ Verde:
   integración en vivo. Esas filas se omiten como está previsto (lectura tolerante).
 - CI levanta un Supabase limpio para los e2e, así que ese estado no se reproduce allí. La
   verificación de `firefox` queda en el job de CI de la PR #38.
+
+## Grupo 7 — Navegación
+
+### 7.1 — `navegacion.spec.ts` en rojo (FR-082 · FR-083 · SC-054)
+
+`provisionClinicalCase` y `syntheticScreens` pasan de `accessibility.spec.ts` a
+`tests/e2e/web/caso-sintetico.ts`, compartido por ambas suites.
+
+Resultado en `chromium`: 5 failed y 1 passed.
+
+- Fallan por falta de navegación: `app-sidebar` y `app-tabbar` no existen, el enlace
+  «Seguimiento» no existe y «Volver a Seguimiento» tampoco.
+- Pasa: «todas las rutas cubiertas siguen resolviendo», la línea base antes de mover archivos.

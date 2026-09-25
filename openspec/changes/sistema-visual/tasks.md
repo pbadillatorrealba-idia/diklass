@@ -88,7 +88,7 @@ Cada tarea conserva las URLs y los `testID` existentes y se verifica con `typech
 las suites e2e afectadas en verde (`--workers=1`). Las verificaciones nativas sin dispositivo quedan
 como pendiente explícito en `quickstart.md`.
 
-- [ ] 7.1 Escribir en rojo `tests/e2e/web/navegacion.spec.ts`:
+- [x] 7.1 Escribir en rojo `tests/e2e/web/navegacion.spec.ts`:
   - a 1280 px, la barra lateral (`app-sidebar`) está en `/patients` con Pacientes marcada `aria-current="page"` y el cierre de sesión al pie;
   - a 375 px, la barra de pestañas (`app-tabbar`) está en `/knowledge`;
   - desde `/consultations/<id>` se llega a `/follow-up` en 1 activación;
