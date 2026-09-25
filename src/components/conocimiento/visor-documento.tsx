@@ -67,7 +67,7 @@ export function VisorDocumento({
       {contexto.fragmentos.map((fragmento) => (
         <Box
           className={`rounded-lg border p-3 ${
-            fragmento.citado ? "border-primary bg-accent/20" : "border-border bg-card"
+            fragmento.citado ? "border-primary bg-primary-surface" : "border-border bg-card"
           }`}
           key={fragmento.ordinal}
           testID={`visor-fragmento-${fragmento.ordinal}`}

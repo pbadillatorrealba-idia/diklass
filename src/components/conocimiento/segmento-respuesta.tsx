@@ -11,8 +11,8 @@ const ETIQUETA_ORIGEN: Record<SegmentoRespuesta["kind"], string> = {
 };
 
 const COLOR_ORIGEN: Record<Exclude<SegmentoRespuesta["kind"], "inferencia">, string> = {
-  evidencia: "bg-primary/15",
-  ficha: "bg-secondary/15",
+  evidencia: "bg-primary-surface",
+  ficha: "bg-secondary-surface",
 };
 
 /**

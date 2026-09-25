@@ -38,13 +38,14 @@
 
 /*
  * Tema de la app: canales RGB separados por espacio para que Tailwind admita opacidad
- * (`bg-primary/15`). Es la fuente de verdad del color; `src/theme/colors.ts` lo replica para
+ * (solo `scrim` la usa: `bg-scrim/55`). Es la fuente de verdad del color; `src/theme/colors.ts` lo replica para
  * los pocos estilos inline y `tests/unit/theme/tema.test.ts` verifica que ambos coincidan y que
  * cada par cumpla WCAG 2.2 AA. Una misma paleta para iOS, Android y web.
  *
  * Valores ajustados respecto al tema de origen, solo en luminosidad y para llegar a AA:
  * claro  → destructive, secondary-foreground, accent-foreground, input, ring;
- * oscuro → muted y muted-foreground (el origen repetía los valores claros), secondary-foreground,
+ * oscuro → muted y muted-foreground (el origen repetía los valores claros; muted-foreground subió
+ *          otra vez para llegar a AA sobre las superficies tintadas), secondary-foreground,
  *          accent-foreground, destructive-foreground (texto oscuro, como primary-foreground),
  *          input, ring.
  * En claro, `background` y `border` se oscurecieron para separar las tarjetas del fondo; por eso
@@ -52,7 +53,9 @@
  *
  * Estados (FR-075): `{estado}` es texto, icono y borde sobre card/fondo; `{estado}-foreground`,
  * el texto sobre su relleno sólido; `{estado}-surface`, el fondo tintado con `foreground`
- * encima. `suggested` marca lo generado por el sistema (FR-076) y `scrim` es la capa modal
+ * encima. `primary-surface`/`secondary-surface` son los tintes opacos de evidencia/fragmento
+ * citado y de ficha (mezcla del 12 % sobre `card`; un tinte translúcido no se puede verificar).
+ * `suggested` marca lo generado por el sistema (FR-076) y `scrim` es la capa modal
  * (se usa con opacidad: `bg-scrim/55`).
  */
 @layer base {
@@ -65,8 +68,10 @@
     --popover-foreground: 3 14 12;
     --primary: 24 122 106;
     --primary-foreground: 242 252 251;
+    --primary-surface: 227 239 237;
     --secondary: 75 120 168;
     --secondary-foreground: 253 254 254;
+    --secondary-surface: 233 239 245;
     --muted: 233 238 236;
     --muted-foreground: 67 86 78;
     --accent: 215 154 61;
@@ -100,10 +105,12 @@
       --popover-foreground: 247 253 252;
       --primary: 67 218 193;
       --primary-foreground: 0 0 0;
+      --primary-surface: 27 60 54;
       --secondary: 109 148 188;
       --secondary-foreground: 26 41 58;
+      --secondary-surface: 32 51 53;
       --muted: 31 40 37;
-      --muted-foreground: 117 148 135;
+      --muted-foreground: 135 170 155;
       --accent: 213 153 61;
       --accent-foreground: 76 52 16;
       --destructive: 254 67 54;

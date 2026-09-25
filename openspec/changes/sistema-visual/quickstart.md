@@ -420,3 +420,37 @@ botones, reglas de layout y prohibición de literales. Revisión humana: pendien
 | `webkit` | 29 passed |
 
 Estado: 5.2 **pendiente**. Se repite tras 5.5/5.6 y tras los grupos 7–8.
+
+### 5.5 — Superficies tintadas opacas (D4 · FR-072 · SC-053)
+
+Rojo: la guarda nueva de `tema.test.ts` (`bg|border|text|ring|outline-<token>/<n>`, salvo
+`scrim`) y los pares de `primary-surface`/`secondary-surface` dieron 15 fallos. Entre ellos, la
+guarda marcó `attribution-badge.tsx`, `segmento-respuesta.tsx` y `visor-documento.tsx`, pero no
+el `bg-scrim/55` del diálogo de sesión.
+
+Cambios:
+
+- `primary-surface` y `secondary-surface` son una mezcla del 12 % sobre `card`: en claro,
+  227 239 237 y 233 239 245; en oscuro, 27 60 54 y 32 51 53.
+- En oscuro, `muted-foreground` pasa de 117 148 135 a 135 170 155, solo en luminosidad.
+- Adopción:
+  - evidencia y fragmento citado → `bg-primary-surface`;
+  - ficha → `bg-secondary-surface`;
+  - `AttributionBadge` → `bg-muted`.
+
+Contraste de `muted-foreground` en oscuro:
+
+| Superficie | Contraste |
+|---|---|
+| `primary-surface` | 4.73:1 |
+| `secondary-surface` | 5.20:1 |
+| `card` | 6.18:1 |
+| `muted` | 5.94:1 |
+| `background` | 8.09:1 |
+
+Verde: `bun test tests/unit/theme` 224 pass, y `accessibility.spec.ts` en `chromium-dark` 7 passed.
+
+Capturas a 1280 px:
+
+- respuesta de `/knowledge`: [claro](evidencia/5.5-respuesta-light.png) · [oscuro](evidencia/5.5-respuesta-dark.png);
+- historial de atribución: [claro](evidencia/5.5-correcciones-light.png) · [oscuro](evidencia/5.5-correcciones-dark.png).

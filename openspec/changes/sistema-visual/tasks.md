@@ -60,7 +60,7 @@ Cada tarea de este grupo:
 - [ ] 5.2 Ejecutar la compuerta axe completa en `chromium` y `chromium-dark` y los proyectos `firefox`/`webkit` requeridos por la constitución, de uno en uno (SC-050). Verificación: 0 violaciones, con resultados y URLs de CI en `quickstart.md`. Primera ejecución (2026-09-25): chromium 29/29 y webkit 29/29 en verde; `chromium-dark` y `firefox` fallan un caso cada uno por defectos reales, que se corrigen en 5.5 y 5.6. Se repite tras el grupo 8, con la navegación montada.
 - [ ] 5.3 Revisión en escala de grises (emulación `forced-colors`/grayscale de Chromium) de `/knowledge`, `/consultations/[id]` y `/follow-up/[patientId]`: sugerido vs validado y severidades distinguibles sin color (US13-AC2/AC3). Verificación: capturas en `quickstart.md`.
 - [ ] 5.4 Prueba de texto ampliado: zoom del navegador al 200 % y, si hay dispositivo, Dynamic Type al máximo en `/patients` y `/consultations/[id]`, sin recortes (FR-074 · escenario "Texto ampliado"). Verificación: capturas o pendiente explícito en `quickstart.md`.
-- [ ] 5.5 Superficies tintadas sin transparencia (D4, corrección de 5.2):
+- [x] 5.5 Superficies tintadas sin transparencia (D4, corrección de 5.2):
   - Primero, en rojo: la guarda de `tema.test.ts` prohíbe `bg-<token>/<n>` salvo `scrim`. Debe fallar en `attribution-badge.tsx`, `segmento-respuesta.tsx` y `visor-documento.tsx`.
   - En `PAIRS`, añadir `muted-foreground` y `foreground` sobre `primary-surface` y `secondary-surface` y sobre `background`, en ambos esquemas.
   - Después: añadir los tokens a `global.css`, `colors.ts` y `tailwind.config.js`, subir la luminosidad de `muted-foreground` en oscuro y migrar los tres componentes (`AttributionBadge` → `bg-muted`).

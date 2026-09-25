@@ -31,8 +31,10 @@ const TOKENS: ThemeToken[] = [
   "popover-foreground",
   "primary",
   "primary-foreground",
+  "primary-surface",
   "secondary",
   "secondary-foreground",
+  "secondary-surface",
   "muted",
   "muted-foreground",
   "accent",
@@ -83,6 +85,14 @@ const PAIRS: [ThemeToken, ThemeToken, number][] = [
   ["muted-foreground", "muted", 4.5],
   ["muted-foreground", "background", 4.5],
   ["muted-foreground", "card", 4.5],
+  // Superficies tintadas opacas (D4): evidencia y fragmento citado sobre `primary-surface`,
+  // ficha sobre `secondary-surface`. Cualquier superficie que admite `tone="muted"` va aquí.
+  ...(["primary-surface", "secondary-surface"] as const).flatMap(
+    (surface): [ThemeToken, ThemeToken, number][] => [
+      ["foreground", surface, 4.5],
+      ["muted-foreground", surface, 4.5],
+    ],
+  ),
   ["accent-foreground", "accent", 4.5],
   ["destructive-foreground", "destructive", 4.5],
   ["destructive", "background", 4.5],
@@ -162,6 +172,9 @@ describe("colores fuera del tema", () => {
     /\b(?:max-w|min-h|max-h|min-w|w|h)-\[[^\]]+\]/g,
     /\brounded-2xl\b/g,
     /\bgap(?:-[xy])?-\d+\.\d+\b/g,
+    // Tintes translúcidos (D4): se componen al pintar y el contraste de este archivo no los mide.
+    // Solo `scrim` se usa con opacidad; el resto de superficies son tokens opacos (`*-surface`).
+    /\b(?:bg|border|text|ring|outline)-(?!scrim\/)[a-z]+(?:-[a-z]+)*\/\d+\b/g,
   ];
 
   // FR-081 · SC-051: cada hallazgo se reporta como `archivo:línea literal`.

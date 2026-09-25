@@ -31,8 +31,17 @@ module.exports = {
         foreground: token("foreground"),
         card: { DEFAULT: token("card"), foreground: token("card-foreground") },
         popover: { DEFAULT: token("popover"), foreground: token("popover-foreground") },
-        primary: { DEFAULT: token("primary"), foreground: token("primary-foreground") },
-        secondary: { DEFAULT: token("secondary"), foreground: token("secondary-foreground") },
+        // `-surface`: tinte opaco de evidencia/fragmento citado (primary) y de ficha (secondary).
+        primary: {
+          DEFAULT: token("primary"),
+          foreground: token("primary-foreground"),
+          surface: token("primary-surface"),
+        },
+        secondary: {
+          DEFAULT: token("secondary"),
+          foreground: token("secondary-foreground"),
+          surface: token("secondary-surface"),
+        },
         muted: { DEFAULT: token("muted"), foreground: token("muted-foreground") },
         accent: { DEFAULT: token("accent"), foreground: token("accent-foreground") },
         destructive: {
