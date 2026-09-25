@@ -614,4 +614,10 @@ Resultado local en `chromium`:
     5, `retroalimentacion` 5, `navegacion` 7 y `attribution` 2. En la primera corrida completa de
     `accessibility`, el recorrido por teclado falló una vez; no se reprodujo en 3 corridas más
     (queda a observar en 5.2).
+- **8.3 `QueryState` (FR-085):**
+  - `query-state.test.tsx`, 6 casos: carga con `aria-busy` y sin vacío aunque `isEmpty`; error con
+    `Callout` y «Reintentar»; `onRetry` invocado; vacío; contenido; la carga precede al error.
+  - Rojo por el módulo ausente. El caso de reintento se comprobó por mutación: sin `onPress`, falla.
+  - Además de las props de D13, recibe `errorMessage` y el prefijo `testID` (`-loading`,
+    `-status`), para conservar los `testID` de las pantallas.
 
