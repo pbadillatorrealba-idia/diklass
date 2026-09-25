@@ -133,7 +133,8 @@ ajuste de la enumeración de funciones del test 23 de `supabase/tests/004_functi
   paciente sin datos de ningún paciente (FR-051 · US5-AC10) y «ver respaldo» de cada turno con los
   datos y fuentes usados (FR-020 · US5-AC5). Añadir el enlace de navegación a `/knowledge` en
   `src/app/(protected)/home.tsx` como edición mínima de 1–2 líneas (pendiente como RI-2: el
-  orquestador mantuvo el veto sobre ese archivo en FASE 2; queda documentada en `quickstart.md`).
+  orquestador mantuvo el veto sobre ese archivo en FASE 2; queda documentada en `quickstart.md`;
+  aplicado después en la tarea 8.1).
   Etiquetas
   programáticas, operación por teclado y foco visible en cada control; `testID` estables.
   Verificación: `bunx biome check --write` sobre los archivos propios y `bun run typecheck`
@@ -160,7 +161,7 @@ ajuste de la enumeración de funciones del test 23 de `supabase/tests/004_functi
   Verificación: lista de comandos y resultados + URLs de CI en `quickstart.md`.
 - [x] 5.3 Consolidar `quickstart.md` con la evidencia real acumulada desde 1.1 (ciclos rojo→verde
   por tarea, comandos, URLs, métricas del arnés de evaluación y alcance de lo verificado) y los
-  pendientes explícitos: RI-2 (enlace de navegación en `home.tsx`), corpus real y conjunto anotado
+  pendientes explícitos: RI-2 (enlace de navegación en `home.tsx`; cerrado después en 8.1), corpus real y conjunto anotado
   del equipo clínico, revisión manual de SC-003, evaluación de especialistas de SC-015 y
   aceptación de SC-002 sobre el conjunto real, verificación visual y e2e funcional web. Verificación:
   documento completo y sin afirmar como aceptado nada que no lo esté.
@@ -194,4 +195,12 @@ observó en local antes del arreglo (evidencia en `quickstart.md`).
 - [x] 7.9 Visor de fuente con estados de carga, no encontrada y error, diálogo de sesión caducada y confirmación del retiro (FR-007 · FR-053 · US5-AC7/AC12 · D10). Verificación: e2e «una fuente inexistente o ilegible…» rojo («Cargando…» indefinido) → verde, y paso de confirmación en el e2e de la colección.
 - [x] 7.10 Guion del corpus con fallo cerrado (`--allow-remote`), sin credenciales por defecto y con sus variables en `.env.example` y `SETUP.md` (AGENTS.md · Principio V · D9). Verificación: `tests/unit/scripts/corpus-conocimiento.test.ts` (rojo por módulo inexistente → 7 pass) y ejecución real del guion (rechazo remoto, falta de variables y carga local).
 - [x] 7.11 Actualizar `design.md` (D2, D3, D4, D5, D6, D9, D10, D11, complejidad y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-base-conocimiento-trazable` y artefactos coherentes con el código de la rama.
-- [ ] 7.12 Distinguir en el visor de fuente la sesión caducada de la fuente inexistente: con la sesión de acceso caducada, la RLS devuelve cero filas (no un error) y el visor muestra «no encontrada»; el diálogo solo aparece si lo abre el rastreador de actividad del layout (`useSessionActivity`). Pendiente declarado: exige que `getSource` consulte el estado de la sesión o una RPC que distinga ambos casos.
+- [x] 7.12 Distinguir en el visor de fuente la sesión caducada de la fuente inexistente: con la sesión de acceso caducada, la RLS devuelve cero filas (no un error) y el visor mostraba «no encontrada»; el diálogo solo aparecía si lo abría el rastreador de actividad del layout (`useSessionActivity`). `getSource` consulta `is_active_access` (ya concedida a `authenticated` en la 005, sin SQL nuevo) solo cuando no hay fila y, si la sesión no está activa, lanza `AuthenticationRequiredError` (SQLSTATE 42501, como `AUTHENTICATION_REQUIRED` del servidor), que el visor ya traduce en el diálogo (FR-007 · US5-AC7 · D10). Verificación: tres pruebas de unidad de `getSource` en `tests/unit/conocimiento/coleccion-service.test.ts` (rojo: devolvía `null` sin consultar la sesión → verde) y e2e «con la sesión de acceso caducada el visor pide reautenticación…» de `tests/e2e/web/conocimiento.spec.ts`, que envejece la sesión con la service role y aísla el rastreador (rojo: «No se encontró la fuente…» sin diálogo → verde). Commit `cb25ae1`.
+
+## 8. Pendientes declarados cerrados tras el merge de 001–005 (2026-09-25)
+
+Con todas las specs en `main`, los archivos compartidos vetados en FASE 2 ya se pueden tocar.
+
+- [x] 8.1 **RI-2**: enlace de navegación a `/knowledge` en `src/app/(protected)/home.tsx` con el patrón del enlace a Pacientes (`testID` `home-knowledge`, etiqueta accesible «Ir a la base de conocimiento»), con `authenticated-identity` intacto (D10 · FR-005 · US5-AC1). Verificación: e2e «el panel clínico enlaza con la base de conocimiento» de `tests/e2e/web/conocimiento.spec.ts` (rojo: `getByTestId('home-knowledge')` inexistente → verde, navega a `/knowledge`). Commit `28d9084`.
+- [x] 8.2 Revisar el resto de requisitos de integración de la 003: RI-1 (`database.types.ts`) y RI-3 (test 23 de `004_function_privileges.sql`) ya estaban resueltos en `main`; `bun run db:types` sigue sin diff y la suite `004` verde. No queda ningún RI abierto. Verificación: compuertas de `quickstart.md` («Pendientes cerrados, 2026-09-25»).
+- [x] 8.3 Actualizar `design.md` (D10, D11, riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-base-conocimiento-trazable`.

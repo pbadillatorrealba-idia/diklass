@@ -182,6 +182,32 @@ Guion del corpus (7.10), ejecutado contra el stack local: sin `CORPUS_VET_EMAIL`
 («Falta CORPUS_VET_EMAIL…»); con `SUPABASE_URL=https://abcd.supabase.co` sale con código 1 («no es
 un Supabase local…»); con las credenciales sintéticas de Ana incorpora el corpus completo.
 
+## Pendientes cerrados (2026-09-25, tareas 7.12 y 8.x)
+
+Rama `feat/003-pendientes` sobre `main` (`4513f95`, specs 001–005 mergeadas), stack local. Las
+compuertas se repitieron tras mergear `origin/main` (migración 013 y arreglo de `auth.spec.ts` de
+la PR #33); la tabla recoge esa corrida.
+
+| Pendiente | Commit | Prueba | Rojo observado |
+|---|---|---|---|
+| 7.12 visor: sesión caducada ≠ fuente inexistente | `cb25ae1` | unidad `getSource` (3 casos) · e2e «con la sesión de acceso caducada el visor pide reautenticación…» | unidad: 2 fail (devolvía `null` sin consultar `is_active_access`) · e2e: «No se encontró la fuente en la colección de tu clínica.» y ningún diálogo «Sesión expirada» |
+| RI-2 enlace en `/home` (8.1) | `28d9084` | e2e «el panel clínico enlaza con la base de conocimiento» | `getByTestId('home-knowledge')` inexistente (timeout) |
+
+El e2e de 7.12 envejece solo la sesión de acceso de su página con la service role (patrón de
+`auth.spec.ts`) y responde `true` a `touch_access_session` para que el rastreador de actividad no
+abra el diálogo por su cuenta: así el diálogo solo puede venir del visor.
+
+| Compuerta | Comando | Resultado |
+|---|---|---|
+| Lint estricto | `bunx biome ci --error-on-warnings .` | verde (199 archivos) |
+| Tipos | `bun run typecheck` | verde |
+| pgTap | `supabase db reset && supabase test db` | 288 aserciones en 15 archivos (migraciones 001–013), «All tests successful» (sin SQL nuevo en esta rama) |
+| Tipos generados | `bun run db:types` + `git diff` | sin diff |
+| Unidad | `SUPABASE_LIVE_TESTS= bun run test` | 388 pass, 75 skip (vivas), 0 fail |
+| Unidad + vivas | `bun run test` (con `SUPABASE_LIVE_TESTS=1`) | 453 pass, 0 fail |
+| Integración viva | `bun run test:integration` | 69 pass, 0 fail |
+| Web e2e (Chromium) | `bunx playwright test --project=chromium` | 28 pass, 0 fail (`conocimiento.spec.ts`: 5) |
+
 ## Transiciones sin acción enumerada (D3 · tarea 1.3)
 
 Las transiciones de fuente (incorporar/retirar) devuelven `Attribution.action = null`: la
@@ -194,13 +220,13 @@ además `log_server_event('knowledge_source_lifecycle', …)` (Constitución IV)
 
 ## Pendientes declarados
 
-- **RI-2**: enlace de navegación a `/knowledge` en `src/app/(protected)/home.tsx` (1–2 líneas; el
-  orquestador mantuvo el veto del archivo en FASE 2). Las rutas son alcanzables por URL.
 - **Corpus real y conjunto anotado del equipo clínico** (sustituyen los sintéticos; HD7).
 - **Aceptación humana**: SC-003 por revisión manual de referencias; SC-015 con ≥ 3 especialistas
   sobre ≥ 5 casos; SC-002 medido sobre el conjunto real.
 - **Verificación visual interactiva** de las pantallas nuevas y **e2e funcional web** completo:
-  `tests/e2e/web/conocimiento.spec.ts` cubre tres pruebas acotadas de la revisión de la PR #30
-  (caché y retiro confirmado, visor sin cuelgues, un envío por consulta); el resto del recorrido
-  lo cargan pgTap y la integración viva.
-- **Sesión caducada frente a fuente inexistente en el visor** (tarea 7.12).
+  `tests/e2e/web/conocimiento.spec.ts` cubre cinco pruebas acotadas (caché y retiro confirmado,
+  visor sin cuelgues, un envío por consulta, enlace desde `/home` y visor con la sesión
+  caducada); el resto del recorrido lo cargan pgTap y la integración viva.
+
+RI-2 (tarea 8.1) y la sesión caducada en el visor (tarea 7.12) se cerraron el 2026-09-25 (sección
+«Pendientes cerrados»).
