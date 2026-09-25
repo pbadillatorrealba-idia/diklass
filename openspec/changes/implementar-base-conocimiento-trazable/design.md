@@ -363,15 +363,21 @@ Comportamiento añadido en la revisión de la PR #30:
   síncrono con `useRef`) o con la pregunta vacía, igual que el botón deshabilitado.
 - **Visor de fuente**: distingue cargando, no encontrada (`getSource` → `null`) y error de lectura;
   un error de sesión caducada abre el diálogo como en la colección; el retiro, irreversible (HD3),
-  pide confirmación explícita en un segundo paso.
+  pide confirmación explícita en un segundo paso. Con la sesión de acceso caducada la RLS no falla
+  sino que devuelve cero filas: antes de declarar «no encontrada», `getSource` pregunta
+  `is_active_access` (la misma función que usan las políticas, ya ejecutable por `authenticated`)
+  y, si la sesión no está activa, lanza `AuthenticationRequiredError` (42501), que el visor
+  traduce en el diálogo (tarea 7.12). La consulta extra solo ocurre en el caso de cero filas.
 
 Componentes kebab-case en `src/components/conocimiento/` (`cita-fragmento`, `segmento-respuesta`,
 `avisos-cobertura`, `respuesta-conocimiento`, `formulario-fuente`, `visor-documento`,
 `selector-paciente-contexto`), reutilizando `ui/*` y `attribution-badge`. Etiquetas
 programáticas, operación por teclado, foco visible y `testID` estables (WCAG 2.2 AA). La única
 edición sobre un archivo existente es un enlace de navegación a `/knowledge` en
-`src/app/(protected)/home.tsx` (1–2 líneas, documentada en `quickstart.md`, coordinada por hub con
-las ramas hermanas); nada más sale de los namespaces propios.
+`src/app/(protected)/home.tsx` (RI-2), aplicado tras el merge de las specs 001–005 con el patrón
+del enlace a Pacientes (`testID` `home-knowledge`, tarea 8.1); fuera de él solo se añadió
+`AuthenticationRequiredError` a `src/lib/errors.ts` (tarea 7.12); nada más sale de los namespaces
+propios.
 
 ### D11. Sin dependencias nuevas; verificación local con el stack Supabase y CI
 
@@ -384,7 +390,8 @@ El clúster scratch queda como alternativa si el stack está ocupado. La verific
 el job `database` de CI (suites pgTap +
 `SUPABASE_LIVE_TESTS=1`); las pruebas de unidad corren localmente con `bun test`. En la revisión
 de la PR #30 Playwright ya corre en local y se añadió `tests/e2e/web/conocimiento.spec.ts` (caché
-de la colección, retiro confirmado, visor sin cuelgues y un solo envío por consulta); el resto del
+de la colección, retiro confirmado, visor sin cuelgues y un solo envío por consulta), y después
+el enlace desde `/home` (RI-2) y el visor con la sesión de acceso caducada (7.12); el resto del
 recorrido funcional web sigue como pendiente declarado.
 
 ## Seguimiento de complejidad (Principio III)
@@ -458,10 +465,14 @@ expresa del orquestador y se re-verifica sin diff tras cada merge.
   tablas que el tipo generado no conocía y el archivo está prohibido para esta rama: el orquestador
   autorizó su regeneración en FASE 2 y quedó commiteada como integración autorizada, con el diff
   de tipos del job `database` en verde y re-verificado tras el merge de 002.
-- **[RI-2 · pendiente] Enlace de navegación en `home.tsx`** → el orquestador mantuvo el veto sobre
-  ese archivo en FASE 2: el enlace a `/knowledge` queda como requisito de integración (1–2 líneas
-  en `src/app/(protected)/home.tsx`, con el `testID` `authenticated-identity` intacto); las rutas
-  son alcanzables por URL mientras tanto.
+- **[RI-2 · resuelta] Enlace de navegación en `home.tsx`** → el orquestador mantuvo el veto sobre
+  ese archivo en FASE 2; con las specs 001–005 ya en `main` se aplicó el botón «Base de
+  conocimiento» (`testID` `home-knowledge`) junto al de Pacientes, con `authenticated-identity`
+  intacto y cubierto por e2e (tarea 8.1).
+- **Sesión caducada con cero filas (7.12)** → la RLS responde a una sesión inactiva con cero filas
+  y no con error, así que toda lectura por id puede confundir «caducada» con «inexistente». El
+  visor de fuente lo resuelve con `is_active_access`; las demás lecturas (colección, pacientes)
+  siguen dependiendo del rastreador de actividad del layout para abrir el diálogo.
 - **Umbral léxico de respaldo (D4/D5)** → una pregunta con léxico divergente del corpus puede
   declararse «sin respaldo» pese a existir evidencia semánticamente cercana (falso negativo de
   FR-023) o vivir en cobertura parcial crónica. Mitigación: medido por SC-002/SC-025 sobre el
