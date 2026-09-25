@@ -3,7 +3,8 @@ import {
   ANTECEDENT_GROUP_ORDER,
   MISSING_FIELD_LABELS,
 } from "@/components/registro/labels";
-import { Box } from "@/components/ui/box";
+import { Callout } from "@/components/ui/callout";
+import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { PatientContent } from "@/features/registro/schema";
@@ -28,29 +29,30 @@ export function MissingFieldsPanel({ content }: { content: PatientContent }) {
   );
 
   return (
-    <Box className="rounded-xl border border-border bg-white p-4" testID="missing-fields-panel">
-      <Text bold>Información de la ficha</Text>
+    <Card className="gap-3" testID="missing-fields-panel">
+      <Text variant="strong">Información de la ficha</Text>
       {missing.length === 0 ? (
         <Text testID="missing-fields-empty">
           La ficha tiene información registrada en todos sus campos.
         </Text>
       ) : (
-        <VStack className="gap-1">
-          <Text>Campos sin información registrada:</Text>
-          {missing.map((item) => (
-            <Text key={`${item.field}-${item.kind}`} testID="missing-field-item">
-              {MISSING_FIELD_LABELS[item.field] ?? item.field}: {KIND_LABELS[item.kind]}
-            </Text>
-          ))}
-        </VStack>
+        <Callout title="Campos sin información registrada" tone="warning">
+          <VStack className="gap-1">
+            {missing.map((item) => (
+              <Text key={`${item.field}-${item.kind}`} testID="missing-field-item">
+                {MISSING_FIELD_LABELS[item.field] ?? item.field}: {KIND_LABELS[item.kind]}
+              </Text>
+            ))}
+          </VStack>
+        </Callout>
       )}
-      <Text className="text-foreground/70">
+      <Text tone="muted">
         Un campo sin dato no es un hallazgo negativo: lo negativo solo cuenta como información
         cuando queda registrado explícitamente.
       </Text>
       {negativeFindings.length > 0 ? (
         <VStack className="gap-1">
-          <Text bold>Hallazgos negativos registrados</Text>
+          <Text variant="strong">Hallazgos negativos registrados</Text>
           {negativeFindings.map((finding) => (
             <Text key={`${finding.group}-${finding.text}`} testID="negative-finding">
               Hallazgo negativo: {finding.text} ({ANTECEDENT_GROUP_LABELS[finding.group]})
@@ -58,6 +60,6 @@ export function MissingFieldsPanel({ content }: { content: PatientContent }) {
           ))}
         </VStack>
       ) : null}
-    </Box>
+    </Card>
   );
 }

@@ -1,21 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
 import {
-  type APIRequestContext,
-  request as apiRequest,
-  type Browser,
-  type Page,
-} from "@playwright/test";
-import {
-  ANA,
-  BRUNO,
-  expect,
-  hasBackend,
-  readSupabaseSession,
-  SUPABASE_ANON_KEY,
-  SUPABASE_URL,
-  submitLogin,
-  test,
-} from "./fixtures";
+  provisionClinicalCase,
+  type SyntheticCase,
+  type SyntheticScreen,
+  syntheticScreens,
+} from "./caso-sintetico";
+import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -38,354 +29,6 @@ async function expectNoViolations(page: Page) {
   expect(sobreLaAplicacion).toEqual([]);
 }
 
-type SyntheticCase = {
-  patientId: string;
-  openConsultationId: string;
-  closedConsultationId: string;
-};
-
-type SyntheticScreen = {
-  name: string;
-  url: string;
-  readyTestID: string;
-  keyboardTestIDs: string[];
-};
-
-/**
- * Tarea 5.1 (D12): caso clínico sintético (paciente, tutor, dos consultas, anamnesis,
- * epicrisis aprobada y correctiva) provisionado por API siguiendo el patrón de
- * `attribution.spec.ts`. TODAS las escrituras clínicas viajan con el token del veterinario
- * que las hace (ANA o BRUNO), nunca con service role: los triggers de atribución exigen
- * `auth.uid()`.
- */
-async function provisionClinicalCase(browser: Browser): Promise<SyntheticCase> {
-  const anaContext = await browser.newContext();
-  const anaPage = await anaContext.newPage();
-  await submitLogin(anaPage, ANA);
-  await expect(anaPage).toHaveURL(/\/home$/, { timeout: 15_000 });
-  const anaSession = await readSupabaseSession(anaPage);
-
-  const brunoContext = await browser.newContext();
-  const brunoPage = await brunoContext.newPage();
-  await submitLogin(brunoPage, BRUNO);
-  await expect(brunoPage).toHaveURL(/\/home$/, { timeout: 15_000 });
-  const brunoSession = await readSupabaseSession(brunoPage);
-
-  const anaApi = await apiRequest.newContext({
-    baseURL: SUPABASE_URL,
-    extraHTTPHeaders: {
-      apikey: SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${anaSession.accessToken}`,
-      "Content-Type": "application/json",
-    },
-  });
-  const brunoApi = await apiRequest.newContext({
-    baseURL: SUPABASE_URL,
-    extraHTTPHeaders: {
-      apikey: SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${brunoSession.accessToken}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  try {
-    const clinicResponse = await anaApi.get(
-      `/rest/v1/veterinarians?select=clinic_id&id=eq.${anaSession.userId}`,
-    );
-    const [anaProfile] = (await clinicResponse.json()) as Array<{ clinic_id: string }>;
-    if (!anaProfile?.clinic_id) {
-      throw new Error("No se pudo leer el clinic_id del perfil de la veterinaria provisionada.");
-    }
-    const clinicId = anaProfile.clinic_id;
-
-    const insert = async (
-      api: APIRequestContext,
-      body: {
-        recordType: string;
-        content: Record<string, unknown>;
-        supersedesEventId?: string;
-      },
-    ): Promise<string> => {
-      const response = await api.post("/rest/v1/clinical_records", {
-        data: {
-          clinic_id: clinicId,
-          record_type: body.recordType,
-          content: body.content,
-          status: body.supersedesEventId ? "corrective" : "draft",
-          ...(body.supersedesEventId ? { supersedes_event_id: body.supersedesEventId } : {}),
-        },
-        headers: { Prefer: "return=representation" },
-      });
-      expect(response.ok()).toBeTruthy();
-      const [row] = (await response.json()) as Array<{ id: string }>;
-      if (!row) {
-        throw new Error("La inserción del caso sintético no devolvió la fila creada.");
-      }
-      return row.id;
-    };
-
-    const tutorId = await insert(anaApi, {
-      recordType: "tutor",
-      content: {
-        name: "Marcela Rojas (caso sintético)",
-        phone: "+56912345678",
-        email: "tutora.caso@example.test",
-      },
-    });
-    // La ficha deja campos sin dato (FR-044) y un hallazgo negativo explícito (SC-024):
-    // el panel debe distinguirlos visiblemente.
-    const patientId = await insert(anaApi, {
-      recordType: "patient",
-      content: {
-        name: "Luna Caso Sintético",
-        species: "perro",
-        breed: "Mestizo",
-        birthDate: null,
-        ageMonths: 36,
-        weightKg: null,
-        sex: "Hembra",
-        reproductiveStatus: "Entera",
-        antecedentes: {
-          medicalHistory: [],
-          preexistingDiseases: [{ text: "Sin enfermedades preexistentes", negative: true }],
-          currentMedications: [],
-          knownAllergies: [],
-          behavioralHistory: [],
-        },
-        tutorId,
-      },
-    });
-
-    const closedConsultationId = await insert(anaApi, {
-      recordType: "consultation",
-      content: { patientId, status: "open" },
-    });
-    const openConsultationId = await insert(anaApi, {
-      recordType: "consultation",
-      content: { patientId, status: "open" },
-    });
-
-    // Primera consulta: anamnesis y diagnóstico de ANA antes de cerrarla con su epicrisis.
-    await insert(anaApi, {
-      recordType: "anamnesis",
-      content: {
-        consultationId: closedConsultationId,
-        field: "motivo_consulta",
-        text: "Aúlla cuando queda sola (caso sintético).",
-        provenance: "reportada",
-      },
-    });
-    await insert(anaApi, {
-      recordType: "diagnosis",
-      content: {
-        consultationId: closedConsultationId,
-        text: "Ansiedad por separación (caso sintético).",
-      },
-    });
-
-    // Epicrisis: borrador → aprobada por la RPC (que cierra la consulta en la transacción) →
-    // correctiva de BRUNO apuntando al evento epicrisis_approved original (D8). El contenido
-    // incluye hipótesis con estado y un pendiente para que el resumen de FR-013 señale algo.
-    const epicrisisContent = {
-      consultationId: closedConsultationId,
-      motivoConsulta: "Aúlla cuando queda sola (caso sintético).",
-      antecedentesRelevantes:
-        "Enfermedades preexistentes: Sin enfermedades preexistentes (hallazgo negativo).",
-      hallazgosAnamnesis: "Motivo de consulta: Aúlla cuando queda sola [procedencia: reportada].",
-      hipotesis: [{ texto: "Ansiedad por separación", estado: "confirmada" }],
-      diagnostico: "Ansiedad por separación (caso sintético).",
-      examenesSolicitados: ["Hemograma completo"],
-      intervencionesPropuestas: ["Modificación de conducta"],
-      medicamentosAprobados: [],
-      recomendacionesTutor: "Evitar despedidas prolongadas.",
-      planSeguimiento: { pendientes: ["Control en 30 días (caso sintético)"] },
-      observaciones: "",
-    };
-    const epicrisisDraftId = await insert(anaApi, {
-      recordType: "epicrisis",
-      content: epicrisisContent,
-    });
-    const approvalResponse = await anaApi.post("/rest/v1/rpc/approve_clinical_record", {
-      data: { p_record_id: epicrisisDraftId },
-    });
-    expect(approvalResponse.ok()).toBeTruthy();
-
-    const eventsResponse = await anaApi.get(
-      `/rest/v1/clinical_audit_events?select=id&entity_id=eq.${epicrisisDraftId}` +
-        "&action=eq.epicrisis_approved",
-    );
-    const [approvalEvent] = (await eventsResponse.json()) as Array<{ id: string }>;
-    if (!approvalEvent) {
-      throw new Error("No se encontró el evento epicrisis_approved del caso sintético.");
-    }
-    await insert(brunoApi, {
-      recordType: "epicrisis",
-      supersedesEventId: approvalEvent.id,
-      content: {
-        ...epicrisisContent,
-        observaciones: "Corrección del caso sintético: se aclara el plan de seguimiento.",
-      },
-    });
-
-    // Retroalimentación sobre la consulta ya cerrada (tarea 7.13 de 005): entrada de BRUNO
-    // con un evento adverso grave y su correctiva de ANA, para que el panel de seguimiento
-    // muestre antecedentes, cronología con corrección y el reporte con versiones sustituidas.
-    const feedbackContent = {
-      consultationId: closedConsultationId,
-      adherence: "parcial",
-      evolution: "mejoriaParcial",
-      evolutionNote: null,
-      adverseEvents: [{ severity: "grave", description: "Vómito aislado (caso sintético)." }],
-      treatmentApplied: "Modificación de conducta",
-      treatmentModification: null,
-      revisedDiagnosis: null,
-    };
-    const feedbackId = await insert(brunoApi, {
-      recordType: "clinical_feedback",
-      content: feedbackContent,
-    });
-    const feedbackEventResponse = await brunoApi.get(
-      "/rest/v1/clinical_audit_events?select=id&entity_type=eq.clinical_feedback" +
-        `&entity_id=eq.${feedbackId}&action=eq.clinical_feedback_recorded`,
-    );
-    const [feedbackEvent] = (await feedbackEventResponse.json()) as Array<{ id: string }>;
-    if (!feedbackEvent) {
-      throw new Error("No se encontró el evento clinical_feedback_recorded del caso sintético.");
-    }
-    await insert(anaApi, {
-      recordType: "clinical_feedback",
-      supersedesEventId: feedbackEvent.id,
-      content: { ...feedbackContent, evolutionNote: "Corrección del caso sintético." },
-    });
-
-    // Segunda consulta, abierta y retomable: anamnesis de ambas veterinarias (una con
-    // corrección de procedencia recuperable) y diagnóstico, para el workspace en curso.
-    await insert(anaApi, {
-      recordType: "anamnesis",
-      content: {
-        consultationId: openConsultationId,
-        field: "motivo_consulta",
-        text: "Control de seguimiento (caso sintético).",
-        provenance: "reportada",
-      },
-    });
-    await insert(brunoApi, {
-      recordType: "anamnesis",
-      content: {
-        consultationId: openConsultationId,
-        field: "comportamiento_problematico",
-        text: "Destruye objetos al quedarse sola (inferido del relato).",
-        provenance: "inferida",
-        provenanceHistory: [{ provenance: "desconocida" }],
-      },
-    });
-    await insert(anaApi, {
-      recordType: "diagnosis",
-      content: {
-        consultationId: openConsultationId,
-        text: "Evolución favorable (caso sintético).",
-      },
-    });
-
-    return { patientId, openConsultationId, closedConsultationId };
-  } finally {
-    await anaApi.dispose();
-    await brunoApi.dispose();
-    await anaContext.close();
-    await brunoContext.close();
-  }
-}
-
-function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
-  return [
-    {
-      name: "lista de pacientes",
-      url: "/patients",
-      readyTestID: "patients-list",
-      keyboardTestIDs: ["patients-register", "patient-open"],
-    },
-    {
-      name: "alta de ficha con tutor",
-      url: "/patients/new",
-      readyTestID: "patient-form",
-      keyboardTestIDs: [
-        "patient-name",
-        "patient-species",
-        "patient-breed",
-        "patient-birth-date",
-        "patient-age-months",
-        "patient-weight-kg",
-        "patient-sex",
-        "patient-reproductive-status",
-        "tutor-mode-existing",
-        "tutor-mode-new",
-        "patient-submit",
-      ],
-    },
-    {
-      name: "ficha del paciente",
-      url: `/patients/${caseIds.patientId}`,
-      readyTestID: "missing-fields-panel",
-      keyboardTestIDs: [
-        "patient-edit",
-        "antecedent-add-text",
-        "antecedent-finding-reported",
-        "antecedent-finding-negative",
-        "antecedent-add",
-        "history-open",
-        "open-consultation",
-      ],
-    },
-    {
-      name: "consulta en curso",
-      url: `/consultations/${caseIds.openConsultationId}`,
-      readyTestID: "anamnesis-section",
-      keyboardTestIDs: [
-        "consultation-patient",
-        "anamnesis-field-motivo-consulta",
-        "anamnesis-text",
-        "anamnesis-provenance-reportada",
-        "anamnesis-submit",
-        "anamnesis-provenance-correct-reportada",
-        "anamnesis-provenance-correct-inferida",
-        "diagnosis-text",
-        "diagnosis-submit",
-        "epicrisis-generate",
-      ],
-    },
-    {
-      name: "consulta cerrada con epicrisis corregida",
-      url: `/consultations/${caseIds.closedConsultationId}`,
-      readyTestID: "epicrisis-correction-history",
-      keyboardTestIDs: ["consultation-patient", "epicrisis-correct"],
-    },
-    // Tarea 7.13 de 005 (D11): pantallas de seguimiento entre consultas.
-    {
-      name: "selector de paciente del seguimiento",
-      url: "/follow-up",
-      readyTestID: "follow-up-patient-list",
-      keyboardTestIDs: ["follow-up-open"],
-    },
-    {
-      name: "panel de seguimiento con entrada corregida",
-      url: `/follow-up/${caseIds.patientId}`,
-      readyTestID: "adverse-event-toggle-superseded",
-      keyboardTestIDs: [
-        "feedback-correct",
-        "adverse-event-toggle-superseded",
-        `feedback-consultation-picker-${caseIds.closedConsultationId}`,
-        "feedback-adherence-completa",
-        "feedback-evolution-mejoria",
-        "feedback-treatment-applied",
-        "feedback-treatment-modification",
-        "feedback-revised-diagnosis",
-        "feedback-evolution-note",
-        "feedback-adverse-add",
-      ],
-    },
-  ];
-}
-
 /**
  * Recorrido mínimo por teclado (D12): se recorre todo control alcanzable por Tab y se
  * afirma que cada uno muestra un indicador de foco visible (WCAG 2.2 AA 2.4.7).
@@ -393,12 +36,19 @@ function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
 async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
   const reached: string[] = [];
   let firstStop: string | null = null;
-  for (let step = 0; step < 150; step += 1) {
+  // La navegación global suma ~10 paradas por pantalla (sistema-visual D12/D17).
+  for (let step = 0; step < 250; step += 1) {
     await page.keyboard.press("Tab");
     const stop = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement | null;
       if (!element || element === document.body || element === document.documentElement) {
         return null;
+      }
+      // Misma exclusión documentada que en `expectNoViolations`: `#error-toast` es el overlay de
+      // desarrollo de `@expo/log-box`, que no existe en producción. Firefox lo enfoca cuando la
+      // app registra un error en consola (p. ej., filas sintéticas omitidas en una base local).
+      if (element.closest("#error-toast")) {
+        return { testID: null, identity: "#error-toast", focusVisible: true, devOverlay: true };
       }
       const style = getComputedStyle(element);
       const outlineWidth = Number.parseFloat(style.outlineWidth || "0");
@@ -419,6 +69,9 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
     if (stop === null) {
       break;
     }
+    if ("devOverlay" in stop) {
+      continue;
+    }
     if (firstStop === null) {
       firstStop = stop.identity;
     } else if (stop.identity === firstStop) {
@@ -431,24 +84,45 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
     }
   }
   for (const testID of expectedTestIDs) {
-    expect(reached, `El recorrido por teclado no alcanzó el control ${testID}`).toContain(testID);
+    // El mensaje lleva las paradas alcanzadas: el fallo intermitente de sistema-visual 8.2/8.4
+    // no se ha podido reproducir a demanda (quickstart.md).
+    expect(
+      reached,
+      `El recorrido por teclado no alcanzó el control ${testID} en ${page.url()} (primera parada ${firstStop}; alcanzó ${reached.join(", ")})`,
+    ).toContain(testID);
   }
 }
 
-/** Adaptabilidad al viewport (D12): 375 px y 1280 px sin desbordamiento horizontal. */
+/**
+ * Adaptabilidad al viewport (D12; sistema-visual FR-079 · SC-052): sin desbordamiento horizontal
+ * desde 320 px (WCAG 1.4.10), en móvil y en escritorio.
+ */
 async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
-  for (const width of [375, 1280]) {
+  for (const width of [320, 375, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto(screen.url);
-    await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
-    const measured = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      clientWidth: document.documentElement.clientWidth,
-    }));
-    expect(
-      measured.scrollWidth,
-      `Desbordamiento horizontal a ${width} px en ${screen.name}`,
-    ).toBeLessThanOrEqual(measured.clientWidth);
+    await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+    // El `ScrollView` de RN Web es un contenedor con scroll propio: un desborde dentro de él no
+    // agranda el documento. Se mide también cada contenedor que recorta o desplaza en horizontal
+    // (salvo campos de texto, cuyo contenido desplazable es esperable).
+    const desbordes = await page.evaluate(() => {
+      const hallazgos: string[] = [];
+      const root = document.documentElement;
+      if (root.scrollWidth > root.clientWidth) {
+        hallazgos.push(`documento ${root.scrollWidth} > ${root.clientWidth}`);
+      }
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) continue;
+        const overflowX = getComputedStyle(el).overflowX;
+        if (overflowX === "visible" || el.clientWidth === 0) continue;
+        if (el.scrollWidth > el.clientWidth + 1) {
+          const id = el.getAttribute("data-testid") ?? el.tagName.toLowerCase();
+          hallazgos.push(`${id} ${el.scrollWidth} > ${el.clientWidth}`);
+        }
+      }
+      return hallazgos;
+    });
+    expect(desbordes, `Desbordamiento horizontal a ${width} px en ${screen.name}`).toEqual([]);
   }
 }
 
@@ -457,6 +131,16 @@ test.describe("WCAG 2.2 AA gate", () => {
     await page.goto("/login");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await expectNoViolations(page);
+  });
+
+  // sistema-visual FR-090 · US15-AC3: la tarjeta de acceso no desborda desde 320 px.
+  test("el acceso no desborda horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    await expectNoHorizontalOverflow(page, {
+      name: "acceso",
+      url: "/login",
+      readyTestID: "login-submit",
+      keyboardTestIDs: [],
+    });
   });
 
   test("the login error state has no automatically detectable violations", async ({ page }) => {
@@ -491,24 +175,240 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {
       await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await expectNoViolations(page);
     }
   });
 
+  // sistema-visual FR-080 · D19: un grupo de opciones es una sola parada de Tab y se recorre con
+  // flechas (patrón ARIA radio group).
+  test("un grupo de opciones es una parada de Tab y las flechas cambian la selección", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.goto("/settings");
+    const sistema = page.getByTestId("settings-theme-system");
+    const claro = page.getByTestId("settings-theme-light");
+    const oscuro = page.getByTestId("settings-theme-dark");
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+    await expect(sistema).toHaveAttribute("tabindex", "0");
+    await expect(claro).toHaveAttribute("tabindex", "-1");
+    await expect(oscuro).toHaveAttribute("tabindex", "-1");
+
+    await sistema.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(claro).toBeFocused();
+    await expect(claro).toHaveAttribute("aria-checked", "true");
+    await expect(claro).toHaveAttribute("tabindex", "0");
+    await page.keyboard.press("End");
+    await expect(oscuro).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(sistema, "la flecha da la vuelta").toBeFocused();
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+
+    await page.keyboard.press("Tab");
+    const dentro = await page.evaluate(
+      () => document.activeElement?.closest('[data-testid="settings-theme"]') !== null,
+    );
+    expect(dentro, "el siguiente Tab sale del grupo").toBe(false);
+  });
+
   test("recorrido por teclado con foco visible en cada control interactivo", async ({ page }) => {
+    // 12 pantallas con decenas de paradas cada una: en Firefox supera los 30 s por defecto.
+    test.setTimeout(90_000);
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {
       await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await walkKeyboard(page, screen.keyboardTestIDs);
     }
   });
 
-  test("las pantallas nuevas no desbordan horizontalmente a 375 px ni a 1280 px", async ({
+  // sistema-visual FR-079 · US13-AC5 (design.md D9): registro y apoyo lado a lado en escritorio,
+  // una sola columna en móvil con el contexto de solo lectura antes del registro.
+  test("la consulta usa dos columnas a 1280 px y una a 375 px", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const cajas = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/consultations/${caso.closedConsultationId}`);
+      await expect(page.getByTestId("epicrisis-correction-history")).toBeVisible({
+        timeout: 15_000,
+      });
+      // El resumen de seguimiento llega después: se mide con la red en reposo y ambas cajas a la
+      // vez, para no comparar una columna antes y otra después de que crezca.
+      await page.waitForLoadState("networkidle");
+      return page.evaluate(() => {
+        const caja = (id: string) => {
+          const el = document.querySelector(`[data-testid="${id}"]`);
+          if (!el) throw new Error(`Falta ${id}`);
+          const { x, y, width, height } = el.getBoundingClientRect();
+          return { x, y, width, height };
+        };
+        return { principal: caja("consultation-main"), lateral: caja("consultation-aside") };
+      });
+    };
+
+    const ancho = await cajas(1280);
+    expect(ancho.lateral.x, "la columna lateral va a la derecha").toBeGreaterThan(
+      ancho.principal.x + ancho.principal.width - 1,
+    );
+    expect(Math.abs(ancho.lateral.y - ancho.principal.y)).toBeLessThan(2);
+
+    const angosto = await cajas(375);
+    expect(angosto.lateral.y + angosto.lateral.height).toBeLessThanOrEqual(angosto.principal.y + 1);
+    expect(Math.abs(angosto.lateral.x - angosto.principal.x)).toBeLessThan(2);
+  });
+
+  // sistema-visual FR-084 · SC-055 (design.md D13): navegar es un enlace real (`<a href>`), que
+  // se puede abrir en otra pestaña y se anuncia como enlace; nunca un botón con `router.push`.
+  test("los controles de navegación son enlaces y no botones", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pantallas = [
+      { url: "/home", readyTestID: "home-agenda" },
+      ...syntheticScreens(caso).map(({ url, readyTestID }) => ({ url, readyTestID })),
+    ];
+    const encontrados = new Set<string>();
+    for (const pantalla of pantallas) {
+      await page.goto(pantalla.url);
+      await expect(page.getByTestId(pantalla.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+      await page.waitForLoadState("networkidle");
+      const controles = await page.evaluate(() =>
+        Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
+          .filter((el) =>
+            /^(home-(patients|follow-up|knowledge)|patients-register|patient-open|history-open|consultation-patient|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+              el.dataset.testid ?? "",
+            ),
+          )
+          .map((el) => ({
+            testID: el.dataset.testid ?? "",
+            tag: el.tagName.toLowerCase(),
+            href: el.getAttribute("href"),
+            role: el.getAttribute("role"),
+          })),
+      );
+      for (const control of controles) {
+        const nombre = control.testID.replace(/-[0-9a-f-]{36}.*$/, "-<id>");
+        encontrados.add(nombre);
+        expect(
+          { ...control, pantalla: pantalla.url },
+          `${control.testID} en ${pantalla.url} debe ser un enlace`,
+        ).toMatchObject({ tag: "a", href: expect.stringMatching(/^\//) });
+        expect(control.role, `${control.testID} en ${pantalla.url} tiene rol button`).not.toBe(
+          "button",
+        );
+      }
+    }
+    // La prueba no vale si las pantallas no pintaron los controles que vigila. `ver-fuente-*`
+    // depende de que la base local tenga fuentes, así que no se exige.
+    expect([...encontrados]).toEqual(
+      expect.arrayContaining([
+        "consultation-patient",
+        "follow-up-open",
+        "history-open",
+        "home-follow-up",
+        "home-knowledge",
+        "home-patients",
+        "patient-open",
+        "patients-register",
+        "conocimiento-incorporar",
+      ]),
+    );
+  });
+
+  // sistema-visual FR-079 · escenario «Listas en escritorio» (design.md D18): las listas usan el
+  // ancho de escritorio y los formularios conservan el de lectura.
+  test("a 1280 px la lista de pacientes va a 2 columnas y el formulario sigue en 720 px", async ({
     page,
   }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const cajas = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/patients");
+      await expect(page.getByTestId("patient-item").nth(1)).toBeVisible({ timeout: 15_000 });
+      return page.evaluate(() => {
+        const [a, b] = Array.from(document.querySelectorAll('[data-testid="patient-item"]'))
+          .slice(0, 2)
+          .map((el) => el.getBoundingClientRect());
+        const lista = document.querySelector('[data-testid="patients-list"]');
+        const ancho = Math.max(
+          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
+            (el) => el.getBoundingClientRect().right,
+          ),
+        );
+        const izquierda = Math.min(
+          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
+            (el) => el.getBoundingClientRect().left,
+          ),
+        );
+        if (!a || !b || !lista) throw new Error("faltan tarjetas o lista");
+        return { a: { x: a.x, y: a.y }, b: { x: b.x, y: b.y }, contenido: ancho - izquierda };
+      });
+    };
+
+    const ancho = await cajas(1280);
+    expect(Math.abs(ancho.a.y - ancho.b.y), "dos tarjetas en la misma fila").toBeLessThan(2);
+    expect(ancho.b.x).toBeGreaterThan(ancho.a.x);
+    expect(ancho.contenido).toBeGreaterThan(720);
+
+    const medio = await cajas(1024);
+    expect(medio.b.y, "una columna a 1024 px").toBeGreaterThan(medio.a.y);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/patients/new");
+    await expect(page.getByTestId("patient-form")).toBeVisible({ timeout: 15_000 });
+    const formulario = await page.getByTestId("patient-form").boundingBox();
+    expect(formulario?.width ?? 0).toBeLessThanOrEqual(720);
+  });
+
+  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
+  test("Inicio, Configuración y la ficha van a 2 columnas a 1280 px y a 1 a 375 px", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pares = [
+      { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
+      { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
+      {
+        url: `/patients/${caso.patientId}`,
+        izquierda: "patient-main",
+        derecha: "patient-aside",
+      },
+    ];
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const par of pares) {
+        await page.goto(par.url);
+        const izquierda = page.getByTestId(par.izquierda).filter({ visible: true });
+        const derecha = page.getByTestId(par.derecha).filter({ visible: true });
+        await expect(derecha).toBeVisible({ timeout: 15_000 });
+        await page.waitForLoadState("networkidle");
+        const a = await izquierda.boundingBox();
+        const b = await derecha.boundingBox();
+        if (!a || !b) throw new Error(`faltan cajas en ${par.url}`);
+        if (width === 1280) {
+          expect(b.x, `${par.url}: ${par.derecha} a la derecha`).toBeGreaterThanOrEqual(
+            a.x + a.width,
+          );
+          expect(b.y, `${par.url}: columnas alineadas arriba`).toBeLessThan(a.y + a.height);
+        } else {
+          expect(b.y, `${par.url}: ${par.derecha} debajo a 375 px`).toBeGreaterThanOrEqual(
+            a.y + a.height,
+          );
+        }
+      }
+    }
+  });
+
+  test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    // 36 cargas (12 pantallas × 3 anchos): aislado tarda ~23 s y roza el límite de 30 s por
+    // defecto cuando corre tras el resto de la suite (sistema-visual 8.7, quickstart.md).
+    test.setTimeout(90_000);
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {

@@ -1,6 +1,7 @@
 import { request as apiRequest } from "@playwright/test";
 import {
   ANA,
+  calloutText,
   expect,
   hasBackend,
   readSupabaseSession,
@@ -18,7 +19,7 @@ test.describe("auth web shell", () => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Diklass" })).toBeVisible();
     await expect(page.getByLabel("Correo de acceso")).toBeVisible();
-    await expect(page.getByLabel("Contraseña")).toBeVisible();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
     await expect(page.getByText(/registr/i)).toHaveCount(0);
   });
@@ -28,7 +29,7 @@ test.describe("auth web shell", () => {
     const submit = page.getByRole("button", { name: "Iniciar sesión" });
     await expect(submit).toBeEnabled();
     await submit.click();
-    await expect(page.getByTestId("login-error")).toHaveText(
+    await expect(page.getByTestId("login-error")).toContainText(
       "Revisa los campos marcados antes de continuar.",
     );
   });
@@ -39,19 +40,21 @@ test.describe("auth web shell", () => {
   }) => {
     await page.goto("/login");
     const emailField = page.getByLabel("Correo de acceso");
-    // The fields stay read-only until React hydrates; a click before that lands on a
-    // non-focusable input and Tab starts from body instead of moving to the password field.
-    await expect(emailField).toBeEditable();
+    // Tab desde el correo solo es fiable con React ya hidratado (el botón se habilita entonces).
+    await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await emailField.click();
     await page.keyboard.press("Tab");
-    await expect(page.getByLabel("Contraseña")).toBeFocused();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeFocused();
+    // sistema-visual FR-090: «Mostrar contraseña» va dentro del campo, antes del envío.
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Mostrar contraseña" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeFocused();
 
     await page.keyboard.press("Enter");
     const error = page.getByTestId("login-error");
-    await expect(error).toHaveText("Revisa los campos marcados antes de continuar.");
-    await expect(error).toHaveAttribute("aria-live", "polite");
+    await expect(error).toContainText("Revisa los campos marcados antes de continuar.");
+    await expect(error).toHaveAttribute("role", "alert");
   });
 
   test("denies a direct protected route without an authenticated session", async ({ page }) => {
@@ -91,7 +94,7 @@ test.describe("auth against the local backend", () => {
         status: response.status(),
         errorCode: body.error_code,
         providerMessage: body.msg,
-        shownMessage: await error.textContent(),
+        shownMessage: await calloutText(error),
       };
     };
 
@@ -262,6 +265,23 @@ test.describe("auth against the local backend", () => {
 
       await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();
+      // sistema-visual 7.5 (caso límite de US14): el diálogo queda por encima de la navegación
+      // global, que no recibe clics ni foco mientras está abierto.
+      const sidebarLink = page.getByTestId("app-sidebar").getByRole("link", { name: "Pacientes" });
+      await expect(sidebarLink.click({ timeout: 2_000 })).rejects.toThrow();
+      await expect(page).toHaveURL(new RegExp(`/consultations/${consultationId}$`));
+      for (let step = 0; step < 6; step += 1) {
+        await page.keyboard.press("Tab");
+        const insideSidebar = await page.evaluate(
+          () =>
+            document
+              .querySelector('[data-testid="app-sidebar"]')
+              ?.contains(document.activeElement) ?? false,
+        );
+        expect(insideSidebar, "el foco llegó a la barra lateral con el diálogo abierto").toBe(
+          false,
+        );
+      }
       await expect(page.getByTestId("consultation-status")).toHaveText(
         "La sesión ya no es válida. El borrador se conservó.",
       );

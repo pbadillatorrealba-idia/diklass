@@ -1,7 +1,8 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect } from "expo-router";
 import { useCallback } from "react";
 import { View } from "react-native";
 import { SessionExpiredDialog } from "@/components/auth/session-expired-dialog";
+import { AppNavigation } from "@/components/navigation/app-navigation";
 import type { AccessSessionRpcClient } from "@/features/auth/access-session-service";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useSessionActivity } from "@/features/auth/use-session-activity";
@@ -38,7 +39,8 @@ export default function ProtectedLayout() {
 
   return (
     <View onTouchStart={registerActivity} style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }} />
+      {/* Navegación global (design.md D12); el diálogo de sesión va después y queda encima. */}
+      <AppNavigation />
       <SessionExpiredDialog
         onReauthenticate={() => void handleReauthenticate()}
         visible={isExpiredDialogOpen}

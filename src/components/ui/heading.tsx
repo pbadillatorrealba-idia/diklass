@@ -1,23 +1,25 @@
 import { Text as RNText, type TextProps as RNTextProps } from "react-native";
 
-const SIZES = {
-  sm: "text-lg",
-  md: "text-xl",
-  lg: "text-2xl",
-  "2xl": "text-3xl",
-  "3xl": "text-4xl",
+/** Tres niveles (FR-074 · design.md D5): título de pantalla, sección y subsección. */
+const LEVELS = {
+  1: "text-2xl font-bold",
+  2: "text-xl font-semibold",
+  3: "text-lg font-semibold",
 } as const;
+
+export type HeadingLevel = keyof typeof LEVELS;
 
 export type HeadingProps = RNTextProps & {
   className?: string;
-  size?: keyof typeof SIZES;
+  level?: HeadingLevel;
 };
 
-export function Heading({ className, size = "md", ...props }: HeadingProps) {
+export function Heading({ className, level = 2, ...props }: HeadingProps) {
   return (
     <RNText
       accessibilityRole="header"
-      className={`text-foreground font-bold ${SIZES[size]} ${className ?? ""}`.trim()}
+      aria-level={level}
+      className={`font-sans text-foreground ${LEVELS[level]} ${className ?? ""}`.trim()}
       role="heading"
       {...props}
     />

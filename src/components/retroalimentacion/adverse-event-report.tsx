@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { SeverityBadge } from "@/components/ui/severity-badge";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { AdverseEventReportEntry } from "@/features/retroalimentacion/feedback-summary";
@@ -20,9 +22,9 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
   const sustituidos = events.filter((entry) => !entry.effective);
 
   return (
-    <Box className="rounded-xl border border-border bg-white p-4" testID="adverse-event-report">
+    <Card testID="adverse-event-report">
       <VStack className="gap-2">
-        <Heading size="lg">Eventos adversos</Heading>
+        <Heading level={2}>Eventos adversos</Heading>
         {vigentes.length === 0 ? (
           <Text testID="adverse-event-empty">Sin eventos adversos en las versiones vigentes.</Text>
         ) : (
@@ -34,18 +36,18 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
                 accessibilityLabel={
                   esGrave ? `Evento adverso grave: ${entry.event.description}` : undefined
                 }
-                className={
-                  esGrave
-                    ? "rounded-lg border border-red-300 bg-red-50 p-3 gap-1"
-                    : "rounded-lg border border-border bg-white p-3 gap-1"
-                }
+                className={`gap-2 rounded-lg border p-3 ${
+                  esGrave ? "border-destructive bg-destructive-surface" : "border-border bg-card"
+                }`}
                 key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                 testID="adverse-event-item"
               >
-                <Text bold={esGrave} className={esGrave ? "text-red-700" : undefined}>
-                  {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}: {entry.event.description}
+                {/* Nombre, icono y color de la escala única (FR-077); texto en `foreground`. */}
+                <SeverityBadge level={entry.event.severity} />
+                <Text selectable variant={esGrave ? "strong" : "body"}>
+                  {entry.event.description}
                 </Text>
-                <Text className="text-foreground/70">
+                <Text selectable tone="muted">
                   Registrado el {registradoEl} · Consulta {entry.consultationId}
                 </Text>
               </Box>
@@ -62,6 +64,7 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
               }
               onPress={() => setVerSustituidos((valor) => !valor)}
               testID="adverse-event-toggle-superseded"
+              variant="outline"
             >
               <ButtonText>
                 {verSustituidos
@@ -72,15 +75,15 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
             {verSustituidos
               ? sustituidos.map((entry) => (
                   <Box
-                    className="rounded-lg border border-border bg-white p-3 gap-1"
+                    className="rounded-lg border border-border bg-card p-3 gap-1"
                     key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                     testID="adverse-event-superseded-item"
                   >
-                    <Text>
+                    <Text selectable>
                       {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}:{" "}
                       {entry.event.description}
                     </Text>
-                    <Text className="text-foreground/70">
+                    <Text selectable tone="muted">
                       Registrado el {new Date(entry.registeredAt).toLocaleString("es-CL")} ·
                       Consulta {entry.consultationId} · en una versión ya corregida; permanece
                       registrado.
@@ -91,6 +94,6 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
           </>
         )}
       </VStack>
-    </Box>
+    </Card>
   );
 }

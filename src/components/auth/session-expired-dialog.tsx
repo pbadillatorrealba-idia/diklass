@@ -12,19 +12,10 @@ type SessionExpiredDialogProps = {
 export function SessionExpiredDialog({ visible, onReauthenticate }: SessionExpiredDialogProps) {
   return (
     <Modal accessibilityViewIsModal animationType="fade" transparent visible={visible}>
-      <View
-        accessibilityViewIsModal
-        style={{
-          alignItems: "center",
-          backgroundColor: "rgba(15, 23, 42, 0.55)",
-          flex: 1,
-          justifyContent: "center",
-          padding: 24,
-        }}
-      >
+      <View accessibilityViewIsModal className="flex-1 items-center justify-center bg-scrim/55 p-6">
         <VStack
           accessibilityLabel="Sesión expirada"
-          className="w-full max-w-[440px] gap-4 rounded-2xl bg-white p-6"
+          className="w-full max-w-dialog gap-4 rounded-xl bg-popover p-6"
         >
           <Heading>Sesión expirada</Heading>
           <Text>Tu sesión dejó de estar activa. El borrador local se conservará.</Text>

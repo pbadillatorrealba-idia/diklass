@@ -7,8 +7,8 @@ import {
   PROVENANCE_OPTIONS,
 } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlError,
@@ -71,14 +71,11 @@ export function AnamnesisSection({
 
   return (
     <VStack className="w-full gap-4" testID="anamnesis-section">
-      <Heading size="lg">Anamnesis</Heading>
+      <Heading level={2}>Anamnesis</Heading>
       {unknownFields.length > 0 ? (
-        <Box
-          className="rounded-xl border border-border bg-white p-4"
-          testID="anamnesis-unknown-panel"
-        >
-          <Text bold>Campos estructurados sin información</Text>
-          <Text className="text-foreground/70">
+        <Card testID="anamnesis-unknown-panel">
+          <Text variant="strong">Campos estructurados sin información</Text>
+          <Text tone="muted">
             Aparecen como desconocidos: sin información no es un hallazgo negativo.
           </Text>
           {unknownFields.map((candidate) => (
@@ -86,14 +83,14 @@ export function AnamnesisSection({
               {ANAMNESIS_FIELD_LABELS[candidate]}: Desconocido
             </Text>
           ))}
-        </Box>
+        </Card>
       ) : null}
       {isSealed ? (
-        <Text className="text-foreground/70">
+        <Text tone="muted">
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-xl border border-border bg-white p-4 gap-4">
+        <VStack className="rounded-xl border border-border bg-card p-4 gap-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}
@@ -109,7 +106,7 @@ export function AnamnesisSection({
               <InputField
                 accessibilityLabel="Texto del antecedente"
                 aria-label="Texto del antecedente"
-                className="min-h-[120px]"
+                className="min-h-textarea"
                 editable={!isBusy}
                 multiline
                 onChangeText={onTextChange}
@@ -145,13 +142,9 @@ export function AnamnesisSection({
         <Text testID="anamnesis-empty">Sin antecedentes registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <Box
-            className="rounded-xl border border-border bg-white p-4 gap-2"
-            key={entry.id}
-            testID="anamnesis-entry"
-          >
-            <Text bold>{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
-            <Text>{entry.content.text}</Text>
+          <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
+            <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
+            <Text selectable>{entry.content.text}</Text>
             <Text>Procedencia: {PROVENANCE_LABELS[entry.content.provenance]}</Text>
             {(entry.content.provenanceHistory ?? []).map((previous, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; la misma procedencia puede repetirse y no aporta identidad.
@@ -169,7 +162,7 @@ export function AnamnesisSection({
                 value={entry.content.provenance}
               />
             )}
-          </Box>
+          </Card>
         ))
       )}
     </VStack>
