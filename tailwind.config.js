@@ -20,6 +20,9 @@ module.exports = {
         dialog: "440px",
         form: "480px", // formularios centrados (login)
       },
+      width: {
+        sidebar: "240px", // barra lateral de navegación en web desde `lg` (D12)
+      },
       minHeight: {
         touch: "44px", // área táctil mínima (WCAG 2.5.8 / HIG)
         textarea: "120px",

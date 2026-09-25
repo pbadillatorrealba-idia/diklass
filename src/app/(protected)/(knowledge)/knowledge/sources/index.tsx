@@ -1,12 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import Head from "expo-router/head";
 import { useEffect } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { listSources } from "@/features/conocimiento/coleccion-service";
@@ -45,11 +43,10 @@ export default function KnowledgeCollectionScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <Screen>
-      <Head>
-        <title>Colección de fuentes · Diklass</title>
-      </Head>
-      <Heading level={2}>Base de conocimiento · Colección</Heading>
+    <Screen
+      title="Base de conocimiento · Colección"
+      back={{ href: "/knowledge", label: "Conocimiento" }}
+    >
       <Text tone="muted" variant="caption">
         Fuentes clínicas disponibles para las consultas. Retirar una fuente la excluye de consultas
         nuevas sin borrarla: las citas previas siguen siendo identificables.

@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import Head from "expo-router/head";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
@@ -234,14 +233,10 @@ export default function FollowUpPanelScreen() {
   }));
 
   return (
-    <Screen>
-      <Head>
-        <title>Seguimiento del paciente · Diklass</title>
-      </Head>
-      <Heading level={1}>
-        Seguimiento de {patientQuery.data?.content.name ?? "este paciente"}
-      </Heading>
-
+    <Screen
+      title={`Seguimiento de ${patientQuery.data?.content.name ?? "este paciente"}`}
+      back={{ href: "/follow-up", label: "Seguimiento" }}
+    >
       {queryError && !sesionExpirada ? (
         <Text accessibilityLiveRegion="polite" testID="feedback-load-error">
           No pudimos cargar la evolución del paciente. Vuelve a intentarlo.

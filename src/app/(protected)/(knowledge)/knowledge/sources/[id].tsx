@@ -1,12 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import Head from "expo-router/head";
 import { useEffect, useState } from "react";
 import { VisorDocumento } from "@/components/conocimiento/visor-documento";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
-import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { getSource, withdrawSource } from "@/features/conocimiento/coleccion-service";
@@ -85,11 +83,10 @@ export default function KnowledgeSourceScreen() {
   };
 
   return (
-    <Screen>
-      <Head>
-        <title>Fuente clínica · Diklass</title>
-      </Head>
-      <Heading level={2}>Base de conocimiento · Fuente clínica</Heading>
+    <Screen
+      title="Base de conocimiento · Fuente clínica"
+      back={{ href: "/knowledge/sources", label: "la colección" }}
+    >
       {fuenteQuery.data ? (
         <>
           <VisorDocumento fuente={fuenteQuery.data} fragmentoCitado={fragmentoCitado} />

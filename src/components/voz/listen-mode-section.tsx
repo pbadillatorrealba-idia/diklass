@@ -29,7 +29,7 @@ function mensajeDeError(error: unknown): string {
  * indicador lo dice y el registro manual de anamnesis de 002 queda expedito (US6-AC10). Todo
  * fallo de las acciones se muestra con su motivo (US6-AC4 incluido).
  *
- * Montaje mínimo (requisito de integración R2) en `src/app/(protected)/consultations/[id].tsx`:
+ * Montaje mínimo (requisito de integración R2) en `src/app/(protected)/(patients)/consultations/[id].tsx`:
  *
  *   import { ListenModeSection } from "@/components/voz/listen-mode-section";
  *   …

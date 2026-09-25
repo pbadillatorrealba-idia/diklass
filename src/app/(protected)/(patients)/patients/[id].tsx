@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Head from "expo-router/head";
 import { useEffect, useState } from "react";
 import { AntecedentsPanel } from "@/components/registro/antecedents-panel";
 import {
@@ -13,7 +12,6 @@ import { MissingFieldsPanel } from "@/components/registro/missing-fields-panel";
 import { PatientHistory } from "@/components/registro/patient-history";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -173,11 +171,7 @@ export default function PatientDetailScreen() {
   };
 
   return (
-    <Screen>
-      <Head>
-        <title>Ficha de paciente · Diklass</title>
-      </Head>
-      <Heading level={1}>Ficha del paciente</Heading>
+    <Screen title="Ficha del paciente" back={{ href: "/patients", label: "Pacientes" }}>
       {patientQuery.isLoading ? <Text testID="patient-detail-loading">Cargando ficha…</Text> : null}
       {patientQuery.isSuccess && patient === null ? (
         <Text testID="patient-detail-missing">No encontramos esta ficha.</Text>

@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import Head from "expo-router/head";
 import { useState } from "react";
 import { z } from "zod";
 import {
@@ -8,7 +7,6 @@ import {
   FormularioFuente,
   type FuenteFormValues,
 } from "@/components/conocimiento/formulario-fuente";
-import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { incorporateSource } from "@/features/conocimiento/coleccion-service";
@@ -89,11 +87,10 @@ export default function NewKnowledgeSourceScreen() {
   };
 
   return (
-    <Screen>
-      <Head>
-        <title>Incorporar fuente · Diklass</title>
-      </Head>
-      <Heading level={2}>Base de conocimiento · Incorporar fuente</Heading>
+    <Screen
+      title="Base de conocimiento · Incorporar fuente"
+      back={{ href: "/knowledge/sources", label: "la colección" }}
+    >
       <Text tone="muted" variant="caption">
         Una fuente incorporada queda atribuida a tu identidad y no puede editarse después: si hay
         que corregirla, se retira y se incorpora una fuente nueva.

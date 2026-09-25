@@ -51,3 +51,22 @@ mock.module("react-native-safe-area-context", () => {
     useSafeAreaInsets: () => insets,
   };
 });
+
+// `expo-router` arrastra el runtime nativo (splash, TurboModules). Las primitivas solo usan
+// `Link`, `Stack.Screen` y `Head`: `Link` se renderiza como `<a>`, `Head` deja su contenido en el
+// HTML y `Stack.Screen` guarda sus opciones en `globalThis.__stackScreenOptions`.
+(globalThis as { __stackScreenOptions?: unknown[] }).__stackScreenOptions = [];
+mock.module("expo-router", () => ({
+  Link: ({ children, href, testID }: { children?: unknown; href: string; testID?: string }) =>
+    createElement("a", { href, "data-testid": testID }, children as never),
+  Stack: {
+    Screen: ({ options }: { options: unknown }) => {
+      (globalThis as { __stackScreenOptions?: unknown[] }).__stackScreenOptions?.push(options);
+      return null;
+    },
+  },
+}));
+mock.module("expo-router/head", () => ({
+  default: ({ children }: { children?: unknown }) =>
+    createElement("head-mock", null, children as never),
+}));

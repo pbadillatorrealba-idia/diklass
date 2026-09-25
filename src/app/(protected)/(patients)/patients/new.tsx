@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import Head from "expo-router/head";
 import { useEffect, useState } from "react";
 import {
   emptyFichaFormValues,
@@ -19,7 +18,6 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
@@ -147,11 +145,7 @@ export default function NewPatientScreen() {
   };
 
   return (
-    <Screen>
-      <Head>
-        <title>Registrar paciente · Diklass</title>
-      </Head>
-      <Heading level={1}>Registrar paciente</Heading>
+    <Screen title="Registrar paciente" back={{ href: "/patients", label: "Pacientes" }}>
       <Text tone="muted">
         Los campos opcionales pueden quedar sin dato: el sistema los señala sin inventar valores ni
         confundirlos con hallazgos negativos.

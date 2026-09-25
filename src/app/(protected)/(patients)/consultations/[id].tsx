@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
@@ -504,11 +503,15 @@ export default function ConsultationScreen() {
   };
 
   return (
-    <Screen width="wide">
-      <Head>
-        <title>Consulta · Diklass</title>
-      </Head>
-      <Heading level={1}>Consulta</Heading>
+    <Screen
+      width="wide"
+      title="Consulta"
+      back={
+        patientId
+          ? { href: `/patients/${patientId}`, label: "la ficha" }
+          : { href: "/patients", label: "Pacientes" }
+      }
+    >
       {workspaceQuery.isLoading ? (
         <Text testID="consultation-loading">Cargando la consulta…</Text>
       ) : null}
