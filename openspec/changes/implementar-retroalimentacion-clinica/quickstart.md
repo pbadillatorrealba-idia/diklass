@@ -77,11 +77,17 @@ carga del panel ≤ 2 s (reales: 10–40 ms).
 sobre los archivos de este cambio **limpio (0 errores, 0 avisos)**; unidades e integración en
 skip sin `SUPABASE_LIVE_TESTS`, verdes con ella.
 
-**CI**: pendiente de registro. `ci.yml` solo se dispara en `pull_request` y en `push` a `main`;
-esta rama aún no tiene PR (la crea el orquestador, por contrato de este cambio). El job
-`database` (`supabase test db` con la suite 011 y diff de `supabase gen types`) y el resto de
-compuertas se ejecutarán en esa PR; sus URLs se registran aquí al abrirse. El clúster scratch y
-la integración viva local cubren la misma superficie de verificación SQL/RLS en el entorno.
+**CI** (registrado el 2026-09-25, PR #28 mergeada en `4513f95`): el primer verde completo tras
+integrar la migración 009 corregida es
+[run 35797419562](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35797419562)
+(`1637afa`), y el head final de la revisión
+[run 36087231282](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/36087231282)
+(`0d3933a`), con los jobs de calidad, unidad/integración, base de datos y E2E web en verde. El rojo
+de la suite pgTap se observó **solo en local** (`/tmp/verify-005/`, tabla de arriba): la única
+ejecución fallida del job `database` en la PR,
+[run 35796856965](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35796856965)
+(`de5e195`), cae en cascada desde el assert 2 tras un merge. No es el rojo previsto de la tarea 1.1. Esta
+desviación de la tarea 1.1 queda aceptada y registrada, y el rojo de CI no se reconstruye a posteriori.
 
 ## Mapping `clinical_record_action` sin cambios (tarea 1.3)
 
@@ -112,15 +118,12 @@ el mapping existente cubre esta capacidad sin modificaciones.
 
 - Verificación visual de las pantallas nuevas (`/follow-up`, componentes de
   `src/components/retroalimentacion/`).
-- Compuerta axe WCAG 2.2 AA + teclado/foco/viewport sobre `/follow-up` (requisito de integración
-  sobre `tests/e2e/web/accessibility.spec.ts`; esta rama no toca Playwright por decisión acordada).
 - Integración de FR-042 en `buildFollowUpSummary` (`src/features/registro/summaries.ts`) y el
   resumen previo de `/consultations/[id]` (requisito de integración D9; SC-036 queda parcialmente
   verificado — solo la superficie `/follow-up` — hasta entonces).
 - Aceptación humana de SC-036 y de SC-037 en su componente de tiempo (< 2 min); su componente
   estructural (campos categóricos solo por selección) sí está verificado por diseño del formulario.
 - Ratificación por el equipo clínico de los vocabularios categóricos de D2 (Open Questions).
-- URLs del verde de CI en la PR que cree el orquestador (sección CI de arriba).
 
 ## Revisión de la PR #28 (2026-09-24)
 
@@ -157,3 +160,26 @@ tarea, así que la prueba dispara los dos `click()` dentro de un único `evaluat
 | `bunx playwright test --project=chromium` | 26 passed (incluidas las 5 nuevas de `retroalimentacion.spec.ts`) |
 
 La URL de la ejecución de CI en verde se registra en el comentario de la PR #28.
+
+## Compuerta de accesibilidad de `/follow-up` (tarea 7.13, 2026-09-25)
+
+Rama `feat/005-pendientes` sobre `main` (`cae4c56`), Supabase local compartido (podman) con las
+migraciones 001–013 y las dos veterinarias sintéticas.
+
+`tests/e2e/web/accessibility.spec.ts` añade dos pantallas a la compuerta de D12 de 002:
+`/follow-up` (selector de paciente) y `/follow-up/[patientId]`. Para la segunda, el caso sintético
+suma una entrada de BRUNO con un evento adverso grave y su correctiva de ANA sobre la consulta
+cerrada, de modo que el panel muestra antecedentes, cronología con corrección y el reporte con
+versiones sustituidas. Las tres pruebas del bloque (axe, recorrido por teclado con foco visible,
+viewport de 375 y 1280 px) recorren ambas pantallas. El teclado debe alcanzar «Corregir entrada»,
+el despliegue de versiones sustituidas, la consulta del selector, adherencia, evolución, los cuatro
+campos de texto y «Agregar evento adverso».
+
+| Etapa | Resultado |
+|---|---|
+| `bunx playwright test --project=chromium tests/e2e/web/accessibility.spec.ts` | 6 passed, al primer intento: `/follow-up` no tenía violaciones que corregir |
+| Sensibilidad (mutación temporal: sin `aria-label` ni `accessibilityLabel` en los campos de texto de `feedback-form.tsx`) | 1 failed: axe `label` («Form elements must have labels») en los 4 campos; mutación revertida |
+| `bunx biome check`, `bun run typecheck` | limpios |
+
+Pasar al primer intento significa que las pantallas ya cumplían. El rojo se forzó con la mutación
+para demostrar que la compuerta detecta defectos reales en esta superficie.
