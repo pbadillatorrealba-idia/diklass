@@ -23,7 +23,13 @@ import {
 } from "@/features/registro/summaries";
 import { listTutors, updateTutor } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
-import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
+import {
+  ANA,
+  BRUNO,
+  isLiveSupabase,
+  type LiveVeterinarian,
+  signedInVeterinarian,
+} from "../live-supabase";
 
 /**
  * Ficha y tutor contra Supabase viva (FR-001, FR-027, FR-044 · US1). Solo corre en el job
@@ -110,7 +116,6 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
   let ana: LiveVeterinarian;
   let tutorId = "";
   let pacienteId = "";
-  let segundoId = "";
   let caso: { consultationId: string; patientId: string; tutorId: string };
 
   beforeAll(async () => {
@@ -125,12 +130,11 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     });
     tutorId = compartida.tutorId;
     pacienteId = compartida.record.id;
-    const segundoCompartido = await createPatientFicha(ana.client, {
+    await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: fichaBase("Simón compartida"),
       tutor: { existingTutorId: compartida.tutorId },
     });
-    segundoId = segundoCompartido.record.id;
   });
 
   test("alta con tutor nuevo y segundo paciente sin duplicar tutor (FR-001 · US1-AC1, FR-027 · US1-AC4)", async () => {
@@ -304,5 +308,60 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
     const despues = await epicrisisEfectiva(ana.client, caso.consultationId);
     expect(despues).toEqual(antes);
+  });
+
+  // Revisión de la PR #27: dos veterinarios de la clínica editan la misma ficha (T055).
+  test("guardar la ficha con una lectura previa no borra el antecedente que otro añadió entretanto", async () => {
+    const bruno = await signedInVeterinarian(BRUNO);
+    const alta = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      ficha: fichaBase("Kira concurrencia"),
+      tutor: { existingTutorId: tutorId },
+    });
+    // Ana abre «Editar ficha» con esta lectura…
+    const lecturaDeAna = await getPatient(ana.client, alta.record.id);
+    if (!lecturaDeAna) {
+      throw new Error("La ficha recién creada debía poder leerse.");
+    }
+    // …Bruno añade una alergia mientras tanto…
+    await addAntecedentItem(bruno.client, alta.record.id, "knownAllergies", {
+      text: "Penicilina",
+      negative: false,
+    });
+    // …y Ana guarda su edición con la lectura anterior.
+    const { tutorId: _tutor, ...fichaDeAna } = lecturaDeAna.content;
+    await updatePatientFicha(ana.client, alta.record.id, { ...fichaDeAna, weightKg: 14 });
+
+    const final = await getPatient(ana.client, alta.record.id);
+    expect(final?.content.weightKg).toBe(14);
+    expect(final?.content.antecedentes.knownAllergies).toEqual([
+      { text: "Penicilina", negative: false },
+    ]);
+  });
+
+  test("dos antecedentes añadidos a la vez se conservan los dos", async () => {
+    const bruno = await signedInVeterinarian(BRUNO);
+    const alta = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      ficha: fichaBase("Toby concurrencia"),
+      tutor: { existingTutorId: tutorId },
+    });
+
+    await Promise.all([
+      addAntecedentItem(ana.client, alta.record.id, "currentMedications", {
+        text: "Fluoxetina 20 mg",
+        negative: false,
+      }),
+      addAntecedentItem(bruno.client, alta.record.id, "currentMedications", {
+        text: "Omeprazol 10 mg",
+        negative: false,
+      }),
+    ]);
+
+    const final = await getPatient(ana.client, alta.record.id);
+    expect(final?.content.antecedentes.currentMedications.map((item) => item.text).sort()).toEqual([
+      "Fluoxetina 20 mg",
+      "Omeprazol 10 mg",
+    ]);
   });
 });
