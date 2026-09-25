@@ -269,3 +269,25 @@ $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/attribution.spec.ts --pr
 $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/accessibility.spec.ts --project=chromium --workers=1        → 6 passed
 ```
 Capturas: [pacientes 1280 px claro](evidencia/4.3-pacientes-1280-claro.png) · [ficha 320 px oscuro](evidencia/4.3-ficha-320-oscuro.png).
+
+### 4.4 — Base de conocimiento (FR-075 · FR-076 · US13-AC2)
+
+- `avisos-cobertura`: cada aviso es un `Callout` (`sin_respaldo_documental` → `error`,
+  `sin_paciente_seleccionado` → `info`, resto → `warning`). El aviso de cobertura parcial y el
+  detalle de lo no cubierto se fusionan en un solo `Callout` que conserva ambos `testID`.
+- `segmento-respuesta`: la `inferencia` (afirmación del propio sistema) va en `SuggestedBlock`,
+  y conserva su etiqueta de origen de FR-021; evidencia citada y dato de ficha mantienen su tinte.
+  Los textos de lectura pasan a `body`.
+- `cita-fragmento`: "Ver fragmento en su contexto" pasa a `ghost sm`; `visor-documento`: la
+  cabecera pasa a superficie de primer nivel (`rounded-xl p-4`) y los fragmentos a `body`.
+- Fuentes: tarjetas → `Card`, estado con `tone`, "Ver documento" → `outline`; la confirmación de
+  retiro → `Callout warning` con "Cancelar" `outline`; el error de lectura → `Callout error`.
+- **Defecto encontrado y corregido:** `Callout` solo envolvía en `Text` un contenido de tipo
+  string, así que un texto con interpolación (arreglo de strings) quedaba suelto en un `View`
+  (LogBox: "Unexpected text node"). Regresión en `callout.test.tsx`: roja con la versión anterior
+  y verde con `isPlainText`.
+
+```
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/conocimiento.spec.ts --project=chromium --workers=1   → 5 passed
+```
+Capturas: [respuesta 1280 px claro](evidencia/4.4-respuesta-1280-claro.png) · [fuentes 320 px oscuro](evidencia/4.4-fuentes-320-oscuro.png).

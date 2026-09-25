@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
 import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conocimiento";
 import { SelectorPacienteContexto } from "@/components/conocimiento/selector-paciente-contexto";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
+import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { consultKnowledge, getQuery } from "@/features/conocimiento/consulta-service";
@@ -86,83 +86,77 @@ export default function KnowledgeConversationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="lg">Base de conocimiento · Consulta</Heading>
-          <Text className="text-foreground/70 text-sm">
-            Pregunta en lenguaje natural sobre protocolos, literatura o medicamentos. Toda respuesta
-            se apoya en la colección documental y distingue fuente, ficha e inferencia.
-          </Text>
+    <Screen>
+      <Heading level={2}>Base de conocimiento · Consulta</Heading>
+      <Text tone="muted" variant="caption">
+        Pregunta en lenguaje natural sobre protocolos, literatura o medicamentos. Toda respuesta se
+        apoya en la colección documental y distingue fuente, ficha e inferencia.
+      </Text>
 
-          <SelectorPacienteContexto
-            onChange={setPatient}
-            pacientes={pacientesQuery.data ?? []}
-            patientId={patientId}
+      <SelectorPacienteContexto
+        onChange={setPatient}
+        pacientes={pacientesQuery.data ?? []}
+        patientId={patientId}
+      />
+
+      <FormControl>
+        <FormControlLabel>
+          <FormControlLabelText>Tu pregunta al asistente</FormControlLabelText>
+        </FormControlLabel>
+        <Input>
+          <InputField
+            accessibilityLabel="Tu pregunta al asistente"
+            onChangeText={setPregunta}
+            onSubmitEditing={() => void consultar()}
+            placeholder="¿Qué antecedentes revisar ante un posible cuadro de ansiedad por separación?"
+            testID="conocimiento-pregunta"
+            value={pregunta}
           />
+        </Input>
+      </FormControl>
+      <Button
+        isDisabled={isConsulting || pregunta.trim() === ""}
+        onPress={() => void consultar()}
+        testID="conocimiento-consultar"
+      >
+        <ButtonText>{isConsulting ? "Consultando…" : "Consultar"}</ButtonText>
+      </Button>
 
-          <FormControl>
-            <FormControlLabel>
-              <FormControlLabelText>Tu pregunta al asistente</FormControlLabelText>
-            </FormControlLabel>
-            <Input>
-              <InputField
-                accessibilityLabel="Tu pregunta al asistente"
-                onChangeText={setPregunta}
-                onSubmitEditing={() => void consultar()}
-                placeholder="¿Qué antecedentes revisar ante un posible cuadro de ansiedad por separación?"
-                testID="conocimiento-pregunta"
-                value={pregunta}
-              />
-            </Input>
-          </FormControl>
-          <Button
-            isDisabled={isConsulting || pregunta.trim() === ""}
-            onPress={() => void consultar()}
-            testID="conocimiento-consultar"
-          >
-            <ButtonText>{isConsulting ? "Consultando…" : "Consultar"}</ButtonText>
-          </Button>
+      {status !== null ? (
+        <Text tone="destructive" variant="caption" testID="conocimiento-status">
+          {status}
+        </Text>
+      ) : null}
 
-          {status !== null ? (
-            <Text className="text-destructive text-sm" testID="conocimiento-status">
-              {status}
-            </Text>
+      {turnos.map((turno) => (
+        <VStack className="gap-2" key={turno.id} testID={`turno-${turno.id}`}>
+          <Heading level={3}>{turno.pregunta}</Heading>
+          <RespuestaConocimiento answer={turno.respuesta} />
+          {turno.queryId !== null ? (
+            <Button
+              className="self-start"
+              onPress={() =>
+                setRespaldoAbierto(respaldoAbierto === turno.queryId ? null : turno.queryId)
+              }
+              testID={`ver-respaldo-${turno.id}`}
+            >
+              <ButtonText>
+                {respaldoAbierto === turno.queryId ? "Ocultar respaldo" : "Ver respaldo registrado"}
+              </ButtonText>
+            </Button>
           ) : null}
-
-          {turnos.map((turno) => (
-            <VStack className="gap-2" key={turno.id} testID={`turno-${turno.id}`}>
-              <Heading size="sm">{turno.pregunta}</Heading>
-              <RespuestaConocimiento answer={turno.respuesta} />
-              {turno.queryId !== null ? (
-                <Button
-                  className="self-start"
-                  onPress={() =>
-                    setRespaldoAbierto(respaldoAbierto === turno.queryId ? null : turno.queryId)
-                  }
-                  testID={`ver-respaldo-${turno.id}`}
-                >
-                  <ButtonText>
-                    {respaldoAbierto === turno.queryId
-                      ? "Ocultar respaldo"
-                      : "Ver respaldo registrado"}
-                  </ButtonText>
-                </Button>
-              ) : null}
-              {respaldoAbierto === turno.queryId && respaldoQuery.data != null ? (
-                <VStack className="gap-2 rounded-lg border border-border bg-card p-3">
-                  <Text className="text-foreground/70 text-xs">
-                    Reconstrucción de lo que produjo esta recomendación (FR-020): consulta{" "}
-                    {respaldoQuery.data.row.id}, paciente{" "}
-                    {respaldoQuery.data.row.patient_id ?? "ninguno"}.
-                  </Text>
-                  <RespuestaConocimiento answer={respaldoQuery.data.answer} />
-                </VStack>
-              ) : null}
+          {respaldoAbierto === turno.queryId && respaldoQuery.data != null ? (
+            <VStack className="gap-2 rounded-lg border border-border bg-card p-3">
+              <Text tone="muted" variant="caption">
+                Reconstrucción de lo que produjo esta recomendación (FR-020): consulta{" "}
+                {respaldoQuery.data.row.id}, paciente{" "}
+                {respaldoQuery.data.row.patient_id ?? "ninguno"}.
+              </Text>
+              <RespuestaConocimiento answer={respaldoQuery.data.answer} />
             </VStack>
-          ))}
+          ) : null}
         </VStack>
-      </ScrollView>
-    </SafeAreaView>
+      ))}
+    </Screen>
   );
 }

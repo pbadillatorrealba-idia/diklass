@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
 import { VisorDocumento } from "@/components/conocimiento/visor-documento";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
 import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import { getSource, withdrawSource } from "@/features/conocimiento/coleccion-service";
 import { invalidateConocimiento } from "@/features/conocimiento/query-cache";
 import { isAuthenticationRequired } from "@/lib/errors";
@@ -84,62 +84,64 @@ export default function KnowledgeSourceScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="lg">Base de conocimiento · Fuente clínica</Heading>
-          {fuenteQuery.data ? (
-            <>
-              <VisorDocumento fuente={fuenteQuery.data} fragmentoCitado={fragmentoCitado} />
-              {fuenteQuery.data.record.status === "available" && !confirmandoRetiro ? (
-                <Button
-                  className="self-start"
-                  isDisabled={isWithdrawing}
-                  onPress={() => setConfirmandoRetiro(true)}
-                  testID="retirar-fuente"
-                >
-                  <ButtonText>
-                    {isWithdrawing ? "Retirando…" : "Retirar fuente de la colección"}
-                  </ButtonText>
-                </Button>
-              ) : null}
-              {fuenteQuery.data.record.status === "available" && confirmandoRetiro ? (
-                // El retiro es irreversible (HD3): se confirma en un segundo paso explícito.
-                <Box className="gap-3 rounded-lg border border-border bg-card p-3">
-                  <Text className="text-foreground text-sm">
-                    ¿Retirar esta fuente? Dejará de responder consultas nuevas y no puede
-                    deshacerse; sus citas previas seguirán siendo identificables.
-                  </Text>
-                  <Box className="flex-row gap-3">
-                    <Button onPress={() => void retirar()} testID="confirmar-retiro">
-                      <ButtonText>Confirmar retiro</ButtonText>
-                    </Button>
-                    <Button onPress={() => setConfirmandoRetiro(false)} testID="cancelar-retiro">
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                  </Box>
-                </Box>
-              ) : null}
-            </>
-          ) : fuenteQuery.isError ? (
-            <Text className="text-destructive text-sm" testID="fuente-error">
-              No se pudo leer la fuente. Vuelve a intentarlo más tarde.
-            </Text>
-          ) : fuenteQuery.data === null || documentId === "" ? (
-            // null: no existe, es de otra clínica o su contenido no es legible (getSource).
-            <Text className="text-foreground/70 text-sm" testID="fuente-no-encontrada">
-              No se encontró la fuente en la colección de tu clínica.
-            </Text>
-          ) : (
-            <Text className="text-foreground/70 text-sm">Cargando la fuente…</Text>
-          )}
-          {status !== null ? (
-            <Text className="text-foreground text-sm" testID="fuente-status">
-              {status}
-            </Text>
+    <Screen>
+      <Heading level={2}>Base de conocimiento · Fuente clínica</Heading>
+      {fuenteQuery.data ? (
+        <>
+          <VisorDocumento fuente={fuenteQuery.data} fragmentoCitado={fragmentoCitado} />
+          {fuenteQuery.data.record.status === "available" && !confirmandoRetiro ? (
+            <Button
+              className="self-start"
+              isDisabled={isWithdrawing}
+              onPress={() => setConfirmandoRetiro(true)}
+              testID="retirar-fuente"
+            >
+              <ButtonText>
+                {isWithdrawing ? "Retirando…" : "Retirar fuente de la colección"}
+              </ButtonText>
+            </Button>
           ) : null}
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+          {fuenteQuery.data.record.status === "available" && confirmandoRetiro ? (
+            // El retiro es irreversible (HD3): se confirma en un segundo paso explícito.
+            <Callout title="¿Retirar esta fuente?" tone="warning">
+              <Text>
+                Dejará de responder consultas nuevas y no puede deshacerse; sus citas previas
+                seguirán siendo identificables.
+              </Text>
+              <Box className="flex-row gap-3">
+                <Button onPress={() => void retirar()} testID="confirmar-retiro">
+                  <ButtonText>Confirmar retiro</ButtonText>
+                </Button>
+                <Button
+                  onPress={() => setConfirmandoRetiro(false)}
+                  testID="cancelar-retiro"
+                  variant="outline"
+                >
+                  <ButtonText>Cancelar</ButtonText>
+                </Button>
+              </Box>
+            </Callout>
+          ) : null}
+        </>
+      ) : fuenteQuery.isError ? (
+        <Callout testID="fuente-error" tone="error">
+          No se pudo leer la fuente. Vuelve a intentarlo más tarde.
+        </Callout>
+      ) : fuenteQuery.data === null || documentId === "" ? (
+        // null: no existe, es de otra clínica o su contenido no es legible (getSource).
+        <Text tone="muted" variant="caption" testID="fuente-no-encontrada">
+          No se encontró la fuente en la colección de tu clínica.
+        </Text>
+      ) : (
+        <Text tone="muted" variant="caption">
+          Cargando la fuente…
+        </Text>
+      )}
+      {status !== null ? (
+        <Text variant="caption" testID="fuente-status">
+          {status}
+        </Text>
+      ) : null}
+    </Screen>
   );
 }

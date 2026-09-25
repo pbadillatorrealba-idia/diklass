@@ -1,5 +1,6 @@
-import { Box } from "@/components/ui/box";
+import { Callout, type CalloutTone } from "@/components/ui/callout";
 import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 import type { AvisoRespuesta, Cobertura } from "@/features/conocimiento/schema";
 
 const TEXTO_AVISO: Record<AvisoRespuesta, string> = {
@@ -21,6 +22,21 @@ const TEXTO_AVISO: Record<AvisoRespuesta, string> = {
 };
 
 /**
+ * Estado de cada aviso (FR-075): la ausencia de respaldo es un error; responder sin paciente es
+ * informativo; el resto advierte de una respuesta incompleta o de citas a revisar.
+ */
+const TONO_AVISO: Record<AvisoRespuesta, CalloutTone> = {
+  sin_respaldo_documental: "error",
+  cobertura_parcial: "warning",
+  fuentes_multiples: "warning",
+  sin_paciente_seleccionado: "info",
+  fuente_retirada: "warning",
+  evidencia_truncada: "warning",
+  cita_irresoluble: "warning",
+  ficha_no_disponible: "warning",
+};
+
+/**
  * Avisos explícitos de la respuesta (FR-022, FR-023, FR-051, FR-052 y FR-053 · US5-AC2/AC8/
  * AC10/AC11/AC12): ausencia de respaldo, qué parte de la pregunta queda sin cubrir, fuentes
  * sin arbitraje, modo sin paciente y citas a fuentes retiradas.
@@ -32,28 +48,28 @@ export function AvisosCobertura({
   cobertura: Cobertura;
   avisos: AvisoRespuesta[];
 }) {
+  const noCubiertos = cobertura.estado === "parcial" ? cobertura.noCubiertos : [];
+  // El aviso de cobertura parcial y el detalle de lo no cubierto son un mismo mensaje.
+  const parcial = avisos.includes("cobertura_parcial") || noCubiertos.length > 0;
   return (
-    <Box
-      accessibilityLabel="Avisos de cobertura de la respuesta"
-      className="gap-2 rounded-lg border border-border bg-card p-3"
-      testID="avisos-cobertura"
-    >
-      {cobertura.estado === "parcial" && cobertura.noCubiertos.length > 0 ? (
-        <Text className="text-foreground text-sm" testID="cobertura-parcial">
-          Queda sin cubrir por la evidencia recuperada: «{cobertura.noCubiertos.join(", ")}».
-        </Text>
+    <VStack className="gap-2" testID="avisos-cobertura">
+      {parcial ? (
+        <Callout testID="aviso-cobertura_parcial" title="Cobertura parcial" tone="warning">
+          <Text>{TEXTO_AVISO.cobertura_parcial}</Text>
+          {noCubiertos.length > 0 ? (
+            <Text testID="cobertura-parcial">
+              Queda sin cubrir por la evidencia recuperada: «{noCubiertos.join(", ")}».
+            </Text>
+          ) : null}
+        </Callout>
       ) : null}
-      {avisos.map((aviso) => (
-        <Text
-          className={`text-sm ${
-            aviso === "sin_respaldo_documental" ? "text-destructive" : "text-foreground"
-          }`}
-          key={aviso}
-          testID={`aviso-${aviso}`}
-        >
-          {TEXTO_AVISO[aviso]}
-        </Text>
-      ))}
-    </Box>
+      {avisos
+        .filter((aviso) => aviso !== "cobertura_parcial")
+        .map((aviso) => (
+          <Callout key={aviso} testID={`aviso-${aviso}`} tone={TONO_AVISO[aviso]}>
+            {TEXTO_AVISO[aviso]}
+          </Callout>
+        ))}
+    </VStack>
   );
 }

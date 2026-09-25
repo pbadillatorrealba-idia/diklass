@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { Children, type PropsWithChildren } from "react";
 import { View } from "react-native";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -34,6 +34,12 @@ const TONES = {
   { box: string; color: ThemeToken; icon: IconName; name: string }
 >;
 
+/** Texto plano, aunque venga interpolado en varios nodos: RN no admite texto suelto en un View. */
+function isPlainText(children: CalloutProps["children"]) {
+  const nodes = Children.toArray(children);
+  return nodes.length > 0 && nodes.every((n) => typeof n === "string" || typeof n === "number");
+}
+
 export type CalloutTone = keyof typeof TONES;
 
 export type CalloutProps = PropsWithChildren<{
@@ -46,7 +52,7 @@ export type CalloutProps = PropsWithChildren<{
 /**
  * Aviso con estado (FR-075 · design.md D7): superficie tintada, borde e icono con nombre, para que
  * el color nunca sea la única señal. `error` y `warning` se anuncian al aparecer. Un texto plano
- * como contenido se envuelve en `Text`.
+ * como contenido (también con interpolación) se envuelve en `Text`.
  */
 export function Callout({ children, className, testID, title, tone }: CalloutProps) {
   const style = TONES[tone];
@@ -61,7 +67,7 @@ export function Callout({ children, className, testID, title, tone }: CalloutPro
       <Icon label={style.name} name={style.icon} tone={style.color} />
       <View className="flex-1 gap-1">
         {title ? <Text variant="strong">{title}</Text> : null}
-        {typeof children === "string" ? <Text>{children}</Text> : children}
+        {isPlainText(children) ? <Text>{children}</Text> : children}
       </View>
     </View>
   );

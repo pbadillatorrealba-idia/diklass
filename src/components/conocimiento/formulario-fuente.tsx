@@ -136,11 +136,11 @@ export function FormularioFuente({
       </FormControl>
 
       <Box className="rounded-lg bg-muted p-3" testID="fuente-vista-previa-fragmentos">
-        <Text bold className="text-foreground text-sm">
+        <Text variant="label">
           Vista previa del corte en fragmentos citables: {fragmentos.length}
         </Text>
         {fragmentos.map((fragmento) => (
-          <Text className="text-foreground/70 text-xs" key={fragmento.ordinal}>
+          <Text tone="muted" variant="caption" key={fragmento.ordinal}>
             {fragmento.ordinal}. {fragmento.seccion ? `[${fragmento.seccion}] ` : ""}
             {fragmento.texto}
           </Text>
@@ -180,7 +180,7 @@ export function FormularioFuente({
       </Button>
 
       {status !== null ? (
-        <Text className="text-foreground text-sm" testID="fuente-status">
+        <Text variant="caption" testID="fuente-status">
           {status}
         </Text>
       ) : null}

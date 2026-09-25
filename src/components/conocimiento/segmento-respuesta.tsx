@@ -1,4 +1,5 @@
 import { Box } from "@/components/ui/box";
+import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import type { SegmentoRespuesta } from "@/features/conocimiento/schema";
 import { CitaFragmento } from "./cita-fragmento";
@@ -9,10 +10,9 @@ const ETIQUETA_ORIGEN: Record<SegmentoRespuesta["kind"], string> = {
   inferencia: "Inferencia del sistema",
 };
 
-const COLOR_ORIGEN: Record<SegmentoRespuesta["kind"], string> = {
+const COLOR_ORIGEN: Record<Exclude<SegmentoRespuesta["kind"], "inferencia">, string> = {
   evidencia: "bg-primary/15",
   ficha: "bg-secondary/15",
-  inferencia: "bg-accent/20",
 };
 
 /**
@@ -26,24 +26,32 @@ export function SegmentoRespuestaView({ segmento }: { segmento: SegmentoRespuest
       ? `${ETIQUETA_ORIGEN.ficha} · ${segmento.provenance}`
       : ETIQUETA_ORIGEN[segmento.kind];
 
-  return (
-    <Box
-      accessibilityLabel={`${etiqueta}: ${segmento.texto}`}
-      className={`rounded-lg p-3 ${COLOR_ORIGEN[segmento.kind]}`}
-      testID={`segmento-${segmento.id}`}
-    >
-      <Text bold className="text-foreground/70 text-xs">
+  const contenido = (
+    <>
+      <Text tone="muted" variant="label">
         {etiqueta}
       </Text>
-      {segmento.kind === "ficha" ? (
-        <Text className="text-foreground text-sm">
-          {segmento.texto}
-          {segmento.provenance === "desconocida" ? "" : ` (${segmento.fichaRef})`}
-        </Text>
-      ) : (
-        <Text className="text-foreground text-sm">{segmento.texto}</Text>
-      )}
+      <Text>
+        {segmento.texto}
+        {segmento.kind === "ficha" && segmento.provenance !== "desconocida"
+          ? ` (${segmento.fichaRef})`
+          : ""}
+      </Text>
       {segmento.kind === "evidencia" ? <CitaFragmento cita={segmento.cita} /> : null}
+    </>
+  );
+
+  // Una inferencia es una afirmación del propio sistema, sin validar: se marca como sugerencia
+  // (FR-076). La evidencia citada y el dato de ficha conservan su tinte de origen.
+  if (segmento.kind === "inferencia") {
+    return <SuggestedBlock testID={`segmento-${segmento.id}`}>{contenido}</SuggestedBlock>;
+  }
+  return (
+    <Box
+      className={`gap-1 rounded-lg p-3 ${COLOR_ORIGEN[segmento.kind]}`}
+      testID={`segmento-${segmento.id}`}
+    >
+      {contenido}
     </Box>
   );
 }

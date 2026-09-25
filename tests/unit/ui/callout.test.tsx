@@ -48,4 +48,16 @@ describe("Callout", () => {
     expect(html.indexOf("Cobertura parcial")).toBeLessThan(html.indexOf("Detalle"));
     expect(html).toMatch(/font-semibold[^>]*>Cobertura parcial/);
   });
+
+  // Regresión: con interpolación, el contenido es un arreglo de textos, no un solo string; sin
+  // envolverlo, RN rechaza nodos de texto sueltos dentro de un View.
+  test("un contenido con varios textos interpolados se envuelve en Text", () => {
+    const faltante = "dosis";
+    const html = renderToStaticMarkup(
+      <Callout testID="c" tone="warning">
+        Queda sin cubrir: «{faltante}».
+      </Callout>,
+    );
+    expect(html).toMatch(/<div dir="auto"[^>]*>Queda sin cubrir: «(<!-- -->)?dosis(<!-- -->)?»\.<\/div>/);
+  });
 });

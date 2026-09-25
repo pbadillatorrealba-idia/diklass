@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
 import { z } from "zod";
 import {
   emptyFuenteFormValues,
@@ -9,8 +8,8 @@ import {
   type FuenteFormValues,
 } from "@/components/conocimiento/formulario-fuente";
 import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import { incorporateSource } from "@/features/conocimiento/coleccion-service";
 import { invalidateConocimiento } from "@/features/conocimiento/query-cache";
 import type { FuenteInput } from "@/features/conocimiento/schema";
@@ -89,24 +88,20 @@ export default function NewKnowledgeSourceScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="lg">Base de conocimiento · Incorporar fuente</Heading>
-          <Text className="text-foreground/70 text-sm">
-            Una fuente incorporada queda atribuida a tu identidad y no puede editarse después: si
-            hay que corregirla, se retira y se incorpora una fuente nueva.
-          </Text>
-          <FormularioFuente
-            errors={errors}
-            isSaving={isSaving}
-            onChange={setValues}
-            onSubmit={(fuente) => void onSubmit(fuente)}
-            status={status}
-            values={values}
-          />
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+    <Screen>
+      <Heading level={2}>Base de conocimiento · Incorporar fuente</Heading>
+      <Text tone="muted" variant="caption">
+        Una fuente incorporada queda atribuida a tu identidad y no puede editarse después: si hay
+        que corregirla, se retira y se incorpora una fuente nueva.
+      </Text>
+      <FormularioFuente
+        errors={errors}
+        isSaving={isSaving}
+        onChange={setValues}
+        onSubmit={(fuente) => void onSubmit(fuente)}
+        status={status}
+        values={values}
+      />
+    </Screen>
   );
 }

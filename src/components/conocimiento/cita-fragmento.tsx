@@ -23,30 +23,32 @@ export function CitaFragmento({ cita }: { cita: Cita }) {
   return (
     <Box
       accessibilityLabel={`Cita de ${cita.bibliografia.titulo}, fragmento ${cita.fragmentoOrdinal}`}
-      className="mt-2 rounded-lg border border-border bg-card p-2"
+      className="mt-2 gap-1 rounded-lg border border-border bg-card p-3"
       testID={`cita-${cita.documentoId}-${cita.fragmentoOrdinal}`}
     >
-      <Text bold className="text-foreground text-sm">
-        {cita.bibliografia.titulo}
+      <Text variant="label">{cita.bibliografia.titulo}</Text>
+      <Text tone="muted" variant="caption">
+        {lineaBibliografica(cita)}
       </Text>
-      <Text className="text-foreground/70 text-xs">{lineaBibliografica(cita)}</Text>
-      <Text className="text-foreground/70 text-xs">
+      <Text tone="muted" variant="caption">
         Fragmento {cita.fragmentoOrdinal} · Licencia: {cita.licencia.tipo}
       </Text>
       {retirada ? (
-        <Text className="text-destructive text-xs" testID="cita-fuente-retirada">
+        <Text tone="destructive" variant="caption" testID="cita-fuente-retirada">
           Fuente retirada de la colección; la referencia sigue identificable.
         </Text>
       ) : null}
       <Button
-        className="mt-2 self-start"
+        className="self-start"
         onPress={() =>
           router.push({
             pathname: "/knowledge/sources/[id]",
             params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
           })
         }
+        size="sm"
         testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+        variant="ghost"
       >
         <ButtonText>Ver fragmento en su contexto</ButtonText>
       </Button>
