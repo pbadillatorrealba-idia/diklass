@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const displayName = useSessionStore((state) => state.displayName);
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Panel clínico · Diklass</title>
       </Head>

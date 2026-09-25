@@ -35,7 +35,7 @@ export function AvisosCobertura({
   return (
     <Box
       accessibilityLabel="Avisos de cobertura de la respuesta"
-      className="gap-2 rounded-lg border border-border bg-white p-3"
+      className="gap-2 rounded-lg border border-border bg-card p-3"
       testID="avisos-cobertura"
     >
       {cobertura.estado === "parcial" && cobertura.noCubiertos.length > 0 ? (

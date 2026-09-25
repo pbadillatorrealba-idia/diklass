@@ -11,7 +11,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Iniciar sesión · Diklass</title>
       </Head>

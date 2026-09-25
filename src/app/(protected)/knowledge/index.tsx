@@ -86,7 +86,7 @@ export default function KnowledgeConversationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <VStack className="w-full max-w-[720px] gap-6">
           <Heading size="lg">Base de conocimiento · Consulta</Heading>
@@ -150,7 +150,7 @@ export default function KnowledgeConversationScreen() {
                 </Button>
               ) : null}
               {respaldoAbierto === turno.queryId && respaldoQuery.data != null ? (
-                <VStack className="gap-2 rounded-lg border border-border bg-white p-3">
+                <VStack className="gap-2 rounded-lg border border-border bg-card p-3">
                   <Text className="text-foreground/70 text-xs">
                     Reconstrucción de lo que produjo esta recomendación (FR-020): consulta{" "}
                     {respaldoQuery.data.row.id}, paciente{" "}

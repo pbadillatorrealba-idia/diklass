@@ -16,7 +16,7 @@ export type TextProps = RNTextProps & {
 export function Text({ bold = false, className, size = "md", ...props }: TextProps) {
   return (
     <RNText
-      className={`text-foreground ${SIZES[size]} ${bold ? "font-semibold" : ""} ${
+      className={`font-sans text-foreground ${SIZES[size]} ${bold ? "font-semibold" : ""} ${
         className ?? ""
       }`.trim()}
       {...props}

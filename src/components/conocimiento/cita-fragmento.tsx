@@ -23,7 +23,7 @@ export function CitaFragmento({ cita }: { cita: Cita }) {
   return (
     <Box
       accessibilityLabel={`Cita de ${cita.bibliografia.titulo}, fragmento ${cita.fragmentoOrdinal}`}
-      className="mt-2 rounded-lg border border-border bg-white p-2"
+      className="mt-2 rounded-lg border border-border bg-card p-2"
       testID={`cita-${cita.documentoId}-${cita.fragmentoOrdinal}`}
     >
       <Text bold className="text-foreground text-sm">

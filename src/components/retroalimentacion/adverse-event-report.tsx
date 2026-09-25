@@ -20,7 +20,7 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
   const sustituidos = events.filter((entry) => !entry.effective);
 
   return (
-    <Box className="rounded-xl border border-border bg-white p-4" testID="adverse-event-report">
+    <Box className="rounded-xl border border-border bg-card p-4" testID="adverse-event-report">
       <VStack className="gap-2">
         <Heading size="lg">Eventos adversos</Heading>
         {vigentes.length === 0 ? (
@@ -36,13 +36,14 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
                 }
                 className={
                   esGrave
-                    ? "rounded-lg border border-red-300 bg-red-50 p-3 gap-1"
-                    : "rounded-lg border border-border bg-white p-3 gap-1"
+                    ? "rounded-lg border border-destructive bg-destructive/10 p-3 gap-1"
+                    : "rounded-lg border border-border bg-card p-3 gap-1"
                 }
                 key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                 testID="adverse-event-item"
               >
-                <Text bold={esGrave} className={esGrave ? "text-red-700" : undefined}>
+                {/* Texto en `foreground`: `destructive` sobre su propio tinte no llega a 4.5:1. */}
+                <Text bold={esGrave}>
                   {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}: {entry.event.description}
                 </Text>
                 <Text className="text-foreground/70">
@@ -72,7 +73,7 @@ export function AdverseEventReport({ events }: { events: AdverseEventReportEntry
             {verSustituidos
               ? sustituidos.map((entry) => (
                   <Box
-                    className="rounded-lg border border-border bg-white p-3 gap-1"
+                    className="rounded-lg border border-border bg-card p-3 gap-1"
                     key={`${entry.feedbackRecordId}-evento-${entry.eventIndex}`}
                     testID="adverse-event-superseded-item"
                   >

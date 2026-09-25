@@ -11,17 +11,11 @@ export type OptionPickerProps<T extends string> = {
   isDisabled?: boolean;
 };
 
-const SELECTED_BACKGROUND = "#0369a1";
-const SELECTED_TEXT = "#f8fafc";
-const IDLE_BACKGROUND = "#ffffff";
-const IDLE_TEXT = "#0f172a";
-
 /**
  * Grupo de opciones accesible (radio) para vocabularios cerrados: etiqueta programática,
  * operable por teclado con foco visible (usa `Button`) y estado `checked` expuesto a los
- * lectores de pantalla. Los colores van inline a propósito — mismo motivo que `InputField`:
- * las utilidades de color de `Button`/`ButtonText` ganarían por orden de hoja de estilos y
- * dejarían el texto sin contraste suficiente.
+ * lectores de pantalla. La opción elegida usa la variante `primary`
+ * y el resto `outline`: los colores salen de la variante y no de clases que compitan entre sí.
  */
 export function OptionPicker<T extends string>({
   label,
@@ -54,12 +48,10 @@ export function OptionPicker<T extends string>({
               key={option.value}
               onPress={() => onChange(option.value)}
               role="radio"
-              style={{ backgroundColor: isSelected ? SELECTED_BACKGROUND : IDLE_BACKGROUND }}
               testID={`${testID}-${option.value.replace(/_/g, "-")}`}
+              variant={isSelected ? "primary" : "outline"}
             >
-              <ButtonText style={{ color: isSelected ? SELECTED_TEXT : IDLE_TEXT }}>
-                {option.label}
-              </ButtonText>
+              <ButtonText>{option.label}</ButtonText>
             </Button>
           );
         })}

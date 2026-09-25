@@ -48,7 +48,7 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
           );
           return (
             <Box
-              className="rounded-xl border border-border bg-white p-4 gap-2"
+              className="rounded-xl border border-border bg-card p-4 gap-2"
               key={entry.record.id}
               testID="feedback-timeline-item"
             >
@@ -97,7 +97,7 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
                       : undefined
                   }
                   bold={evento.severity === "grave"}
-                  className={evento.severity === "grave" ? "text-red-700" : undefined}
+                  className={evento.severity === "grave" ? "text-destructive" : undefined}
                   key={`${entry.record.id}-adverse-${index}`}
                   testID="feedback-timeline-adverse-event"
                 >

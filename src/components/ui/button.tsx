@@ -6,25 +6,38 @@ import {
   type TextProps as RNTextProps,
 } from "react-native";
 
-type ButtonContextValue = { isDisabled: boolean };
+const VARIANTS = {
+  primary: { surface: "bg-primary", text: "text-primary-foreground" },
+  outline: { surface: "border border-input bg-card", text: "text-foreground" },
+} as const;
 
-const ButtonContext = createContext<ButtonContextValue>({ isDisabled: false });
+export type ButtonVariant = keyof typeof VARIANTS;
+
+const ButtonContext = createContext<ButtonVariant>("primary");
 
 export type ButtonProps = Omit<PressableProps, "disabled"> & {
   className?: string;
   isDisabled?: boolean;
+  variant?: ButtonVariant;
 };
 
-export function Button({ children, className, isDisabled = false, ...props }: ButtonProps) {
+export function Button({
+  children,
+  className,
+  isDisabled = false,
+  variant = "primary",
+  ...props
+}: ButtonProps) {
   return (
-    <ButtonContext.Provider value={{ isDisabled }}>
+    <ButtonContext.Provider value={variant}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: isDisabled }}
         // `focus:` keeps a visible focus ring on web, required by WCAG 2.2 AA 2.4.7.
-        className={`min-h-[44px] items-center justify-center rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-          isDisabled ? "bg-muted opacity-60" : "bg-primary active:opacity-80"
-        } ${className ?? ""}`.trim()}
+        // Disabled keeps the variant so a selected radio (OptionPicker) still reads as selected.
+        className={`min-h-[44px] items-center justify-center rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+          VARIANTS[variant].surface
+        } ${isDisabled ? "opacity-50" : "active:opacity-80"} ${className ?? ""}`.trim()}
         disabled={isDisabled}
         role="button"
         {...props}
@@ -38,12 +51,10 @@ export function Button({ children, className, isDisabled = false, ...props }: Bu
 export type ButtonTextProps = RNTextProps & { className?: string };
 
 export function ButtonText({ className, ...props }: ButtonTextProps) {
-  const { isDisabled } = useContext(ButtonContext);
+  const variant = useContext(ButtonContext);
   return (
     <RNText
-      className={`text-base font-semibold ${
-        isDisabled ? "text-foreground/60" : "text-primary-foreground"
-      } ${className ?? ""}`.trim()}
+      className={`font-sans text-base font-semibold ${VARIANTS[variant].text} ${className ?? ""}`.trim()}
       {...props}
     />
   );

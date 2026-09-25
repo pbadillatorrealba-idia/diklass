@@ -12,7 +12,7 @@ export function AttributionBadge({ attribution }: { attribution: Attribution }) 
   return (
     <Box
       accessibilityLabel={`Atribuido a ${actor} el ${occurredAt}`}
-      className="rounded-lg bg-sky-100 p-2"
+      className="rounded-lg bg-secondary/15 p-2"
       testID="attribution-badge"
     >
       <Text bold>{actor}</Text>

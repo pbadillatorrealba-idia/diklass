@@ -32,7 +32,7 @@ export function FollowUpSummaryPanel({ summary }: { summary: FollowUpSummary }) 
   ].some((items) => items.length > 0);
 
   return (
-    <Box className="rounded-xl border border-border bg-white p-4" testID="follow-up-summary">
+    <Box className="rounded-xl border border-border bg-card p-4" testID="follow-up-summary">
       <Text bold>Resumen de consultas previas</Text>
       {hasContent ? (
         <VStack className="gap-3">

@@ -42,7 +42,7 @@ export default function PatientsScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Pacientes · Diklass</title>
       </Head>
@@ -67,7 +67,7 @@ export default function PatientsScreen() {
           <VStack className="w-full gap-3" testID="patients-list">
             {(patientsQuery.data ?? []).map((entry) => (
               <Box
-                className="rounded-xl border border-border bg-white p-4 gap-2"
+                className="rounded-xl border border-border bg-card p-4 gap-2"
                 key={entry.record.id}
                 testID="patient-item"
               >

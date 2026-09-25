@@ -10,9 +10,9 @@ const ETIQUETA_ORIGEN: Record<SegmentoRespuesta["kind"], string> = {
 };
 
 const COLOR_ORIGEN: Record<SegmentoRespuesta["kind"], string> = {
-  evidencia: "bg-emerald-100",
-  ficha: "bg-sky-100",
-  inferencia: "bg-amber-100",
+  evidencia: "bg-primary/15",
+  ficha: "bg-secondary/15",
+  inferencia: "bg-accent/20",
 };
 
 /**

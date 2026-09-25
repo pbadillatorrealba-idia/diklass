@@ -28,7 +28,7 @@ export function MissingFieldsPanel({ content }: { content: PatientContent }) {
   );
 
   return (
-    <Box className="rounded-xl border border-border bg-white p-4" testID="missing-fields-panel">
+    <Box className="rounded-xl border border-border bg-card p-4" testID="missing-fields-panel">
       <Text bold>Información de la ficha</Text>
       {missing.length === 0 ? (
         <Text testID="missing-fields-empty">

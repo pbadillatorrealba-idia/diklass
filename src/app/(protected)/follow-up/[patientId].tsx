@@ -233,7 +233,7 @@ export default function FollowUpPanelScreen() {
   }));
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Seguimiento del paciente · Diklass</title>
       </Head>
@@ -250,7 +250,7 @@ export default function FollowUpPanelScreen() {
           ) : null}
 
           <Box
-            className="rounded-xl border border-border bg-white p-4"
+            className="rounded-xl border border-border bg-card p-4"
             testID="feedback-antecedents"
           >
             <VStack className="gap-2">
@@ -286,10 +286,7 @@ export default function FollowUpPanelScreen() {
           <FeedbackTimeline entries={timeline} onCorrect={corregirEntrada} />
           <AdverseEventReport events={eventosAdversos} />
 
-          <Box
-            className="rounded-xl border border-border bg-white p-4"
-            testID="feedback-aggregates"
-          >
+          <Box className="rounded-xl border border-border bg-card p-4" testID="feedback-aggregates">
             <VStack className="gap-1">
               <Heading size="lg">Agregado por categoría</Heading>
               <Text testID="feedback-aggregates-total">Entradas vigentes: {agregados.total}</Text>
@@ -306,7 +303,7 @@ export default function FollowUpPanelScreen() {
             </VStack>
           </Box>
 
-          <Box className="rounded-xl border border-border bg-white p-4" testID="feedback-register">
+          <Box className="rounded-xl border border-border bg-card p-4" testID="feedback-register">
             <VStack className="gap-4">
               <Heading size="lg">
                 {correctionTargetId === null

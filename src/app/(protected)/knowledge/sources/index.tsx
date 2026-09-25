@@ -44,7 +44,7 @@ export default function KnowledgeCollectionScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <VStack className="w-full max-w-[720px] gap-6">
           <Heading size="lg">Base de conocimiento · Colección</Heading>
@@ -63,7 +63,7 @@ export default function KnowledgeCollectionScreen() {
 
           {(fuentesQuery.data ?? []).map((fuente) => (
             <VStack
-              className="gap-2 rounded-lg border border-border bg-white p-3"
+              className="gap-2 rounded-lg border border-border bg-card p-3"
               key={fuente.record.id}
             >
               <Text bold className="text-foreground">

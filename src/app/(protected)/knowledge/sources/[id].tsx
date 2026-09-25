@@ -84,7 +84,7 @@ export default function KnowledgeSourceScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <VStack className="w-full max-w-[720px] gap-6">
           <Heading size="lg">Base de conocimiento · Fuente clínica</Heading>
@@ -105,7 +105,7 @@ export default function KnowledgeSourceScreen() {
               ) : null}
               {fuenteQuery.data.record.status === "available" && confirmandoRetiro ? (
                 // El retiro es irreversible (HD3): se confirma en un segundo paso explícito.
-                <Box className="gap-3 rounded-lg border border-border bg-white p-3">
+                <Box className="gap-3 rounded-lg border border-border bg-card p-3">
                   <Text className="text-foreground text-sm">
                     ¿Retirar esta fuente? Dejará de responder consultas nuevas y no puede
                     deshacerse; sus citas previas seguirán siendo identificables.

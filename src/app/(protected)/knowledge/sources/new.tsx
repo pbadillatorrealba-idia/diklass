@@ -89,7 +89,7 @@ export default function NewKnowledgeSourceScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <VStack className="w-full max-w-[720px] gap-6">
           <Heading size="lg">Base de conocimiento · Incorporar fuente</Heading>

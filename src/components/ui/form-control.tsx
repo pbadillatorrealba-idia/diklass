@@ -29,7 +29,7 @@ export function FormControlLabelText({
 }: RNTextProps & { className?: string }) {
   return (
     <RNText
-      className={`text-foreground text-sm font-medium ${className ?? ""}`.trim()}
+      className={`font-sans text-foreground text-sm font-medium ${className ?? ""}`.trim()}
       {...props}
     />
   );
@@ -47,7 +47,7 @@ export function FormControlErrorText({
     <RNText
       // Announced by screen readers as soon as validation fails, per WCAG 2.2 AA 3.3.1.
       accessibilityLiveRegion="polite"
-      className={`text-destructive text-sm ${className ?? ""}`.trim()}
+      className={`font-sans text-destructive text-sm ${className ?? ""}`.trim()}
       role="alert"
       {...props}
     />

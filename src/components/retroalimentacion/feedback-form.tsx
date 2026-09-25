@@ -144,7 +144,7 @@ export function FeedbackForm({
         </Text>
         {values.adverseEvents.map((evento, index) => (
           <Box
-            className="rounded-lg border border-border bg-white p-3 gap-2"
+            className="rounded-lg border border-border bg-card p-3 gap-2"
             key={`adverse-${index}`}
           >
             <OptionPicker

@@ -54,7 +54,7 @@ export function DraftFactsPanel({
                   ? "confirmado"
                   : "descartado"
             }, procedencia ${PROVENANCE_LABELS[fact.content.provenance]}: ${fact.content.text}`}
-            className="rounded-xl border border-border bg-white p-3"
+            className="rounded-xl border border-border bg-card p-3"
             key={fact.record.id}
             testID="draft-fact-card"
           >

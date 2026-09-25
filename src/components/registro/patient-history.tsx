@@ -27,7 +27,7 @@ export function PatientHistory({ entries, onOpen }: PatientHistoryProps) {
           const openedAt = new Date(entry.openedAt).toLocaleString("es-CL");
           return (
             <Box
-              className="rounded-xl border border-border bg-white p-4"
+              className="rounded-xl border border-border bg-card p-4"
               key={entry.consultationId}
               testID="history-item"
             >

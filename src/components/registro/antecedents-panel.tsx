@@ -77,7 +77,7 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
         const groupLabel = ANTECEDENT_GROUP_LABELS[group];
         return (
           <Box
-            className="rounded-xl border border-border bg-white p-4"
+            className="rounded-xl border border-border bg-card p-4"
             key={group}
             testID="antecedent-group"
           >

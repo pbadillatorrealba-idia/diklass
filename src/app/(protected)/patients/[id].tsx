@@ -173,7 +173,7 @@ export default function PatientDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Ficha de paciente · Diklass</title>
       </Head>
@@ -194,7 +194,7 @@ export default function PatientDetailScreen() {
           {content ? (
             <>
               <VStack
-                className="rounded-xl border border-border bg-white p-4 gap-2"
+                className="rounded-xl border border-border bg-card p-4 gap-2"
                 testID="patient-ficha"
               >
                 <Text bold>Ficha de {content.name}</Text>

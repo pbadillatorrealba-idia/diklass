@@ -501,7 +501,7 @@ export default function ConsultationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Consulta · Diklass</title>
       </Head>
@@ -566,7 +566,7 @@ export default function ConsultationScreen() {
                   ) : (
                     <>
                       <Box
-                        className="rounded-xl border border-border bg-white p-4 gap-2"
+                        className="rounded-xl border border-border bg-card p-4 gap-2"
                         testID="epicrisis-effective"
                       >
                         <Text bold>Epicrisis efectiva — registro definitivo</Text>
@@ -580,7 +580,7 @@ export default function ConsultationScreen() {
                       <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
                       {correctionChain.length > 0 ? (
                         <Box
-                          className="rounded-xl border border-border bg-white p-4"
+                          className="rounded-xl border border-border bg-card p-4"
                           testID="epicrisis-correction-history"
                         >
                           <CorrectionHistory entries={correctionChain} />
@@ -645,7 +645,7 @@ export default function ConsultationScreen() {
                 ) : draftContent === null ? null : (
                   <>
                     <Box
-                      className="rounded-xl border border-border bg-white p-4 gap-2"
+                      className="rounded-xl border border-border bg-card p-4 gap-2"
                       testID="consultation-draft-label"
                     >
                       <Text bold>Borrador de epicrisis</Text>

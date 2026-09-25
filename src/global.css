@@ -3,6 +3,100 @@
 @tailwind utilities;
 
 /*
+ * Atkinson Hyperlegible Next (Braille Institute, OFL 1.1): distingue caracteres confundibles
+ * (1 l I, 0 O, rn m) en dosis, pesos e identificadores. En web se sirve desde `public/fonts` y
+ * `+html.tsx` precarga los pesos del primer pintado; en iOS/Android la embebe el config plugin
+ * de `expo-font` (app.json) con el mismo nombre de familia.
+ */
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_400Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_500Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_600SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_700Bold.woff2") format("woff2");
+}
+
+/*
+ * Tema de la app: canales RGB separados por espacio para que Tailwind admita opacidad
+ * (`bg-primary/15`). Es la fuente de verdad del color; `src/theme/colors.ts` lo replica para
+ * los pocos estilos inline y `tests/unit/theme/tema.test.ts` verifica que ambos coincidan y que
+ * cada par cumpla WCAG 2.2 AA. Una misma paleta para iOS, Android y web.
+ *
+ * Valores ajustados respecto al tema de origen, solo en luminosidad y para llegar a AA:
+ * claro  → destructive, secondary-foreground, accent-foreground, input, ring;
+ * oscuro → muted y muted-foreground (el origen repetía los valores claros), secondary-foreground,
+ *          accent-foreground, destructive-foreground (texto oscuro, como primary-foreground),
+ *          input, ring.
+ */
+@layer base {
+  :root {
+    --background: 245 248 247;
+    --foreground: 4 5 5;
+    --card: 255 255 255;
+    --card-foreground: 3 14 12;
+    --popover: 239 249 247;
+    --popover-foreground: 3 14 12;
+    --primary: 24 122 106;
+    --primary-foreground: 242 252 251;
+    --secondary: 75 120 168;
+    --secondary-foreground: 253 254 254;
+    --muted: 233 238 236;
+    --muted-foreground: 67 86 78;
+    --accent: 215 154 61;
+    --accent-foreground: 79 54 16;
+    --destructive: 224 14 0;
+    --destructive-foreground: 255 255 255;
+    --border: 233 241 239;
+    --input: 101 151 144;
+    --ring: 97 153 139;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 1 4 4;
+      --foreground: 247 253 252;
+      --card: 22 38 35;
+      --card-foreground: 247 253 252;
+      --popover: 39 46 45;
+      --popover-foreground: 247 253 252;
+      --primary: 67 218 193;
+      --primary-foreground: 0 0 0;
+      --secondary: 109 148 188;
+      --secondary-foreground: 26 41 58;
+      --muted: 31 40 37;
+      --muted-foreground: 117 148 135;
+      --accent: 213 153 61;
+      --accent-foreground: 76 52 16;
+      --destructive: 254 67 54;
+      --destructive-foreground: 0 0 0;
+      --border: 58 68 66;
+      --input: 96 114 111;
+      --ring: 97 113 110;
+    }
+  }
+}
+
+/*
  * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO control interactivo.
  * React Native Web renderiza Pressable/Button como <div tabindex>, que sin esta regla
  * enfoca sin indicador visible. `:focus-visible` lo aplica solo a foco por teclado.
@@ -16,6 +110,6 @@ select:focus-visible,
 [role="button"]:focus-visible,
 [role="radio"]:focus-visible,
 [role="checkbox"]:focus-visible {
-  outline: 2px solid #0f766e;
+  outline: 2px solid rgb(var(--ring));
   outline-offset: 2px;
 }

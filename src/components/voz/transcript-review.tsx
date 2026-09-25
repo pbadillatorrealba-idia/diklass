@@ -19,7 +19,7 @@ export function TranscriptReview({ segments }: { segments: TranscriptSegmentEntr
       {segments.map((segment) => (
         <Box
           accessibilityLabel={`Tramo ${segment.seq + 1}: ${segment.text}`}
-          className="rounded-xl border border-border bg-white p-3"
+          className="rounded-xl border border-border bg-card p-3"
           key={segment.id}
           testID="transcript-segment"
         >

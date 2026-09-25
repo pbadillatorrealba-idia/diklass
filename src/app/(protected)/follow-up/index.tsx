@@ -47,7 +47,7 @@ export default function FollowUpIndexScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Seguimiento · Diklass</title>
       </Head>
@@ -68,7 +68,7 @@ export default function FollowUpIndexScreen() {
           <VStack className="w-full gap-3" testID="follow-up-patient-list">
             {(patientsQuery.data ?? []).map((entry) => (
               <Box
-                className="rounded-xl border border-border bg-white p-4 gap-2"
+                className="rounded-xl border border-border bg-card p-4 gap-2"
                 key={entry.record.id}
                 testID="follow-up-patient-item"
               >

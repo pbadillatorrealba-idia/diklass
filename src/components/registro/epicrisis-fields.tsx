@@ -171,7 +171,7 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
         ) : (
           content.hipotesis.map((hipotesis, index) => (
             <Box
-              className="rounded-xl border border-border bg-white p-4 gap-2"
+              className="rounded-xl border border-border bg-card p-4 gap-2"
               // biome-ignore lint/suspicious/noArrayIndexKey: filas controladas por el contenido, sin estado interno; dos hipótesis pueden repetir texto y estado.
               key={`hipotesis-${index}`}
               testID="epicrisis-hipotesis"

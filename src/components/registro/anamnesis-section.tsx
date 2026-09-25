@@ -74,7 +74,7 @@ export function AnamnesisSection({
       <Heading size="lg">Anamnesis</Heading>
       {unknownFields.length > 0 ? (
         <Box
-          className="rounded-xl border border-border bg-white p-4"
+          className="rounded-xl border border-border bg-card p-4"
           testID="anamnesis-unknown-panel"
         >
           <Text bold>Campos estructurados sin información</Text>
@@ -93,7 +93,7 @@ export function AnamnesisSection({
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-xl border border-border bg-white p-4 gap-4">
+        <VStack className="rounded-xl border border-border bg-card p-4 gap-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}
@@ -146,7 +146,7 @@ export function AnamnesisSection({
       ) : (
         entries.map((entry) => (
           <Box
-            className="rounded-xl border border-border bg-white p-4 gap-2"
+            className="rounded-xl border border-border bg-card p-4 gap-2"
             key={entry.id}
             testID="anamnesis-entry"
           >

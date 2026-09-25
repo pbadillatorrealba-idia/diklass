@@ -17,7 +17,7 @@ export function Heading({ className, size = "md", ...props }: HeadingProps) {
   return (
     <RNText
       accessibilityRole="header"
-      className={`text-foreground font-bold ${SIZES[size]} ${className ?? ""}`.trim()}
+      className={`font-sans text-foreground font-bold ${SIZES[size]} ${className ?? ""}`.trim()}
       role="heading"
       {...props}
     />

@@ -85,7 +85,7 @@ export function DiagnosisSection({
       ) : (
         entries.map((entry) => (
           <Box
-            className="rounded-xl border border-border bg-white p-4 gap-2"
+            className="rounded-xl border border-border bg-card p-4 gap-2"
             key={entry.id}
             testID="diagnosis-entry"
           >

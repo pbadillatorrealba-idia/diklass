@@ -147,7 +147,7 @@ export default function NewPatientScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Head>
         <title>Registrar paciente · Diklass</title>
       </Head>
