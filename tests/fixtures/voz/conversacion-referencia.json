@@ -1,0 +1,78 @@
+{
+  "descripcion": "Conversación clínica simulada de referencia para SC-004 (recall ≥ 70%) y SC-016 (propuestas incorrectas ≤ 30%). Datos sintéticos, español, un solo canal sin separación de hablantes (supuestos de la spec). 'hechosEsperados' es el ground truth clínico: lo que un veterinario extraería de la conversación, con el campo de anamnesis y el sujeto textual que debe contener la propuesta.",
+  "guion": [
+    {
+      "seq": 0,
+      "calidad": "ok",
+      "transcripcion": "Buenos días doctora. El problema es que Rocky destroza el sofá cuando se queda solo en casa. Empezó hace tres meses. Ah, y ladra todos los días sin parar.",
+      "hechosEsperados": [
+        { "field": "motivo_consulta", "sujeto": "destroza el sofá" },
+        { "field": "comportamiento_problematico", "sujeto": "destroza el sofá" },
+        { "field": "desencadenantes", "sujeto": "se queda solo" },
+        { "field": "duracion", "sujeto": "hace tres meses" },
+        { "field": "comportamiento_problematico", "sujeto": "ladra" },
+        { "field": "frecuencia", "sujeto": "todos los días" }
+      ]
+    },
+    {
+      "seq": 1,
+      "calidad": "ok",
+      "transcripcion": "Al principio era solo de noche, no, perdón, en realidad es de día cuando salgo a trabajar.",
+      "hechosEsperados": [
+        { "field": "contexto", "sujeto": "de noche" },
+        { "field": "contexto", "sujeto": "de día" },
+        { "field": "desencadenantes", "sujeto": "cuando salgo a trabajar" }
+      ],
+      "nota": "Autocorrección del tutor dentro de la conversación: el borrador debe reflejar la contradicción entre ambos contextos (FR-032, edge de contradicción intraconversación)."
+    },
+    {
+      "seq": 2,
+      "calidad": "insufficient",
+      "transcripcion": "… (ruido ambiente inaudible) …",
+      "hechosEsperados": [],
+      "nota": "Tramo de calidad insuficiente: no deben derivarse antecedentes de él (FR-031 · US6-AC7), solo señalarse como no confiable."
+    },
+    {
+      "seq": 3,
+      "calidad": "ok",
+      "transcripcion": "Mi gata Mishu también maúlla de noche, aunque ella no destroza nada. Vive en un departamento pequeño con patio.",
+      "hechosEsperados": [
+        { "field": "convivencia", "sujeto": "gata Mishu" },
+        { "field": "ambiente", "sujeto": "departamento pequeño" }
+      ],
+      "nota": "Mención a un animal distinto del paciente (edge case): lo que se extraiga sobre la gata y no conste aquí cuenta como propuesta incorrecta de SC-016, y solo se atribuye al paciente si el veterinario lo confirma (FR-017)."
+    },
+    {
+      "seq": 4,
+      "calidad": "ok",
+      "transcripcion": "Le pica mucho la piel. El año pasado tuvo dermatitis atópica y le dimos prednisona, con eso mejoró bastante.",
+      "hechosEsperados": [
+        { "field": "texto_libre", "sujeto": "dermatitis atópica" },
+        { "field": "tratamientos_anteriores", "sujeto": "prednisona" },
+        { "field": "respuesta_tratamientos", "sujeto": "mejoró" }
+      ]
+    },
+    {
+      "seq": 5,
+      "calidad": "ok",
+      "transcripcion": "Come croquetas dos veces al día. Lo saco a pasear todas las mañanas. Hace poco nació mi bebé y desde que nació todo cambió.",
+      "hechosEsperados": [
+        { "field": "alimentacion", "sujeto": "croquetas" },
+        { "field": "rutinas", "sujeto": "todas las mañanas" },
+        { "field": "actividad", "sujeto": "pasear" },
+        { "field": "cambios_recientes", "sujeto": "hace poco nació mi bebé" },
+        { "field": "convivencia", "sujeto": "mi bebé" }
+      ]
+    },
+    {
+      "seq": 6,
+      "calidad": "ok",
+      "transcripcion": "Probamos fluoxetina el mes pasado y no hubo mejoría. Ahora ya no toma fluoxetina, la suspendimos.",
+      "hechosEsperados": [
+        { "field": "tratamientos_anteriores", "sujeto": "fluoxetina" },
+        { "field": "respuesta_tratamientos", "sujeto": "no hubo mejoría" }
+      ],
+      "nota": "Contradice la ficha si currentMedications contiene fluoxetina (FR-032 · US6-AC8): se señala la contradicción, nunca se sobrescribe el dato previo."
+    }
+  ]
+}

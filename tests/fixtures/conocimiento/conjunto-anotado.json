@@ -1,0 +1,43 @@
+{
+  "preguntas": [
+    {
+      "pregunta": "¿Qué antecedentes revisar ante un posible cuadro de ansiedad por separación?",
+      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 1 }
+    },
+    {
+      "pregunta": "¿Cómo se diagnostica la ansiedad por separación?",
+      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 2 }
+    },
+    {
+      "pregunta": "¿Qué combina el tratamiento de la ansiedad por separación?",
+      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 3 }
+    },
+    {
+      "pregunta": "¿Cuánto tarda el efecto de la fluoxetina?",
+      "evidenciaEsperada": { "documentoClave": "ficha-fluoxetina", "ordinal": 1 }
+    },
+    {
+      "pregunta": "¿Qué revisar antes de iniciar fluoxetina?",
+      "evidenciaEsperada": { "documentoClave": "ficha-fluoxetina", "ordinal": 2 }
+    },
+    {
+      "pregunta": "¿Cómo se maneja el miedo a los fuegos artificiales?",
+      "evidenciaEsperada": { "documentoClave": "protocolo-miedo-fuegos", "ordinal": 1 }
+    },
+    {
+      "pregunta": "¿Cómo presentar a un perro y a un gato?",
+      "evidenciaEsperada": { "documentoClave": "protocolo-convivencia-especies", "ordinal": 1 }
+    },
+    {
+      "pregunta": "¿Qué reduce la ansiedad generalizada?",
+      "evidenciaEsperada": { "documentoClave": "guia-modificacion-conducta", "ordinal": 2 }
+    }
+  ],
+  "preguntasFueraDeDominio": [
+    "¿Cuál es el protocolo de anestesia para caballos?",
+    "Vacunación antirrábica en aves rapaces",
+    "Diagnóstico de sarna sarcóptica en ovejas",
+    "Cirugía de esterilización en hurones",
+    "Suplementación con triptófano en reptiles"
+  ]
+}

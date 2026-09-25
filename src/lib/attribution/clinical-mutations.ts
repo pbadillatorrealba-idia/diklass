@@ -85,6 +85,32 @@ export async function createClinicalRecord(
 }
 
 /**
+ * Alta en bloque de registros cuyo INSERT no es una acción clínica enumerada (los borradores
+ * `audio_fact` de un tramo, D6 de la spec 004): un único INSERT, atómico, en vez de uno por
+ * registro. No relee la traza porque ese alta no emite evento; la atribución real vive en las
+ * columnas que fija el servidor. Cada payload cruza el mismo guardia de atribución (FR-063).
+ */
+export async function createClinicalRecords(
+  client: SupabaseClient<Database>,
+  payloads: Record<string, unknown>[],
+): Promise<ClinicalRecord[]> {
+  if (payloads.length === 0) {
+    return [];
+  }
+  for (const payload of payloads) {
+    assertNoClientAttributionFields(payload);
+  }
+  const { data, error } = await client
+    .from("clinical_records")
+    .insert(payloads as never)
+    .select("*");
+  if (error || !data) {
+    throw error ?? new Error("No se pudieron crear los registros clínicos.");
+  }
+  return data;
+}
+
+/**
  * Actualiza SOLO el contenido de un registro clínico (D9). Las columnas de atribución no forman
  * parte de la firma ni del UPDATE: el servidor las fija y el rol de la Data API solo puede
  * escribir `content`. El contenido con campos de control de atribución se rechaza antes de

@@ -225,6 +225,244 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_documents: {
+        Row: {
+          clinic_id: string
+          content: Json
+          created_at: string
+          created_by: string
+          id: string
+          status: string
+          withdrawn_at: string | null
+          withdrawn_by: string | null
+        }
+        Insert: {
+          clinic_id: string
+          content?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          content?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_documents_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_documents_withdrawn_by_fkey"
+            columns: ["withdrawn_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_fragments: {
+        Row: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion: string | null
+          texto: string
+          vector: unknown
+        }
+        Insert: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion?: string | null
+          texto: string
+          vector?: unknown
+        }
+        Update: {
+          clinic_id?: string
+          documento_id?: string
+          ordinal?: number
+          seccion?: string | null
+          texto?: string
+          vector?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_fragments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_fragments_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_queries: {
+        Row: {
+          answer: Json
+          clinic_id: string
+          created_at: string
+          id: string
+          patient_id: string | null
+          question: string
+        }
+        Insert: {
+          answer: Json
+          clinic_id: string
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          question: string
+        }
+        Update: {
+          answer?: Json
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_queries_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_queries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listening_sessions: {
+        Row: {
+          clinic_id: string
+          consultation_id: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          started_by: string
+          state: string
+        }
+        Insert: {
+          clinic_id: string
+          consultation_id: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Update: {
+          clinic_id?: string
+          consultation_id?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listening_sessions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listening_sessions_started_by_fkey"
+            columns: ["started_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_segments: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          ended_at: string
+          id: string
+          listening_session_id: string
+          processing_state: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          ended_at: string
+          id?: string
+          listening_session_id: string
+          processing_state?: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          ended_at?: string
+          id?: string
+          listening_session_id?: string
+          processing_state?: string
+          quality?: string
+          seq?: number
+          started_at?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_segments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_segments_listening_session_id_fkey"
+            columns: ["listening_session_id"]
+            isOneToOne: false
+            referencedRelation: "listening_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veterinarians: {
         Row: {
           clinic_id: string
@@ -310,6 +548,22 @@ export type Database = {
       }
       revoke_access_sessions: { Args: never; Returns: boolean }
       revoke_current_access_session: { Args: never; Returns: boolean }
+      search_knowledge_fragments: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          bibliografia: Json
+          documento_id: string
+          estado: string
+          fragmento_ordinal: number
+          lemas_cubiertos: string[]
+          lemas_pregunta: string[]
+          licencia: Json
+          rank_cd: number
+          seccion: string
+          terminos_pregunta: string[]
+          texto: string
+        }[]
+      }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
     }
