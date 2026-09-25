@@ -951,3 +951,38 @@ Informe completo: https://github.com/pbadillatorrealba-idia/diklass/pull/38#issu
   accessibility 12, retroalimentacion 5 y registro-epicrisis 2;
 - `chromium-dark`: accessibility 12.
 
+## Cierre (6.4) — estado a 2026-09-25
+
+**Compuertas:**
+
+- local, sobre `1181915`: `bun run typecheck`, `bunx biome ci --error-on-warnings .` y
+  `bun run test` (784 pass, 75 skip de suites vivas, 0 fail);
+- CI verde en `1181915`:
+  https://github.com/pbadillatorrealba-idia/diklass/actions/runs/36189923114 (`chromium` en la PR);
+- e2e local tras la revisión:
+  - `firefox` y `webkit`: accessibility, login, auth y tema, 32/32 cada uno;
+  - `chromium`: todas las suites;
+  - `chromium-dark`: accessibility 12/12.
+
+**Estado:** todo lo anterior está **implementado y verificado** según su tarea. Nada de esto
+equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
+
+**Pendientes explícitos:**
+
+- **Nativo, pendiente de dispositivo:**
+  - modo oscuro (1.2) y peso 600 de la fuente (1.3);
+  - capturas de `NativeTabs` y de las cabeceras (7.4, 7.7);
+  - flujos de Maestro (7.8);
+  - teclado en `/patients/new` y `/login` (8.7 y la revisión);
+  - Dynamic Type (5.4);
+  - autocompletado de credenciales en iOS/Android (9.4);
+  - `normalize("NFD")` en Hermes.
+- **9.4 (web):** comprobar a mano en Chrome que el gestor ofrece guardar y rellena.
+- **iOS:** el guardado en el llavero exige Associated Domains con un dominio desplegado.
+- **CI:** la matriz `firefox`/`webkit` corre en `push` a `main`; en la PR solo está la
+  verificación local.
+- **Aceptación conjunta de FR-076/FR-077 con 003–005:** el sugerido/validado y las severidades se
+  usan en esas features.
+- **Menores de la revisión** registrados arriba: el error de página del seguimiento, los estados
+  del selector de `/knowledge`, la señal de reintento y el CSP.
+
