@@ -187,7 +187,7 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
       consultKnowledge(ana.client, {
         clinicId: ana.clinicId,
         pregunta: `¿Cómo habituar de forma zurdísima ${termino}?`,
-        patientId: ficha.record.content.tutorId,
+        patientId: ficha.tutorId,
       }),
     ).rejects.toMatchObject({ message: "KNOWLEDGE_QUERY_PATIENT_INVALID" });
   });
