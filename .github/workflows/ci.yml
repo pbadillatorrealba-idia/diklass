@@ -8,8 +8,10 @@ on:
 permissions:
   contents: read
 
-env:
-  BUN_VERSION: 1.4.0
+# Cancel superseded runs on rapid pushes; never cancel main, a finished run there is the record.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   quality:
@@ -19,9 +21,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - run: bun install --frozen-lockfile
-      - run: bunx biome ci .
+          bun-version-file: .bun-version
+      # Not --frozen-lockfile on purpose: install and diff, so a drifted bun.lock fails with a
+      # fix hint instead of the opaque "lockfile had changes" (Dependabot bumps package.json
+      # without regenerating bun.lock). Every other job keeps --frozen-lockfile.
+      - name: Install dependencies and verify bun.lock is in sync
+        run: |
+          bun install
+          git diff --exit-code bun.lock || {
+            echo "::error::bun.lock is out of sync with package.json. Run 'bun install' with the pinned Bun (.bun-version) and commit bun.lock."
+            exit 1
+          }
+      - run: bunx biome ci --error-on-warnings .
       - run: bun run typecheck
 
   unit:
@@ -31,7 +42,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       # The live suites under tests/integration skip here: there is no Supabase in this job.
       - run: bun run test
@@ -47,7 +58,7 @@ jobs:
       # Deliberately after setup-cli: v3 runs its own setup-bun and would shadow the job's Bun.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - name: Start local Supabase
         run: |
@@ -84,7 +95,7 @@ jobs:
       # Deliberately after setup-cli: v3 runs its own setup-bun and would shadow the job's Bun.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - name: Start local Supabase and provision synthetic veterinarians
         run: |
@@ -98,6 +109,11 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
           } >> "$GITHUB_ENV"
       - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+      # Browser downloads dominate this job's setup time; cache them across runs.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('bun.lock') }}
       - run: bunx playwright install --with-deps chromium
       # Includes tests/e2e/web/accessibility.spec.ts: the axe WCAG 2.2 AA gate.
       - run: bun run test:e2e:web -- --project=chromium
@@ -121,7 +137,7 @@ jobs:
       # Deliberately after setup-cli: v3 runs its own setup-bun and would shadow the job's Bun.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - name: Start local Supabase and provision synthetic veterinarians
         run: |
@@ -135,6 +151,11 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
           } >> "$GITHUB_ENV"
       - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+      # Browser downloads dominate this job's setup time; cache them across runs.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.project }}-${{ hashFiles('bun.lock') }}
       - run: bunx playwright install --with-deps ${{ matrix.project }}
       - run: bun run test:e2e:web -- --project=${{ matrix.project }}
 
@@ -145,7 +166,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       # Expo/Metro currently pins these vulnerable transitive versions. Bun cannot
       # upgrade them without breaking the parent dependency ranges, so keep the

@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO control interactivo.
+ * React Native Web renderiza Pressable/Button como <div tabindex>, que sin esta regla
+ * enfoca sin indicador visible. `:focus-visible` lo aplica solo a foco por teclado.
+ */
+[tabindex]:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="checkbox"]:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}

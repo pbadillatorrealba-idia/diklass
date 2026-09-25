@@ -1,0 +1,55 @@
+import { useRouter } from "expo-router";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import type { Cita } from "@/features/conocimiento/schema";
+
+function lineaBibliografica(cita: Cita): string {
+  const autores = cita.bibliografia.autores.join(", ");
+  const anio = cita.bibliografia.anio !== null ? ` (${cita.bibliografia.anio})` : "";
+  const revista = cita.bibliografia.revista ? `. ${cita.bibliografia.revista}` : "";
+  return `${autores}${anio}. ${cita.bibliografia.titulo}${revista}`;
+}
+
+/**
+ * Cita documento+fragmento con su referencia bibliográfica (FR-007, FR-030 · US5-AC1/AC7/AC9).
+ * Abrir la cita lleva al fragmento dentro de su documento fuente; una fuente retirada sigue
+ * siendo identificable y así se declara (FR-053 · US5-AC12).
+ */
+export function CitaFragmento({ cita }: { cita: Cita }) {
+  const router = useRouter();
+  const retirada = cita.estado === "withdrawn";
+
+  return (
+    <Box
+      accessibilityLabel={`Cita de ${cita.bibliografia.titulo}, fragmento ${cita.fragmentoOrdinal}`}
+      className="mt-2 rounded-lg border border-border bg-white p-2"
+      testID={`cita-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+    >
+      <Text bold className="text-foreground text-sm">
+        {cita.bibliografia.titulo}
+      </Text>
+      <Text className="text-foreground/70 text-xs">{lineaBibliografica(cita)}</Text>
+      <Text className="text-foreground/70 text-xs">
+        Fragmento {cita.fragmentoOrdinal} · Licencia: {cita.licencia.tipo}
+      </Text>
+      {retirada ? (
+        <Text className="text-destructive text-xs" testID="cita-fuente-retirada">
+          Fuente retirada de la colección; la referencia sigue identificable.
+        </Text>
+      ) : null}
+      <Button
+        className="mt-2 self-start"
+        onPress={() =>
+          router.push({
+            pathname: "/knowledge/sources/[id]",
+            params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
+          })
+        }
+        testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+      >
+        <ButtonText>Ver fragmento en su contexto</ButtonText>
+      </Button>
+    </Box>
+  );
+}
