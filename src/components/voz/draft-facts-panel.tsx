@@ -53,8 +53,11 @@ export function DraftFactsPanel({
         const detalle = (
           <VStack className="gap-1">
             <Text variant="strong">{etiquetaCampo}</Text>
-            <Text>{fact.content.text}</Text>
-            <Text tone="muted">{`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}</Text>
+            <Text selectable>{fact.content.text}</Text>
+            <Text
+              selectable
+              tone="muted"
+            >{`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}</Text>
             <Text tone="muted">{`Procedencia: ${PROVENANCE_LABELS[fact.content.provenance]}`}</Text>
           </VStack>
         );

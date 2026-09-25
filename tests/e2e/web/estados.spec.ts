@@ -66,4 +66,33 @@ test.describe("estados de datos", () => {
     await expect(page.getByTestId("patient-item").first()).toBeVisible();
     await expect(page.getByTestId("patients-error")).toHaveCount(0);
   });
+
+  // sistema-visual FR-087 · design.md D14: los datos clínicos y los errores se pueden copiar.
+  test("el nombre de un paciente y un error se pueden seleccionar", async ({ page }) => {
+    await page.goto("/patients");
+    const nombre = page.getByTestId("patient-item").first().getByText(/.+/).first();
+    await expect(nombre).toBeVisible({ timeout: 15_000 });
+    const texto = (await nombre.textContent())?.trim() ?? "";
+    await nombre.click({ clickCount: 3 });
+    const seleccion = await page.evaluate(() => window.getSelection()?.toString().trim() ?? "");
+    expect(texto.length).toBeGreaterThan(0);
+    expect(seleccion).toBe(texto);
+    expect(await nombre.evaluate((el) => getComputedStyle(el).userSelect)).toBe("text");
+
+    await page.route("**/rest/v1/clinical_records?*", (route) =>
+      route.request().url().includes("record_type=eq.patient")
+        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+        : route.continue(),
+    );
+    await page.reload();
+    const mensaje = page
+      .getByTestId("patients-error")
+      .getByText("No pudimos cargar los pacientes.");
+    await expect(mensaje).toBeVisible({ timeout: 15_000 });
+    await mensaje.click({ clickCount: 3 });
+    expect(await page.evaluate(() => window.getSelection()?.toString().trim())).toBe(
+      "No pudimos cargar los pacientes.",
+    );
+    expect(await mensaje.evaluate((el) => getComputedStyle(el).userSelect)).toBe("text");
+  });
 });

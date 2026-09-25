@@ -87,7 +87,9 @@ export default function PatientsScreen() {
           testID="patient-item"
         >
           <VStack className="gap-1">
-            <Text variant="strong">{entry.content.name}</Text>
+            <Text selectable variant="strong">
+              {entry.content.name}
+            </Text>
             <Text tone="muted">
               {entry.content.species} · {entry.content.breed}
             </Text>

@@ -659,4 +659,22 @@ Resultado local en `chromium`:
     `follow-up-patient-item`): el `FlatList` existe antes de que lleguen los datos.
   - Verde en `chromium`, de una en una: `accessibility` 8 (incluye el reflujo a 320 px),
     `navegacion` 7, `tema` 5, `estados` 2, `conocimiento` 5 y `retroalimentacion` 5.
+- **8.6 Texto copiable (FR-087):**
+  - `Text` ya pasa `selectable` a RN, porque hereda sus props: no hizo falta tocarlo.
+  - `callout.test.tsx`, rojo→verde: el texto de un `Callout tone="error"` es seleccionable, y el
+    de los demás tonos no se marca. `QueryState` marca su mensaje de error.
+  - Se activa en:
+    - la ficha (valores, tutor y nombre en la lista);
+    - los antecedentes;
+    - el texto de la anamnesis;
+    - los hechos del borrador de voz y su fragmento de origen;
+    - el título, los autores y los fragmentos del visor;
+    - el título y la referencia de las citas;
+    - las líneas del resumen de seguimiento.
+  - La epicrisis efectiva se muestra en campos `TextInput` no editables: en web ya se puede
+    seleccionar, y en nativo queda pendiente de verificar en dispositivo.
+  - e2e en `estados.spec.ts`: triple clic y `getSelection` sobre el nombre de un paciente y sobre
+    el mensaje de error, más `user-select: text`. Sin el cambio, falla con `auto`.
+  - Verde en `chromium`: `estados` 3, `conocimiento` 5, `registro-epicrisis` 2 y
+    `retroalimentacion` 5.
 

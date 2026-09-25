@@ -41,7 +41,7 @@ export function QueryState({
   if (error) {
     return (
       <Callout testID={`${testID}-error`} tone="error">
-        <Text>{errorMessage}</Text>
+        <Text selectable>{errorMessage}</Text>
         <Button className="self-start" onPress={onRetry} size="sm" variant="outline">
           <ButtonText>Reintentar</ButtonText>
         </Button>

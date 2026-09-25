@@ -30,8 +30,10 @@ export function VisorDocumento({
   return (
     <VStack className="gap-3" testID="visor-documento">
       <Box className="rounded-xl bg-muted p-4">
-        <Text variant="strong">{fuente.content.bibliografia.titulo}</Text>
-        <Text tone="muted" variant="caption">
+        <Text selectable variant="strong">
+          {fuente.content.bibliografia.titulo}
+        </Text>
+        <Text selectable tone="muted" variant="caption">
           Autores: {fuente.content.bibliografia.autores.join(", ") || "sin autores registrados"}
         </Text>
         <Text tone="muted" variant="caption">
@@ -77,7 +79,7 @@ export function VisorDocumento({
             {fragmento.seccion ? ` · ${fragmento.seccion}` : ""}
             {fragmento.citado ? " · fragmento citado" : ""}
           </Text>
-          <Text>{fragmento.texto}</Text>
+          <Text selectable>{fragmento.texto}</Text>
         </Box>
       ))}
 

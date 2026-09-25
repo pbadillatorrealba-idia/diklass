@@ -83,7 +83,7 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
             ) : (
               content.antecedentes[group].map((item, index) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; dos antecedentes pueden repetir su texto.
-                <Text key={`${item.text}-${index}`} testID="antecedent-item">
+                <Text key={`${item.text}-${index}`} selectable testID="antecedent-item">
                   {item.negative ? "Hallazgo negativo registrado" : "Dato registrado"}: {item.text}
                 </Text>
               ))

@@ -188,15 +188,15 @@ export default function PatientDetailScreen() {
             testID="patient-ficha"
           >
             <Text variant="strong">Ficha de {content.name}</Text>
-            <Text>Nombre: {content.name}</Text>
-            <Text>Especie: {content.species}</Text>
-            <Text>Raza: {content.breed}</Text>
-            <Text>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
-            <Text>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
-            <Text>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
-            <Text>Sexo: {content.sex}</Text>
-            <Text>Estado reproductivo: {content.reproductiveStatus}</Text>
-            <Text>
+            <Text selectable>Nombre: {content.name}</Text>
+            <Text selectable>Especie: {content.species}</Text>
+            <Text selectable>Raza: {content.breed}</Text>
+            <Text selectable>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
+            <Text selectable>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
+            <Text selectable>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
+            <Text selectable>Sexo: {content.sex}</Text>
+            <Text selectable>Estado reproductivo: {content.reproductiveStatus}</Text>
+            <Text selectable>
               Tutor:{" "}
               {tutor
                 ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`

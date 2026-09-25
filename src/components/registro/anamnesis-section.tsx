@@ -144,7 +144,7 @@ export function AnamnesisSection({
         entries.map((entry) => (
           <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
             <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
-            <Text>{entry.content.text}</Text>
+            <Text selectable>{entry.content.text}</Text>
             <Text>Procedencia: {PROVENANCE_LABELS[entry.content.provenance]}</Text>
             {(entry.content.provenanceHistory ?? []).map((previous, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; la misma procedencia puede repetirse y no aporta identidad.

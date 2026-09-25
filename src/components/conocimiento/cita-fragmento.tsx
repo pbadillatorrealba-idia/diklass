@@ -25,8 +25,10 @@ export function CitaFragmento({ cita }: { cita: Cita }) {
       className="mt-2 gap-1 rounded-lg border border-border bg-card p-3"
       testID={`cita-${cita.documentoId}-${cita.fragmentoOrdinal}`}
     >
-      <Text variant="label">{cita.bibliografia.titulo}</Text>
-      <Text tone="muted" variant="caption">
+      <Text selectable variant="label">
+        {cita.bibliografia.titulo}
+      </Text>
+      <Text selectable tone="muted" variant="caption">
         {lineaBibliografica(cita)}
       </Text>
       <Text tone="muted" variant="caption">

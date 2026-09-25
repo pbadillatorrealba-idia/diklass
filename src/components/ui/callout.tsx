@@ -67,7 +67,12 @@ export function Callout({ children, className, testID, title, tone }: CalloutPro
       <Icon label={style.name} name={style.icon} tone={style.color} />
       <View className="flex-1 gap-1">
         {title ? <Text variant="strong">{title}</Text> : null}
-        {isPlainText(children) ? <Text>{children}</Text> : children}
+        {/* Un error se puede copiar para reportarlo (FR-087 · design.md D14). */}
+        {isPlainText(children) ? (
+          <Text selectable={tone === "error" || undefined}>{children}</Text>
+        ) : (
+          children
+        )}
       </View>
     </View>
   );
