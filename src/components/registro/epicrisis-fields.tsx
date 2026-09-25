@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { linesToItems, visibleListText } from "@/components/registro/list-lines";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
@@ -85,8 +87,49 @@ const LIST_FIELDS: {
   },
 ];
 
-// Un ítem por línea es la representación editable de un `string[]` del contenido: la
-// conversión (partir, recortar y descartar líneas vacías) es idéntica en los cuatro campos.
+/**
+ * Campo de lista (un ítem por línea). Guarda localmente el texto tal como se escribe y
+ * entrega al contenido la lista ya limpia: si el campo mostrara la lista recortada, cada
+ * pulsación borraría el espacio o el salto de línea recién escrito.
+ */
+function ListField({
+  label,
+  testID,
+  items,
+  isEditable,
+  onChangeItems,
+}: {
+  label: string;
+  testID: string;
+  items: string[];
+  isEditable: boolean;
+  onChangeItems: (items: string[]) => void;
+}) {
+  const [typed, setTyped] = useState(() => items.join("\n"));
+  return (
+    <FormControl>
+      <FormControlLabel>
+        <FormControlLabelText>{label}</FormControlLabelText>
+      </FormControlLabel>
+      <Input>
+        <InputField
+          accessibilityLabel={label}
+          aria-label={label}
+          className="min-h-[96px]"
+          editable={isEditable}
+          multiline
+          onChangeText={(text) => {
+            setTyped(text);
+            onChangeItems(linesToItems(text));
+          }}
+          testID={testID}
+          textAlignVertical="top"
+          value={visibleListText(typed, items)}
+        />
+      </Input>
+    </FormControl>
+  );
+}
 
 /**
  * Los 12 campos editables de FR-011 (las hipótesis con su estado cuentan cada uno):
@@ -210,34 +253,14 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
         ) : null}
       </VStack>
       {LIST_FIELDS.map(({ name, label, testID, read, write }) => (
-        <FormControl key={name}>
-          <FormControlLabel>
-            <FormControlLabelText>{label}</FormControlLabelText>
-          </FormControlLabel>
-          <Input>
-            <InputField
-              accessibilityLabel={label}
-              aria-label={label}
-              className="min-h-[96px]"
-              editable={isEditable}
-              multiline
-              onChangeText={(text) =>
-                onChange?.(
-                  write(
-                    content,
-                    text
-                      .split("\n")
-                      .map((line) => line.trim())
-                      .filter((line) => line !== ""),
-                  ),
-                )
-              }
-              testID={testID}
-              textAlignVertical="top"
-              value={read(content).join("\n")}
-            />
-          </Input>
-        </FormControl>
+        <ListField
+          isEditable={isEditable}
+          items={read(content)}
+          key={name}
+          label={label}
+          onChangeItems={(lines) => onChange?.(write(content, lines))}
+          testID={testID}
+        />
       ))}
     </VStack>
   );

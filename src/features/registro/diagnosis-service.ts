@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseRows } from "@/features/registro/read-rows";
 import { type DiagnosisContent, diagnosisContentSchema } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createClinicalRecord } from "@/lib/attribution/clinical-mutations";
@@ -66,18 +67,7 @@ export async function listDiagnoses(
     if (error) {
       throw error;
     }
-    return (data ?? []).flatMap((row) => {
-      const legible = diagnosisContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listDiagnoses", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    return parseRows(data, diagnosisContentSchema, "listDiagnoses");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
