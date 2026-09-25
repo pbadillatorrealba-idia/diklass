@@ -62,16 +62,25 @@ export class ListenModeController {
     this.#abort = new AbortController();
     this.#cambiarEstado("capturando");
     const signal = this.#abort.signal;
-    for await (const window of this.#deps.source.windows(signal)) {
-      const result = await this.#deps.transcription.transcribe(window);
-      if (signal.aborted) {
-        // FR-055 · US6-AC12: el tramo interrumpido se resuelve explícitamente, con su
-        // transcripción ya disponible: se procesa o se descarta, nunca a medio camino.
-        this.#interrupted = true;
-        await this.#deps.settlePartialWindow?.(window, result, this.#decision);
-        break;
+    try {
+      for await (const window of this.#deps.source.windows(signal)) {
+        const result = await this.#deps.transcription.transcribe(window);
+        if (signal.aborted) {
+          // FR-055 · US6-AC12: el tramo interrumpido se resuelve explícitamente, con su
+          // transcripción ya disponible: se procesa o se descarta, nunca a medio camino.
+          this.#interrupted = true;
+          await this.#deps.settlePartialWindow?.(window, result, this.#decision);
+          break;
+        }
+        await this.#deps.processWindow(window, result);
       }
-      await this.#deps.processWindow(window, result);
+    } catch (error) {
+      // Revisión de la PR #29: un fallo (red, RLS, contrato) corta la captura. El estado pasa
+      // a `detenido` para que la interfaz no siga ofreciendo «Detener escucha» sobre un ciclo
+      // muerto, y la captura cuenta como interrumpida; quien llama cierra la sesión.
+      this.#interrupted = true;
+      this.#cambiarEstado("detenido");
+      throw error;
     }
     if (this.#state === "capturando") {
       this.#cambiarEstado("detenido");

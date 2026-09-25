@@ -182,4 +182,22 @@ describe("ListenModeController", () => {
     await controlador.run();
     expect(controlador.wasInterrupted).toBe(false);
   });
+
+  // Revisión de la PR #29, hallazgo 1: un fallo del procesamiento no deja la escucha colgada.
+  test("un fallo al procesar un tramo detiene la captura, la marca interrumpida y propaga el error", async () => {
+    const fuente = new FuenteFija(3);
+    const estados: string[] = [];
+    const controlador = new ListenModeController({
+      source: fuente,
+      transcription: new TranscripciónFija(),
+      processWindow: (window) =>
+        window.seq === 1 ? Promise.reject(new Error("RLS")) : Promise.resolve(),
+      onState: (estado) => estados.push(estado),
+    });
+    await expect(controlador.run()).rejects.toThrow("RLS");
+    expect(estados).toEqual(["capturando", "detenido"]);
+    expect(controlador.state).toBe("detenido");
+    expect(controlador.wasInterrupted).toBe(true);
+    expect(fuente.eventos).toEqual(["ventana:0", "ventana:1"]);
+  });
 });
