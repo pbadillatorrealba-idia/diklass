@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { Box } from "@/components/ui/box";
@@ -19,7 +19,6 @@ import { useUiStore } from "@/stores/ui-store";
  * bibliografía, licencia, estado y la atribución de quién y cuándo la incorporó.
  */
 export default function KnowledgeCollectionScreen() {
-  const router = useRouter();
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const fuentesQuery = useQuery({
@@ -52,13 +51,11 @@ export default function KnowledgeCollectionScreen() {
         nuevas sin borrarla: las citas previas siguen siendo identificables.
       </Text>
 
-      <Button
-        className="self-start"
-        onPress={() => router.push("/knowledge/sources/new")}
-        testID="conocimiento-incorporar"
-      >
-        <ButtonText>Incorporar fuente clínica</ButtonText>
-      </Button>
+      <Link asChild href="/knowledge/sources/new">
+        <Button className="self-start" testID="conocimiento-incorporar">
+          <ButtonText>Incorporar fuente clínica</ButtonText>
+        </Button>
+      </Link>
 
       {(fuentesQuery.data ?? []).map((fuente) => (
         <Card className="gap-2" key={fuente.record.id}>
@@ -99,19 +96,18 @@ export default function KnowledgeCollectionScreen() {
               />
             </Box>
           ) : null}
-          <Button
-            className="self-start"
-            onPress={() =>
-              router.push({
-                pathname: "/knowledge/sources/[id]",
-                params: { id: fuente.record.id },
-              })
-            }
-            testID={`ver-fuente-${fuente.record.id}`}
-            variant="outline"
+          <Link
+            asChild
+            href={{ pathname: "/knowledge/sources/[id]", params: { id: fuente.record.id } }}
           >
-            <ButtonText>Ver documento</ButtonText>
-          </Button>
+            <Button
+              className="self-start"
+              testID={`ver-fuente-${fuente.record.id}`}
+              variant="outline"
+            >
+              <ButtonText>Ver documento</ButtonText>
+            </Button>
+          </Link>
         </Card>
       ))}
     </Screen>

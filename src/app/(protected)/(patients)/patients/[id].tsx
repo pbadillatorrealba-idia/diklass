@@ -241,10 +241,7 @@ export default function PatientDetailScreen() {
             </Button>
           )}
           <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
-          <PatientHistory
-            entries={historyQuery.data ?? []}
-            onOpen={(consultationId) => router.push(`/consultations/${consultationId}`)}
-          />
+          <PatientHistory entries={historyQuery.data ?? []} />
           <Button
             accessibilityLabel="Abrir consulta"
             isDisabled={isBusy}

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect } from "react";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -15,7 +15,6 @@ import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
 export default function PatientsScreen() {
-  const router = useRouter();
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const patientsQuery = useQuery({
@@ -42,13 +41,11 @@ export default function PatientsScreen() {
 
   return (
     <Screen title="Pacientes">
-      <Button
-        accessibilityLabel="Registrar paciente"
-        onPress={() => router.push("/patients/new")}
-        testID="patients-register"
-      >
-        <ButtonText>Registrar paciente</ButtonText>
-      </Button>
+      <Link asChild href="/patients/new">
+        <Button accessibilityLabel="Registrar paciente" testID="patients-register">
+          <ButtonText>Registrar paciente</ButtonText>
+        </Button>
+      </Link>
       {patientsQuery.isLoading ? <Text testID="patients-loading">Cargando pacientes…</Text> : null}
       {queryError ? (
         <Callout testID="patients-status" tone="error">
@@ -69,14 +66,15 @@ export default function PatientsScreen() {
                 {entry.content.species} · {entry.content.breed}
               </Text>
             </VStack>
-            <Button
-              accessibilityLabel={`Ver ficha de ${entry.content.name}`}
-              onPress={() => router.push(`/patients/${entry.record.id}`)}
-              testID="patient-open"
-              variant="outline"
-            >
-              <ButtonText>Ver ficha</ButtonText>
-            </Button>
+            <Link asChild href={`/patients/${entry.record.id}`}>
+              <Button
+                accessibilityLabel={`Ver ficha de ${entry.content.name}`}
+                testID="patient-open"
+                variant="outline"
+              >
+                <ButtonText>Ver ficha</ButtonText>
+              </Button>
+            </Link>
           </Card>
         ))}
         {patientsQuery.isSuccess && (patientsQuery.data ?? []).length === 0 ? (

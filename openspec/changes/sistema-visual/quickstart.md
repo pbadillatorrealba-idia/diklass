@@ -599,4 +599,19 @@ Resultado local en `chromium`:
     falla con un `<button href>`.
   - `LinkText`: rojo por el módulo vacío y por el doble color (`text-foreground` + `text-primary`),
     y verde con el tono nuevo `primary` de `Text`.
+- **8.2 Navegación con `Link` (FR-084 · SC-055):**
+  - Caso nuevo en `accessibility.spec.ts` («los controles de navegación son enlaces y no botones»),
+    que recorre `/home` y las pantallas del caso sintético. Rojo: `patients-register` en
+    `/patients` era un `<button>` sin `href`.
+  - Migrados a `<Link href asChild>`: `patients-register`, `patient-open`, `history-open`
+    (`PatientHistory` ya no recibe `onOpen`), `consultation-patient`, `follow-up-open`,
+    `conocimiento-incorporar`, `ver-fuente-*` y `ver-contexto-*`. Los de `/home` ya lo eran.
+  - `router.push`/`replace` solo quedan tras una operación: guardar una ficha, abrir una consulta
+    e incorporar una fuente.
+  - `conocimiento.spec.ts` y `registro-epicrisis.spec.ts` localizaban dos de esos controles por el
+    rol `button`; ahora usan `link`.
+  - Verde en `chromium`, de una en una: `accessibility` 8, `registro-epicrisis` 2, `conocimiento`
+    5, `retroalimentacion` 5, `navegacion` 7 y `attribution` 2. En la primera corrida completa de
+    `accessibility`, el recorrido por teclado falló una vez; no se reprodujo en 3 corridas más
+    (queda a observar en 5.2).
 

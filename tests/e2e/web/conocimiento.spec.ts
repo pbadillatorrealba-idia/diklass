@@ -65,9 +65,9 @@ test.describe("base de conocimiento web", () => {
       await page.goto("/knowledge/sources");
       await expect(page.getByText("Base de conocimiento · Colección")).toBeVisible();
       // La lista ya está en caché antes de incorporar.
-      await expect(page.getByRole("button", { name: "Incorporar fuente clínica" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Incorporar fuente clínica" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Incorporar fuente clínica" }).click();
+      await page.getByRole("link", { name: "Incorporar fuente clínica" }).click();
       await escribir(page, "Título de la fuente", titulo);
       // La licencia viene precargada con «CC BY 4.0 (ficticia)».
       await escribir(page, "Texto del documento", "Fragmento sintético para la prueba de caché.");

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
@@ -143,7 +143,6 @@ function statusMessage(outcome: ClinicalGuardOutcome, success: string, failure: 
 export default function ConsultationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const consultationId = String(id);
-  const router = useRouter();
   const veterinarianId = useSessionStore((state) => state.veterinarianId);
   const clinicId = useSessionStore((state) => state.clinicId);
   const accessState = useSessionStore((state) => state.accessState);
@@ -529,15 +528,16 @@ export default function ConsultationScreen() {
             {status ?? (data.isClosed ? "Consulta cerrada." : "Consulta abierta.")}
           </Text>
           {savedAttribution ? <AttributionBadge attribution={savedAttribution} /> : null}
-          <Button
-            accessibilityLabel="Ver ficha del paciente"
-            className="self-start"
-            onPress={() => router.push(`/patients/${data.consultation.content.patientId}`)}
-            testID="consultation-patient"
-            variant="outline"
-          >
-            <ButtonText>Ver ficha del paciente</ButtonText>
-          </Button>
+          <Link asChild href={`/patients/${data.consultation.content.patientId}`}>
+            <Button
+              accessibilityLabel="Ver ficha del paciente"
+              className="self-start"
+              testID="consultation-patient"
+              variant="outline"
+            >
+              <ButtonText>Ver ficha del paciente</ButtonText>
+            </Button>
+          </Link>
           {/*
            * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
            * DOM —como en móvil, donde precede a la anamnesis— y a la derecha en escritorio. Al no

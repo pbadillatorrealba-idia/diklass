@@ -211,6 +211,63 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     expect(Math.abs(angosto.lateral.x - angosto.principal.x)).toBeLessThan(2);
   });
 
+  // sistema-visual FR-084 · SC-055 (design.md D13): navegar es un enlace real (`<a href>`), que
+  // se puede abrir en otra pestaña y se anuncia como enlace; nunca un botón con `router.push`.
+  test("los controles de navegación son enlaces y no botones", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pantallas = [
+      { url: "/home", readyTestID: "home-agenda" },
+      ...syntheticScreens(caso).map(({ url, readyTestID }) => ({ url, readyTestID })),
+    ];
+    const encontrados = new Set<string>();
+    for (const pantalla of pantallas) {
+      await page.goto(pantalla.url);
+      await expect(page.getByTestId(pantalla.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await page.waitForLoadState("networkidle");
+      const controles = await page.evaluate(() =>
+        Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
+          .filter((el) =>
+            /^(home-(patients|follow-up|knowledge)|patients-register|patient-open|history-open|consultation-patient|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+              el.dataset.testid ?? "",
+            ),
+          )
+          .map((el) => ({
+            testID: el.dataset.testid ?? "",
+            tag: el.tagName.toLowerCase(),
+            href: el.getAttribute("href"),
+            role: el.getAttribute("role"),
+          })),
+      );
+      for (const control of controles) {
+        const nombre = control.testID.replace(/-[0-9a-f-]{36}.*$/, "-<id>");
+        encontrados.add(nombre);
+        expect(
+          { ...control, pantalla: pantalla.url },
+          `${control.testID} en ${pantalla.url} debe ser un enlace`,
+        ).toMatchObject({ tag: "a", href: expect.stringMatching(/^\//) });
+        expect(control.role, `${control.testID} en ${pantalla.url} tiene rol button`).not.toBe(
+          "button",
+        );
+      }
+    }
+    // La prueba no vale si las pantallas no pintaron los controles que vigila. `ver-fuente-*`
+    // depende de que la base local tenga fuentes, así que no se exige.
+    expect([...encontrados]).toEqual(
+      expect.arrayContaining([
+        "consultation-patient",
+        "follow-up-open",
+        "history-open",
+        "home-follow-up",
+        "home-knowledge",
+        "home-patients",
+        "patient-open",
+        "patients-register",
+        "conocimiento-incorporar",
+      ]),
+    );
+  });
+
   test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });

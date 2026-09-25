@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect } from "react";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -20,7 +20,6 @@ import { useUiStore } from "@/stores/ui-store";
  * de integración (archivo compartido): esta ruta es alcanzable por URL documentada.
  */
 export default function FollowUpIndexScreen() {
-  const router = useRouter();
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const patientsQuery = useQuery({
@@ -65,14 +64,15 @@ export default function FollowUpIndexScreen() {
             testID="follow-up-patient-item"
           >
             <Text variant="strong">{entry.content.name}</Text>
-            <Button
-              accessibilityLabel={`Ver el seguimiento de ${entry.content.name}`}
-              onPress={() => router.push(`/follow-up/${entry.record.id}`)}
-              testID="follow-up-open"
-              variant="outline"
-            >
-              <ButtonText>Ver seguimiento</ButtonText>
-            </Button>
+            <Link asChild href={`/follow-up/${entry.record.id}`}>
+              <Button
+                accessibilityLabel={`Ver el seguimiento de ${entry.content.name}`}
+                testID="follow-up-open"
+                variant="outline"
+              >
+                <ButtonText>Ver seguimiento</ButtonText>
+              </Button>
+            </Link>
           </Card>
         ))}
       </VStack>

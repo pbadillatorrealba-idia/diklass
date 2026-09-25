@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
@@ -7,7 +8,6 @@ import type { ConsultationHistoryEntry } from "@/features/registro/summaries";
 
 type PatientHistoryProps = {
   entries: ConsultationHistoryEntry[];
-  onOpen: (consultationId: string) => void;
 };
 
 /**
@@ -16,7 +16,7 @@ type PatientHistoryProps = {
  * nunca figura aquí; solo la versión efectiva, marcada si corrige una anterior (FR-010,
  * FR-024).
  */
-export function PatientHistory({ entries, onOpen }: PatientHistoryProps) {
+export function PatientHistory({ entries }: PatientHistoryProps) {
   return (
     <VStack className="w-full gap-3" testID="patient-history">
       <Heading level={2}>Historial de consultas</Heading>
@@ -42,13 +42,14 @@ export function PatientHistory({ entries, onOpen }: PatientHistoryProps) {
               {entry.epicrisisSuperseded ? (
                 <Text>Corregida: la versión original permanece registrada.</Text>
               ) : null}
-              <Button
-                accessibilityLabel={`Ver la consulta del ${openedAt}`}
-                onPress={() => onOpen(entry.consultationId)}
-                testID="history-open"
-              >
-                <ButtonText>Ver consulta</ButtonText>
-              </Button>
+              <Link asChild href={`/consultations/${entry.consultationId}`}>
+                <Button
+                  accessibilityLabel={`Ver la consulta del ${openedAt}`}
+                  testID="history-open"
+                >
+                  <ButtonText>Ver consulta</ButtonText>
+                </Button>
+              </Link>
             </Card>
           );
         })

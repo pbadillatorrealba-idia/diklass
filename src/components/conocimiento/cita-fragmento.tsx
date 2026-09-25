@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -17,7 +17,6 @@ function lineaBibliografica(cita: Cita): string {
  * siendo identificable y así se declara (FR-053 · US5-AC12).
  */
 export function CitaFragmento({ cita }: { cita: Cita }) {
-  const router = useRouter();
   const retirada = cita.estado === "withdrawn";
 
   return (
@@ -38,20 +37,22 @@ export function CitaFragmento({ cita }: { cita: Cita }) {
           Fuente retirada de la colección; la referencia sigue identificable.
         </Text>
       ) : null}
-      <Button
-        className="self-start"
-        onPress={() =>
-          router.push({
-            pathname: "/knowledge/sources/[id]",
-            params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
-          })
-        }
-        size="sm"
-        testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
-        variant="ghost"
+      <Link
+        asChild
+        href={{
+          pathname: "/knowledge/sources/[id]",
+          params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
+        }}
       >
-        <ButtonText>Ver fragmento en su contexto</ButtonText>
-      </Button>
+        <Button
+          className="self-start"
+          size="sm"
+          testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+          variant="ghost"
+        >
+          <ButtonText>Ver fragmento en su contexto</ButtonText>
+        </Button>
+      </Link>
     </Box>
   );
 }
