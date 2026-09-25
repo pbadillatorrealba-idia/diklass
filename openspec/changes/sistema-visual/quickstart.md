@@ -844,3 +844,16 @@ Resultado local en `chromium`:
   `border border-transparent`, que el modo de alto contraste pinta. Axe en `chromium` y
   `chromium-dark`: 12 de 12 tras el cambio.
 
+### 5.4 — Texto ampliado (FR-074)
+
+- Zoom del 200 % en una ventana de 1280 px, emulado como viewport de 640×450 CSS con
+  `deviceScaleFactor: 2` (método de WCAG 1.4.4), en `chromium`.
+- `/patients` y `/consultations/<abierta>`:
+  - sin desplazamiento horizontal;
+  - 0 nodos de texto recortados (`overflow: hidden/clip` con contenido mayor que la caja, o
+    `text-overflow: ellipsis`);
+  - la navegación pasa a la barra superior compacta y las pestañas inferiores.
+- Capturas: `evidencia/5.4-pacientes-zoom-200.png` y `evidencia/5.4-consulta-zoom-200.png`.
+- **Pendiente de dispositivo:** Dynamic Type al máximo en iOS y el tamaño de fuente máximo en
+  Android.
+
