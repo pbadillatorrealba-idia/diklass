@@ -208,3 +208,31 @@ Cada prueba se observó en rojo (`Cannot find module …` para los componentes n
 `bun run typecheck` sin errores. El preload también sustituye `react-native-safe-area-context`.
 `Screen` pasa `style={{ flex: 1 }}` al `SafeAreaView` porque NativeWind solo interpreta
 `className` en los componentes de RN.
+
+## Revisión de colores antes del grupo 4 (tarea 2.2 · Open Questions)
+
+Vista previa construida con las mismas utilidades de Tailwind que usan las primitivas, compiladas
+desde `src/global.css`: [claro](evidencia/2.2-tokens-claro.png) · [oscuro](evidencia/2.2-tokens-oscuro.png).
+El usuario **aprobó** los valores (2026-09-25) y eligió la **columna lateral** para el resumen de
+seguimiento en la consulta en escritorio.
+
+## Grupo 4 — Migración por pantalla
+
+Método común: Metro web local (`bun run web -- --port 8084`) + script de capturas con Playwright
+(inicio de sesión como Ana), a 320 px en oscuro y 1280 px en claro; e2e de la feature con
+`--workers=1`; `bun test tests/unit/theme` (guarda de literales) y `bun run typecheck` en verde.
+
+### 4.1 — Login
+
+`login.tsx`: `SafeAreaView` de safe-area-context y `contentContainerClassName="grow items-center
+justify-center p-4 md:p-6"` (el centrado vertical solo lo usa esta pantalla, así que no va en
+`Screen`). `login-form.tsx`: `max-w-form` (nuevo token de D6), `Heading level={1}`,
+`tone="muted"`, y `login-error` con `tone="destructive"`. Es un mensaje de validación del
+formulario cuyo texto ya explica el error; no se usa `Callout`, porque el glifo del icono entraría
+en el texto verificado por `auth.spec.ts`.
+
+```
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/auth.spec.ts --project=chromium --workers=1
+  8 passed
+```
+Capturas: [320 px oscuro](evidencia/4.1-login-320-oscuro.png) · [1280 px claro](evidencia/4.1-login-1280-claro.png).

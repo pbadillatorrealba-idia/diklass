@@ -133,7 +133,7 @@ se conservan `size` y `bold` como alias deprecados; se eliminan en la tarea 6.3.
 `tailwind.config.js` extiende:
 
 - `maxWidth`: `content` (720 px, una columna de lectura), `wide` (1200 px, consulta a dos
-  columnas) y `dialog` (440 px, diálogos);
+  columnas), `dialog` (440 px, diálogos) y `form` (480 px, formulario de acceso);
 - `minHeight`: `touch` (44 px) y `textarea` (120 px).
 
 Esto sustituye `max-w-[720px]`, `min-h-[44px]`, `min-h-[120px]` y `min-h-[96px]`.
@@ -277,7 +277,10 @@ Reversión: cada pantalla migra en su propio commit, así que se puede revertir 
 
 ## Open Questions
 
-- Valores exactos de `suggested`, `warning`, `success` e `info`: se proponen en la tarea 2.2 y se
-  revisan visualmente con el usuario antes de migrar las pantallas.
-- ¿El resumen de seguimiento va a la columna lateral o encabeza la principal en `lg`? Se decide en
-  la revisión visual de la tarea 4.6.
+Resueltas con el usuario el 2026-09-25:
+
+- Valores de `suggested`, `warning`, `success` e `info`: **aprobados** tal como se fijaron en la
+  tarea 2.2 (vista previa en `evidencia/2.2-tokens-claro.png` y `2.2-tokens-oscuro.png`).
+- Resumen de seguimiento en la consulta a partir de `lg`: **columna lateral**, junto con los
+  antecedentes y el historial de correcciones; la principal lleva anamnesis, diagnóstico y
+  epicrisis.

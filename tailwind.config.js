@@ -18,6 +18,7 @@ module.exports = {
         content: "720px", // una columna de lectura
         wide: "1200px", // consulta a dos columnas en escritorio
         dialog: "440px",
+        form: "480px", // formularios centrados (login)
       },
       minHeight: {
         touch: "44px", // área táctil mínima (WCAG 2.5.8 / HIG)

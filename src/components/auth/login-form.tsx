@@ -49,10 +49,10 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   }, []);
 
   return (
-    <VStack className="w-full max-w-[480px] gap-6">
+    <VStack className="w-full max-w-form gap-6">
       <VStack className="gap-1">
-        <Heading size="3xl">Diklass</Heading>
-        <Text className="text-foreground/70">Acceso para profesionales veterinarios</Text>
+        <Heading level={1}>Diklass</Heading>
+        <Text tone="muted">Acceso para profesionales veterinarios</Text>
       </VStack>
 
       <form.Field name="email">
@@ -125,7 +125,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       </form.Field>
 
       {submitError ? (
-        <Text accessibilityLiveRegion="polite" className="text-destructive" testID="login-error">
+        <Text accessibilityLiveRegion="polite" testID="login-error" tone="destructive">
           {submitError}
         </Text>
       ) : null}
