@@ -112,7 +112,7 @@ como pendiente explícito en `quickstart.md`.
 - [x] 8.5 Pasar `/patients`, `/follow-up` y `/knowledge/sources` a `FlatList`, con `Screen scroll={false}`, cabecera en `ListHeaderComponent`, vacío en `ListEmptyComponent` y `contentInsetAdjustmentBehavior="automatic"` (FR-086). Verificación: e2e en verde y la prueba de reflujo a 320 px de 5.1 en verde, sin doble contenedor de desplazamiento.
 - [x] 8.6 Añadir `selectable` a `Text` y activarlo en los datos clínicos y en `Callout tone="error"` según D14, con una prueba de componente en rojo primero para `Callout` (FR-087). Verificación: prueba verde; en web, el texto se puede seleccionar (e2e con triple clic y `getSelection`).
 - [x] 8.7 `KeyboardAvoidingView` en `Screen` según D14 (FR-088). Verificación: `typecheck` verde; en dispositivo, captura de `/patients/new` con el teclado abierto y el botón de guardar visible, o pendiente explícito.
-- [ ] 8.8 Estilo de código de D15: `process.env.EXPO_OS` en los 4 usos de `Platform.OS`, `React.use` en los 4 de `useContext` y `borderCurve: "continuous"` en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock`. Añadir `Platform.OS` y `useContext(` a la guarda de `tema.test.ts` (rojo primero). Verificación: guarda roja→verde, `typecheck` y `bun test` verdes.
+- [x] 8.8 Estilo de código de D15: `process.env.EXPO_OS` en los 4 usos de `Platform.OS`, `React.use` en los 4 de `useContext` y `borderCurve: "continuous"` en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock`. Añadir `Platform.OS` y `useContext(` a la guarda de `tema.test.ts` (rojo primero). Verificación: guarda roja→verde, `typecheck` y `bun test` verdes.
 - [ ] 8.9 Actualizar la sección «Sistema visual» de `AGENTS.md`:
   - navegación y títulos: `Screen title`/`back`;
   - `Link` para navegar;

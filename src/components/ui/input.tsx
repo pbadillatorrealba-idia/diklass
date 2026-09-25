@@ -1,16 +1,18 @@
 import { TextInput, type TextInputProps, View, type ViewProps } from "react-native";
 import { useFormControl } from "@/components/ui/form-control";
 import { useThemeColors } from "@/theme/use-theme-colors";
+import { CONTINUOUS_CURVE } from "./border-curve";
 
 export type InputProps = ViewProps & { className?: string };
 
-export function Input({ className, ...props }: InputProps) {
+export function Input({ className, style, ...props }: InputProps) {
   const { isInvalid } = useFormControl();
   return (
     <View
       className={`w-full flex-row items-center rounded-xl border bg-card ${
         isInvalid ? "border-destructive" : "border-input"
       } ${className ?? ""}`.trim()}
+      style={[CONTINUOUS_CURVE, style]}
       {...props}
     />
   );

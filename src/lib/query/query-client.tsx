@@ -1,6 +1,6 @@
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type PropsWithChildren, useEffect, useState } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +17,7 @@ export function QueryProvider({ children }: PropsWithChildren) {
   const [client] = useState(queryClient);
 
   useEffect(() => {
-    if (Platform.OS === "web") {
+    if (process.env.EXPO_OS === "web") {
       return;
     }
 

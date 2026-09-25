@@ -689,4 +689,19 @@ Resultado local en `chromium`:
   - El caso de reflujo de `accessibility.spec.ts` agotó una vez los 30 s por defecto. Aislado
     tarda unos 23 s en 36 cargas. Se le fija `test.setTimeout(90_000)` y la suite queda en 8 de 8.
     `registro-epicrisis` 2 y `auth` 8 en verde.
+- **8.8 Estilo de código de D15:**
+  - La guarda de `tema.test.ts` suma `Platform.OS` y `useContext(`. En rojo fallaba en 7 archivos:
+    - 4 usos de `Platform.OS` (`gluestack`, `use-session-activity`, `query-client`,
+      `platform-auth-storage`);
+    - 3 de `useContext` (`button`, `form-control`, `auth-provider`).
+  - Después, `process.env.EXPO_OS` y `use` de React 19.
+  - `border-curve.test.tsx`, rojo→verde: `Card`, `Callout`, `Input` y `SuggestedBlock` llevan
+    `borderCurve: "continuous"`, y `Button` también en iOS, incluso bajo `Link asChild`.
+  - Regresión encontrada con la compuerta axe: el botón «Iniciar sesión» quedó con contraste
+    1.51. NativeWind acumulaba `opacity-50` del estado deshabilitado al recibir un `style`
+    compuesto en web.
+  - Aislada con y sin el cambio de `Button`: 2 fallos contra 6 de 6 en verde. Se corrigió con una
+    prueba en rojo («Button no toca su style en web»).
+  - Verde: `accessibility` 8, `navegacion` 7, `auth` 8, `tema` 5 y `conocimiento` 5; 757 pruebas
+    unitarias.
 

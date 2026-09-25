@@ -192,6 +192,10 @@ describe("colores fuera del tema", () => {
     // Tintes translúcidos (D4): se componen al pintar y el contraste de este archivo no los mide.
     // Solo `scrim` se usa con opacidad; el resto de superficies son tokens opacos (`*-surface`).
     /\b(?:bg|border|text|ring|outline)-(?!scrim\/)[a-z]+(?:-[a-z]+)*\/\d+\b/g,
+    // Estilo de código de D15: `process.env.EXPO_OS` (el bundle elimina las ramas de otras
+    // plataformas) y `React.use` de React 19.
+    /\bPlatform\.OS\b/g,
+    /\buseContext\(/g,
   ];
 
   // FR-081 · SC-051: cada hallazgo se reporta como `archivo:línea literal`.

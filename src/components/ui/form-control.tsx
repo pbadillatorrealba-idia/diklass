@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import { Text as RNText, type TextProps as RNTextProps, View, type ViewProps } from "react-native";
 
 type FormControlContextValue = { isInvalid: boolean };
@@ -6,7 +6,7 @@ type FormControlContextValue = { isInvalid: boolean };
 const FormControlContext = createContext<FormControlContextValue>({ isInvalid: false });
 
 export function useFormControl(): FormControlContextValue {
-  return useContext(FormControlContext);
+  return use(FormControlContext);
 }
 
 export type FormControlProps = ViewProps & { className?: string; isInvalid?: boolean };

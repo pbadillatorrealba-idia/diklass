@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
 import { type PropsWithChildren, useEffect } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { palette } from "@/theme/colors";
 import { themeStore } from "@/theme/theme-store";
 import { useColorScheme } from "@/theme/use-color-scheme";
@@ -27,7 +27,7 @@ export function AppUiProvider({ children }: PropsWithChildren) {
     ...base,
     colors: {
       ...base.colors,
-      background: Platform.OS === "web" ? "transparent" : colors.background,
+      background: process.env.EXPO_OS === "web" ? "transparent" : colors.background,
       border: colors.border,
       card: colors.card,
       notification: colors.destructive,

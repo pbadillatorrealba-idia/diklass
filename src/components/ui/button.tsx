@@ -1,10 +1,11 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import {
   Pressable,
   type PressableProps,
   Text as RNText,
   type TextProps as RNTextProps,
 } from "react-native";
+import { CONTINUOUS_CURVE } from "./border-curve";
 
 const VARIANTS = {
   primary: { surface: "bg-primary", text: "text-primary-foreground" },
@@ -41,6 +42,7 @@ export function Button({
   className,
   isDisabled = false,
   size = "md",
+  style,
   variant = "primary",
   ...props
 }: ButtonProps) {
@@ -56,6 +58,16 @@ export function Button({
         } ${isDisabled ? "opacity-50" : "active:opacity-80"} ${className ?? ""}`.trim()}
         disabled={isDisabled}
         role="button"
+        // La curva solo existe en iOS. En web, un `style` compuesto hace que NativeWind acumule
+        // las clases de renders anteriores (un botón ya habilitado seguía con `opacity-50`).
+        // `Link asChild` también pasa `style`: se compone con la curva en vez de sustituirla.
+        style={
+          process.env.EXPO_OS !== "ios"
+            ? style
+            : typeof style === "function"
+              ? (state) => [CONTINUOUS_CURVE, style(state)]
+              : [CONTINUOUS_CURVE, style]
+        }
         {...props}
       >
         {children}
@@ -67,7 +79,7 @@ export function Button({
 export type ButtonTextProps = RNTextProps & { className?: string };
 
 export function ButtonText({ className, ...props }: ButtonTextProps) {
-  const { size, variant } = useContext(ButtonContext);
+  const { size, variant } = use(ButtonContext);
   return (
     <RNText
       className={`font-sans ${SIZES[size].text} font-semibold ${VARIANTS[variant].text} ${

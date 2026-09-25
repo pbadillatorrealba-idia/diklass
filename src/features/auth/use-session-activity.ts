@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 import {
   ACCESS_SESSION_INACTIVITY_MS,
   type AccessSessionRpcClient,
@@ -62,7 +62,7 @@ export function useSessionActivity({ client, sessionId, onExpired }: SessionActi
       }
     });
     const register = () => void tracker.registerActivity();
-    const hasWindow = Platform.OS === "web" && typeof window !== "undefined";
+    const hasWindow = process.env.EXPO_OS === "web" && typeof window !== "undefined";
     if (hasWindow) {
       window.addEventListener("pointerdown", register);
       window.addEventListener("keydown", register);

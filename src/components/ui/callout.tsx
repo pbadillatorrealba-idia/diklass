@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import type { ThemeToken } from "@/theme/colors";
+import { CONTINUOUS_CURVE } from "./border-curve";
 
 const TONES = {
   error: {
@@ -62,6 +63,7 @@ export function Callout({ children, className, testID, title, tone }: CalloutPro
       accessibilityLiveRegion={live ? "polite" : undefined}
       aria-live={live ? "polite" : undefined}
       className={`flex-row gap-2 rounded-lg border p-3 ${style.box} ${className ?? ""}`.trim()}
+      style={CONTINUOUS_CURVE}
       testID={testID}
     >
       <Icon label={style.name} name={style.icon} tone={style.color} />

@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react";
 import { View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { CONTINUOUS_CURVE } from "./border-curve";
 
 const LABEL = "Sugerencia del sistema";
 
@@ -20,6 +21,7 @@ export function SuggestedBlock({ children, className, testID }: SuggestedBlockPr
       aria-label={LABEL}
       className={`gap-1 border-l-4 border-suggested pl-3 ${className ?? ""}`.trim()}
       role="group"
+      style={CONTINUOUS_CURVE}
       testID={testID}
     >
       <View className="flex-row items-center gap-1">

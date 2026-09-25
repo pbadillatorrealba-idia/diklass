@@ -404,7 +404,7 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
 | SF Symbols (`expo-symbols`) | **Solo en la barra de pestañas nativa** (`sf`/`md` de `NativeTabs`, sin dependencia) | Dentro de pantalla se mantiene `@expo/vector-icons` (decisión del usuario, D8), igual en las tres plataformas |
 | `process.env.EXPO_OS` en vez de `Platform.OS` | **Se adopta** | Permite eliminar código por plataforma en el bundle. 4 usos |
 | `React.use` en vez de `useContext` | **Se adopta** | React 19. 4 usos |
-| `borderCurve: "continuous"` | **Se adopta** en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock` vía `style` | Sin efecto en web; esquinas nativas en iOS |
+| `borderCurve: "continuous"` | **Se adopta** en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock` vía `style` (constante `CONTINUOUS_CURVE`) | Sin efecto en web; esquinas nativas en iOS. `Button` solo lo compone en iOS: en web, un `style` compuesto en su `Pressable` hacía que NativeWind acumulara clases de renders anteriores (8.8) |
 | Sombras con `boxShadow` | Sin acción | No hay sombras: las superficies se separan con borde y fondo (D4) |
 | Modal propio para confirmaciones | **Se mantiene** el diálogo de sesión expirada | Es una confirmación consecuente que bloquea la sesión; la guía admite alertas para estas. El retiro de fuentes ya confirma en línea |
 | `Text selectable`, cuatro estados, `FlatList`, `keyboardShouldPersistTaps` | **Se adoptan** | D13–D14 |
