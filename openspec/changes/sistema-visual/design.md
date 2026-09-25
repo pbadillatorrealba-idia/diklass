@@ -256,8 +256,8 @@ ventana: `md` = 768 px (tablet) y `lg` = 1024 px (escritorio).
   La lateral va **primero en el DOM**, como iba el resumen antes de la migración: en móvil da el
   contexto antes del registro. En escritorio `lg:flex-row-reverse` la muestra a la derecha. Es de
   solo lectura, así que el orden de foco del teclado sobre los controles del registro no cambia.
-- Las listas (pacientes, fuentes) siguen en una columna. A partir de `lg`, las tarjetas de
-  paciente ponen la acción a la derecha (`lg:flex-row`) en vez de debajo.
+- El ancho de las listas y los paneles en escritorio lo fija D18. A partir de `lg`, las tarjetas
+  de paciente ponen la acción a la derecha (`lg:flex-row`) en vez de debajo.
 - Se respeta el escalado de texto: nada de `allowFontScaling={false}` y las alturas son mínimas
   (`min-h-*`), no fijas.
 
@@ -369,7 +369,7 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
     desplazamiento, con cabecera (título y acciones) en `ListHeaderComponent`, el vacío en
     `ListEmptyComponent` y `contentInsetAdjustmentBehavior="automatic"`.
   - Las tres usan `ScreenList` (`src/components/ui/screen.tsx`). Comparte con `Screen` el área
-    segura, el título, el retroceso, el ancho de lectura y el margen, pero su único contenedor de
+    segura, el título, el retroceso, el ancho (`width`, D18) y el margen, pero su único contenedor de
     desplazamiento es el `FlatList`. Así la configuración no se repite en cada pantalla, y el
     título y las acciones se desplazan con la lista.
   - El `ListEmptyComponent` es un `QueryState` sin contenido: carga, error o vacío.
@@ -588,6 +588,29 @@ Decisiones del usuario (2026-09-25):
 - Fuente de iconos: ≤ 1.2 MB, sin precarga; no bloquea el primer pintado.
 - Sin salto de maquetación atribuible a la fuente de texto en el primer pintado (FR-073). Se
   verifica con la traza de rendimiento de Playwright en `/login`: CLS ≤ 0.1.
+
+### D18 — Ancho por tipo de pantalla (FR-079)
+
+Decisión del usuario (2026-09-25): en escritorio web, 720 px dejaban casi la mitad del área útil
+vacía junto a la barra lateral. El ancho pasa a depender del tipo de pantalla.
+
+| Pantalla | Ancho en `lg` | Disposición |
+|---|---|---|
+| `/home` | `wide` | Panel de secciones y calendario lado a lado |
+| `/patients`, `/follow-up`, `/knowledge/sources` | `ScreenList width="wide"` | 2 columnas desde `xl` (1280 px de ventana) |
+| `/settings` | `wide` | Tarjetas en 2 columnas |
+| `/patients/[id]` | `wide` | 2 columnas: ficha y campos faltantes a la izquierda; antecedentes e historial a la derecha |
+| Formularios, visor de fuente, `/knowledge`, `/follow-up/[id]`, `/login` | `content` (720 px) | Una columna de lectura |
+
+- Las columnas de `ScreenList` se toman de `useWindowDimensions()`: `numColumns` es 2 con 1280 px
+  o más, y el `key` del `FlatList` cambia con él, porque RN no admite cambiar `numColumns` en
+  caliente. Desde `xl`, 1280 px de ventana menos 240 px de barra lateral dejan unos 1040 px: dos
+  tarjetas de unos 500 px.
+- En la ficha, el orden del DOM no cambia (ficha, campos faltantes, edición, antecedentes,
+  historial y abrir consulta), y el foco de teclado tampoco. Las dos columnas se forman con
+  `lg:flex-row` sobre dos contenedores que ya siguen ese orden.
+- Los formularios conservan 720 px: las líneas largas y los campos anchos dificultan la lectura y
+  el llenado (WCAG 1.4.8, orientativo).
 
 ## Complexity Tracking
 

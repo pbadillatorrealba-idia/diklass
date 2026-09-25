@@ -119,7 +119,8 @@ como pendiente explícito en `quickstart.md`.
   - `QueryState`;
   - `FlatList` para listas no acotadas;
   - `selectable`;
-  - las desviaciones de D15.
+  - las desviaciones de D15;
+  - el ancho por tipo de pantalla (D18).
   Verificación: sección revisada.
 
 ## 9. Acceso con gestor de contraseñas y tarjeta (D16 · US15)
@@ -188,3 +189,23 @@ como pendiente explícito en `quickstart.md`.
   - la preferencia de tema;
   - el envoltorio `MonthCalendar` como único punto de uso del paquete.
   Verificación: sección revisada.
+
+## 11. Ancho por tipo de pantalla (D18 · FR-079)
+
+- [ ] 11.1 Escribir en rojo, en `accessibility.spec.ts`, el escenario «Listas en escritorio»:
+  - a 1280 px, `/patients` muestra dos `patient-item` lado a lado y el contenido mide más de
+    720 px;
+  - a 1024 px, una sola columna;
+  - `/patients/new` sigue en 720 px o menos.
+  FR-079. Verificación: rojo por el ancho actual.
+- [ ] 11.2 Añadir a `ScreenList` la prop `width` y las columnas adaptables (`numColumns` según
+  `useWindowDimensions`, con `key` por número de columnas), con prueba de componente en rojo
+  primero. Adoptarlo en `/patients`, `/follow-up` y `/knowledge/sources`. Verificación: prueba
+  verde y el caso de 11.1 en verde.
+- [ ] 11.3 Pasar `/home` (panel y calendario lado a lado), `/settings` (tarjetas en 2 columnas) y
+  `/patients/[id]` (2 columnas con el orden del DOM intacto) a `width="wide"`. Verificación:
+  `navegacion`, `tema`, `registro-epicrisis` y el recorrido por teclado en verde.
+- [ ] 11.4 Repetir el reflujo a 320 px y axe en `chromium` y `chromium-dark`, y dejar capturas a
+  1280 y 1440 px de `/home`, `/patients` y `/patients/[id]` en `quickstart.md`. Verificación:
+  compuertas en verde y capturas registradas.
+

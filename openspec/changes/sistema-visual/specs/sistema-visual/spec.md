@@ -377,6 +377,13 @@ Las pantallas MUST adaptarse al ancho de la ventana sin desplazamiento horizonta
 lectura MUST limitarse a un ancho legible, y la consulta MUST mostrar el registro y el apoyo del
 sistema en dos columnas.
 
+En escritorio web (≥ 1024 px):
+
+- Las pantallas de lista y de panel MUST aprovechar el ancho disponible hasta 1200 px: Inicio,
+  pacientes, seguimiento, colección de fuentes, Configuración y ficha del paciente.
+- Los formularios y la lectura larga MUST conservar el ancho de lectura de 720 px: alta de
+  paciente, incorporar fuente, visor de fuente, consulta a la base de conocimiento y acceso.
+
 #### Scenario: US13-AC4
 
 - **GIVEN** una ventana de 320 px de ancho
@@ -388,6 +395,13 @@ sistema en dos columnas.
 - **GIVEN** una ventana de 1280 px de ancho
 - **WHEN** se abre una consulta
 - **THEN** el registro clínico y el apoyo del sistema se muestran lado a lado
+
+#### Scenario: Listas en escritorio
+
+- **GIVEN** una ventana de 1280 px y una clínica con 2 o más pacientes
+- **WHEN** se abre `/patients`
+- **THEN** las tarjetas se muestran en 2 columnas y el contenido ocupa más de 720 px
+- **AND** `/patients/new` sigue limitado a 720 px
 
 ### Requirement: FR-080
 
