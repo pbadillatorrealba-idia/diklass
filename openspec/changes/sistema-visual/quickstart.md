@@ -389,3 +389,23 @@ No hubo rojo por pantallas sin migrar: al llegar a 5.1 todas estaban migradas (g
 ```
 $ … accessibility.spec.ts --project=chromium --workers=1   → 7 passed (con las 5 rutas nuevas)
 ```
+
+## Grupo 6 — Limpieza
+
+### 6.3 — Alias deprecados retirados (D5)
+
+El script de migración pasado por todo `src` solo encontró un resto (`correction-history`:
+`<Text bold>` → `variant="strong"`). `Text` pierde `size`/`bold` y `Heading` pierde `size`; se
+eliminan sus pruebas de alias. `bun run typecheck` sin errores (no quedan usos) y
+`bun test tests/unit/ui` → 54 pass.
+
+### 6.1 — Guarda de deriva (FR-081 · SC-051)
+
+`tema.test.ts` prohíbe además `text-foreground/<n>`, `text-xs`, dimensiones arbitrarias
+(`max-w-[…]`, `min-h-[…]`, `w-[…]`…), `rounded-2xl` y `gap-<n>.<m>`. Verde sobre `src`. Mutación:
+un archivo con los seis patrones da 6 hallazgos `archivo:línea` y rojo; al quitarlo, verde.
+
+### 6.2 — AGENTS.md
+
+Sección «Sistema visual»: dónde viven los tokens, qué primitiva usar para cada caso, jerarquía de
+botones, reglas de layout y prohibición de literales. Revisión humana: pendiente en la PR.

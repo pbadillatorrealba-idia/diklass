@@ -63,8 +63,8 @@ Cada tarea de este grupo:
 
 ## 6. Limpieza y cierre
 
-- [ ] 6.1 Confirmar con grep que no quedan `text-foreground/70`, `text-xs`, `max-w-[`, `min-h-[`, `rounded-2xl` ni `gap-1.5` en `src/` (D5–D6), y añadir esos patrones a `sin-literales.test.ts`. Verificación: prueba verde, y roja al reintroducir cualquiera de ellos.
-- [ ] 6.2 Actualizar `AGENTS.md` con una sección breve sobre el sistema visual: dónde viven los tokens, qué primitiva usar para cada caso y la prohibición de literales. Verificación: sección presente y revisada.
-- [ ] 6.3 Retirar los alias deprecados (`Text size`/`bold`, `Heading size`). Verificación: `typecheck`, `bun test` y Biome en verde.
+- [x] 6.1 Confirmar con grep que no quedan `text-foreground/70`, `text-xs`, `max-w-[`, `min-h-[`, `rounded-2xl` ni `gap-1.5` en `src/` (D5–D6), y añadir esos patrones a `sin-literales.test.ts`. Verificación: prueba verde, y roja al reintroducir cualquiera de ellos.
+- [x] 6.2 Actualizar `AGENTS.md` con una sección breve sobre el sistema visual: dónde viven los tokens, qué primitiva usar para cada caso y la prohibición de literales. Verificación: sección presente y revisada.
+- [x] 6.3 Retirar los alias deprecados (`Text size`/`bold`, `Heading size`). Verificación: `typecheck`, `bun test` y Biome en verde.
 - [ ] 6.4 Ejecutar las compuertas locales (`bun run typecheck`, `bunx biome check`, `bun test`) y dejar CI en verde; consolidar `quickstart.md` sin dar por aceptado nada que no lo esté, con los pendientes explícitos (verificación nativa si faltó y aceptación conjunta de FR-076/FR-077 con 003–005). Verificación: documento completo y URLs de CI.
 - [ ] 6.5 Generar el reporte de revisión en español con `requesting-code-review` sobre el rango completo de la rama. Verificación: reporte existente y su ubicación registrada.

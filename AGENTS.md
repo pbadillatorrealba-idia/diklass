@@ -61,6 +61,33 @@ solo viven las reglas de trabajo.
   `bunx expo export --clear`). Metro cachea la transformación que inlinea el valor y, sin limpiar,
   el bundle sale con el valor anterior sin avisar.
 
+## Sistema visual
+
+El detalle y su justificación viven en el cambio `openspec/changes/sistema-visual/` (design.md).
+Reglas para cualquier UI nueva o modificada:
+
+- **Color:** solo tokens semánticos de `src/global.css` (claro y oscuro), vía clases
+  (`bg-card`, `text-muted-foreground`, `border-warning`…). `src/theme/colors.ts` es su espejo
+  para props que no aceptan `className` (`useThemeColors()`). Un token nuevo va en ambos y en
+  `tests/unit/theme/tema.test.ts` con su par de contraste AA. Nunca hex, `rgb()`, paleta fija de
+  Tailwind ni escalas numeradas de gluestack (`text-warning-700`): la guarda de ese test falla.
+- **Primitivas** (`src/components/ui/`):
+  - Pantalla: `Screen` (`width="wide"` solo para la consulta).
+  - Superficie: `Card`.
+  - Estado: `Callout tone="error|warning|success|info"`.
+  - Contenido del sistema sin validar: `SuggestedBlock`.
+  - Severidad clínica: `SeverityBadge`.
+  - Iconos: `Icon` (`label` o `decorative`, obligatorio).
+- **Texto:** `Text variant="body|caption|label|strong"` y `tone`; títulos con
+  `Heading level={1|2|3}`. Nada de `text-sm`/`text-xs` sueltos ni `text-foreground/70`.
+- **Botones:** `primary` para la acción principal de la pantalla; `outline` para las
+  secundarias y las acciones por fila; `ghost` para las terciarias; `destructive` solo para
+  detener algo en curso.
+- **Layout:** espaciado de la escala (`gap`/`p` 1, 2, 3, 4, 6, 8), `rounded-xl` para controles y
+  superficies y `rounded-lg` para lo anidado, y dimensiones con nombre (`max-w-content`,
+  `min-h-touch`, `min-h-textarea`), nunca valores arbitrarios `[…]`.
+- **El color nunca es la única señal:** todo estado lleva texto o icono con nombre.
+
 ## Comandos
 
 Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager; la versión

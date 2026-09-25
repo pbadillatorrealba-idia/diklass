@@ -20,14 +20,6 @@ const TONES = {
   onDestructive: "text-destructive-foreground",
 } as const;
 
-/** @deprecated Usar `variant`; se retira al terminar la migración (tarea 6.3). */
-const LEGACY_SIZES = {
-  xs: "text-xs",
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
-} as const;
-
 export type TextVariant = keyof typeof VARIANTS;
 export type TextTone = keyof typeof TONES;
 
@@ -35,28 +27,12 @@ export type TextProps = RNTextProps & {
   className?: string;
   variant?: TextVariant;
   tone?: TextTone;
-  /** @deprecated Usar `variant="strong"`. */
-  bold?: boolean;
-  /** @deprecated Usar `variant`. */
-  size?: keyof typeof LEGACY_SIZES;
 };
 
-export function Text({
-  bold = false,
-  className,
-  size,
-  tone = "default",
-  variant = "body",
-  ...props
-}: TextProps) {
-  const scale = size ? LEGACY_SIZES[size] : VARIANTS[variant];
+export function Text({ className, tone = "default", variant = "body", ...props }: TextProps) {
   return (
     <RNText
-      className={`font-sans ${TONES[tone]} ${scale} ${bold ? "font-semibold" : ""} ${
-        className ?? ""
-      }`
-        .replace(/\s+/g, " ")
-        .trim()}
+      className={`font-sans ${TONES[tone]} ${VARIANTS[variant]} ${className ?? ""}`.trim()}
       {...props}
     />
   );

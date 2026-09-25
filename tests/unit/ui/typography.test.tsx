@@ -42,18 +42,6 @@ describe("Text", () => {
     );
     expect(colors).toEqual([expected]);
   });
-
-  test("los alias deprecados size/bold siguen funcionando durante la migración", () => {
-    const cls = classOf(
-      renderToStaticMarkup(
-        <Text bold size="sm">
-          x
-        </Text>,
-      ),
-    );
-    expect(cls).toContain("text-sm");
-    expect(cls).toContain("font-semibold");
-  });
 });
 
 describe("Heading", () => {
@@ -66,16 +54,6 @@ describe("Heading", () => {
     for (const c of classes) expect(classOf(html)).toContain(c);
     expect(html).toContain('role="heading"');
     expect(html).toContain(`aria-level="${level}"`);
-  });
-
-  test.each([
-    ["2xl", 1],
-    ["lg", 2],
-    ["sm", 3],
-  ] as const)("el alias deprecado size=%s declara el nivel %d", (size, level) => {
-    expect(renderToStaticMarkup(<Heading size={size}>x</Heading>)).toContain(
-      `aria-level="${level}"`,
-    );
   });
 
   test("por defecto es nivel 2", () => {

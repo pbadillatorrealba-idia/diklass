@@ -155,10 +155,17 @@ describe("colores fuera del tema", () => {
     // Escalas numeradas (p. ej. `text-warning-700` de gluestack): no existen en el tema y se
     // renderizan sin color.
     /\b(?:bg|text|border|ring|outline|placeholder)-[a-z]+-\d{2,3}\b/g,
+    // Deriva ya migrada (sistema-visual, design.md D5–D6): tono y tamaños con nombre, dimensiones
+    // del tema y radios de la regla control/superficie.
+    /\btext-foreground\/\d+\b/g,
+    /\btext-xs\b/g,
+    /\b(?:max-w|min-h|max-h|min-w|w|h)-\[[^\]]+\]/g,
+    /\brounded-2xl\b/g,
+    /\bgap(?:-[xy])?-\d+\.\d+\b/g,
   ];
 
   // FR-081 · SC-051: cada hallazgo se reporta como `archivo:línea literal`.
-  test.each(files)("%s no usa hex, rgb() ni la paleta fija de Tailwind", (path) => {
+  test.each(files)("%s no usa colores literales ni valores fuera del sistema visual", (path) => {
     const found = readFileSync(path, "utf8")
       .split("\n")
       .flatMap((line, index) =>
