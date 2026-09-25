@@ -810,4 +810,19 @@ Resultado local en `chromium`:
   - La mutación (quitar la regla genérica) ya no lo pone en rojo en `firefox`: tras `ScreenList` y
     `KeyboardAvoidingView`, el recorrido ya no enfoca un contenedor de scroll. La regla se
     conserva por si otro contenedor vuelve a ser enfocable.
+- **5.8 Selector de paciente con búsqueda (FR-095 · US14-AC6):**
+  - `filtrar-pacientes.test.ts`, 7 casos en rojo primero:
+    - sin búsqueda, las 8 primeras fichas;
+    - sin mayúsculas ni tildes;
+    - búsqueda por raza y especie;
+    - tope de 8;
+    - el elegido siempre, y primero si no coincide;
+    - sin coincidencias;
+    - `contarCoincidencias`, el total real sin tope.
+  - `SelectorPacienteContexto`: el campo «Buscar paciente», el recuento en región viva
+    (`selector-paciente-contexto-recuento`) y el `OptionPicker` con las opciones filtradas.
+  - e2e en `conocimiento.spec.ts`: crea una ficha «Búho E2E …», la busca como «buho e2e …», ve
+    «1 paciente coincide» y 2 opciones, y la elige. Rojo por el campo ausente.
+  - Verde: `conocimiento` 6; `accessibility` 12 en `chromium` y 12 en `chromium-dark` (incluye
+    axe de `/knowledge`); 778 pruebas unitarias.
 

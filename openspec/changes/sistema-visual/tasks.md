@@ -78,7 +78,7 @@ Cada tarea de este grupo:
   - ajustar los `keyboardTestIDs` del caso sintético a una parada por grupo.
   Verificación: el e2e nuevo y el recorrido por teclado en verde en `chromium`, `firefox` y
   `webkit`.
-- [ ] 5.8 Selector de paciente con búsqueda (D19 · FR-095 · US14-AC6):
+- [x] 5.8 Selector de paciente con búsqueda (D19 · FR-095 · US14-AC6):
   - prueba unitaria en rojo de `filtrarPacientes` (tildes, mayúsculas, raza/especie, máximo 8 y
     el elegido siempre presente);
   - después, el componente;
