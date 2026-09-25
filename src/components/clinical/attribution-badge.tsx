@@ -15,8 +15,8 @@ export function AttributionBadge({ attribution }: { attribution: Attribution }) 
       className="rounded-lg bg-secondary/15 p-2"
       testID="attribution-badge"
     >
-      <Text bold>{actor}</Text>
-      <Text className="text-foreground/70">{occurredAt}</Text>
+      <Text variant="strong">{actor}</Text>
+      <Text tone="muted">{occurredAt}</Text>
     </Box>
   );
 }

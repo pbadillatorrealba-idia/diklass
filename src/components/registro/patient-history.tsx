@@ -1,5 +1,5 @@
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -19,19 +19,15 @@ type PatientHistoryProps = {
 export function PatientHistory({ entries, onOpen }: PatientHistoryProps) {
   return (
     <VStack className="w-full gap-3" testID="patient-history">
-      <Heading size="lg">Historial de consultas</Heading>
+      <Heading level={2}>Historial de consultas</Heading>
       {entries.length === 0 ? (
         <Text testID="history-empty">Sin consultas registradas para este paciente.</Text>
       ) : (
         entries.map((entry) => {
           const openedAt = new Date(entry.openedAt).toLocaleString("es-CL");
           return (
-            <Box
-              className="rounded-xl border border-border bg-card p-4"
-              key={entry.consultationId}
-              testID="history-item"
-            >
-              <Text bold>Consulta del {openedAt}</Text>
+            <Card key={entry.consultationId} testID="history-item">
+              <Text variant="strong">Consulta del {openedAt}</Text>
               <Text>{entry.status === "closed" ? "Cerrada" : "Abierta"}</Text>
               {entry.epicrisis ? (
                 <Text testID="history-epicrisis">
@@ -53,7 +49,7 @@ export function PatientHistory({ entries, onOpen }: PatientHistoryProps) {
               >
                 <ButtonText>Ver consulta</ButtonText>
               </Button>
-            </Box>
+            </Card>
           );
         })
       )}

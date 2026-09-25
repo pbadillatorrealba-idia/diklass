@@ -250,3 +250,22 @@ $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/auth.spec.ts --project=c
   8 passed (incluye logout y el diálogo de sesión expirada)
 ```
 Capturas: [320 px oscuro](evidencia/4.2-home-320-oscuro.png) · [1280 px claro](evidencia/4.2-home-1280-claro.png).
+
+### 4.3 — Pacientes, ficha, historial, antecedentes y atribución
+
+Migración mecánica con un script local (no versionado): `SafeAreaView`+`ScrollView`+`max-w-[720px]`
+→ `Screen`, tarjetas → `Card`, `text-foreground/70` → `tone="muted"`, `bold` → `variant="strong"`
+(o `label` si era texto pequeño) y `Heading size` → `level`. Revisado con `git diff -w`. Cambios
+de diseño, además:
+- `/patients`: en `lg` la tarjeta pone "Ver ficha" a la derecha (D9); "Ver ficha" pasa a `outline`
+  para no competir con la acción principal "Registrar paciente"; el error de carga pasa a
+  `Callout tone="error"`.
+- Los mensajes de estado de la ficha y del alta (`setStatus`) mezclan éxito y error en un solo
+  texto; tipificarlos cambia su lógica de estado y queda fuera de esta tarea.
+
+```
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/registro-epicrisis.spec.ts --project=chromium --workers=1   → 2 passed
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/attribution.spec.ts --project=chromium --workers=1          → 2 passed
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/accessibility.spec.ts --project=chromium --workers=1        → 6 passed
+```
+Capturas: [pacientes 1280 px claro](evidencia/4.3-pacientes-1280-claro.png) · [ficha 320 px oscuro](evidencia/4.3-ficha-320-oscuro.png).

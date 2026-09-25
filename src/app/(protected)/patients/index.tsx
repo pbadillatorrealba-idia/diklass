@@ -2,10 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
+import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { listPatients } from "@/features/registro/ficha-service";
@@ -42,54 +43,52 @@ export default function PatientsScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen>
       <Head>
         <title>Pacientes · Diklass</title>
       </Head>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="2xl">Pacientes</Heading>
-          <Button
-            accessibilityLabel="Registrar paciente"
-            onPress={() => router.push("/patients/new")}
-            testID="patients-register"
+      <Heading level={1}>Pacientes</Heading>
+      <Button
+        accessibilityLabel="Registrar paciente"
+        onPress={() => router.push("/patients/new")}
+        testID="patients-register"
+      >
+        <ButtonText>Registrar paciente</ButtonText>
+      </Button>
+      {patientsQuery.isLoading ? <Text testID="patients-loading">Cargando pacientes…</Text> : null}
+      {queryError ? (
+        <Callout testID="patients-status" tone="error">
+          No pudimos cargar los pacientes. Vuelve a intentarlo.
+        </Callout>
+      ) : null}
+      <VStack className="w-full gap-3" testID="patients-list">
+        {(patientsQuery.data ?? []).map((entry) => (
+          // En escritorio la acción va a la derecha de los datos (design.md D9).
+          <Card
+            className="gap-2 lg:flex-row lg:items-center lg:justify-between"
+            key={entry.record.id}
+            testID="patient-item"
           >
-            <ButtonText>Registrar paciente</ButtonText>
-          </Button>
-          {patientsQuery.isLoading ? (
-            <Text testID="patients-loading">Cargando pacientes…</Text>
-          ) : null}
-          {queryError ? (
-            <Text accessibilityLiveRegion="polite" testID="patients-status">
-              No pudimos cargar los pacientes. Vuelve a intentarlo.
-            </Text>
-          ) : null}
-          <VStack className="w-full gap-3" testID="patients-list">
-            {(patientsQuery.data ?? []).map((entry) => (
-              <Box
-                className="rounded-xl border border-border bg-card p-4 gap-2"
-                key={entry.record.id}
-                testID="patient-item"
-              >
-                <Text bold>{entry.content.name}</Text>
-                <Text className="text-foreground/70">
-                  {entry.content.species} · {entry.content.breed}
-                </Text>
-                <Button
-                  accessibilityLabel={`Ver ficha de ${entry.content.name}`}
-                  onPress={() => router.push(`/patients/${entry.record.id}`)}
-                  testID="patient-open"
-                >
-                  <ButtonText>Ver ficha</ButtonText>
-                </Button>
-              </Box>
-            ))}
-            {patientsQuery.isSuccess && (patientsQuery.data ?? []).length === 0 ? (
-              <Text testID="patients-empty">Aún no hay pacientes registrados.</Text>
-            ) : null}
-          </VStack>
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+            <VStack className="gap-1">
+              <Text variant="strong">{entry.content.name}</Text>
+              <Text tone="muted">
+                {entry.content.species} · {entry.content.breed}
+              </Text>
+            </VStack>
+            <Button
+              accessibilityLabel={`Ver ficha de ${entry.content.name}`}
+              onPress={() => router.push(`/patients/${entry.record.id}`)}
+              testID="patient-open"
+              variant="outline"
+            >
+              <ButtonText>Ver ficha</ButtonText>
+            </Button>
+          </Card>
+        ))}
+        {patientsQuery.isSuccess && (patientsQuery.data ?? []).length === 0 ? (
+          <Text testID="patients-empty">Aún no hay pacientes registrados.</Text>
+        ) : null}
+      </VStack>
+    </Screen>
   );
 }

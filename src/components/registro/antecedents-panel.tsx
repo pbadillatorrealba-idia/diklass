@@ -2,8 +2,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { ANTECEDENT_GROUP_LABELS, ANTECEDENT_GROUP_ORDER } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlError,
@@ -70,18 +70,14 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
 
   return (
     <VStack className="w-full gap-3" testID="antecedents-panel">
-      <Text bold>Antecedentes</Text>
+      <Text variant="strong">Antecedentes</Text>
       {ANTECEDENT_GROUP_ORDER.map((group) => {
         const draft = drafts[group];
         const error = errors[group];
         const groupLabel = ANTECEDENT_GROUP_LABELS[group];
         return (
-          <Box
-            className="rounded-xl border border-border bg-card p-4"
-            key={group}
-            testID="antecedent-group"
-          >
-            <Text bold>{groupLabel}</Text>
+          <Card key={group} testID="antecedent-group">
+            <Text variant="strong">{groupLabel}</Text>
             {content.antecedentes[group].length === 0 ? (
               <Text testID="antecedent-empty">Sin registrar</Text>
             ) : (
@@ -134,7 +130,7 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
             >
               <ButtonText>Añadir antecedente</ButtonText>
             </Button>
-          </Box>
+          </Card>
         );
       })}
     </VStack>

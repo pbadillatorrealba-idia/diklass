@@ -2,7 +2,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
 import { AntecedentsPanel } from "@/components/registro/antecedents-panel";
 import {
   type FichaField,
@@ -15,6 +14,7 @@ import { PatientHistory } from "@/components/registro/patient-history";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { listPatientTimeline, openConsultation } from "@/features/registro/consultation-service";
@@ -173,100 +173,94 @@ export default function PatientDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen>
       <Head>
         <title>Ficha de paciente · Diklass</title>
       </Head>
-      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="2xl">Ficha del paciente</Heading>
-          {patientQuery.isLoading ? (
-            <Text testID="patient-detail-loading">Cargando ficha…</Text>
-          ) : null}
-          {patientQuery.isSuccess && patient === null ? (
-            <Text testID="patient-detail-missing">No encontramos esta ficha.</Text>
-          ) : null}
-          {status ? (
-            <Text accessibilityLiveRegion="polite" testID="patient-detail-status">
-              {status}
+      <Heading level={1}>Ficha del paciente</Heading>
+      {patientQuery.isLoading ? <Text testID="patient-detail-loading">Cargando ficha…</Text> : null}
+      {patientQuery.isSuccess && patient === null ? (
+        <Text testID="patient-detail-missing">No encontramos esta ficha.</Text>
+      ) : null}
+      {status ? (
+        <Text accessibilityLiveRegion="polite" testID="patient-detail-status">
+          {status}
+        </Text>
+      ) : null}
+      {content ? (
+        <>
+          <VStack
+            className="rounded-xl border border-border bg-card p-4 gap-2"
+            testID="patient-ficha"
+          >
+            <Text variant="strong">Ficha de {content.name}</Text>
+            <Text>Nombre: {content.name}</Text>
+            <Text>Especie: {content.species}</Text>
+            <Text>Raza: {content.breed}</Text>
+            <Text>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
+            <Text>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
+            <Text>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
+            <Text>Sexo: {content.sex}</Text>
+            <Text>Estado reproductivo: {content.reproductiveStatus}</Text>
+            <Text>
+              Tutor:{" "}
+              {tutor
+                ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`
+                : "Sin tutor asociado"}
             </Text>
-          ) : null}
-          {content ? (
-            <>
-              <VStack
-                className="rounded-xl border border-border bg-card p-4 gap-2"
-                testID="patient-ficha"
-              >
-                <Text bold>Ficha de {content.name}</Text>
-                <Text>Nombre: {content.name}</Text>
-                <Text>Especie: {content.species}</Text>
-                <Text>Raza: {content.breed}</Text>
-                <Text>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
-                <Text>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
-                <Text>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
-                <Text>Sexo: {content.sex}</Text>
-                <Text>Estado reproductivo: {content.reproductiveStatus}</Text>
-                <Text>
-                  Tutor:{" "}
-                  {tutor
-                    ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`
-                    : "Sin tutor asociado"}
-                </Text>
-              </VStack>
-              <MissingFieldsPanel content={content} />
-              {isEditing && fichaValues ? (
-                <VStack className="w-full gap-4">
-                  <FichaForm
-                    errors={fichaErrors}
-                    isDisabled={isBusy}
-                    onChange={(field: FichaField, text: string) =>
-                      setFichaValues((prev) => (prev === null ? prev : { ...prev, [field]: text }))
-                    }
-                    values={fichaValues}
-                  />
-                  <Button
-                    accessibilityLabel="Guardar ficha"
-                    isDisabled={isBusy}
-                    onPress={() => void handleSaveFicha()}
-                    testID="patient-save"
-                  >
-                    <ButtonText>Guardar ficha</ButtonText>
-                  </Button>
-                  <Button
-                    accessibilityLabel="Cancelar la edición de la ficha"
-                    onPress={() => setIsEditing(false)}
-                    testID="patient-edit-cancel"
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                </VStack>
-              ) : (
-                <Button
-                  accessibilityLabel="Editar ficha"
-                  isDisabled={isBusy}
-                  onPress={startEditing}
-                  testID="patient-edit"
-                >
-                  <ButtonText>Editar ficha</ButtonText>
-                </Button>
-              )}
-              <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
-              <PatientHistory
-                entries={historyQuery.data ?? []}
-                onOpen={(consultationId) => router.push(`/consultations/${consultationId}`)}
+          </VStack>
+          <MissingFieldsPanel content={content} />
+          {isEditing && fichaValues ? (
+            <VStack className="w-full gap-4">
+              <FichaForm
+                errors={fichaErrors}
+                isDisabled={isBusy}
+                onChange={(field: FichaField, text: string) =>
+                  setFichaValues((prev) => (prev === null ? prev : { ...prev, [field]: text }))
+                }
+                values={fichaValues}
               />
               <Button
-                accessibilityLabel="Abrir consulta"
+                accessibilityLabel="Guardar ficha"
                 isDisabled={isBusy}
-                onPress={() => void handleOpenConsultation()}
-                testID="open-consultation"
+                onPress={() => void handleSaveFicha()}
+                testID="patient-save"
               >
-                <ButtonText>Abrir consulta</ButtonText>
+                <ButtonText>Guardar ficha</ButtonText>
               </Button>
-            </>
-          ) : null}
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+              <Button
+                accessibilityLabel="Cancelar la edición de la ficha"
+                onPress={() => setIsEditing(false)}
+                testID="patient-edit-cancel"
+              >
+                <ButtonText>Cancelar</ButtonText>
+              </Button>
+            </VStack>
+          ) : (
+            <Button
+              accessibilityLabel="Editar ficha"
+              isDisabled={isBusy}
+              onPress={startEditing}
+              testID="patient-edit"
+            >
+              <ButtonText>Editar ficha</ButtonText>
+            </Button>
+          )}
+          <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
+          <PatientHistory
+            entries={historyQuery.data ?? []}
+            onOpen={(consultationId) => router.push(`/consultations/${consultationId}`)}
+          />
+          <Button
+            accessibilityLabel="Abrir consulta"
+            isDisabled={isBusy}
+            onPress={() => void handleOpenConsultation()}
+            testID="open-consultation"
+          >
+            <ButtonText>Abrir consulta</ButtonText>
+          </Button>
+        </>
+      ) : null}
+    </Screen>
   );
 }
