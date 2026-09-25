@@ -47,10 +47,17 @@
  * oscuro → muted y muted-foreground (el origen repetía los valores claros), secondary-foreground,
  *          accent-foreground, destructive-foreground (texto oscuro, como primary-foreground),
  *          input, ring.
+ * En claro, `background` y `border` se oscurecieron para separar las tarjetas del fondo; por eso
+ * destructive, input y ring bajaron de nuevo su luminosidad (sistema-visual, design.md D4).
+ *
+ * Estados (FR-075): `{estado}` es texto, icono y borde sobre card/fondo; `{estado}-foreground`,
+ * el texto sobre su relleno sólido; `{estado}-surface`, el fondo tintado con `foreground`
+ * encima. `suggested` marca lo generado por el sistema (FR-076) y `scrim` es la capa modal
+ * (se usa con opacidad: `bg-scrim/55`).
  */
 @layer base {
   :root {
-    --background: 245 248 247;
+    --background: 238 242 241;
     --foreground: 4 5 5;
     --card: 255 255 255;
     --card-foreground: 3 14 12;
@@ -64,11 +71,23 @@
     --muted-foreground: 67 86 78;
     --accent: 215 154 61;
     --accent-foreground: 79 54 16;
-    --destructive: 224 14 0;
+    --destructive: 217 14 0;
     --destructive-foreground: 255 255 255;
-    --border: 233 241 239;
-    --input: 101 151 144;
-    --ring: 97 153 139;
+    --destructive-surface: 250 230 229;
+    --warning: 147 95 16;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 250 242 229;
+    --success: 36 123 67;
+    --success-foreground: 255 255 255;
+    --success-surface: 231 248 237;
+    --info: 57 111 172;
+    --info-foreground: 255 255 255;
+    --info-surface: 232 239 247;
+    --suggested: 131 83 198;
+    --scrim: 0 0 0;
+    --border: 206 219 215;
+    --input: 97 145 138;
+    --ring: 93 147 133;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -89,6 +108,18 @@
       --accent-foreground: 76 52 16;
       --destructive: 254 67 54;
       --destructive-foreground: 0 0 0;
+      --destructive-surface: 59 25 22;
+      --warning: 230 148 25;
+      --warning-foreground: 37 24 4;
+      --warning-surface: 59 44 22;
+      --success: 57 198 109;
+      --success-foreground: 9 32 17;
+      --success-surface: 22 59 36;
+      --info: 91 142 200;
+      --info-foreground: 10 20 31;
+      --info-surface: 22 40 59;
+      --suggested: 161 125 212;
+      --scrim: 0 0 0;
       --border: 58 68 66;
       --input: 96 114 111;
       --ring: 97 113 110;

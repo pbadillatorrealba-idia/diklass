@@ -132,8 +132,8 @@ se conservan `size` y `bold` como alias deprecados; se eliminan en la tarea 6.3.
 
 `tailwind.config.js` extiende:
 
-- `maxWidth`: `content` (720 px, una columna de lectura) y `wide` (1200 px, consulta a dos
-  columnas);
+- `maxWidth`: `content` (720 px, una columna de lectura), `wide` (1200 px, consulta a dos
+  columnas) y `dialog` (440 px, diálogos);
 - `minHeight`: `touch` (44 px) y `textarea` (120 px).
 
 Esto sustituye `max-w-[720px]`, `min-h-[44px]`, `min-h-[120px]` y `min-h-[96px]`.

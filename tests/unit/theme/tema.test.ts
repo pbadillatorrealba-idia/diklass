@@ -39,6 +39,18 @@ const TOKENS: ThemeToken[] = [
   "accent-foreground",
   "destructive",
   "destructive-foreground",
+  "destructive-surface",
+  "warning",
+  "warning-foreground",
+  "warning-surface",
+  "success",
+  "success-foreground",
+  "success-surface",
+  "info",
+  "info-foreground",
+  "info-surface",
+  "suggested",
+  "scrim",
   "border",
   "input",
   "ring",
@@ -75,6 +87,24 @@ const PAIRS: [ThemeToken, ThemeToken, number][] = [
   ["destructive-foreground", "destructive", 4.5],
   ["destructive", "background", 4.5],
   ["destructive", "card", 4.5],
+  // Estados (FR-075 · design.md D4): `{estado}` sirve de texto, icono y borde sobre card/fondo;
+  // `{estado}-foreground` va sobre el relleno sólido; `foreground` sobre `{estado}-surface`.
+  ...(["warning", "success", "info"] as const).flatMap(
+    (state): [ThemeToken, ThemeToken, number][] => [
+      [state, "background", 4.5],
+      [state, "card", 4.5],
+      [`${state}-foreground`, state, 4.5],
+      ["foreground", `${state}-surface`, 4.5],
+      [state, `${state}-surface`, 3],
+    ],
+  ),
+  ["foreground", "destructive-surface", 4.5],
+  ["destructive", "destructive-surface", 3],
+  // Borde lateral de lo sugerido por el sistema (FR-076): componente no textual, 3:1.
+  ["suggested", "background", 3],
+  ["suggested", "card", 3],
+  // Separación card/fondo (D4): borde decorativo, sin umbral WCAG; mínimo acordado 1.4:1.
+  ["border", "card", 1.4],
   ["input", "background", 3],
   ["input", "card", 3],
   ["ring", "background", 3],
@@ -118,14 +148,22 @@ describe("colores fuera del tema", () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  test.each(files)("%s no usa hex ni la paleta fija de Tailwind", (path) => {
-    const text = readFileSync(path, "utf8");
-    expect(text.match(/["'`]#[0-9a-fA-F]{3,8}\b/g) ?? []).toEqual([]);
-    expect(
-      text.match(
-        /\b(?:bg|text|border|ring|outline|placeholder)-(?:white|black|(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3})\b/g,
-      ) ?? [],
-    ).toEqual([]);
+  const LITERALS = [
+    /["'`]#[0-9a-fA-F]{3,8}\b/g,
+    /\brgba?\([^)]*\)/g,
+    /\b(?:bg|text|border|ring|outline|placeholder)-(?:white|black|(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3})\b/g,
+  ];
+
+  // FR-081 · SC-051: cada hallazgo se reporta como `archivo:línea literal`.
+  test.each(files)("%s no usa hex, rgb() ni la paleta fija de Tailwind", (path) => {
+    const found = readFileSync(path, "utf8")
+      .split("\n")
+      .flatMap((line, index) =>
+        LITERALS.flatMap((pattern) => line.match(pattern) ?? []).map(
+          (literal) => `${path}:${index + 1} ${literal}`,
+        ),
+      );
+    expect(found).toEqual([]);
   });
 });
 
