@@ -157,3 +157,54 @@ $ bun run typecheck                    → sin errores
 $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/auth.spec.ts --project=chromium --workers=1
   8 passed (incluye US11/AC5: el diálogo de sesión expirada aparece y permite reautenticar)
 ```
+
+## 3.1 — Dependencias de iconos (D8 · Complexity Tracking)
+
+```
+$ bunx expo install @expo/vector-icons   → @expo/vector-icons ^15.0.2 (instalado 15.1.1, alineado con SDK 57)
+$ bunx expo install expo-font            → expo-font ~57.0.4
+$ bun audit --ignore … (mismas exclusiones que CI)
+  No vulnerabilities found (checked 602 packages, 2 ignored)
+$ bunx expo install --check              → Dependencies are up to date
+$ bunx expo-doctor                       → 20/21 checks passed
+```
+
+`expo-doctor` detectó que `expo-font` (cuyo config plugin ya usa `app.json`) era solo transitiva y
+`@expo/vector-icons` la requiere como peer: se instaló como dependencia directa. El único aviso
+restante, `react-native-screens` duplicado dentro de `expo-router`, **existe ya en `main`**
+(`bun.lock` de `main` contiene `expo-router/react-native-screens`) y queda fuera del alcance de
+este cambio.
+
+## 3.2 — Icon (FR-078 · D8)
+
+`src/components/ui/icon.tsx` (MaterialCommunityIcons; color por token con `tone`; tamaños 16/20/24).
+Para renderizarlo en Bun, el preload de D11 también sustituye `expo-font` (fuente dada por cargada)
+y define `__DEV__`.
+
+```
+$ bun test tests/unit/ui/icon.test.tsx   # sin el componente
+error: Cannot find module '@/components/ui/icon'
+$ bun test tests/unit/ui/icon.test.tsx   # implementado
+ 6 pass / 0 fail   (role="img" + aria-label con label; aria-hidden con decorative; font-size por tamaño)
+$ bun run typecheck                      # con los tipos relajados a { label?; decorative? }
+ 2 × TS2578 (Unused '@ts-expect-error'): los tipos sí exigen label o decorative
+```
+
+## 3.3–3.8 — Primitivas (FR-074 · FR-075 · FR-076 · FR-077 · FR-078 · FR-079 · D5–D8)
+
+Cada prueba se observó en rojo (`Cannot find module …` para los componentes nuevos; 12 fallas en
+`typography.test.tsx` y 3 en `button.test.tsx` antes de implementar) y luego en verde:
+
+| Tarea | Componente | Prueba | Resultado |
+|---|---|---|---|
+| 3.3 | `Text` (`variant`, `tone`), `Heading` (`level`, `aria-level`; alias `size`/`bold` deprecados con nivel derivado) | `tests/unit/ui/typography.test.tsx` | verde |
+| 3.4 | `Card`, `Screen` (safe-area-context, `max-w-content`/`wide`, `p-4 md:p-6`, `<testID>-scroll`) | `tests/unit/ui/layout.test.tsx` | 5/5 |
+| 3.5 | `Callout` (superficie + borde + icono con nombre; `aria-live` en error/warning) | `tests/unit/ui/callout.test.tsx` | 9/9 |
+| 3.6 | `SuggestedBlock` (`border-l-4 border-suggested`, grupo con nombre, etiqueta visible primero) | `tests/unit/ui/suggested-block.test.tsx` | 4/4 |
+| 3.7 | `SeverityBadge` (leve/moderado/grave/crítico; tono `onDestructive` añadido a `Text`) | `tests/unit/ui/severity-badge.test.tsx` | verde |
+| 3.8 | `Button` `ghost` + `size` sm/md con `min-h-touch` | `tests/unit/ui/button.test.tsx` | 6/6 |
+
+`bun test tests/unit/ui tests/unit/registro/option-picker.test.tsx` → 60 pass / 0 fail;
+`bun run typecheck` sin errores. El preload también sustituye `react-native-safe-area-context`.
+`Screen` pasa `style={{ flex: 1 }}` al `SafeAreaView` porque NativeWind solo interpreta
+`className` en los componentes de RN.

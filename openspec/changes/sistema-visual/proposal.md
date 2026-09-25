@@ -75,7 +75,8 @@ primitivas de esta capacidad.
 - Código: `src/global.css`, `tailwind.config.js`, `src/theme/`, `src/components/ui/`, todas las
   pantallas de `src/app/(protected)/` y `(auth)/`, y los componentes de feature que hoy usan
   `text-foreground/70`, `bg-secondary/15`, `bg-accent/20` o estilos inline.
-- Dependencias: `expo-font` (ya presente) y `@expo/vector-icons` (nueva).
+- Dependencias: `expo-font` (el config plugin ya se usaba; pasa a dependencia directa, antes solo
+  transitiva) y `@expo/vector-icons` (nueva).
 - Pruebas: `tests/unit/theme/`, compuerta axe en `tests/e2e/web/accessibility.spec.ts` (claro y
   oscuro) y una comprobación nueva de reflujo a 320 px.
 - Dependencias de construcción: `identidad-y-acceso` (pantallas protegidas y diálogo de sesión).

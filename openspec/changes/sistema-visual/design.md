@@ -168,8 +168,10 @@ pantalla como hijo y no lo gestiona.
 `Card` no se usa para filas de listas densas dentro de otra tarjeta, para no caer en
 *Everything's a Card*: las listas internas se separan con `gap` y un divisor.
 
-`SuggestedBlock` pinta `border-l-4 border-suggested`, la etiqueta "Sugerencia del sistema" (icono
-+ texto, `tone="muted"`) y un `accessibilityLabel` que antepone "Sugerencia del sistema:" (FR-076).
+`SuggestedBlock` pinta `border-l-4 border-suggested` y, como primer hijo, la etiqueta visible
+"Sugerencia del sistema" (icono decorativo + texto `tone="muted"`), de modo que se lee antes que
+el contenido en todas las plataformas; el contenedor es un `role="group"` con ese nombre. Un
+`aria-label` sobre un contenedor sin rol lo ignoran los lectores de pantalla (FR-076).
 El contenido validado sigue usando `AttributionBadge`.
 
 `Button` gana la variante `ghost`, para acciones terciarias como "Ver fuente", y la prop `size`
@@ -259,7 +261,7 @@ aspecto final lo verifican la compuerta axe y las capturas.
 | Elemento | Por qué hace falta | Alternativa más simple descartada |
 |---|---|---|
 | `@expo/vector-icons` (dependencia nueva) | FR-075/077/078: estado y severidad no pueden depender solo del color, y el texto solo es menos escaneable en pantallas densas. Es un paquete de Expo, versionado con el SDK 57 e instalable con `expo install` | Sin iconos, solo texto: cumple WCAG pero no el objetivo de reconocimiento rápido de US13. SVG propios: más código que mantener |
-| `expo-font` (config plugin, ya presente) | FR-073: fuente embebida sin carga en tiempo de ejecución en nativo | `useFonts` en tiempo de ejecución: añade un estado de carga y un parpadeo |
+| `expo-font` (config plugin; antes solo transitiva, ahora dependencia directa) | FR-073: fuente embebida sin carga en tiempo de ejecución en nativo | `useFonts` en tiempo de ejecución: añade un estado de carga y un parpadeo |
 | Espejo `src/theme/colors.ts` | Props de color que no aceptan `className` (D1) | Leer las variables CSS en tiempo de ejecución: no es posible en nativo |
 | 6 primitivas nuevas | Cada una tiene ≥ 2 usos reales (tabla de D7) | Clases repetidas: 30+ copias con deriva ya medida |
 | Nivel visual `critico` | Decisión de producto para 006/007; es una fila en `SeverityBadge` | Añadirlo con 006: aceptable, pero el usuario lo pidió ahora |
