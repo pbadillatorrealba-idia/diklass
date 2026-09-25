@@ -364,6 +364,105 @@ export type Database = {
           },
         ]
       }
+      listening_sessions: {
+        Row: {
+          clinic_id: string
+          consultation_id: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          started_by: string
+          state: string
+        }
+        Insert: {
+          clinic_id: string
+          consultation_id: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Update: {
+          clinic_id?: string
+          consultation_id?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listening_sessions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listening_sessions_started_by_fkey"
+            columns: ["started_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_segments: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          ended_at: string
+          id: string
+          listening_session_id: string
+          processing_state: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          ended_at: string
+          id?: string
+          listening_session_id: string
+          processing_state?: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          ended_at?: string
+          id?: string
+          listening_session_id?: string
+          processing_state?: string
+          quality?: string
+          seq?: number
+          started_at?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_segments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_segments_listening_session_id_fkey"
+            columns: ["listening_session_id"]
+            isOneToOne: false
+            referencedRelation: "listening_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veterinarians: {
         Row: {
           clinic_id: string
