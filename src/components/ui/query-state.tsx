@@ -12,7 +12,7 @@ export type QueryStateProps = {
   errorMessage: string;
   /** Texto que explica qué falta y, si existe, la acción para crearlo. */
   empty: ReactNode;
-  /** Prefijo de `testID`: `<testID>-loading` y `<testID>-status`. */
+  /** Prefijo de `testID`: `<testID>-loading` y `<testID>-error`. */
   testID: string;
   children: ReactNode;
 };
@@ -40,7 +40,7 @@ export function QueryState({
   }
   if (error) {
     return (
-      <Callout testID={`${testID}-status`} tone="error">
+      <Callout testID={`${testID}-error`} tone="error">
         <Text>{errorMessage}</Text>
         <Button className="self-start" onPress={onRetry} size="sm" variant="outline">
           <ButtonText>Reintentar</ButtonText>

@@ -5,6 +5,7 @@ import { VisorDocumento } from "@/components/conocimiento/visor-documento";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
+import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { getSource, withdrawSource } from "@/features/conocimiento/coleccion-service";
@@ -87,57 +88,60 @@ export default function KnowledgeSourceScreen() {
       title="Base de conocimiento · Fuente clínica"
       back={{ href: "/knowledge/sources", label: "la colección" }}
     >
-      {fuenteQuery.data ? (
-        <>
-          <VisorDocumento fuente={fuenteQuery.data} fragmentoCitado={fragmentoCitado} />
-          {fuenteQuery.data.record.status === "available" && !confirmandoRetiro ? (
-            <Button
-              className="self-start"
-              isDisabled={isWithdrawing}
-              onPress={() => setConfirmandoRetiro(true)}
-              testID="retirar-fuente"
-            >
-              <ButtonText>
-                {isWithdrawing ? "Retirando…" : "Retirar fuente de la colección"}
-              </ButtonText>
-            </Button>
-          ) : null}
-          {fuenteQuery.data.record.status === "available" && confirmandoRetiro ? (
-            // El retiro es irreversible (HD3): se confirma en un segundo paso explícito.
-            <Callout title="¿Retirar esta fuente?" tone="warning">
-              <Text>
-                Dejará de responder consultas nuevas y no puede deshacerse; sus citas previas
-                seguirán siendo identificables.
-              </Text>
-              <Box className="flex-row gap-3">
-                <Button onPress={() => void retirar()} testID="confirmar-retiro">
-                  <ButtonText>Confirmar retiro</ButtonText>
-                </Button>
-                <Button
-                  onPress={() => setConfirmandoRetiro(false)}
-                  testID="cancelar-retiro"
-                  variant="outline"
-                >
-                  <ButtonText>Cancelar</ButtonText>
-                </Button>
-              </Box>
-            </Callout>
-          ) : null}
-        </>
-      ) : fuenteQuery.isError ? (
-        <Callout testID="fuente-error" tone="error">
-          No se pudo leer la fuente. Vuelve a intentarlo más tarde.
-        </Callout>
-      ) : fuenteQuery.data === null || documentId === "" ? (
-        // null: no existe, es de otra clínica o su contenido no es legible (getSource).
-        <Text tone="muted" variant="caption" testID="fuente-no-encontrada">
-          No se encontró la fuente en la colección de tu clínica.
-        </Text>
-      ) : (
-        <Text tone="muted" variant="caption">
-          Cargando la fuente…
-        </Text>
-      )}
+      <QueryState
+        empty={
+          // null: no existe, es de otra clínica o su contenido no es legible (getSource).
+          <Text testID="fuente-no-encontrada">
+            No se encontró la fuente en la colección de tu clínica.
+          </Text>
+        }
+        error={fuenteQuery.error}
+        errorMessage="No se pudo leer la fuente."
+        isEmpty={documentId === "" || fuenteQuery.data === null}
+        // Sin id la consulta no se ejecuta y quedaría pendiente para siempre.
+        isPending={documentId !== "" && fuenteQuery.isPending}
+        onRetry={() => void fuenteQuery.refetch()}
+        testID="fuente"
+      >
+        {fuenteQuery.data ? (
+          <>
+            <VisorDocumento fuente={fuenteQuery.data} fragmentoCitado={fragmentoCitado} />
+            {fuenteQuery.data.record.status === "available" && !confirmandoRetiro ? (
+              <Button
+                className="self-start"
+                isDisabled={isWithdrawing}
+                onPress={() => setConfirmandoRetiro(true)}
+                testID="retirar-fuente"
+              >
+                <ButtonText>
+                  {isWithdrawing ? "Retirando…" : "Retirar fuente de la colección"}
+                </ButtonText>
+              </Button>
+            ) : null}
+            {fuenteQuery.data.record.status === "available" && confirmandoRetiro ? (
+              // El retiro es irreversible (HD3): se confirma en un segundo paso explícito.
+              <Callout title="¿Retirar esta fuente?" tone="warning">
+                <Text>
+                  Dejará de responder consultas nuevas y no puede deshacerse; sus citas previas
+                  seguirán siendo identificables.
+                </Text>
+                <Box className="flex-row gap-3">
+                  <Button onPress={() => void retirar()} testID="confirmar-retiro">
+                    <ButtonText>Confirmar retiro</ButtonText>
+                  </Button>
+                  <Button
+                    onPress={() => setConfirmandoRetiro(false)}
+                    testID="cancelar-retiro"
+                    variant="outline"
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                </Box>
+              </Callout>
+            ) : null}
+          </>
+        ) : null}
+      </QueryState>
       {status !== null ? (
         <Text variant="caption" testID="fuente-status">
           {status}

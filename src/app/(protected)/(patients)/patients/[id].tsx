@@ -241,7 +241,12 @@ export default function PatientDetailScreen() {
             </Button>
           )}
           <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
-          <PatientHistory entries={historyQuery.data ?? []} />
+          <PatientHistory
+            entries={historyQuery.data ?? []}
+            error={historyQuery.error}
+            isPending={historyQuery.isPending}
+            onRetry={() => void historyQuery.refetch()}
+          />
           <Button
             accessibilityLabel="Abrir consulta"
             isDisabled={isBusy}

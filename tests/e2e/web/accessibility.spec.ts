@@ -84,7 +84,12 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
     }
   }
   for (const testID of expectedTestIDs) {
-    expect(reached, `El recorrido por teclado no alcanzó el control ${testID}`).toContain(testID);
+    // El mensaje lleva las paradas alcanzadas: el fallo intermitente de sistema-visual 8.2/8.4
+    // no se ha podido reproducir a demanda (quickstart.md).
+    expect(
+      reached,
+      `El recorrido por teclado no alcanzó el control ${testID} en ${page.url()} (primera parada ${firstStop}; alcanzó ${reached.join(", ")})`,
+    ).toContain(testID);
   }
 }
 

@@ -274,7 +274,16 @@ export default function FollowUpPanelScreen() {
         </VStack>
       </Card>
 
-      <FeedbackTimeline entries={timeline} onCorrect={corregirEntrada} />
+      <FeedbackTimeline
+        entries={timeline}
+        // La cronología depende de ambas lecturas: consultas y, sobre ellas, las entradas.
+        error={consultationsQuery.error ?? feedbackQuery.error}
+        isPending={consultationsQuery.isPending || feedbackQuery.isPending}
+        onCorrect={corregirEntrada}
+        onRetry={() =>
+          void (consultationsQuery.error ? consultationsQuery.refetch() : feedbackQuery.refetch())
+        }
+      />
       <AdverseEventReport events={eventosAdversos} />
 
       <Card testID="feedback-aggregates">

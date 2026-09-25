@@ -2,12 +2,17 @@ import { Link } from "expo-router";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { QueryState } from "@/components/ui/query-state";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { ConsultationHistoryEntry } from "@/features/registro/summaries";
 
 type PatientHistoryProps = {
   entries: ConsultationHistoryEntry[];
+  /** Estado de la lectura (FR-085): el vacío no se muestra mientras carga. */
+  isPending: boolean;
+  error: unknown;
+  onRetry: () => void;
 };
 
 /**
@@ -16,14 +21,20 @@ type PatientHistoryProps = {
  * nunca figura aquí; solo la versión efectiva, marcada si corrige una anterior (FR-010,
  * FR-024).
  */
-export function PatientHistory({ entries }: PatientHistoryProps) {
+export function PatientHistory({ entries, error, isPending, onRetry }: PatientHistoryProps) {
   return (
     <VStack className="w-full gap-3" testID="patient-history">
       <Heading level={2}>Historial de consultas</Heading>
-      {entries.length === 0 ? (
-        <Text testID="history-empty">Sin consultas registradas para este paciente.</Text>
-      ) : (
-        entries.map((entry) => {
+      <QueryState
+        empty={<Text testID="history-empty">Sin consultas registradas para este paciente.</Text>}
+        error={error}
+        errorMessage="No pudimos cargar el historial de consultas."
+        isEmpty={entries.length === 0}
+        isPending={isPending}
+        onRetry={onRetry}
+        testID="history"
+      >
+        {entries.map((entry) => {
           const openedAt = new Date(entry.openedAt).toLocaleString("es-CL");
           return (
             <Card key={entry.consultationId} testID="history-item">
@@ -52,8 +63,8 @@ export function PatientHistory({ entries }: PatientHistoryProps) {
               </Link>
             </Card>
           );
-        })
-      )}
+        })}
+      </QueryState>
     </VStack>
   );
 }

@@ -6,6 +6,7 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { QueryState } from "@/components/ui/query-state";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -26,6 +27,10 @@ function attributionDe(entry: FeedbackTimelineEntry): Attribution {
 type FeedbackTimelineProps = {
   entries: FeedbackTimelineEntry[];
   onCorrect: (entry: FeedbackTimelineEntry) => void;
+  /** Estado de la lectura (FR-085): el vacío no se muestra mientras carga. */
+  isPending: boolean;
+  error: unknown;
+  onRetry: () => void;
 };
 
 /**
@@ -34,16 +39,30 @@ type FeedbackTimelineProps = {
  * original que permanece (FR-024 · US10-AC5) y atribución de autor y momento (FR-070). El
  * `grave` de un evento adverso se destaca para no diluirse (FR-041 · US10-AC2).
  */
-export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) {
+export function FeedbackTimeline({
+  entries,
+  error,
+  isPending,
+  onCorrect,
+  onRetry,
+}: FeedbackTimelineProps) {
   return (
     <VStack className="w-full gap-3" testID="feedback-timeline">
       <Heading level={2}>Evolución registrada</Heading>
-      {entries.length === 0 ? (
-        <Text testID="feedback-timeline-empty">
-          Sin retroalimentación registrada para este paciente.
-        </Text>
-      ) : (
-        entries.map((entry) => {
+      <QueryState
+        empty={
+          <Text testID="feedback-timeline-empty">
+            Sin retroalimentación registrada para este paciente.
+          </Text>
+        }
+        error={error}
+        errorMessage="No pudimos cargar la evolución registrada."
+        isEmpty={entries.length === 0}
+        isPending={isPending}
+        onRetry={onRetry}
+        testID="feedback-timeline"
+      >
+        {entries.map((entry) => {
           const registradoEl = new Date(entry.record.created_at).toLocaleString("es-CL");
           const correcciones = entries.filter(
             (candidata) => candidata.correctsRecordId === entry.record.id,
@@ -120,8 +139,8 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
               ) : null}
             </Card>
           );
-        })
-      )}
+        })}
+      </QueryState>
     </VStack>
   );
 }

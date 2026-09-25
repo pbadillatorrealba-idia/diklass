@@ -57,7 +57,7 @@ describe("QueryState", () => {
 
   test("con error muestra el mensaje en un Callout de error y la acción «Reintentar»", () => {
     const html = render({ error: new Error("red"), isEmpty: true });
-    expect(html).toContain('data-testid="patients-status"');
+    expect(html).toContain('data-testid="patients-error"');
     expect(html).toContain("No pudimos cargar los pacientes.");
     expect(html).toContain(">Reintentar<");
     expect(html).toMatch(/data-class="[^"]*border-destructive/);

@@ -112,11 +112,11 @@ test.describe("base de conocimiento web", () => {
     try {
       await page.goto("/knowledge/sources/00000000-0000-4000-8000-00000000dead");
       await expect(page.getByTestId("fuente-no-encontrada")).toBeVisible();
-      await expect(page.getByText("Cargando la fuente…")).toBeHidden();
+      await expect(page.getByTestId("fuente-loading")).toHaveCount(0);
 
       await page.goto("/knowledge/sources/no-es-un-uuid");
       await expect(page.getByTestId("fuente-error")).toBeVisible();
-      await expect(page.getByText("Cargando la fuente…")).toBeHidden();
+      await expect(page.getByTestId("fuente-loading")).toHaveCount(0);
     } finally {
       await api.dispose();
     }

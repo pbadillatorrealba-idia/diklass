@@ -620,4 +620,31 @@ Resultado local en `chromium`:
   - Rojo por el módulo ausente. El caso de reintento se comprobó por mutación: sin `onPress`, falla.
   - Además de las props de D13, recibe `errorMessage` y el prefijo `testID` (`-loading`,
     `-status`), para conservar los `testID` de las pantallas.
+- **8.4 Adopción de `QueryState` (FR-085 · SC-056 · US14-AC5):**
+  - La usan `/patients`, `/follow-up`, `/knowledge/sources`, `/knowledge/sources/[id]`,
+    `PatientHistory` y `FeedbackTimeline`. Los dos historiales reciben ahora `isPending`, `error` y
+    `onRetry`: antes decían «Sin consultas…» o «Sin retroalimentación…» mientras la lectura seguía
+    en curso.
+  - Estados vacíos redactados. En `/patients` y `/knowledge/sources`, la acción de alta pasa al
+    vacío y la cabecera la oculta, para que haya una sola en pantalla. `/follow-up` enlaza a
+    «Registrar paciente» con `LinkText`.
+  - El error de `QueryState` usa el sufijo `-error` (`fuente-error`, `patients-error`…), porque
+    `fuente-status` ya era el aviso del retiro.
+  - Pruebas en rojo primero:
+    - `historiales-estados.test.tsx`: 4 casos rojos de carga y error;
+    - `estados.spec.ts`: rojo por `fuentes-loading` y `patients-error` ausentes.
+  - La «clínica sin fuentes» se reproduce respondiendo `knowledge_documents` con `[]` mediante
+    `page.route`, con la respuesta retenida para afirmar «Cargando…» con `aria-busy` y sin vacío.
+    La base local tiene una sola clínica sintética. El error se simula con un 500 en la lista de
+    pacientes, y «Reintentar» la recupera.
+  - `conocimiento.spec.ts` ahora afirma `fuente-loading` ausente, en vez del texto antiguo.
+  - Verde en `chromium`, de una en una: `estados` 2, `conocimiento` 5, `registro-epicrisis` 2,
+    `retroalimentacion` 5, `navegacion` 7, `attribution` 2 y `auth` 8. `accessibility`: 7 de 8.
+- **Pendiente a observar en 5.2:**
+  - «Recorrido por teclado» falla de forma intermitente en `/knowledge` («no alcanzó
+    `conocimiento-pregunta`»): 2 veces en unas 30 corridas, antes y después de 8.4.
+  - No se reprodujo a demanda: 17 corridas seguidas en verde, incluso con la lista de pacientes
+    retrasada 400 ms.
+  - Sin causa raíz confirmada no se cambia la prueba. Su mensaje ahora incluye la URL, la primera
+    parada y las paradas alcanzadas.
 
