@@ -121,3 +121,39 @@ el mapping existente cubre esta capacidad sin modificaciones.
   estructural (campos categóricos solo por selección) sí está verificado por diseño del formulario.
 - Ratificación por el equipo clínico de los vocabularios categóricos de D2 (Open Questions).
 - URLs del verde de CI en la PR que cree el orquestador (sección CI de arriba).
+
+## Revisión de la PR #28 (2026-09-24)
+
+Tras integrar `main` (migraciones 010 y 011 de las PR #30 y #29) y renombrar la suite pgTap a
+`012_retroalimentacion_clinica.sql`. Detalle por hallazgo en la sección 7 de [tasks.md](tasks.md).
+
+**Rojo observado antes de cada arreglo** (Supabase local compartido, podman):
+
+| Hallazgo | Prueba | Rojo | Verde |
+|---|---|---|---|
+| 1 · 2 | `supabase/tests/012_retroalimentacion_clinica.sql`, asserts 31–37 | 7 de 38 fallan, «caught: no exception» | 38/38 |
+| 3 | e2e «el reporte de eventos adversos muestra una vez…» | 3 ítems (esperado 1) | verde |
+| 4 | e2e «solo la versión vigente de una cadena ofrece «Corregir entrada»» | 2 botones (esperado 1) | verde |
+| 5 | e2e «dos pulsaciones rápidas…» (dos `click()` en la misma tarea) | 2 filas en la base (esperado 1) | verde |
+| 6 | e2e «los antecedentes muestran el vocabulario en español» | «Sin evolución registrada antes de hoy.» | verde |
+| 7 | e2e «una lectura rechazada por sesión expirada…» | sin diálogo «Sesión expirada» | verde |
+| 8 · 9 | `tests/unit/retroalimentacion/feedback-service.test.ts` | export inexistente; lectura de la traza como lista | verde |
+| 10 | refactor sin cambio de comportamiento | — | suites de cronología verdes |
+
+Nota del hallazgo 5: con dos clics de Playwright separados React vuelve a renderizar entre
+ambos y el botón ya está deshabilitado (no reproduce); el doble toque real llega en la misma
+tarea, así que la prueba dispara los dos `click()` dentro de un único `evaluate`.
+
+**Compuertas locales sobre el head de la revisión**:
+
+| Compuerta | Resultado |
+|---|---|
+| `bunx biome ci --error-on-warnings .` | limpio (199 archivos) |
+| `bun run typecheck` | limpio |
+| `supabase db reset && supabase test db` | 14 archivos, 276 tests, PASS (suite 012: 38/38) |
+| `bun run db:types` | sin diff |
+| `SUPABASE_LIVE_TESTS= bun run test` | 385 pass / 75 skip / 0 fail |
+| `bun run test:integration` (vivas) | 69 pass / 0 fail |
+| `bunx playwright test --project=chromium` | 26 passed (incluidas las 5 nuevas de `retroalimentacion.spec.ts`) |
+
+La URL de la ejecución de CI en verde se registra en el comentario de la PR #28.

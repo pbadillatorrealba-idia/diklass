@@ -192,6 +192,12 @@ objetos con `severity` en vocabulario y `description` no vacía, y `consultation
 con cast defensivo del uuid, patrón de 009 — a una consulta `closed` de la misma clínica (D3 hecha
 estructural). Viola la validación → `CLINICAL_FEEDBACK_INVALID_CONTENT` (SQLSTATE 23514).
 
+*Revisión de la PR #28*: el `consultationId` se exige además en su **forma canónica** (el texto es
+igual a `consultationId::uuid::text`). El cast acepta mayúsculas, llaves y la forma sin guiones,
+pero toda lectura filtra `content->>'consultationId'` por igualdad de texto: una variante
+resolvería la consulta y dejaría la entrada invisible e inborrable (D4), contra el 100 % de SC-023
+y SC-035. El mismo trigger impone el vínculo de las correcciones (D7).
+
 *Justificación* (Principio III y V): SC-023 afirma que el 100 % de los campos categóricos se
 recupera agregado sin interpretar texto libre; eso es verificable solo si el vocabulario lo garantiza
 el servidor. La validación Zod del servicio es una comodidad del cliente y **nunca un control**
@@ -218,18 +224,34 @@ del registro original (lectura de `clinical_audit_events` por `entity_id` + acci
 `createCorrectiveRecord` con ese `supersedesEventId`. Corregir una correctiva resuelve también al
 original (por su `supersedes_event_id → entity_id`), como en D8 de 002. La corrección conserva el
 `consultationId` del original: un registro asociado a otra consulta no es una corrección, es otra
-entrada (el servicio lo impone; ver Riesgos para la escritura directa).
+entrada.
+
+*Revisión de la PR #28*: el vínculo lo garantiza también el servidor, dentro del trigger de D5 (sin
+función callable nueva, compatible con D6). Para `record_type = 'clinical_feedback'`:
+`status = 'corrective'` ⇔ `supersedes_event_id` no nulo, y ese evento es el
+`clinical_feedback_recorded` de un original `clinical_feedback` de la misma clínica y con el mismo
+`consultationId`. Así una escritura directa no puede abrir una segunda cadena (apuntando al
+`corrective_record_created` de otra correctiva) que dejaría dos versiones vigentes y el agregado
+contaría dos veces la entrada (SC-023), ni saltar de consulta, ni declarar sustituir sin ser
+correctiva. El servicio busca el evento del original por `(entity_type, entity_id, action)` con
+`limit 1`: usa la columna líder del índice `clinical_audit_events(entity_type, entity_id,
+occurred_at)` y no trae la traza entera.
 
 ### D8. Lecturas como funciones puras + consultas simples
 
 Cuatro funciones puras unit-testeadas en `src/features/retroalimentacion/feedback-summary.ts`, con
-el mismo criterio de orden que 002 (`created_at` ascendente, `id` como desempate):
+el mismo criterio de orden que 002 (`created_at` ascendente, `id` como desempate). Tras la revisión
+de la PR #28 ese criterio no se duplica: `compararFilas` se exporta desde
+`src/features/registro/summaries.ts` (único cambio en ese archivo, sin cambio de comportamiento) y
+se importa aquí.
 
 - `buildFeedbackTimeline(entries, consultationId?)` → cronología sin sobrescritura (FR-056 ·
   US10-AC11) con marcas de corrección (`corrects`, `supersededBy`, entrada efectiva) y el original
   siempre presente (FR-024 · US10-AC5).
 - `collectAdverseEvents(timeline)` → eventos adversos **diferenciados** del resto de la evolución,
-  con su consulta, fecha y severidad; `grave` destacable (FR-041 · SC-035 · US10-AC2).
+  con su consulta, fecha, severidad y marca `effective`; `grave` destacable (FR-041 · SC-035 ·
+  US10-AC2). Devuelve el 100 %, incluidos los de versiones sustituidas; el reporte de la interfaz
+  (D10) lista por defecto solo los vigentes, porque una corrección copia los eventos del original.
 - `aggregateFeedback(timeline)` → recuentos por categoría de `adherence` y `evolution` y por
   severidad de `adverseEvents`, sin interpretar texto libre (FR-043 · SC-023 · US10-AC9).
 - `buildFeedbackAntecedents({ timeline, consultations, excludeConsultationId? })` → la evolución
@@ -238,8 +260,9 @@ el mismo criterio de orden que 002 (`created_at` ascendente, `id` como desempate
   referida (FR-039 · US10-AC7). Ver D9.
 
 Las consultas Supabase son lecturas simples: entradas por `content->>'consultationId'` (índice
-existente) y, para el agregado por paciente, las consultas por `content->>'patientId'` (índice
-existente) y luego sus entradas. Sin índice nuevo (Principio III): los dos caminos de lectura ya
+existente) y, para el agregado por paciente, `listFeedbackByConsultations(ids)` sobre las consultas
+que el panel ya leyó por `content->>'patientId'` (índice existente); tras la revisión de la PR #28
+el servicio no repite esa lectura de consultas. Sin índice nuevo (Principio III): los dos caminos de lectura ya
 están cubiertos por los índices de 009 y los presupuestos de abajo lo verifican con carga
 realista.
 
@@ -249,7 +272,7 @@ realista.
 esta rama, pero son donde FR-042 dice que la evolución previa se presenta al iniciar la consulta
 posterior (SC-036). Este cambio entrega:
 
-1. **El dato**: `listFeedbackByPatient`, `listFeedbackByConsultation` y `buildFeedbackAntecedents`
+1. **El dato**: `listFeedbackByConsultations`, `listFeedbackByConsultation` y `buildFeedbackAntecedents`
    (D8) exponen la evolución ya en forma de antecedentes, con la firma pensada para que una
    extensión futura de `buildFollowUpSummary` la consuma sin reformatear.
 2. **La presentación en superficie propia**: el panel de seguimiento `/follow-up/[patientId]` (D10)
@@ -281,6 +304,15 @@ Montaje mínimo documentado por ruta propia (lo permitido para esta rama):
   `AttributionBadge` y `CorrectionHistory` de `src/components/clinical/`) y
   `adverse-event-report.tsx` (sección propia; `grave` destacado).
 
+*Revisión de la PR #28* (comportamiento del panel, cubierto por
+`tests/e2e/web/retroalimentacion.spec.ts`): el reporte de eventos adversos lista los de versiones
+vigentes y deja los de versiones sustituidas a demanda y sin resalte; «Corregir entrada» solo se
+ofrece en la versión vigente de su cadena (corregir una sustituida prellenaba contenido viejo y
+revertía la corrección posterior); `guardar` lleva un cerrojo síncrono (`useRef`) contra el doble
+toque, porque lo registrado es inmutable e inborrable; los antecedentes usan las etiquetas del
+vocabulario; y un error de autenticación en las lecturas marca la sesión como expirada y abre su
+diálogo (patrón de `follow-up/index.tsx`).
+
 SC-037 («sin recurrir a texto libre para los campos categóricos») es estructural en el formulario:
 `adherence`, `evolution` y `severity` se registran con controles de selección; el texto libre solo
 describe (`evolutionNote`, `treatmentApplied`, `treatmentModification`, `revisedDiagnosis`,
@@ -300,6 +332,11 @@ establece para sus pantallas) y como pendiente declarado. Lo verificable sin Pla
 `bun run typecheck`, Biome sobre los archivos de este cambio, pruebas unitarias de lógica de
 formulario y esquema, pruebas de servicio e integración viva. La verificación visual local y la
 aceptación humana de SC-037 quedan explícitamente pendientes.
+
+*Revisión de la PR #28*: la restricción de Playwright se levantó para los defectos que solo se ven
+en pantalla. `tests/e2e/web/retroalimentacion.spec.ts` cubre reporte de eventos adversos,
+corrección de la vigente, doble envío, etiquetas de antecedentes y sesión expirada. La compuerta axe
++ teclado/foco/viewport sobre `/follow-up` sigue pendiente.
 
 ## Seguimiento de complejidad (Principio III)
 
@@ -364,9 +401,10 @@ la validación e inmunidad retiradas). El orden de aplicación lo garantiza el p
 - **`jsonb` sin FK** (heredado de D1 de 002): una escritura fuera de los servicios puede dejar
   `consultationId` huérfano o una correctiva apuntando mal. Mitigación: el trigger de D5 exige que
   `consultationId` resuelva a una consulta cerrada de la misma clínica (la referencia peor queda
-  cortada en el servidor) y los servicios son la única puerta de escritura. Queda sin cerrar la
-  escritura directa que corrija apuntando a otra consulta (D7 la impone solo en servicio): registrado
-  como coste aceptado, igual que en 002.
+  cortada en el servidor), en su forma canónica, y una correctiva solo encadena al evento de
+  registro de un original de la misma clínica y consulta (D7, cerrado en el servidor en la revisión
+  de la PR #28; antes era coste aceptado). Sigue sin FK la referencia en sí: un `DELETE` no es
+  posible (004/008 revocan DELETE), así que no puede quedar huérfana.
 - **Vocabularios categóricos sin ratificación del equipo clínico** (supuesto de la spec): los valores
   de D2 son el **default propuesto** y viven en un único punto (`schema.ts` + el vocabulario del
   trigger de D5 + su assert pgTap). Si el equipo define otros, el cambio se acota a esos tres
@@ -378,10 +416,10 @@ la validación e inmunidad retiradas). El orden de aplicación lo garantiza el p
   sobre la fila de consulta podría devolverla a `open` y desactivar el sello de 002 para anamnesis y
   diagnósticos. Para esta entidad el impacto es nulo por el trigger de D4; para el resto queda como
   nota de integración a 002 (un guard de no-reapertura cerraría el agujero).
-- **Verificación visual y axe automatizado imposibles en esta rama** (sin Playwright, restricción
-  explícita): las pantallas se verifican por typecheck, Biome, pruebas unitarias de lógica y
-  compilación; falta una pasada visual/axe cuando el entorno y el alcance lo permitan. Pendiente
-  declarado, no compuerta cumplida.
+- **Verificación visual y axe automatizado incompletos**: desde la revisión de la PR #28 hay
+  Playwright funcional sobre `/follow-up` (`tests/e2e/web/retroalimentacion.spec.ts`), pero la
+  compuerta axe + teclado/foco/viewport sigue sin cubrir esta ruta. Pendiente declarado, no
+  compuerta cumplida.
 - **Ciclos TDD lentos para SQL** (rojo/verde por CI + clúster scratch `/tmp/verify-005/`): se mitigan
   con una suite enfocada; las URLs de ejecución y la salida del clúster quedan como evidencia en
   `quickstart.md`.

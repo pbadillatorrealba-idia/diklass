@@ -40,3 +40,24 @@ Dn remiten a [design.md](design.md).
 - [ ] 6.1 Generar el reporte de revisión en español con `requesting-code-review` (subagente) sobre el rango completo de la rama y dejarlo publicado en la PR que cree el orquestador, o adjunto al reporte final si la PR aún no existe (esta rama nunca crea PRs). Verificación: reporte existente y su ubicación registrada.
 - [ ] 6.2 Aplicar los hallazgos con `receiving-code-review` (verificación técnica por ítem, respuestas en los hilos de la PR cuando exista), commit + push de los cambios y comentario del resultado. Verificación: ítems respondidos, commits pusheados y resultado comentado.
 - [ ] 6.3 Si la implementación desvía `design.md` o estas tareas, actualizar los artefactos con `openspec-update-change` antes del cierre. Verificación: artefactos coherentes entre sí.
+
+## 7. Revisión de la PR #28 (2026-09-24)
+
+Hallazgos de `/code-review` publicados en la PR (10 comentarios en línea sobre `24209f7`). Antes de
+corregir se integró `main` (PR #29 y #30: migraciones 010 y 011). pgTap, la integración viva y
+Playwright corren en local contra el Supabase compartido (podman), así que cada rojo se observó
+antes del arreglo.
+
+- [x] 7.1 Integrar `main` sin conflictos y renombrar la suite pgTap a `012_retroalimentacion_clinica.sql` para no compartir prefijo con `011_captura_voz_revision.sql` (D6). Verificación: `supabase db reset` con 001–012, `supabase test db` verde en las 14 suites y `bun run db:types` sin diff.
+- [x] 7.2 Exigir en el servidor el vínculo de la corrección: `status = 'corrective'` ⇔ `supersedes_event_id`, y ese evento es el `clinical_feedback_recorded` de un original de la misma clínica y consulta (FR-024 · SC-022 · US10-AC5 · SC-023, D7; hallazgo 1). Verificación: asserts 31–35 de la suite 012 rojos sin el arreglo («no exception») y verdes con él.
+- [x] 7.3 Exigir el `consultationId` en forma canónica (SC-023 · SC-035, D5; hallazgo 2). Verificación: asserts 36–37 (mayúsculas, llaves) rojo→verde.
+- [x] 7.4 Reporte de eventos adversos con las versiones vigentes y las sustituidas a demanda, sin resalte (FR-041 · SC-035 · US10-AC2, D10; hallazgo 3). Verificación: e2e «el reporte de eventos adversos muestra una vez…», rojo 3 ítems → verde 1.
+- [x] 7.5 «Corregir entrada» solo en la versión vigente (FR-024 · US10-AC5, D7/D10; hallazgo 4). Verificación: e2e «solo la versión vigente…», rojo 2 botones → verde 1.
+- [x] 7.6 Cerrojo síncrono contra el doble envío en `/follow-up/[patientId]` (FR-056 · SC-023, D4/D10; hallazgo 5). Verificación: e2e «dos pulsaciones rápidas…», rojo 2 filas → verde 1.
+- [x] 7.7 Antecedentes con etiquetas del vocabulario y texto vacío acorde a lo listado (FR-042 · US10-AC6, D10; hallazgo 6). Verificación: e2e «los antecedentes muestran el vocabulario en español» rojo→verde.
+- [x] 7.8 Sesión expirada en las lecturas del panel: `setAccessState('expired')` + diálogo; el aviso de carga se deriva del error vigente (US11 · Constitución IV, D10; hallazgo 7). Verificación: e2e «una lectura rechazada por sesión expirada…» rojo (sin diálogo) → verde.
+- [x] 7.9 `listFeedbackByConsultations(ids)` sobre las consultas ya cargadas por el panel, sin repetir `listConsultationsByPatient` (FR-043 · SC-023, D8; hallazgo 8). Verificación: prueba unitaria nueva (sin lectura de consultas) y suite viva verde.
+- [x] 7.10 Evento de registro del original leído por `(entity_type, entity_id, action)` con `limit 1` (D7; hallazgo 9). Verificación: prueba unitaria de los filtros rojo→verde.
+- [x] 7.11 Reutilizar `compararFilas` de `src/features/registro/summaries.ts` (D8; hallazgo 10). Verificación: suites unitarias de cronología verdes sin cambios.
+- [x] 7.12 Actualizar `design.md` (D5, D7, D8, D9, D10, D11 y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-retroalimentacion-clinica` válido.
+- [ ] 7.13 Compuerta axe WCAG 2.2 AA + teclado/foco/viewport sobre `/follow-up` en `tests/e2e/web/accessibility.spec.ts`. Pendiente declarado (D11): la revisión añadió Playwright funcional, no la compuerta de accesibilidad.
