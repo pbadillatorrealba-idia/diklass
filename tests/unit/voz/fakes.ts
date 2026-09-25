@@ -15,6 +15,7 @@ type FakeQuery = Promise<FakeResult> & {
   update: (...args: unknown[]) => FakeQuery;
   select: (...args: unknown[]) => FakeQuery;
   eq: (...args: unknown[]) => FakeQuery;
+  is: (...args: unknown[]) => FakeQuery;
   order: (...args: unknown[]) => FakeQuery;
   limit: (...args: unknown[]) => FakeQuery;
   single: () => Promise<FakeResult>;
@@ -51,6 +52,7 @@ export function fakeClient(queues: Partial<Record<string, FakeResult[]>> = {}) {
         update: chain("update"),
         select: chain("select"),
         eq: chain("eq"),
+        is: chain("is"),
         order: chain("order"),
         limit: chain("limit"),
         single: (): Promise<FakeResult> => {

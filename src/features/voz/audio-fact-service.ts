@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseRows } from "@/features/registro/read-rows";
 import type { AnamnesisField } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import {
@@ -6,8 +7,7 @@ import {
   audioFactContentSchema,
   type ExtractedFactDraft,
 } from "@/features/voz/schema";
-import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
-import type { ClinicalMutationResult } from "@/lib/attribution/types";
+import { createClinicalRecords, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
 import {
   captureClientError,
   type ErrorReporterClient,
@@ -53,9 +53,8 @@ export async function createAudioFactDrafts(
 ): Promise<AudioFactEntry[]> {
   const requestId = makeRequestId();
   try {
-    const hechos: AudioFactEntry[] = [];
-    for (const propuesta of input.drafts) {
-      const content = audioFactContentSchema.parse({
+    const contenidos = input.drafts.map((propuesta) =>
+      audioFactContentSchema.parse({
         consultationId: input.consultationId,
         field: propuesta.field,
         text: propuesta.text,
@@ -65,15 +64,20 @@ export async function createAudioFactDrafts(
         transcriptExcerpt: input.segmentText.slice(propuesta.excerptStart, propuesta.excerptEnd),
         segmentSeq: input.segmentSeq,
         contradiction: propuesta.contradiction ?? null,
-      });
-      const creada: ClinicalMutationResult<ClinicalRecordRow> = await createClinicalRecord(client, {
+      }),
+    );
+    // SC-028 (revisión de la PR #29): un único INSERT atómico por tramo. Los borradores del
+    // tramo nacen todos o ninguno, y el alta no relee la traza (D6: no emite evento).
+    const creadas = await createClinicalRecords(
+      client,
+      contenidos.map((content) => ({
         clinic_id: input.clinicId,
         record_type: "audio_fact",
         content,
         status: "draft",
-      });
-      hechos.push(aHecho(creada.record));
-    }
+      })),
+    );
+    const hechos = creadas.map((fila) => aHecho(fila));
     logEvent("voz.audio_fact_drafts_created", {
       requestId,
       operation: "createAudioFactDrafts",
@@ -105,8 +109,9 @@ export async function listAudioFacts(
     if (error) {
       throw error;
     }
-    const filas = (data ?? []) as ClinicalRecordRow[];
-    return filas.map((fila) => aHecho(fila));
+    // Revisión de la PR #29: una fila fuera de contrato se omite con log en vez de tumbar la
+    // lista entera (y con ella el panel de borradores y el contexto de contradicciones).
+    return parseRows(data as ClinicalRecordRow[] | null, audioFactContentSchema, "listAudioFacts");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -148,7 +153,9 @@ export async function editAudioFactDraft(
       text: input.text ?? actual.content.text,
       field: input.field ?? actual.content.field,
     });
-    const editada = await updateClinicalContent(client, input.factId, content);
+    const editada = await updateClinicalContent(client, input.factId, content, {
+      expectedUpdatedAt: actual.record.updated_at,
+    });
     logEvent("voz.audio_fact_draft_edited", {
       requestId,
       operation: "editAudioFactDraft",
@@ -175,7 +182,9 @@ export async function discardAudioFactDraft(
       ...actual.content,
       confirmationState: "discarded",
     });
-    const descartada = await updateClinicalContent(client, factId, content);
+    const descartada = await updateClinicalContent(client, factId, content, {
+      expectedUpdatedAt: actual.record.updated_at,
+    });
     logEvent("voz.audio_fact_draft_discarded", {
       requestId,
       operation: "discardAudioFactDraft",
@@ -206,8 +215,12 @@ export async function confirmAudioFact(
       confirmationState: "confirmed",
     });
     // D5: esta UPDATE aterriza la anamnesis en su misma transacción (trigger de dominio) y
-    // devuelve anamnesisEntryId derivado por el servidor.
-    const confirmada = await updateClinicalContent(client, factId, content);
+    // devuelve anamnesisEntryId derivado por el servidor. Con el control optimista (revisión
+    // de la PR #29) se confirma exactamente el texto que se leyó: si otro veterinario lo
+    // corrigió entretanto, no se escribe nada y se lanza ClinicalWriteConflictError.
+    const confirmada = await updateClinicalContent(client, factId, content, {
+      expectedUpdatedAt: actual.record.updated_at,
+    });
     const resultado = aHecho(confirmada.record);
     const landedEntryId = resultado.content.anamnesisEntryId;
     if (!landedEntryId) {
