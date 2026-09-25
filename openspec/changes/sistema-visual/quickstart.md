@@ -986,3 +986,16 @@ equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
 - **Menores de la revisión** registrados arriba: el error de página del seguimiento, los estados
   del selector de `/knowledge`, la señal de reintento y el CSP.
 
+### 9.4 — Guardado de credenciales (FR-089 · US15-AC1/AC2)
+
+- **Chrome de escritorio (2026-09-25):** verificado a mano por el usuario en su Chrome, con
+  perfil real, sobre `/login` local con `vet.ana@example.test`. El gestor ofreció guardar la
+  contraseña tras entrar y la rellenó en la visita siguiente.
+- **Cambio respecto a la tarea:** no hay captura. El diálogo del gestor es interfaz del
+  navegador, fuera de la página: ni `page.screenshot` de Playwright ni un `launchPersistentContext`
+  headless lo muestran. La evidencia es la confirmación del usuario.
+- **Pendientes de dispositivo:**
+  - que el teclado de iOS/Android ofrezca las credenciales guardadas;
+  - el guardado en el llavero de iOS, que además exige Associated Domains con un dominio
+    desplegado.
+

@@ -157,7 +157,7 @@ como pendiente explícito en `quickstart.md`.
   accesible, `aria-pressed`, área táctil) (FR-090). Verificación: prueba verde, axe en `chromium`
   y `chromium-dark` en verde, reflujo a 320 px en verde, y capturas a 320/1280 px en claro y en
   oscuro en `quickstart.md`.
-- [ ] 9.4 Verificar el guardado de credenciales:
+- [x] 9.4 Verificar el guardado de credenciales:
   - en Chromium con perfil persistente (`launchPersistentContext`), comprobar que tras entrar el
     gestor ofrece guardar, y registrarlo con captura;
   - en iOS/Android, comprobar que el teclado ofrece credenciales guardadas, o dejarlo como
