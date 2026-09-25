@@ -94,4 +94,19 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
       await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
     });
   }
+
+  // Revisión de la PR #38 (WCAG 4.1.2): sin acciones por día, los días no son botones ni paradas
+  // de Tab; solo se enfocan «Mes anterior» y «Mes siguiente».
+  test("en la agenda solo las flechas de mes son controles", async ({ page }) => {
+    const agenda = page.getByTestId("home-agenda");
+    await expect(agenda).toBeVisible();
+    const controles = await agenda.evaluate((el) =>
+      Array.from(
+        el.querySelectorAll<HTMLElement>(
+          'button, a[href], [role="button"], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).map((c) => c.getAttribute("aria-label") ?? c.textContent?.trim() ?? ""),
+    );
+    expect(new Set(controles)).toEqual(new Set(["Mes anterior", "Mes siguiente"]));
+  });
 });

@@ -79,6 +79,39 @@ function WeekdayHeader() {
   );
 }
 
+type DayProps = {
+  date?: { day: number; dateString: string };
+  state?: string;
+  todayKey: string;
+  eventDays: Set<string>;
+};
+
+/**
+ * Día del mes como texto (revisión de la PR #38): el `BasicDay` del paquete es un botón con rol
+ * `button` aunque no haga nada, y en web sumaba ~35 paradas de Tab sin acción (WCAG 4.1.2). Hoy
+ * lleva anillo y negrita; un día con eventos, fondo y subrayado. Nunca solo el color.
+ */
+function CalendarDay({ date, state, todayKey, eventDays }: DayProps) {
+  if (!date) return <View className="min-h-touch min-w-touch" />;
+  const isToday = date.dateString === todayKey;
+  const hasEvents = eventDays.has(date.dateString);
+  return (
+    <View
+      className={`min-h-touch min-w-touch items-center justify-center rounded-full ${
+        isToday ? "border-2 border-primary" : ""
+      } ${hasEvents ? "bg-primary-surface" : ""}`.trim()}
+      testID={isToday ? "calendar-today" : undefined}
+    >
+      <Text
+        className={`${isToday ? "font-bold" : ""} ${hasEvents ? "underline" : ""}`.trim()}
+        tone={state === "disabled" && !isToday ? "muted" : "default"}
+      >
+        {date.day}
+      </Text>
+    </View>
+  );
+}
+
 function shiftMonth(month: string, delta: number) {
   const [year = 0, index = 1] = month.split("-").map(Number);
   const date = new Date(Date.UTC(year, index - 1 + delta, 1));
@@ -103,24 +136,10 @@ export function MonthCalendar({ events, today }: MonthCalendarProps) {
   const todayKey = today ?? localDay(new Date().toISOString(), timeZone);
   const [month, setMonth] = useState(`${todayKey.slice(0, 7)}-01`);
 
-  const markedDates = useMemo(() => {
-    const styles: Record<string, { customStyles: object }> = {};
-    for (const day of Object.keys(toMarkedDates(events, timeZone))) {
-      styles[day] = {
-        customStyles: {
-          container: { backgroundColor: colors["primary-surface"] },
-          text: { textDecorationLine: "underline" },
-        },
-      };
-    }
-    styles[todayKey] = {
-      customStyles: {
-        container: { borderColor: colors.primary, borderWidth: 2 },
-        text: { color: colors.foreground, fontWeight: "700" },
-      },
-    };
-    return styles;
-  }, [colors, events, timeZone, todayKey]);
+  const eventDays = useMemo(
+    () => new Set(Object.keys(toMarkedDates(events, timeZone))),
+    [events, timeZone],
+  );
 
   const [year = "", monthIndex = "1"] = month.split("-");
   const title = `${LocaleConfig.locales.es.monthNames[Number(monthIndex) - 1]} de ${year}`;
@@ -157,8 +176,9 @@ export function MonthCalendar({ events, today }: MonthCalendarProps) {
         key={`${month}-${colors.card}`}
         current={month}
         customHeader={WeekdayHeader}
-        markedDates={markedDates}
-        markingType="custom"
+        dayComponent={({ date, state }) => (
+          <CalendarDay date={date} eventDays={eventDays} state={state} todayKey={todayKey} />
+        )}
         theme={{
           backgroundColor: colors.card,
           calendarBackground: colors.card,

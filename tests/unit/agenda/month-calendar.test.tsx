@@ -54,4 +54,17 @@ describe("MonthCalendar", () => {
     expect(html).toContain("Mes anterior");
     expect(html).toContain("Mes siguiente");
   });
+
+  // Revisión de la PR #38 (WCAG 4.1.2): sin acción por día, los días son texto, no botones.
+  test("los únicos botones son las flechas de mes", () => {
+    const botones = html.match(/role="button"/g) ?? [];
+    expect(botones).toHaveLength(2);
+    expect(html).toContain(">28<");
+  });
+
+  test("hoy se distingue con anillo y negrita, no solo con color", () => {
+    const hoy = html.match(/<div[^>]*data-testid="calendar-today"[^>]*>/)?.[0] ?? "";
+    expect(hoy).toContain("border-2");
+    expect(html).toMatch(/data-testid="calendar-today"[\s\S]*?font-bold/);
+  });
 });
