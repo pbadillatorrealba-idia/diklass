@@ -121,6 +121,15 @@ servidor.
 
 ### D4. Aprobación y cierre de consulta son atómicos, en este orden
 
+**El cierre solo ocurre por la aprobación** (migración 013, tarea 7.10): el trigger
+`guard_consultation_close` exige que una consulta nazca `open`, que su estado pertenezca a
+{`open`, `closed`} (`CONSULTATION_STATUS_INVALID`) y que la transición `open → closed` encuentre una
+epicrisis `approved` de esa misma consulta y clínica (`CONSULTATION_CLOSE_REQUIRES_APPROVAL`). Como
+`approve_clinical_record` aprueba la epicrisis antes de cerrar la consulta, la condición se cumple
+por ese camino sin tocar la función, y un `UPDATE` o `INSERT` directo por la Data API ya no puede
+dejar una consulta cerrada sin epicrisis (SC-014). Los fixtures pgTap de 004 y 005 cierran sus
+consultas aprobando una epicrisis, como la aplicación.
+
 `approve_clinical_record` se extiende (`create or replace`, misma firma y respuesta) para que, al
 aprobar una epicrisis con `content.consultationId`, cierre en la misma transacción la consulta
 vinculada (`content.status = 'closed'`). Así US3-AC2 (almacena versión aprobada con aprobador y
@@ -348,11 +357,6 @@ especialistas: quedan como **pendiente de aceptación**, no como verificados.
   rootless) y Playwright corren en el entorno de desarrollo, y `registro-epicrisis.spec.ts` cubre
   dos recorridos (D12). El e2e funcional web del recorrido clínico completo sigue **pendiente y
   declarado**; la verificación visual manual, también.
-- **Cierre de consulta sin epicrisis por la Data API**: el sellado impide reabrir una consulta
-  cerrada (D5.4), pero un `UPDATE` directo aún puede pasar una consulta `open` a `closed` sin
-  aprobar su epicrisis, lo que rompería SC-014 (toda consulta cerrada con su epicrisis). Restringir
-  el cierre a `approve_clinical_record` rompe los fixtures pgTap de las specs 004 y 005, que
-  insertan consultas ya cerradas; se aborda junto con esas specs.
 - **`jsonb` sin FK** (D1/D6): un cliente que escriba fuera de los servicios puede dejar referencias
   huérfanas; RLS no lo impide. Mitigación: servicios únicos de escritura, pruebas de integración y
   este registro explícito. Es el coste de no crear una segunda convención de persistencia.
