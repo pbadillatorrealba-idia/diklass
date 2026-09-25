@@ -339,3 +339,18 @@ $ … registro-epicrisis.spec.ts --project=chromium --workers=1   → 2 passed
 $ … auth.spec.ts / attribution.spec.ts                           → 8 / 2 passed
 ```
 Capturas (consulta cerrada): [1280 px oscuro](evidencia/4.6-consulta-1280-oscuro.png) · [320 px claro](evidencia/4.6-consulta-320-claro.png).
+
+### 4.7 — Seguimiento y retroalimentación (FR-077 · US13-AC3)
+
+- `adverse-event-report`: cada evento vigente muestra `SeverityBadge` (nombre + icono + color) y su
+  descripción; el `grave` conserva su superficie destacada con el token `destructive-surface` (antes
+  `bg-destructive/10`). Las versiones sustituidas siguen sin resalte (la e2e lo exige). "Ver
+  versiones ya corregidas" → `outline`.
+- `feedback-timeline`: el evento adverso usa `SeverityBadge` en lugar de texto en rojo.
+- `/follow-up`: error de carga → `Callout error`; tarjeta con acción a la derecha en `lg` y
+  "Ver seguimiento" → `outline` (como `/patients`).
+
+```
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/retroalimentacion.spec.ts --project=chromium --workers=1   → 5 passed
+```
+Capturas del reporte de eventos adversos: [1280 px claro](evidencia/4.7-eventos-1280-claro.png) · [320 px oscuro](evidencia/4.7-eventos-320-oscuro.png).

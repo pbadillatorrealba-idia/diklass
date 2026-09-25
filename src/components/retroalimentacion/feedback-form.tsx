@@ -138,10 +138,8 @@ export function FeedbackForm({
       })}
 
       <VStack className="w-full gap-3" testID="feedback-adverse-events">
-        <Text bold>Eventos adversos</Text>
-        <Text className="text-foreground/70">
-          Vacío significa «sin eventos adversos en esta entrada».
-        </Text>
+        <Text variant="strong">Eventos adversos</Text>
+        <Text tone="muted">Vacío significa «sin eventos adversos en esta entrada».</Text>
         {values.adverseEvents.map((evento, index) => (
           <Box
             className="rounded-lg border border-border bg-card p-3 gap-2"

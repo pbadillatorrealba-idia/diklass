@@ -4,12 +4,14 @@ import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
+import { SeverityBadge } from "@/components/ui/severity-badge";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { FeedbackTimelineEntry } from "@/features/retroalimentacion/feedback-summary";
 import type { Attribution } from "@/lib/attribution/types";
-import { ADHERENCE_LABELS, ADVERSE_EVENT_SEVERITY_LABELS, EVOLUTION_LABELS } from "./labels";
+import { ADHERENCE_LABELS, EVOLUTION_LABELS } from "./labels";
 
 function attributionDe(entry: FeedbackTimelineEntry): Attribution {
   return {
@@ -35,7 +37,7 @@ type FeedbackTimelineProps = {
 export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) {
   return (
     <VStack className="w-full gap-3" testID="feedback-timeline">
-      <Heading size="lg">Evolución registrada</Heading>
+      <Heading level={2}>Evolución registrada</Heading>
       {entries.length === 0 ? (
         <Text testID="feedback-timeline-empty">
           Sin retroalimentación registrada para este paciente.
@@ -47,12 +49,8 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
             (candidata) => candidata.correctsRecordId === entry.record.id,
           );
           return (
-            <Box
-              className="rounded-xl border border-border bg-card p-4 gap-2"
-              key={entry.record.id}
-              testID="feedback-timeline-item"
-            >
-              <Text bold testID="feedback-timeline-registered-at">
+            <Card className="gap-2" key={entry.record.id} testID="feedback-timeline-item">
+              <Text variant="strong" testID="feedback-timeline-registered-at">
                 Entrada registrada el {registradoEl}
               </Text>
               <Text>
@@ -90,20 +88,19 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
                 </Text>
               ) : null}
               {entry.content.adverseEvents.map((evento, index) => (
-                <Text
-                  accessibilityLabel={
-                    evento.severity === "grave"
-                      ? `Evento adverso grave: ${evento.description}`
-                      : undefined
-                  }
-                  bold={evento.severity === "grave"}
-                  className={evento.severity === "grave" ? "text-destructive" : undefined}
+                <Box
+                  className="flex-row flex-wrap items-center gap-2"
                   key={`${entry.record.id}-adverse-${index}`}
                   testID="feedback-timeline-adverse-event"
                 >
-                  Evento adverso ({ADVERSE_EVENT_SEVERITY_LABELS[evento.severity]}):{" "}
-                  {evento.description}
-                </Text>
+                  <Text variant={evento.severity === "grave" ? "strong" : "body"}>
+                    Evento adverso:
+                  </Text>
+                  <SeverityBadge level={evento.severity} />
+                  <Text variant={evento.severity === "grave" ? "strong" : "body"}>
+                    {evento.description}
+                  </Text>
+                </Box>
               ))}
 
               <AttributionBadge attribution={attributionDe(entry)} />
@@ -121,7 +118,7 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
                   <ButtonText>Corregir entrada</ButtonText>
                 </Button>
               ) : null}
-            </Box>
+            </Card>
           );
         })
       )}
