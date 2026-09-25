@@ -52,16 +52,20 @@ export type CalloutProps = PropsWithChildren<{
 
 /**
  * Aviso con estado (FR-075 · design.md D7): superficie tintada, borde e icono con nombre, para que
- * el color nunca sea la única señal. `error` y `warning` se anuncian al aparecer. Un texto plano
+ * el color nunca sea la única señal. `error` (`role="alert"`) y `warning` se anuncian al aparecer. Un texto plano
  * como contenido (también con interpolación) se envuelve en `Text`.
  */
 export function Callout({ children, className, testID, title, tone }: CalloutProps) {
   const style = TONES[tone];
-  const live = tone === "error" || tone === "warning";
+  // Un error es `alert`, que los lectores anuncian al insertarse; un aviso, región `polite`. Una
+  // región `polite` que aparece ya con su texto no se anuncia en muchos lectores (PR #38).
+  const isAlert = tone === "error";
+  const isPolite = tone === "warning";
   return (
     <View
-      accessibilityLiveRegion={live ? "polite" : undefined}
-      aria-live={live ? "polite" : undefined}
+      accessibilityLiveRegion={isAlert ? "assertive" : isPolite ? "polite" : undefined}
+      aria-live={isPolite ? "polite" : undefined}
+      role={isAlert ? "alert" : undefined}
       className={`flex-row gap-2 rounded-lg border p-3 ${style.box} ${className ?? ""}`.trim()}
       style={CONTINUOUS_CURVE}
       testID={testID}

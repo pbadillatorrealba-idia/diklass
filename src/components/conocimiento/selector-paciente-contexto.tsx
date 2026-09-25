@@ -60,17 +60,16 @@ export function SelectorPacienteContexto({
           />
         </Input>
       </FormControl>
-      {busqueda.trim() === "" ? null : (
-        <Text
-          accessibilityLiveRegion="polite"
-          aria-live="polite"
-          testID="selector-paciente-contexto-recuento"
-          tone="muted"
-          variant="caption"
-        >
-          {recuento(contarCoincidencias(pacientes, busqueda))}
-        </Text>
-      )}
+      {/* Siempre montada: una región viva que aparece ya con su texto no se anuncia (PR #38). */}
+      <Text
+        accessibilityLiveRegion="polite"
+        aria-live="polite"
+        testID="selector-paciente-contexto-recuento"
+        tone="muted"
+        variant="caption"
+      >
+        {busqueda.trim() === "" ? "" : recuento(contarCoincidencias(pacientes, busqueda))}
+      </Text>
       <OptionPicker
         isDisabled={isDisabled}
         label="Contexto de paciente"

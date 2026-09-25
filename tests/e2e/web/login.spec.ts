@@ -116,7 +116,7 @@ test.describe("acceso compatible con gestores de contraseñas", () => {
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
       const error = page.getByTestId("login-error");
       await expect(error).toBeVisible({ timeout: 15_000 });
-      await expect(error).toHaveAttribute("aria-live", "polite");
+      await expect(error).toHaveAttribute("role", "alert");
       await expect(page.locator("#username")).toHaveValue(ANA.email);
       await expect(page.locator("#password")).toHaveValue("");
     });

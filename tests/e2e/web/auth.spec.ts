@@ -54,7 +54,7 @@ test.describe("auth web shell", () => {
     await page.keyboard.press("Enter");
     const error = page.getByTestId("login-error");
     await expect(error).toContainText("Revisa los campos marcados antes de continuar.");
-    await expect(error).toHaveAttribute("aria-live", "polite");
+    await expect(error).toHaveAttribute("role", "alert");
   });
 
   test("denies a direct protected route without an authenticated session", async ({ page }) => {

@@ -27,17 +27,26 @@ describe("Callout", () => {
     expect(html).toContain("Texto del aviso");
   });
 
+  // Revisión de la PR #38: una región `polite` que aparece ya con su texto no se anuncia en
+  // muchos lectores; `role="alert"` sí se anuncia al insertarse.
   test.each([
-    ["error", true],
-    ["warning", true],
-    ["success", false],
-    ["info", false],
-  ] as const)("el tono %s se anuncia al aparecer: %p", (tone, live) => {
+    ["error", 'role="alert"'],
+    ["warning", 'aria-live="polite"'],
+  ] as const)("el tono %s se anuncia al aparecer con %s", (tone, marca) => {
     const box = tagWith(
       renderToStaticMarkup(<Callout testID="c" tone={tone} />),
       'data-testid="c"',
     );
-    expect(box.includes('aria-live="polite"')).toBe(live);
+    expect(box).toContain(marca);
+  });
+
+  test.each(["success", "info"] as const)("el tono %s no interrumpe", (tone) => {
+    const box = tagWith(
+      renderToStaticMarkup(<Callout testID="c" tone={tone} />),
+      'data-testid="c"',
+    );
+    expect(box).not.toContain("aria-live");
+    expect(box).not.toContain('role="alert"');
   });
 
   test("el título opcional va en texto fuerte antes del contenido", () => {

@@ -324,6 +324,8 @@ test.describe("base de conocimiento web", () => {
       await page.waitForLoadState("networkidle");
       expect(await grupo.getByRole("radio").count()).toBeLessThanOrEqual(9);
 
+      // La región viva existe antes de buscar: así el lector anuncia el cambio de texto (PR #38).
+      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText("");
       await escribir(page, "Buscar paciente", `buho e2e ${marca}`);
       await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText(
         "1 paciente coincide",
