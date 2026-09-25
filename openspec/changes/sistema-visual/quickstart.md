@@ -876,9 +876,13 @@ Resultado local en `chromium`:
   - los enlaces de navegación;
   - las dos columnas de la consulta y de D18;
   - el reflujo a 320/375/1280 px, también de `/login`.
-- CI (`chromium`, y `firefox`/`webkit` en matriz): verde en `8990c3e`,
-  https://github.com/pbadillatorrealba-idia/diklass/actions/runs/36185078838. `chromium-dark` no
-  corre en CI; su resultado es el local.
+- CI verde en `8990c3e`:
+  https://github.com/pbadillatorrealba-idia/diklass/actions/runs/36185078838.
+  - En la PR, CI solo corre `chromium`.
+  - La matriz `firefox`/`webkit` (`web-e2e-full-matrix`) solo corre en `push`, así que quedó
+    *skipped* en la rama. Su resultado es el local de la tabla, y en CI queda **pendiente** del
+    `push` a `main`.
+  - `chromium-dark` no corre en CI.
 - El fallo intermitente del recorrido por teclado queda explicado y corregido (5.7, 5.8 y la
   espera de `history-open`).
 
