@@ -155,3 +155,24 @@ criterio observable de terminación y su trazabilidad a FR/US/SC del spec del ca
   decisiones duras (ASR simulado por defecto, procedencia `inferida`, confirmación atómica por
   trigger de dominio, refinamiento del mapping) y lista de requisitos de integración R1–R3. Verificación: reporte
   entregado; sin PRs ni merges (restricción de esta rama).
+
+## 7. Revisión de la PR #29 (2026-09-24)
+
+Hallazgos de `/code-review high` publicados en la PR (10 comentarios en línea sobre `a5e2812`).
+La rama se puso al día con `main` (PR #30, migración 010) antes de corregir. pgTap, la integración
+viva y Playwright corren en local contra el stack Supabase compartido (podman rootless), así que
+cada rojo se observó antes del arreglo.
+
+- [x] 7.1 Cerrar la sesión de escucha y resolver el tramo cuando el ciclo falla: controlador en `detenido`, sesión `interrupted`, tramo `discarded` (FR-055 · US6-AC12 · FR-025, D10). Verificación: `tests/unit/voz/listen-mode-controller.test.ts` (1 caso) y `tests/unit/voz/listen-mode-pipeline.test.ts` (`procesarTramo`, `ejecutarEscucha`), rojos antes del arreglo.
+- [x] 7.2 `stop('processed')` procesa de verdad el tramo interrumpido (US6-AC12 · FR-016, D10). Verificación: `resolverTramoInterrumpido` con `processed` crea sus borradores, rojo→verde.
+- [x] 7.3 Confirmar invalida `['registro']` con `invalidateRegistro` (FR-017 · US6-AC6, D10). Verificación: `confirmarHecho` deja invalidadas las consultas del workspace y del modo de escucha sobre un `QueryClient` real, rojo→verde.
+- [x] 7.4 Control optimista en editar, descartar y confirmar (`expectedUpdatedAt`, `ClinicalWriteConflictError`) (FR-017 · SC-027 · US6-AC15, D5). Verificación: 4 casos nuevos en `tests/unit/voz/audio-fact-service.test.ts`, rojos antes del arreglo.
+- [x] 7.5 `anamnesisEntryId` descartado en el INSERT y vocabulario de `confirmationState` cerrado en el UPDATE (SC-027 · FR-017, D6). Verificación: `supabase/tests/011_captura_voz_revision.sql` casos 1–4, rojos con la 011 anterior.
+- [x] 7.6 Contradicciones con polaridad simétrica y solo contra borradores pendientes (FR-032 · US6-AC8, D4). Verificación: `tests/unit/voz/contradictions.test.ts` y `crearCargadorContexto` en `listen-mode-pipeline.test.ts`, rojos antes del arreglo.
+- [x] 7.7 Retirar la marca muerta `no,` y excluir `sin parar` de la negación (FR-032, D4). Verificación: `esNegativo` y el caso de frecuencia en `contradictions.test.ts`, rojos antes del arreglo.
+- [x] 7.8 Consulta abierta y sesión activa exigidas en el servidor, tramos y sesiones cerradas sellados, con `FOR SHARE` (FR-014 · US6-AC14 · SC-027 · FR-068, D8 · D10). Verificación: `011_captura_voz_revision.sql` casos 5–17 (rojo 12/17 en total), dos casos vivos en `tests/integration/voz/captura-voz.test.ts` (rojos 2/8 con la 011 anterior) y la carrera con dos sesiones `psql` (sin el bloqueo entra 1 sesión sobre la consulta cerrada; con él 0 y `CONSULTATION_NOT_OPEN`).
+- [x] 7.9 `listAudioFacts` con `parseRows` (lectura tolerante) (FR-017, D6). Verificación: caso de fila malformada en `audio-fact-service.test.ts`, rojo→verde.
+- [x] 7.10 Lecturas del contexto en paralelo, consulta y ficha una vez por sesión, y borradores en un único INSERT (SC-028, presupuestos). Verificación: concurrencia ≥ 3 y una lectura de consulta y ficha en dos tramos (`listen-mode-pipeline.test.ts`), un único INSERT sin relecturas de la traza (`audio-fact-service.test.ts`), rojos antes del arreglo.
+- [x] 7.11 Actualizar `design.md` (D4, D5, D6, D8, D9, D10, complejidad, presupuestos y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-captura-voz-anamnesis` y artefactos coherentes con el código.
+- [ ] 7.12 Automatizar la prueba de la carrera de cierre (`FOR SHARE`) de las sesiones y los tramos. Pendiente declarado en los riesgos de `design.md`: pgTap no ejerce dos sesiones y hoy se verifica a mano.
+- [ ] 7.13 Verificar en la interfaz el modo de escucha (e2e) cuando se monte la sección en `[id].tsx` (R2). Pendiente declarado: los arreglos del hook se prueban con unitarias de `listen-mode-pipeline.ts`.

@@ -114,6 +114,50 @@ La única transición enumerada de `audio_fact` es el paso a `confirmationState 
 | 6 [Nitpick] tarea 4.3 sin marcar | marcada `[x]` en `tasks.md` (snippet de montaje y manual expedito documentados) | `tasks.md` |
 | Nota del revisor (etiquetas de tarjeta sin estado ni procedencia) | `accessibilityLabel` de `draft-fact-card` ahora nombra estado y procedencia | revisión estática de `draft-facts-panel.tsx` |
 
+## Revisión de la PR #29 (`/code-review high`, 2026-09-24)
+
+Diez hallazgos en línea sobre `a5e2812`, todos verificados contra el código y corregidos (tareas
+7.1–7.11). La rama se puso al día con `main` (`e23bba0`, PR #30 con la migración 010); el conflicto
+de `database.types.ts` se resolvió regenerando tras `supabase db reset` (sin diff posterior).
+
+| Hallazgo | Corrección | Prueba (rojo → verde) |
+|---|---|---|
+| 1 `run()` rechazado dejaba la sesión `active` y el tramo `pending` | controlador a `detenido`; `ejecutarEscucha` cierra `interrupted`; `procesarTramo` descarta el tramo | controlador 1 caso, pipeline 2 casos |
+| 2 `stop('processed')` no procesaba | `resolverTramoInterrumpido` delega en `procesarTramo` | pipeline 1 caso |
+| 3 confirmar no invalidaba el registro | `confirmarHecho` + `invalidateRegistro` | pipeline 1 caso (`QueryClient` real) |
+| 4 lost update al editar/descartar/confirmar | `expectedUpdatedAt` + `ClinicalWriteConflictError` | 4 casos unitarios |
+| 5 `anamnesisEntryId` en INSERT y vocabulario en UPDATE | trigger de la 011 | pgTap 4 casos |
+| 6 polaridad falsa y descartados en previos | `esNegativo` compartido, previos pendientes | 2 unitarias + cargador |
+| 7 `no,` muerto y `sin parar` negado | marcas y `NEGACION` corregidas | 2 unitarias |
+| 8 sesiones y tramos sin validar en el servidor | triggers `guard_listening_session` / `guard_transcript_segment` con `FOR SHARE`, grant de UPDATE solo `processing_state` | pgTap 13 casos, 2 vivos, carrera `psql` |
+| 9 `listAudioFacts` sin lectura tolerante | `parseRows` | 1 unitaria |
+| 10 lecturas secuenciales y 2N escrituras | `Promise.all`, caché por sesión, `createClinicalRecords` | 2 unitarias |
+
+**Rojos observados antes de cada arreglo**:
+
+- pgTap `011_captura_voz_revision.sql` con la 011 anterior: **12/17 fallan** (1–3, 5–7, 9, 11, 13,
+  15–17; la 2 muere en `AUDIO_FACT_ANAMNESIS_FORGED`, la razón del hallazgo 5).
+- Unitarias: contradicciones 3 fallos, `audio-fact-service` 6, controlador 1, pipeline 6/9 (con el
+  código del hook extraído tal cual antes de corregirlo).
+- Integración viva con la 011 anterior: **2/8 fallan** (sesión sin consulta aceptada; tramo
+  procesado re-resuelto).
+- Carrera (dos sesiones `psql`: A cierra la consulta y espera 3 s sin confirmar; B activa la
+  escucha sobre ella): con el guarda sin `FOR SHARE`, B crea la sesión (**1** sesión sobre la
+  consulta cerrada); con `FOR SHARE`, B espera a A y falla con `CONSULTATION_NOT_OPEN` (**0**).
+
+**Compuertas locales tras la revisión** (stack compartido, `supabase db reset` desde este worktree):
+
+| Compuerta | Resultado |
+|---|---|
+| `bunx biome ci --error-on-warnings .` | sin diagnósticos |
+| `bun run typecheck` | verde |
+| `supabase test db` | **All tests successful — Files=13, Tests=238** |
+| `bun run db:types` | sin diff |
+| `SUPABASE_LIVE_TESTS= bun run test` | **338 pass / 66 skip / 0 fail** |
+| `bun run test:integration` (vivas) | **61 pass / 0 fail** |
+| `SUPABASE_LIVE_TESTS=1 bun run test` | **395 pass / 0 fail** |
+| `bunx playwright test --project=chromium` | **20 pass / 1 fail**: `auth.spec.ts` «unsaved notes survive an expired session…», fallo conocido solo en local (en CI pasa) |
+
 ## Requisitos de integración (archivos compartidos, fuera de esta rama)
 
 | ID | Requisito | Comando / acción |
@@ -122,17 +166,21 @@ La única transición enumerada de `audio_fact` es el paso a `confirmationState 
 | R2 | Montar `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx` | ver snippet de arriba |
 | R3 | Actualizar la nota de transiciones del quickstart de 002 | su «INSERT cubre los 12 `record_type` salvo `epicrisis`» ya no incluye `audio_fact` (D6) |
 
-Solo se ha tocado, de los archivos compartidos, `src/lib/supabase/database.types.ts`
-(regeneración autorizada como RI-1). El resto sigue intocado: `src/features/registro/*`,
-`src/lib/attribution/*`, `src/lib/storage/*`, el resto de `src/lib/supabase/*`,
+Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.types.ts`
+(regeneración autorizada como RI-1) y, en la revisión de la PR #29, `src/lib/attribution/clinical-mutations.ts`
+(nueva función `createClinicalRecords`, sin cambios en las existentes). El resto sigue intocado:
+`src/features/registro/*`, `src/lib/storage/*`, el resto de `src/lib/supabase/*`,
 `supabase/tests/001-008*`, `supabase/migrations/001-009*` y `seed.sql`.
 
 ## Pendientes explícitos (declarados, no cumplidos)
 
 - **Compuerta de tipos de CI**: resuelta con R1 aplicada (regen de `database.types.ts` + seam
   eliminado, autorización RI-1). La integración viva local corrió en verde (arriba).
-- **Verificación visual/e2e de la UI**: sin Playwright en esta ejecución; queda la revisión
-  estática WCAG y falta una pasada manual/e2e cuando el entorno lo permita.
+- **Verificación visual/e2e de la UI**: la sección no está montada (R2), así que no hay e2e del
+  modo de escucha; los arreglos de la revisión de la PR #29 se prueban con unitarias de
+  `listen-mode-pipeline.ts` (tarea 7.13).
+- **Carrera de cierre automatizada**: verificada a mano con dos sesiones `psql` (arriba), sin
+  prueba automatizada (tarea 7.12).
 - **Micrófono real y ASR real**: extensiones documentadas del diseño (D2 · D3), sin implementar y
   sin dependencias nuevas. FR-054 se ejercita por la señal de indisponibilidad de `CaptureSource`;
   el flujo real de permisos de micrófono no está verificado.

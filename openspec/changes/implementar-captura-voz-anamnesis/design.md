@@ -149,6 +149,19 @@ FR-032 prohíbe resolverla por cuenta del sistema y US6-AC8 prohíbe sobrescribi
 decisión es siempre del veterinario. Los falsos positivos son admisibles porque el resultado es una
 advertencia revisable, nunca una escritura.
 
+Precisiones de la revisión de la PR #29 (hallazgos 6 y 7):
+
+- **Polaridad simétrica**: `esNegativo(texto)` es la única regla de negación y se aplica igual al
+  hecho nuevo, a los borradores previos y a la anamnesis registrada (la ficha trae su propio
+  `negative`). Fijar `negation: false` en lo ya registrado marcaba todo hecho negado contra
+  cualquier previo del mismo campo, aunque también fuera negativo, y nunca marcaba un afirmativo
+  frente a un previo negado.
+- **Previos = borradores pendientes**: los `discarded` ya los rechazó el veterinario y los
+  `confirmed` están aterrizados en la anamnesis, que se compara aparte.
+- **Marcas que pueden coincidir**: el texto comparado es una cláusula ya partida por comas, así que
+  la marca de autocorrección `no,` era código muerto y se retira; `sin parar|cesar|descanso` (que
+  extrae la regla de frecuencia) deja de contar como negación.
+
 ### D5. Confirmación atómica: el trigger de dominio aterriza la anamnesis en la misma transacción
 
 La única ruta de confirmación es la UPDATE del borrador a `confirmationState = 'confirmed'` por el
@@ -174,6 +187,12 @@ patchear la enumeración de `004_function_privileges.sql` — es el único costo
 cambia; (b) orquestar en el cliente dos escrituras (anamnesis y luego UPDATE de la traza) — deja
 una ventana de fallo parcial con antecedente aterrizado sin traza (rompe SC-027) o traza sin
 anamnesis, y obligaría a una máquina de estados `landing` con reglas de adopción.
+
+*Control optimista (revisión de la PR #29, hallazgo 4)*: editar, descartar y confirmar leen el
+hecho, reconstruyen el `content` completo y lo escriben con `updateClinicalContent(..., {
+expectedUpdatedAt })`. Si otro veterinario corrigió el hecho entre la lectura y la escritura, no se
+escribe nada y se lanza `ClinicalWriteConflictError`: sin esto la confirmación reescribía el texto
+viejo y el trigger aterrizaba en la anamnesis un texto distinto del que el otro veterinario dejó.
 
 *Equivalencia con una validación explícita de RPC* (los dos invariantes del arbitraje de
 integración, verificados por `supabase/tests/010_captura_voz.sql`): «confirmar solo con consulta
@@ -203,8 +222,11 @@ contienen ninguna aserción sobre `audio_fact` (verificado). Las suites existent
 firma y los privilegios de la función, que se conservan.
 
 Complemento: el trigger `guard_audio_fact_lifecycle` (`BEFORE INSERT OR UPDATE`) impide fabricar
-confirmaciones fuera de la ruta sancionada: (a) INSERT solo con `confirmationState = 'pending'`;
-(b) cualquier UPDATE sobre un estado terminal (`confirmed`, `discarded`) → `AUDIO_FACT_IMMUTABLE`
+confirmaciones fuera de la ruta sancionada: (a) INSERT solo con `confirmationState = 'pending'` y
+sin `anamnesisEntryId` (el servidor lo descarta: un enlace fabricado en el alta viajaba después en
+el contenido reenviado y hacía el borrador inconfirmable, revisión de la PR #29); (a') UPDATE solo
+a un `confirmationState` del vocabulario (`AUDIO_FACT_STATE_INVALID` 23514), para que ninguna fila
+quede fuera del contrato de lectura; (b) cualquier UPDATE sobre un estado terminal (`confirmed`, `discarded`) → `AUDIO_FACT_IMMUTABLE`
 23514 — la traza confirmada es inmutable (SC-027) y las correcciones del antecedente van por las
 rutas de corrección de anamnesis de 002 (`correctProvenance`, anamnesis correctiva); y (c) la
 transición a `confirmed` **aterriza** en la misma transacción la entrada de anamnesis (D5): exige
@@ -230,9 +252,11 @@ si el veterinario discrepa, la corrección de procedencia usa el camino recupera
 
 ### D8. Atribución y auditoría (FR-063, FR-068)
 
-- Toda escritura de borradores cruza el contrato `src/lib/attribution` (`createClinicalRecord`,
+- Toda escritura de borradores cruza el contrato `src/lib/attribution` (`createClinicalRecords`,
   `updateClinicalContent`): ningún campo de control aceptado del cliente, atribución real sellada
-  por el servidor.
+  por el servidor. Los borradores de un tramo se insertan en un único INSERT atómico
+  (`createClinicalRecords`, revisión de la PR #29): nacen todos o ninguno y el alta no relee la
+  traza por cada uno, porque no emite evento (D6).
 - La **activación** de la escucha queda atribuida en `public.listening_sessions.started_by` /
   `started_at` (columnas con `default auth.uid()` / `timezone('utc', now())` y privilegios de
   columna revocados para `authenticated`, patrón de 001): FR-068 exige atribución de ambas acciones,
@@ -240,6 +264,13 @@ si el veterinario discrepa, la corrección de procedencia usa el camino recupera
   atribución vive en la tabla propia de la sesión de escucha, que además guarda `ended_at` y `state`
   (`active | stopped | interrupted`) — la entidad Sesión de escucha de la spec. No se registra
   «quién detuvo»: ningún FR lo exige (YAGNI).
+- **Contenedor exigido en el servidor** (revisión de la PR #29, hallazgo 8): el trigger
+  `guard_listening_session` rechaza la sesión cuya `consultation_id` no es una consulta abierta de
+  la propia clínica (`CONSULTATION_NOT_OPEN` 23514, también para una consulta inexistente o ajena:
+  falla cerrado) y sella la sesión cerrada (`LISTENING_SESSION_SEALED`). La comprobación de
+  `startListenSession` queda como guía de interfaz. Lee la consulta con `FOR SHARE`, como
+  `guard_consultation_sealed` (009), para serializar con el cierre en paralelo; los guardas son
+  trigger functions sin `security definer`, así que la lectura pasa por la RLS de quien escribe.
 - La **confirmación** se atribuye por la acción enumerada `audio_fact_confirmed` (actor del evento =
   confirmante) más `updated_by`/`updated_at` sellados en la fila (SC-048 · US6-AC15).
 
@@ -256,7 +287,8 @@ workspace de consulta (recibe `consultationId`; `clinicId` sale de `useSessionSt
   fragmento de origen (US6-AC6), chip de procedencia `inferida` (US6-AC9), insignia de
   contradicción (FR-032), marca de tramo no confiable (FR-031) y acciones por antecedente
   Confirmar / Corregir / Descartar (FR-017 · US6-AC3), todas operables por teclado.
-- Sin consulta abierta o sin sesión activa, el botón no inicia captura (FR-014 · US6-AC14); la
+- Sin consulta abierta o sin sesión activa, el botón no inicia captura (FR-014 · US6-AC14; desde la
+  revisión de la PR #29 lo impone también la base, D8); la
   indisponibilidad deja expedito el registro manual de anamnesis de 002 (FR-054 · US6-AC10) — nada
   de esta spec lo bloquea.
 
@@ -272,6 +304,25 @@ alcance) queda **documentado** como requisito de integración R2: una importaci�
 US6-AC12: al interrumpir la captura a mitad de un tramo, el tramo parcial se marca `processed` o
 `discarded` de forma explícita y ningún tramo queda a medio procesar (aserción pgTap/integración).
 El audio **nunca** se persiste (supuestos de la spec: sin retención de audio como requisito).
+
+Revisión de la PR #29 (hallazgos 1, 2 y 8):
+
+- **Tramos solo en una sesión activa**: el trigger `guard_transcript_segment` exige que la sesión
+  sea de la clínica y siga `active` (`LISTENING_SESSION_NOT_ACTIVE`) y que su consulta siga
+  abierta (`CONSULTATION_NOT_OPEN`), con `FOR SHARE` sobre ambas filas.
+- **Tramo resuelto sellado**: el cliente solo puede escribir `processing_state` (el texto y la
+  calidad son el origen trazable de los hechos, SC-027) y un tramo `processed`/`discarded` no se
+  vuelve a resolver (`TRANSCRIPT_SEGMENT_SEALED`).
+- **Fallos**: si extraer o crear los borradores de un tramo falla, el tramo se marca `discarded`
+  (el alta en bloque es atómica, así que no quedó ningún borrador suyo) y el error se propaga; el
+  controlador pasa a `detenido` y la sesión se cierra `interrupted`. Ninguna sesión queda `active`
+  ni ningún tramo `pending` por un fallo.
+- **`stop('processed')` procesa de verdad** el tramo interrumpido (extrae y crea sus borradores),
+  en vez de solo etiquetarlo `processed`.
+- La orquestación vive en `src/features/voz/listen-mode-pipeline.ts`, sin React, y el hook solo la
+  conecta con la interfaz: así se prueba con unitarias mientras la sección no está montada (R2).
+  Confirmar invalida `['voz']` y `['registro']` (`invalidateRegistro`), para que la anamnesis
+  aterrizada aparezca en el workspace sin esperar al `staleTime`.
 
 ### D11. Verificación: clúster scratch + CI, presupuestos con verificación
 
@@ -305,6 +356,9 @@ públicas (`recordAnamnesisEntry`, `listAnamnesisEntries`, `getConsultation`, `c
 | Trigger `guard_audio_fact_lifecycle` con aterrizaje de la anamnesis | FR-017 + FR-068 + SC-027/SC-048: confirmación atómica y atribución server-side sin funciones ejecutables nuevas (D5) | Nunca; es la única ruta de confirmación |
 | Refinamiento de `clinical_record_action` | FR-017/FR-063: `audio_fact_confirmed` exactamente al confirmar, nunca al insertar o editar un borrador | Nunca mientras la spec exija confirmación explícita |
 | Tablas `listening_sessions` y `transcript_segments` | FR-068 (atribución de activación, entidad Sesión de escucha), FR-055 · US6-AC12 (estado explícito por tramo), SC-027 (fragmento) | — |
+| Triggers `guard_listening_session` y `guard_transcript_segment` (revisión de la PR #29) | FR-014 · US6-AC14 exigidos en el servidor («Falla cerrado»), SC-027 (tramo resuelto sellado), sin funciones ejecutables nuevas | Nunca mientras la escucha exija consulta abierta |
+| `listen-mode-pipeline.ts` (revisión de la PR #29) | FR-055 · US6-AC12 · SC-028 probados sin React mientras la sección no está montada (R2) | No se elimina: es la orquestación; el hook solo la conecta |
+| `createClinicalRecords` en `src/lib/attribution` | SC-028: un único INSERT atómico por tramo, con el guardia de atribución por payload | — |
 | Seam `src/features/voz/db-types.ts` | Tipos generados compartidos no editables (R1) | Al aplicar R1 |
 
 Dependencias de ejecución nuevas: **ninguna** (Principio III; micrófono y ASR real son extensiones
@@ -319,6 +373,10 @@ documentadas). Capas arquitectónicas nuevas: **ninguna** (servicios sobre el pa
 | `extractClinicalFacts` sobre un tramo de ~30 s de habla | ≤ 300 ms de CPU | aserción de tiempo en `tests/unit/voz/extraction.test.ts` (tarea 2.3) |
 | `confirmAudioFact` (una UPDATE que aterriza la anamnesis en su misma transacción) | ≤ 2 s con red local | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
 | Listar borradores de una consulta (≤ 100 borradores, ≤ 10 tramos) | ≤ 2 s | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
+
+Por tramo, el contexto de contradicciones lee hechos y anamnesis en paralelo y la consulta y la
+ficha una sola vez por sesión, y los borradores se insertan en un único INSERT (revisión de la
+PR #29): antes eran cuatro lecturas secuenciales y 2N escrituras secuenciales por tramo.
 
 SC-004 (≥ 70 % de antecedentes identificados) y SC-016 (≤ 30 % de propuestas incorrectas) se miden
 por test sobre la conversación de referencia etiquetada (tarea 2.3); no son presupuestos temporales.
@@ -369,6 +427,17 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   `anamnesisEntryId` las asegura la única puerta de escritura (`audio-fact-service` + trigger de
   dominio) y las
   pruebas de integración; es el coste de no crear una segunda convención clínica.
+
+- **Ficha leída una vez por sesión** (revisión de la PR #29): si otro veterinario edita los
+  antecedentes de la ficha durante la escucha, las señales de contradicción del resto de la sesión
+  comparan contra la versión leída al empezar. Es una señal revisable (FR-032), nunca una
+  escritura; el coste de releerla en cada tramo iba contra SC-028.
+- **Carrera de cierre con `FOR SHARE`** (revisión de la PR #29): pgTap no puede ejercer dos
+  sesiones; la serialización se verificó a mano con dos sesiones `psql` (evidencia en
+  `quickstart.md`) y no queda automatizada.
+- **Cierre de consulta por UPDATE directo**: el cierre de la consulta no está restringido a
+  `approve_clinical_record` (pendiente 7.10 de la spec 002); los guardas de la 011 lo respetan
+  igual, porque leen el estado vigente de la consulta.
 
 ## Open Questions
 
