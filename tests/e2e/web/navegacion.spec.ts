@@ -40,6 +40,19 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     await expect(sidebar.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
   });
 
+  test("el primer elemento enfocable es «Saltar al contenido» y lleva el foco al contenido", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Saltar al contenido" });
+    await expect(skip).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#contenido")).toBeFocused();
+  });
+
   test("a 375 px, la barra de pestañas da acceso a las cuatro secciones", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto("/knowledge");

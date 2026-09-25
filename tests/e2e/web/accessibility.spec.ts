@@ -43,6 +43,12 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
       if (!element || element === document.body || element === document.documentElement) {
         return null;
       }
+      // Misma exclusión documentada que en `expectNoViolations`: `#error-toast` es el overlay de
+      // desarrollo de `@expo/log-box`, que no existe en producción. Firefox lo enfoca cuando la
+      // app registra un error en consola (p. ej., filas sintéticas omitidas en una base local).
+      if (element.closest("#error-toast")) {
+        return { testID: null, identity: "#error-toast", focusVisible: true, devOverlay: true };
+      }
       const style = getComputedStyle(element);
       const outlineWidth = Number.parseFloat(style.outlineWidth || "0");
       const outlineVisible =
@@ -61,6 +67,9 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
     });
     if (stop === null) {
       break;
+    }
+    if ("devOverlay" in stop) {
+      continue;
     }
     if (firstStop === null) {
       firstStop = stop.identity;

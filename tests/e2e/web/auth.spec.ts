@@ -262,6 +262,23 @@ test.describe("auth against the local backend", () => {
 
       await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();
+      // sistema-visual 7.5 (caso límite de US14): el diálogo queda por encima de la navegación
+      // global, que no recibe clics ni foco mientras está abierto.
+      const sidebarLink = page.getByTestId("app-sidebar").getByRole("link", { name: "Pacientes" });
+      await expect(sidebarLink.click({ timeout: 2_000 })).rejects.toThrow();
+      await expect(page).toHaveURL(new RegExp(`/consultations/${consultationId}$`));
+      for (let step = 0; step < 6; step += 1) {
+        await page.keyboard.press("Tab");
+        const insideSidebar = await page.evaluate(
+          () =>
+            document
+              .querySelector('[data-testid="app-sidebar"]')
+              ?.contains(document.activeElement) ?? false,
+        );
+        expect(insideSidebar, "el foco llegó a la barra lateral con el diálogo abierto").toBe(
+          false,
+        );
+      }
       await expect(page.getByTestId("consultation-status")).toHaveText(
         "La sesión ya no es válida. El borrador se conservó.",
       );

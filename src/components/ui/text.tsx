@@ -6,6 +6,8 @@ const VARIANTS = {
   caption: "text-sm",
   label: "text-sm font-medium",
   strong: "text-base font-semibold",
+  /** Solo para etiquetas de navegación (design.md D17). */
+  nav: "text-nav font-medium",
 } as const;
 
 /** Un solo color de texto por tono; cada par está verificado AA en `tema.test.ts`. */

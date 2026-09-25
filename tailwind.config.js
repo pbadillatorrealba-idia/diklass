@@ -20,6 +20,11 @@ module.exports = {
         dialog: "440px",
         form: "480px", // formularios centrados (login)
       },
+      // Etiquetas de la barra de pestañas web (D17): 12 px como las de iOS/Material. El mínimo de
+      // 14 px (D5) es para metadatos clínicos.
+      fontSize: {
+        nav: ["12px", "16px"],
+      },
       width: {
         sidebar: "240px", // barra lateral de navegación en web desde `lg` (D12)
       },

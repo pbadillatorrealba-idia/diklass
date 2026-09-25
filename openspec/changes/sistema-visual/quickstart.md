@@ -494,3 +494,51 @@ Resultado en `chromium`: 5 failed y 1 passed.
 - Fallan por falta de navegación: `app-sidebar` y `app-tabbar` no existen, el enlace
   «Seguimiento» no existe y «Volver a Seguimiento» tampoco.
 - Pasa: «todas las rutas cubiertas siguen resolviendo», la línea base antes de mover archivos.
+
+### 7.2–7.8 — Navegación montada (FR-082 · FR-083 · SC-054)
+
+- **7.2:** rutas en `(home)`, `(patients)` (incluye `consultations/[id]`), `(follow-up)` y
+  `(knowledge)`, cada una con `SectionStack`. No cambió ninguna URL de los tests.
+- **7.3:**
+  - token `w-sidebar` (240 px);
+  - `NavItem`, `SkipLink` y `SECTIONS` con prueba de componente (`tests/unit/navigation`,
+    7 pass): enlace real con `href`, `aria-current`, peso, barra `bg-primary` y `bg-muted`;
+  - `app-navigation.web.tsx`: `TabList` oculto que solo define las rutas, más las barras
+    `app-sidebar` (desde `lg`) y `app-tabbar`.
+  - `TabTrigger asChild` inyecta `justifyContent: space-between`: `NavItem` descarta ese `style`.
+- **7.4:** `NativeTabs` con `sf`/`md` y colores del tema; `typecheck` verde. **Pendiente de
+  dispositivo:** capturas iOS/Android en claro y en oscuro.
+- **7.5:** la navegación se monta bajo el diálogo de sesión. En `auth.spec.ts` (sesión envejecida),
+  con el diálogo abierto, el clic en «Pacientes» de la barra lateral no llega y 6 Tab no la
+  alcanzan.
+- **7.6:**
+  - `Screen title`/`back`, con prueba de componente en rojo→verde (3 casos; los dobles de
+    `expo-router` pasan al preload);
+  - 11 pantallas sin `Head` suelto, y retroceso en los detalles;
+  - las de conocimiento ganan su `h1`, antes empezaban en `h2`.
+  - `contentInsetAdjustmentBehavior="automatic"` no es observable en web: **pendiente de
+    dispositivo**.
+- **7.7:** `SectionStack`:
+  - `headerShown` solo en nativo;
+  - título grande en la raíz iOS;
+  - `headerBackButtonDisplayMode: "minimal"`;
+  - colores del tema.
+  **Pendiente de dispositivo:** capturas.
+- **7.8:**
+  - `/home` es un panel de enlaces (`home-patients`, `home-follow-up`, `home-knowledge`);
+  - «Cerrar sesión» solo por debajo de 1024 px en web y siempre en nativo;
+  - Maestro (`auth.yaml`, `attribution.yaml`) solo cubre `/login`: sin cambios.
+
+Reflujo a 320 px: con 4 pestañas, «Conocimiento» a 14 px (89 px) no cabía en 80 px. Se añadió la
+variante `nav` (12 px, `text-nav`, D17) y se retiró el recorte.
+
+Resultado local en `chromium`: suite completa 34/35 antes de la variante `nav`; después,
+`accessibility` + `navegacion` 13/13 y `navegacion` + `auth` 15/15.
+
+Firefox/WebKit locales: sin fallos de foco. Quedan 2 limitaciones del entorno local:
+
+- el recorrido por teclado supera sus 150 pasos en `/knowledge`, porque la base local tiene 639
+  pacientes sintéticos, un radio por paciente;
+- el caso de reflujo agota sus 30 s en Firefox.
+
+Ambas se verifican de nuevo sobre una base limpia (5.2/5.6).

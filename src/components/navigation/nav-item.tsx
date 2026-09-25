@@ -12,7 +12,7 @@ const VARIANTS = {
   tabbar: {
     item: "min-h-touch min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2",
     indicator: "absolute left-4 right-4 top-0 h-1 rounded-full bg-primary",
-    text: "caption",
+    text: "nav",
   },
 } as const;
 
@@ -57,11 +57,8 @@ export function NavItem({
     >
       {isFocused ? <View className={styles.indicator} testID={`${testID}-indicator`} /> : null}
       <Icon decorative name={icon} tone={isFocused ? "primary" : "muted-foreground"} />
-      {/* En la barra inferior a 320 px la etiqueta se recorta con elipsis; el texto completo sigue
-          en el DOM, así que el nombre accesible no cambia (caso límite de US14). */}
       <Text
         className={`${variant === "tabbar" ? "w-full text-center" : ""} ${isFocused ? "font-semibold" : ""}`.trim()}
-        numberOfLines={variant === "tabbar" ? 1 : undefined}
         tone={isFocused ? "default" : "muted"}
         variant={styles.text}
       >
