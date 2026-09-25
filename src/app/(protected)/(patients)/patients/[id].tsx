@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { AntecedentsPanel } from "@/components/registro/antecedents-panel";
 import {
   type FichaField,
@@ -171,7 +172,11 @@ export default function PatientDetailScreen() {
   };
 
   return (
-    <Screen title="Ficha del paciente" back={{ href: "/patients", label: "Pacientes" }}>
+    <Screen
+      back={{ href: "/patients", label: "Pacientes" }}
+      title="Ficha del paciente"
+      width="wide"
+    >
       {patientQuery.isLoading ? <Text testID="patient-detail-loading">Cargando ficha…</Text> : null}
       {patientQuery.isSuccess && patient === null ? (
         <Text testID="patient-detail-missing">No encontramos esta ficha.</Text>
@@ -183,78 +188,88 @@ export default function PatientDetailScreen() {
       ) : null}
       {content ? (
         <>
-          <VStack
-            className="rounded-xl border border-border bg-card p-4 gap-2"
-            testID="patient-ficha"
-          >
-            <Text variant="strong">Ficha de {content.name}</Text>
-            <Text selectable>Nombre: {content.name}</Text>
-            <Text selectable>Especie: {content.species}</Text>
-            <Text selectable>Raza: {content.breed}</Text>
-            <Text selectable>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
-            <Text selectable>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
-            <Text selectable>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
-            <Text selectable>Sexo: {content.sex}</Text>
-            <Text selectable>Estado reproductivo: {content.reproductiveStatus}</Text>
-            <Text selectable>
-              Tutor:{" "}
-              {tutor
-                ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`
-                : "Sin tutor asociado"}
-            </Text>
-          </VStack>
-          <MissingFieldsPanel content={content} />
-          {isEditing && fichaValues ? (
-            <VStack className="w-full gap-4">
-              <FichaForm
-                errors={fichaErrors}
-                isDisabled={isBusy}
-                onChange={(field: FichaField, text: string) =>
-                  setFichaValues((prev) => (prev === null ? prev : { ...prev, [field]: text }))
-                }
-                values={fichaValues}
+          {/*
+           * Desde `lg`, ficha y edición a la izquierda; antecedentes, historial y «Abrir consulta»
+           * a la derecha (design.md D18). El orden del DOM y del foco no cambia.
+           */}
+          <View className="gap-6 lg:flex-row lg:items-start">
+            <View className="gap-6 lg:flex-1" testID="patient-main">
+              <VStack
+                className="rounded-xl border border-border bg-card p-4 gap-2"
+                testID="patient-ficha"
+              >
+                <Text variant="strong">Ficha de {content.name}</Text>
+                <Text selectable>Nombre: {content.name}</Text>
+                <Text selectable>Especie: {content.species}</Text>
+                <Text selectable>Raza: {content.breed}</Text>
+                <Text selectable>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
+                <Text selectable>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
+                <Text selectable>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
+                <Text selectable>Sexo: {content.sex}</Text>
+                <Text selectable>Estado reproductivo: {content.reproductiveStatus}</Text>
+                <Text selectable>
+                  Tutor:{" "}
+                  {tutor
+                    ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`
+                    : "Sin tutor asociado"}
+                </Text>
+              </VStack>
+              <MissingFieldsPanel content={content} />
+              {isEditing && fichaValues ? (
+                <VStack className="w-full gap-4">
+                  <FichaForm
+                    errors={fichaErrors}
+                    isDisabled={isBusy}
+                    onChange={(field: FichaField, text: string) =>
+                      setFichaValues((prev) => (prev === null ? prev : { ...prev, [field]: text }))
+                    }
+                    values={fichaValues}
+                  />
+                  <Button
+                    accessibilityLabel="Guardar ficha"
+                    isDisabled={isBusy}
+                    onPress={() => void handleSaveFicha()}
+                    testID="patient-save"
+                  >
+                    <ButtonText>Guardar ficha</ButtonText>
+                  </Button>
+                  <Button
+                    accessibilityLabel="Cancelar la edición de la ficha"
+                    onPress={() => setIsEditing(false)}
+                    testID="patient-edit-cancel"
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                </VStack>
+              ) : (
+                <Button
+                  accessibilityLabel="Editar ficha"
+                  isDisabled={isBusy}
+                  onPress={startEditing}
+                  testID="patient-edit"
+                >
+                  <ButtonText>Editar ficha</ButtonText>
+                </Button>
+              )}
+            </View>
+            <View className="gap-6 lg:flex-1" testID="patient-aside">
+              <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
+              <PatientHistory
+                entries={historyQuery.data ?? []}
+                error={historyQuery.error}
+                isPending={historyQuery.isPending}
+                onRetry={() => void historyQuery.refetch()}
               />
               <Button
-                accessibilityLabel="Guardar ficha"
+                accessibilityLabel="Abrir consulta"
                 isDisabled={isBusy}
-                onPress={() => void handleSaveFicha()}
-                testID="patient-save"
+                onPress={() => void handleOpenConsultation()}
+                testID="open-consultation"
               >
-                <ButtonText>Guardar ficha</ButtonText>
+                <ButtonText>Abrir consulta</ButtonText>
               </Button>
-              <Button
-                accessibilityLabel="Cancelar la edición de la ficha"
-                onPress={() => setIsEditing(false)}
-                testID="patient-edit-cancel"
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-            </VStack>
-          ) : (
-            <Button
-              accessibilityLabel="Editar ficha"
-              isDisabled={isBusy}
-              onPress={startEditing}
-              testID="patient-edit"
-            >
-              <ButtonText>Editar ficha</ButtonText>
-            </Button>
-          )}
-          <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
-          <PatientHistory
-            entries={historyQuery.data ?? []}
-            error={historyQuery.error}
-            isPending={historyQuery.isPending}
-            onRetry={() => void historyQuery.refetch()}
-          />
-          <Button
-            accessibilityLabel="Abrir consulta"
-            isDisabled={isBusy}
-            onPress={() => void handleOpenConsultation()}
-            testID="open-consultation"
-          >
-            <ButtonText>Abrir consulta</ButtonText>
-          </Button>
+            </View>
+          </View>
         </>
       ) : null}
     </Screen>

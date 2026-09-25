@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { useWindowDimensions } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { SECTIONS } from "@/components/navigation/sections";
@@ -30,38 +30,43 @@ export default function HomeScreen() {
   const showLogout = process.env.EXPO_OS !== "web" || width < SIDEBAR_MIN_WIDTH;
 
   return (
-    <Screen title="Panel clínico">
-      <VStack className="gap-3">
-        <Text accessibilityLabel="Identidad autenticada" testID="authenticated-identity">
-          Sesión activa: {displayName}
-        </Text>
-        <Text tone="muted">
-          Tu identidad queda asociada a las operaciones clínicas de esta sesión.
-        </Text>
-      </VStack>
-      <VStack className="gap-3">
-        {SECTIONS.filter((section) => section.name in ENTRIES).map((section) => {
-          const entry = ENTRIES[section.name as keyof typeof ENTRIES];
-          return (
-            <Link asChild href={section.href} key={section.name}>
-              <Button
-                accessibilityLabel={entry.label}
-                className="flex-row gap-2"
-                testID={entry.testID}
-                variant="outline"
-              >
-                <Icon decorative name={section.icon} />
-                <ButtonText>{section.label}</ButtonText>
-              </Button>
-            </Link>
-          );
-        })}
-      </VStack>
-      {/* Agenda (FR-094): vacía hasta que exista una fuente de eventos. */}
-      <Card className="gap-3" testID="home-agenda">
-        <Heading level={2}>Agenda</Heading>
-        <MonthCalendar events={[]} />
-      </Card>
+    <Screen title="Panel clínico" width="wide">
+      {/* Desde `lg`, accesos a la izquierda y agenda a la derecha (design.md D18). */}
+      <View className="gap-6 lg:flex-row lg:items-start">
+        <View className="gap-6 lg:flex-1">
+          <VStack className="gap-3">
+            <Text accessibilityLabel="Identidad autenticada" testID="authenticated-identity">
+              Sesión activa: {displayName}
+            </Text>
+            <Text tone="muted">
+              Tu identidad queda asociada a las operaciones clínicas de esta sesión.
+            </Text>
+          </VStack>
+          <VStack className="gap-3">
+            {SECTIONS.filter((section) => section.name in ENTRIES).map((section) => {
+              const entry = ENTRIES[section.name as keyof typeof ENTRIES];
+              return (
+                <Link asChild href={section.href} key={section.name}>
+                  <Button
+                    accessibilityLabel={entry.label}
+                    className="flex-row gap-2"
+                    testID={entry.testID}
+                    variant="outline"
+                  >
+                    <Icon decorative name={section.icon} />
+                    <ButtonText>{section.label}</ButtonText>
+                  </Button>
+                </Link>
+              );
+            })}
+          </VStack>
+        </View>
+        {/* Agenda (FR-094): vacía hasta que exista una fuente de eventos. */}
+        <Card className="gap-3 lg:flex-1" testID="home-agenda">
+          <Heading level={2}>Agenda</Heading>
+          <MonthCalendar events={[]} />
+        </Card>
+      </View>
       {showLogout ? <LogoutButton onLogout={signOut} /> : null}
     </Screen>
   );

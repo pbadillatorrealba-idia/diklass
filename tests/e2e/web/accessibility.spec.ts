@@ -319,6 +319,46 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     expect(formulario?.width ?? 0).toBeLessThanOrEqual(720);
   });
 
+  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
+  test("Inicio, Configuración y la ficha van a 2 columnas a 1280 px y a 1 a 375 px", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pares = [
+      { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
+      { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
+      {
+        url: `/patients/${caso.patientId}`,
+        izquierda: "patient-main",
+        derecha: "patient-aside",
+      },
+    ];
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const par of pares) {
+        await page.goto(par.url);
+        const izquierda = page.getByTestId(par.izquierda).filter({ visible: true });
+        const derecha = page.getByTestId(par.derecha).filter({ visible: true });
+        await expect(derecha).toBeVisible({ timeout: 15_000 });
+        await page.waitForLoadState("networkidle");
+        const a = await izquierda.boundingBox();
+        const b = await derecha.boundingBox();
+        if (!a || !b) throw new Error(`faltan cajas en ${par.url}`);
+        if (width === 1280) {
+          expect(b.x, `${par.url}: ${par.derecha} a la derecha`).toBeGreaterThanOrEqual(
+            a.x + a.width,
+          );
+          expect(b.y, `${par.url}: columnas alineadas arriba`).toBeLessThan(a.y + a.height);
+        } else {
+          expect(b.y, `${par.url}: ${par.derecha} debajo a 375 px`).toBeGreaterThanOrEqual(
+            a.y + a.height,
+          );
+        }
+      }
+    }
+  });
+
   test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
     // 36 cargas (12 pantallas × 3 anchos): aislado tarda ~23 s y roza el límite de 30 s por
     // defecto cuando corre tras el resto de la suite (sistema-visual 8.7, quickstart.md).

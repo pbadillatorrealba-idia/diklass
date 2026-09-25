@@ -716,4 +716,14 @@ Resultado local en `chromium`:
   - `screen-list.test.tsx` en rojo primero: el ancho de `max-w-content`/`max-w-wide` y 4 casos
     de columnas. El mock expone `contentContainerClassName` como `data-content-class`.
   - Adoptado en `/patients`, `/follow-up` y `/knowledge/sources`. El caso de 11.1 pasa a verde.
+- **11.3:**
+  - `/home` (accesos | agenda), `/settings` (perfil | apariencia y sesión) y `/patients/[id]`
+    (`patient-main` | `patient-aside`) usan `width="wide"` y `lg:flex-row`, sin cambiar el orden
+    del DOM.
+  - Caso nuevo en `accessibility.spec.ts`: a 1280 px, la segunda columna va a la derecha y
+    alineada arriba; a 375 px, debajo. Rojo en `/home`.
+  - El primer intento medía `patient-history`, que en la columna derecha queda bajo los
+    antecedentes. Se pasó a medir los contenedores de columna.
+  - Verde en `chromium`: `accessibility` 10 (incluye el recorrido por teclado y el reflujo),
+    `navegacion` 7, `tema` 5 y `registro-epicrisis` 2.
 

@@ -202,7 +202,7 @@ como pendiente explícito en `quickstart.md`.
   `useWindowDimensions`, con `key` por número de columnas), con prueba de componente en rojo
   primero. Adoptarlo en `/patients`, `/follow-up` y `/knowledge/sources`. Verificación: prueba
   verde y el caso de 11.1 en verde.
-- [ ] 11.3 Pasar `/home` (panel y calendario lado a lado), `/settings` (tarjetas en 2 columnas) y
+- [x] 11.3 Pasar `/home` (panel y calendario lado a lado), `/settings` (tarjetas en 2 columnas) y
   `/patients/[id]` (2 columnas con el orden del DOM intacto) a `width="wide"`. Verificación:
   `navegacion`, `tema`, `registro-epicrisis` y el recorrido por teclado en verde.
 - [ ] 11.4 Repetir el reflujo a 320 px y axe en `chromium` y `chromium-dark`, y dejar capturas a
