@@ -23,6 +23,15 @@ mock.module("react-native", () => {
   const web = require("react-native-web");
   return {
     ...web,
+    // `behavior` se reexpone como `data-behavior` para comprobarlo en el HTML (D14).
+    KeyboardAvoidingView: forwardRef(
+      (props: { behavior?: string; dataSet?: object; className?: string }, ref) =>
+        createElement(web.KeyboardAvoidingView, {
+          ...props,
+          ref,
+          dataSet: { ...props.dataSet, behavior: props.behavior ?? "none", class: props.className },
+        }),
+    ),
     Pressable: withClass(web.Pressable),
     SafeAreaView: withClass(web.SafeAreaView),
     ScrollView: withClass(web.ScrollView),

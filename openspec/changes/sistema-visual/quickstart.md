@@ -677,4 +677,16 @@ Resultado local en `chromium`:
     el mensaje de error, más `user-select: text`. Sin el cambio, falla con `auto`.
   - Verde en `chromium`: `estados` 3, `conocimiento` 5, `registro-epicrisis` 2 y
     `retroalimentacion` 5.
+- **8.7 Teclado (FR-088):**
+  - `Screen` envuelve su `ScrollView` en `KeyboardAvoidingView`: `padding` en iOS y sin
+    comportamiento en Android.
+  - `app.json` no declara `softwareKeyboardLayoutMode`, pero Expo lo pone en `resize` por
+    defecto (`@expo/config-types`), así que se cumple lo que supone D14.
+  - `layout.test.tsx`, rojo→verde en iOS y Android: el mock expone `behavior` como
+    `data-behavior`.
+  - `typecheck` en verde. **Pendiente de dispositivo:** la captura de `/patients/new` con el
+    teclado abierto y el botón de guardar visible.
+  - El caso de reflujo de `accessibility.spec.ts` agotó una vez los 30 s por defecto. Aislado
+    tarda unos 23 s en 36 cargas. Se le fija `test.setTimeout(90_000)` y la suite queda en 8 de 8.
+    `registro-epicrisis` 2 y `auth` 8 en verde.
 

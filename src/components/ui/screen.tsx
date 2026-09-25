@@ -1,7 +1,7 @@
 import { Link, Stack } from "expo-router";
 import Head from "expo-router/head";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
-import { FlatList, type FlatListProps, ScrollView, View } from "react-native";
+import { FlatList, type FlatListProps, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "./heading";
 import { Text } from "./text";
@@ -89,14 +89,21 @@ export function Screen({
   return (
     <ScreenFrame title={title}>
       {scroll ? (
-        <ScrollView
-          className="flex-1"
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          testID={testID ? `${testID}-scroll` : undefined}
+        // FR-088 · design.md D14: en iOS el teclado empuja el contenido; Android ya redimensiona
+        // la ventana (`softwareKeyboardLayoutMode`, `resize` por defecto en Expo).
+        <KeyboardAvoidingView
+          behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
         >
-          {content}
-        </ScrollView>
+          <ScrollView
+            className="flex-1"
+            contentInsetAdjustmentBehavior="automatic"
+            keyboardShouldPersistTaps="handled"
+            testID={testID ? `${testID}-scroll` : undefined}
+          >
+            {content}
+          </ScrollView>
+        </KeyboardAvoidingView>
       ) : (
         content
       )}

@@ -34,6 +34,24 @@ describe("Screen", () => {
     expect(renderToStaticMarkup(<Screen scroll={false} testID="p" />)).not.toContain("p-scroll");
   });
 
+  // sistema-visual FR-088 · design.md D14: el teclado no tapa el formulario. En iOS el contenido
+  // se desplaza con `padding`; Android ya redimensiona la ventana (`softwareKeyboardLayoutMode`).
+  test.each([
+    ["ios", "padding"],
+    ["android", "none"],
+  ])("en %s el área desplazable va dentro de KeyboardAvoidingView (%s)", (os, behavior) => {
+    const original = process.env.EXPO_OS;
+    process.env.EXPO_OS = os;
+    try {
+      const html = renderToStaticMarkup(<Screen testID="p" />);
+      const kav = html.indexOf(`data-behavior="${behavior}"`);
+      expect(kav).toBeGreaterThan(-1);
+      expect(html.indexOf('data-testid="p-scroll"')).toBeGreaterThan(kav);
+    } finally {
+      process.env.EXPO_OS = original;
+    }
+  });
+
   test("className del llamador se aplica al contenido, al final", () => {
     const html = renderToStaticMarkup(<Screen className="items-start" testID="pantalla" />);
     expect(tagWith(html, 'data-testid="pantalla"')).toMatch(/gap-6.*items-start/);

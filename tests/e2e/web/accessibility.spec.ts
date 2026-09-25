@@ -274,6 +274,9 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
   });
 
   test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    // 36 cargas (12 pantallas × 3 anchos): aislado tarda ~23 s y roza el límite de 30 s por
+    // defecto cuando corre tras el resto de la suite (sistema-visual 8.7, quickstart.md).
+    test.setTimeout(90_000);
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {
