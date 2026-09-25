@@ -1,8 +1,11 @@
 import { Link } from "expo-router";
 import { useWindowDimensions } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { SECTIONS } from "@/components/navigation/sections";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
@@ -54,6 +57,11 @@ export default function HomeScreen() {
           );
         })}
       </VStack>
+      {/* Agenda (FR-094): vacía hasta que exista una fuente de eventos. */}
+      <Card className="gap-3" testID="home-agenda">
+        <Heading level={2}>Agenda</Heading>
+        <MonthCalendar events={[]} />
+      </Card>
       {showLogout ? <LogoutButton onLogout={signOut} /> : null}
     </Screen>
   );

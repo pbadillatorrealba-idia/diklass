@@ -28,6 +28,9 @@ module.exports = {
       width: {
         sidebar: "240px", // barra lateral de navegación en web desde `lg` (D12)
       },
+      minWidth: {
+        touch: "44px", // avatar y controles cuadrados (D17)
+      },
       minHeight: {
         touch: "44px", // área táctil mínima (WCAG 2.5.8 / HIG)
         textarea: "120px",

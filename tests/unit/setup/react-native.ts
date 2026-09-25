@@ -70,3 +70,18 @@ mock.module("expo-router/head", () => ({
   default: ({ children }: { children?: unknown }) =>
     createElement("head-mock", null, children as never),
 }));
+
+// `expo-secure-store` necesita el runtime nativo; en las pruebas es un almacén en memoria.
+mock.module("expo-secure-store", () => {
+  const data = new Map<string, string>();
+  return {
+    WHEN_UNLOCKED_THIS_DEVICE_ONLY: "WHEN_UNLOCKED_THIS_DEVICE_ONLY",
+    getItemAsync: async (key: string) => data.get(key) ?? null,
+    setItemAsync: async (key: string, value: string) => {
+      data.set(key, value);
+    },
+    deleteItemAsync: async (key: string) => {
+      data.delete(key);
+    },
+  };
+});

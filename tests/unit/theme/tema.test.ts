@@ -15,12 +15,29 @@ function tokensOf(block: string): Record<string, Rgb> {
   return tokens;
 }
 
-// El bloque claro es el primer `:root`; el oscuro, el `:root` dentro de la media query.
-const [lightBlock = "", darkSection = ""] = CSS.split("@media (prefers-color-scheme: dark)");
+// El bloque claro es el primer `:root`; el oscuro, el `:root` dentro de la media query (modo
+// `system`, y el que usa NativeWind en nativo). `:root.light`/`:root.dark` fuerzan el modo en web
+// (FR-091 · design.md D17) y deben repetir exactamente esos valores.
+const blockAfter = (marker: string) => {
+  const start = CSS.indexOf(marker);
+  if (start < 0) return "";
+  return CSS.slice(start, CSS.indexOf("}", start));
+};
+const lightBlock = blockAfter(":root {");
+const darkSection = blockAfter("@media (prefers-color-scheme: dark)");
 const schemes: Record<"light" | "dark", Record<string, Rgb>> = {
   light: tokensOf(lightBlock),
   dark: tokensOf(darkSection),
 };
+
+describe("modo forzado en web (FR-091)", () => {
+  test.each([
+    [":root.light {", "light"],
+    [":root.dark {", "dark"],
+  ] as const)("%s repite los tokens del esquema %s", (marker, scheme) => {
+    expect(tokensOf(blockAfter(marker))).toEqual(schemes[scheme]);
+  });
+});
 
 const TOKENS: ThemeToken[] = [
   "background",

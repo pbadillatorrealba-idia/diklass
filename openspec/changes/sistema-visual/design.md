@@ -470,29 +470,32 @@ Decisiones del usuario (2026-09-25):
 
 **Tema manual (FR-091).**
 
-- `tailwind.config.js` pasa a `darkMode: "class"`, que NativeWind 4.2 exige para fijar el esquema
-  en web; `colorScheme.set` delega en `Appearance.setColorScheme` en nativo.
-- `global.css` define los tokens oscuros una sola vez, en `:root.dark`, y los repite bajo
-  `@media (prefers-color-scheme: dark) { :root:not(.light) }` para el modo `system`.
-  `tema.test.ts` extrae ambos bloques y exige que sean idénticos.
-- La preferencia vive en `src/stores/theme-store.ts` (zustand, ya instalado):
-  - `setPreference` llama a `colorScheme.set`;
-  - se persiste en `localStorage` en web y en `expo-secure-store` en nativo, ambos ya presentes,
-    envueltos en `try/catch` y con `system` como valor por defecto.
-- `+html.tsx` incluye un script en línea de 3 líneas que lee la preferencia y pone la clase `dark`
-  o `light` en `<html>` antes del primer pintado (caso límite «sin destello»).
-- `useThemeColors()` sigue a `useColorScheme()`, que refleja el valor fijado.
-- El botón rápido es un `Button variant="ghost"` con `Icon`: `weather-night` para
+- `global.css` conserva el bloque oscuro bajo `@media (prefers-color-scheme: dark) { :root }`, que
+  NativeWind usa en nativo y que en web da el modo `system`. Añade `:root.light` y `:root.dark`,
+  que ganan por especificidad y fuerzan el modo en web con una clase en `<html>`. `tema.test.ts`
+  exige que repitan exactamente los valores de claro y oscuro.
+- No se usa `darkMode: "class"` de Tailwind: el tema no tiene variantes `dark:`, y la
+  media query debe seguir sirviendo a nativo.
+- La preferencia vive en `src/theme/theme-preference.ts` (store zustand vanilla, con prueba
+  unitaria). La conectan dos archivos de plataforma:
+  - `theme-store.web.ts`: `localStorage` y la clase en `<html>`;
+  - `theme-store.ts`: `expo-secure-store` y `Appearance.setColorScheme`.
+  - En ambos, `system` es el valor por defecto y un fallo de almacenamiento no es visible.
+- `+html.tsx` incluye un script en línea que lee la preferencia y pone la clase antes del primer
+  pintado (caso límite «sin destello»).
+- `useThemeColors()` y `AppUiProvider` usan `useColorScheme()` de `src/theme/use-color-scheme.ts`,
+  que resuelve la preferencia y, con `system`, el esquema del sistema operativo.
+- El botón rápido es `ThemeToggle`, un `Button variant="ghost"` con `Icon`: `weather-night` para
   «Cambiar a modo oscuro» y `white-balance-sunny` para «Cambiar a modo claro».
 
 **Avatar (FR-092).**
 
 - Primitiva `src/components/ui/avatar.tsx`: círculo `rounded-full` (cápsula, sin `borderCurve`) con
-  `bg-primary-surface` e iniciales `text-primary font-semibold`. Las iniciales son la primera letra
+  `bg-primary-surface` e iniciales `text-foreground font-semibold` (`primary` sobre esa superficie da
+  4.3:1 en claro, por debajo de AA). Las iniciales son la primera letra
   de las dos primeras palabras, ignorando títulos como «Dr.»/«Dra.».
 - Prop futura `uri`, con `expo-image` cuando se añada la foto: fuera de alcance. Por eso no se
   instala ahora.
-- El par `primary` sobre `primary-surface` entra en `PAIRS`.
 
 **Configuración (FR-093).**
 
@@ -511,12 +514,16 @@ Decisiones del usuario (2026-09-25):
   - nueva variante de `Text` `nav` (12 px, `font-medium`), exclusiva de la navegación. Las barras
     de pestañas de iOS/Material usan 10–12 px, y el mínimo de 14 px de D5 es para metadatos
     clínicos;
-  - con ella, «Conocimiento» ocupa 76 px y cabe en los 78 px útiles;
+  - con ella (`text-nav` en `tailwind.config.js`), «Conocimiento» ocupa 76 px y cabe en los
+    78 px útiles;
   - `numberOfLines` se retira: nada se recorta.
 - Nativo: `NativeTabs` con 5 pestañas; el sistema ajusta las etiquetas.
 
 **Calendario (FR-094).**
 
+- La cabecera del paquete se sustituye con `customHeader` (solo los nombres de los días). En web, su
+  `accessibilityRole="adjustable"` se convierte en un `slider` sin nombre (axe
+  `aria-input-field-name`). El título y las flechas son propios.
 - `react-native-calendars` `Calendar`, envuelto en `src/components/calendar/month-calendar.tsx`
   para aislar la dependencia. El envoltorio recibe `events: CalendarEvent[]` y traduce a
   `markedDates`.
@@ -591,7 +598,7 @@ Decisiones del usuario (2026-09-25):
 | 4 layouts de grupo (`(home)`, `(patients)`, `(follow-up)`, `(knowledge)`) | Un `Stack` por sección, para que cada pestaña conserve su historial y su retroceso (FR-083) | Un único `Stack`: al cambiar de sección se pierde la posición en la anterior |
 | Primitivas `QueryState` y `LinkText` | FR-084/085, con ≥ 4 y ≥ 3 usos | Repetir en cada pantalla los ternarios de carga/error/vacío: es la deriva que se midió |
 | `react-native-calendars` (dependencia nueva, MIT, JS puro; arrastra `xdate`, `lodash`, `recyclerlistview`, `memoize-one`, `prop-types`, `hoist-non-react-statics`, `react-native-swipe-gestures`) | FR-094: calendario mensual accesible y localizable hoy, con semana y agenda disponibles cuando existan citas (decisión del usuario, D17) | Vista de mes propia con `Intl`: sin dependencias, pero habría que reescribirla al llegar semana y agenda |
-| `darkMode: "class"` y bloque oscuro duplicado en `global.css` | FR-091: NativeWind solo permite fijar el esquema en web con la estrategia `class` | Solo la media query: no admite preferencia manual. La duplicación la vigila `tema.test.ts` |
+| Bloques `:root.light`/`:root.dark` duplicados en `global.css` | FR-091: forzar el modo en web sin perder la media query de la que depende NativeWind en nativo | `darkMode: "class"`: rompería el modo `system` en nativo y no hay variantes `dark:` que lo necesiten. La duplicación la vigila `tema.test.ts` |
 | `KeyboardAvoidingView` (React Native) en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen |
 
 ## Migration Plan

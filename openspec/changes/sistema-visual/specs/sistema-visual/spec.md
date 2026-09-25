@@ -619,7 +619,7 @@ verificar ambos caminos.
 ### Requirement: FR-092
 
 La identidad del profesional MUST mostrarse con un `Avatar`. Sin foto, muestra sus iniciales en
-`text-primary` sobre `bg-primary-surface`, con `min-h-touch` de diámetro y forma circular. El avatar
+`text-foreground` sobre `bg-primary-surface`, con `min-h-touch` de diámetro y forma circular. El avatar
 MUST ser decorativo, con el nombre siempre presente como texto o como nombre accesible del control
 que lo contiene. El componente MUST aceptar a futuro una `uri` de foto con respaldo a las
 iniciales si la imagen falla; la carga y el almacenamiento de fotos quedan fuera de este cambio.

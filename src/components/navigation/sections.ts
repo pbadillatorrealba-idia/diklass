@@ -31,6 +31,14 @@ export const SECTIONS = [
     sf: "book",
     md: "menu_book",
   },
+  {
+    name: "(settings)",
+    href: "/settings",
+    label: "Configuración",
+    icon: "cog-outline",
+    sf: "gearshape",
+    md: "settings",
+  },
 ] as const satisfies ReadonlyArray<{
   name: string;
   href: string;
@@ -41,3 +49,9 @@ export const SECTIONS = [
 }>;
 
 export type Section = (typeof SECTIONS)[number];
+
+/**
+ * Barra inferior web: a 320 px solo caben 4 secciones con el nombre visible (D17). Configuración
+ * se alcanza desde el avatar de la barra superior compacta.
+ */
+export const TABBAR_SECTIONS = SECTIONS.filter((section) => section.name !== "(settings)");

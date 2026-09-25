@@ -2,27 +2,27 @@ import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
 import { View } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Heading } from "@/components/ui/heading";
-import { Text } from "@/components/ui/text";
 import { useAuth } from "@/features/auth/auth-provider";
-import { useSessionStore } from "@/stores/session-store";
+import { AccountLink } from "./account-link";
 import { NavItem } from "./nav-item";
-import { SECTIONS } from "./sections";
+import { SECTIONS, type Section, TABBAR_SECTIONS } from "./sections";
 import { SkipLink } from "./skip-link";
+import { ThemeToggle } from "./theme-toggle";
 
 const CONTENT_ID = "contenido";
 
 /**
- * Navegación global en web (FR-082 · design.md D12). El `TabList` oculto solo define las
- * rutas; se ven dos barras con los mismos disparadores: la lateral desde `lg` y la inferior por
- * debajo. El orden del DOM es: enlace de salto, barra lateral, contenido y barra inferior, igual
- * que el orden visual en cada ancho.
+ * Navegación global en web (FR-082 · FR-093 · design.md D12/D17). El `TabList` oculto solo
+ * define las rutas; los disparadores visibles están en la barra lateral (desde `lg`, 5
+ * secciones) o en la barra superior compacta más la inferior (por debajo de `lg`, con las 4
+ * clínicas, y Configuración desde el avatar). El orden del DOM coincide con el visual en cada
+ * ancho.
  */
 export function AppNavigation() {
   const { signOut } = useAuth();
-  const displayName = useSessionStore((state) => state.displayName);
 
-  const items = (variant: "sidebar" | "tabbar") =>
-    SECTIONS.map((section) => (
+  const items = (variant: "sidebar" | "tabbar", sections: readonly Section[]) =>
+    sections.map((section) => (
       <TabTrigger asChild key={section.name} name={section.name}>
         <NavItem
           icon={section.icon}
@@ -39,17 +39,26 @@ export function AppNavigation() {
       <View className="flex-1 bg-background lg:flex-row">
         <SkipLink targetId={CONTENT_ID} />
         <View
+          className="flex-row items-center justify-between border-b border-border bg-card px-4 py-1 lg:hidden"
+          testID="app-topbar"
+        >
+          <Heading level={2}>Diklass</Heading>
+          <View className="flex-row items-center gap-2">
+            <ThemeToggle />
+            <AccountLink />
+          </View>
+        </View>
+        <View
           aria-label="Secciones"
           className="hidden w-sidebar gap-6 border-r border-border bg-card p-4 lg:flex"
           role="navigation"
           testID="app-sidebar"
         >
           <Heading level={2}>Diklass</Heading>
-          <View className="flex-1 gap-1">{items("sidebar")}</View>
+          <View className="flex-1 gap-1">{items("sidebar", SECTIONS)}</View>
           <View className="gap-3 border-t border-border pt-4">
-            <Text tone="muted" variant="caption">
-              {displayName}
-            </Text>
+            <AccountLink showName />
+            <ThemeToggle showLabel />
             <LogoutButton onLogout={signOut} />
           </View>
         </View>
@@ -62,7 +71,7 @@ export function AppNavigation() {
           role="navigation"
           testID="app-tabbar"
         >
-          {items("tabbar")}
+          {items("tabbar", TABBAR_SECTIONS)}
         </View>
       </View>
       <TabList style={{ display: "none" }}>

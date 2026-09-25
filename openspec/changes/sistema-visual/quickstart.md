@@ -542,3 +542,49 @@ Firefox/WebKit locales: sin fallos de foco. Quedan 2 limitaciones del entorno lo
 - el caso de reflujo agota sus 30 s en Firefox.
 
 Ambas se verifican de nuevo sobre una base limpia (5.2/5.6).
+
+## Grupo 10 — Apariencia, cuenta y agenda (US16)
+
+- **10.1 Tema manual (FR-091):**
+  - rojo→verde en `tema.test.ts`: los bloques `:root.light`/`:root.dark` repiten los tokens;
+  - rojo→verde en `theme-preference.test.ts`: 8 casos de resolución, hidratación, persistencia y
+    degradación a `system`.
+  - e2e `tema.spec.ts`:
+    - el botón cambia a oscuro sin recargar, y `--background` pasa a `1 4 4`;
+    - tras recargar sigue oscuro y axe da 0 violaciones;
+    - «Sistema» lo devuelve a claro;
+    - con el bundle bloqueado, el script de `+html.tsx` ya pone `dark` en `<html>` (sin destello).
+- **10.2 `Avatar`:**
+  - prueba de componente: iniciales con «Dra.», acentos, espacios y vacío; decorativo; `min-h-touch`
+    y `min-w-touch`.
+  - Las iniciales van en `foreground`: `primary` sobre `primary-surface` daba 4.3:1 en claro.
+- **10.3 Configuración:**
+  - la quinta sección (`/settings`) tiene perfil (avatar, nombre, correo), apariencia (Sistema,
+    Claro, Oscuro) y sesión;
+  - la barra lateral lleva 5 secciones y un pie con avatar, tema y cierre de sesión;
+  - `app-topbar` por debajo de `lg`, con la marca, el tema y el avatar-enlace;
+  - la barra inferior conserva las 4 clínicas (`TABBAR_SECTIONS`);
+  - `NativeTabs` con 5.
+  - e2e: Configuración a 1 activación a 1280 y a 375 px.
+  - La edición de datos personales queda en `perfil-profesional`; la pantalla lo indica.
+- **10.4 Calendario:**
+  - `react-native-calendars@1.1314.0` (MIT, JS puro, 9 paquetes transitivos) instalado con
+    `bunx expo install`; justificación en design.md (Complexity Tracking).
+  - `bunfig.toml` carga `.png` como archivo, porque el paquete importa imágenes.
+  - Pruebas unitarias (6):
+    - `toMarkedDates` usa la zona del evento, agrupa por día e ignora los cancelados;
+    - mes en español, semana desde el lunes, estado vacío y flechas con nombre.
+  - La cabecera del paquete se sustituye (daba `slider` sin nombre en axe).
+  - e2e: mes navegable y axe verde en claro y en oscuro.
+
+Resultado local en `chromium`:
+
+- La suite completa dio 34 passed hasta que el Metro del servidor de pruebas agotó su heap (OOM de
+  la máquina local).
+- `retroalimentacion` + `tema`, corridas aparte: 10 passed.
+- El recorrido por teclado sube su tope de 150 a 250 paradas: la navegación suma unas 10 por
+  pantalla.
+- Repetición tras 10.5 (2026-09-25), en `chromium` y de una en una: `navegacion` + `tema` 12 passed
+  y `accessibility` 7 passed (incluye el reflujo a 320 px con 5 secciones). `typecheck`,
+  `biome ci --error-on-warnings` y `bun run test` (725 pass, 75 skip, 0 fail) en verde.
+- **10.5:** `AGENTS.md` suma `Avatar`, `MonthCalendar`, la variante `nav` y la preferencia de tema.

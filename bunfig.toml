@@ -1,3 +1,8 @@
 [test]
 # Sustituye react-native por react-native-web en las pruebas de componentes (design.md D11 de sistema-visual).
 preload = ["./tests/unit/setup/react-native.ts"]
+
+# Los paquetes de React Native importan imágenes (p. ej. las flechas de react-native-calendars);
+# en las pruebas basta con su ruta.
+[loader]
+".png" = "file"

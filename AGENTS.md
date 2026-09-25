@@ -78,8 +78,19 @@ Reglas para cualquier UI nueva o modificada:
   - Contenido del sistema sin validar: `SuggestedBlock`.
   - Severidad clínica: `SeverityBadge`.
   - Iconos: `Icon` (`label` o `decorative`, obligatorio).
+  - Persona: `Avatar` con iniciales; es decorativo, así que el nombre siempre va al lado como
+    texto o como nombre accesible del control que lo contiene.
+  - Calendario: `MonthCalendar` (`src/components/calendar/`), único punto de uso de
+    `react-native-calendars`; recibe `CalendarEvent[]` (`src/features/agenda/`), nunca
+    `markedDates` directamente.
 - **Texto:** `Text variant="body|caption|label|strong"` y `tone`; títulos con
-  `Heading level={1|2|3}`. Nada de `text-sm`/`text-xs` sueltos ni `text-foreground/70`.
+  `Heading level={1|2|3}`. Nada de `text-sm`/`text-xs` sueltos ni `text-foreground/70`. La
+  variante `nav` (12 px) es exclusiva de las etiquetas de navegación.
+- **Tema:** la preferencia (`system|light|dark`, por defecto `system`) se lee y cambia con
+  `useThemePreference()`, y el esquema efectivo con `useColorScheme()` de
+  `src/theme/use-color-scheme.ts`, nunca el de `react-native`. Un token nuevo va también en los
+  bloques `:root.light`/`:root.dark` de `global.css`, que `tema.test.ts` compara con claro y
+  oscuro.
 - **Botones:** `primary` para la acción principal de la pantalla; `outline` para las
   secundarias y las acciones por fila; `ghost` para las terciarias; `destructive` solo para
   detener algo en curso.

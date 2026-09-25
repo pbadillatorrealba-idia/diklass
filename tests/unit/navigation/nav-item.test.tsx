@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { NavItem } from "@/components/navigation/nav-item";
-import { SECTIONS } from "@/components/navigation/sections";
+import { SECTIONS, TABBAR_SECTIONS } from "@/components/navigation/sections";
 import { SkipLink } from "@/components/navigation/skip-link";
 
 // sistema-visual FR-082 · design.md D12: cada sección es un enlace con icono y nombre, y la actual
@@ -47,16 +47,26 @@ describe("NavItem", () => {
 });
 
 describe("secciones", () => {
-  test("son las cuatro de D12, con icono web y SF/Material para nativo", () => {
+  test("son las cinco de D12/D17, con icono web y SF/Material para nativo", () => {
     expect(SECTIONS.map((s) => [s.label, s.href])).toEqual([
       ["Inicio", "/home"],
       ["Pacientes", "/patients"],
       ["Seguimiento", "/follow-up"],
       ["Conocimiento", "/knowledge"],
+      ["Configuración", "/settings"],
     ]);
     for (const section of SECTIONS) {
       expect(section.icon && section.sf && section.md).toBeTruthy();
     }
+  });
+
+  test("la barra inferior web lleva las 4 clínicas; Configuración va por el avatar (SC-059)", () => {
+    expect(TABBAR_SECTIONS.map((s) => s.label)).toEqual([
+      "Inicio",
+      "Pacientes",
+      "Seguimiento",
+      "Conocimiento",
+    ]);
   });
 });
 

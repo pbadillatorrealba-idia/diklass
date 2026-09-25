@@ -1,6 +1,10 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 import type { PropsWithChildren } from "react";
 
+// Solo acepta los dos valores que fijan el modo; cualquier otra cosa deja la media query.
+const THEME_BOOTSTRAP =
+  'try{var p=localStorage.getItem("diklass.theme");if(p==="light"||p==="dark")document.documentElement.classList.add(p)}catch(e){}';
+
 const FIRST_PAINT_FONTS = ["400Regular", "500Medium", "600SemiBold", "700Bold"];
 
 // Web-only root document for static rendering; runs in Node.js, with no DOM access.
@@ -25,6 +29,11 @@ export default function Root({ children }: PropsWithChildren) {
           />
         ))}
         <ScrollViewStyleReset />
+        {/* Tema fijado por el usuario antes del primer pintado, sin destello (FR-091 · D17). */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: literal estático, sin datos del usuario.
+          dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }}
+        />
       </head>
       <body>{children}</body>
     </html>

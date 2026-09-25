@@ -132,6 +132,81 @@
       --ring: 97 113 110;
     }
   }
+
+  /* Modo forzado en web (FR-091 · D17): gana a la media query por especificidad. El script de
+   * `+html.tsx` pone la clase antes del primer pintado. `tema.test.ts` exige que repitan los
+   * valores de arriba. En nativo, el modo se fija con `Appearance.setColorScheme`. */
+  :root.light {
+    --background: 238 242 241;
+    --foreground: 4 5 5;
+    --card: 255 255 255;
+    --card-foreground: 3 14 12;
+    --popover: 239 249 247;
+    --popover-foreground: 3 14 12;
+    --primary: 24 122 106;
+    --primary-foreground: 242 252 251;
+    --primary-surface: 227 239 237;
+    --secondary: 75 120 168;
+    --secondary-foreground: 253 254 254;
+    --secondary-surface: 233 239 245;
+    --muted: 233 238 236;
+    --muted-foreground: 67 86 78;
+    --accent: 215 154 61;
+    --accent-foreground: 79 54 16;
+    --destructive: 217 14 0;
+    --destructive-foreground: 255 255 255;
+    --destructive-surface: 250 230 229;
+    --warning: 147 95 16;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 250 242 229;
+    --success: 36 123 67;
+    --success-foreground: 255 255 255;
+    --success-surface: 231 248 237;
+    --info: 57 111 172;
+    --info-foreground: 255 255 255;
+    --info-surface: 232 239 247;
+    --suggested: 131 83 198;
+    --scrim: 0 0 0;
+    --border: 206 219 215;
+    --input: 97 145 138;
+    --ring: 93 147 133;
+  }
+
+  :root.dark {
+    --background: 1 4 4;
+    --foreground: 247 253 252;
+    --card: 22 38 35;
+    --card-foreground: 247 253 252;
+    --popover: 39 46 45;
+    --popover-foreground: 247 253 252;
+    --primary: 67 218 193;
+    --primary-foreground: 0 0 0;
+    --primary-surface: 27 60 54;
+    --secondary: 109 148 188;
+    --secondary-foreground: 26 41 58;
+    --secondary-surface: 32 51 53;
+    --muted: 31 40 37;
+    --muted-foreground: 135 170 155;
+    --accent: 213 153 61;
+    --accent-foreground: 76 52 16;
+    --destructive: 254 67 54;
+    --destructive-foreground: 0 0 0;
+    --destructive-surface: 59 25 22;
+    --warning: 230 148 25;
+    --warning-foreground: 37 24 4;
+    --warning-surface: 59 44 22;
+    --success: 57 198 109;
+    --success-foreground: 9 32 17;
+    --success-surface: 22 59 36;
+    --info: 91 142 200;
+    --info-foreground: 10 20 31;
+    --info-surface: 22 40 59;
+    --suggested: 161 125 212;
+    --scrim: 0 0 0;
+    --border: 58 68 66;
+    --input: 96 114 111;
+    --ring: 97 113 110;
+  }
 }
 
 /*

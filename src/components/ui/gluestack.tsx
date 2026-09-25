@@ -1,7 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
-import type { PropsWithChildren } from "react";
-import { Platform, useColorScheme, View } from "react-native";
+import { type PropsWithChildren, useEffect } from "react";
+import { Platform, View } from "react-native";
 import { palette } from "@/theme/colors";
+import { themeStore } from "@/theme/theme-store";
+import { useColorScheme } from "@/theme/use-color-scheme";
 import "@/global.css";
 
 /**
@@ -14,6 +16,10 @@ import "@/global.css";
  * `bg-background` (a CSS media query) shows through from the first paint, before hydration.
  */
 export function AppUiProvider({ children }: PropsWithChildren) {
+  // Aplica la preferencia de tema guardada en el dispositivo (FR-091).
+  useEffect(() => {
+    void themeStore.getState().hydrate();
+  }, []);
   const isDark = useColorScheme() === "dark";
   const base = isDark ? DarkTheme : DefaultTheme;
   const colors = palette[isDark ? "dark" : "light"];

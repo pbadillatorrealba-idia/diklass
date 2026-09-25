@@ -36,7 +36,8 @@ async function expectNoViolations(page: Page) {
 async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
   const reached: string[] = [];
   let firstStop: string | null = null;
-  for (let step = 0; step < 150; step += 1) {
+  // La navegación global suma ~10 paradas por pantalla (sistema-visual D12/D17).
+  for (let step = 0; step < 250; step += 1) {
     await page.keyboard.press("Tab");
     const stop = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement | null;
