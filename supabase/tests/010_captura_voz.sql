@@ -283,16 +283,6 @@ select throws_ok(
   'FR-068 · D8: started_by no es escribible por el cliente'
 );
 
--- 19. FR-031 · D10: quality solo admite 'ok' | 'insufficient'.
-select throws_ok(
-  $$insert into public.transcript_segments
-      (listening_session_id, clinic_id, seq, started_at, ended_at, text, quality)
-    values ('11111111-0000-0000-0000-000000000201', 'e4e4e4e4-0000-0000-0000-00000000000e', 0,
-      timezone('utc', now()), timezone('utc', now()), 'texto', 'inaudible')$$,
-  '23514', null,
-  'FR-031 · D10: quality solo admite ok | insufficient'
-);
-
 -- 20. US6-AC12 · D10: processing_state no es escribible por el cliente en INSERT; nace 'pending'.
 select throws_ok(
   $$insert into public.transcript_segments
@@ -342,6 +332,18 @@ select throws_ok(
     where id = '99999999-0000-0000-0000-000000000010'$$,
   '23514', null,
   'US6-AC12 · D10: processing_state solo admite pending | processed | discarded'
+);
+
+-- 19. FR-031 · D10: quality solo admite 'ok' | 'insufficient'. Se ejerce sobre la sesión activa
+-- de ANA: desde la revisión de la PR #29 un tramo sin sesión activa ya se rechaza antes, en el
+-- guarda del tramo, y el test pasaría por la razón equivocada.
+select throws_ok(
+  $$insert into public.transcript_segments
+      (listening_session_id, clinic_id, seq, started_at, ended_at, text, quality)
+    values ('11111111-0000-0000-0000-000000000201', 'e4e4e4e4-0000-0000-0000-00000000000e', 1,
+      timezone('utc', now()), timezone('utc', now()), 'texto', 'inaudible')$$,
+  '23514', 'new row for relation "transcript_segments" violates check constraint "transcript_segments_quality_check"',
+  'FR-031 · D10: quality solo admite ok | insufficient'
 );
 
 -- 24. D8: una clínica ajena no ve la sesión de escucha.

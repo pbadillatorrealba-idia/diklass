@@ -15,10 +15,14 @@
 --   * D10 · FR-031 · US6-AC12 · FR-055: `transcript_segments` con `quality` y
 --     `processing_state` explícitos; sin retención de audio (supuestos de la spec).
 --
+--   * Revisión de la PR #29 (sección 5): consulta abierta y sesión activa exigidas en el
+--     servidor (FR-014 · US6-AC14), tramos y sesiones cerradas sellados (SC-027).
+--
 -- SIN funciones ejecutables nuevas, a propósito: la enumeración de funciones ejecutables por
 -- 'authenticated' es taxativa en 004_function_privileges.sql (exactamente nueve) y las suites
--- 001–008 deben seguir verdes (D5 del diseño). Los trigger functions no necesitan grant (005:
--- «Trigger functions need no grant»). Verificación: supabase/tests/010_captura_voz.sql.
+-- 001–008 deben seguir verdes (D5 del diseño). Los guardas nuevos son trigger functions, que no
+-- necesitan grant (005: «Trigger functions need no grant»). Verificación:
+-- supabase/tests/010_captura_voz.sql y supabase/tests/011_captura_voz_revision.sql.
 
 -- ---------------------------------------------------------------------------
 -- 1. Refinamiento del mapping (mismo cuerpo que 003_attribution_hardening.sql, solo el
@@ -100,6 +104,10 @@ begin
     if coalesce(new.content ->> 'confirmationState', 'pending') <> 'pending' then
       raise exception 'AUDIO_FACT_STATE_INVALID' using errcode = '23514';
     end if;
+    -- D5 · SC-027 (revisión de la PR #29): anamnesisEntryId es del servidor también al nacer.
+    -- Un enlace fabricado en el alta viajaría después en el contenido que el cliente reenvía
+    -- al confirmar, y la confirmación lo rechazaría como AUDIO_FACT_ANAMNESIS_FORGED.
+    new.content := new.content - 'anamnesisEntryId';
     return new;
   end if;
 
@@ -108,6 +116,15 @@ begin
   -- correcciones del antecedente van por las rutas de anamnesis de 002.
   if coalesce(old.content ->> 'confirmationState', 'pending') in ('confirmed', 'discarded') then
     raise exception 'AUDIO_FACT_IMMUTABLE' using errcode = '23514';
+  end if;
+
+  -- D6 · FR-017 (revisión de la PR #29): el vocabulario está cerrado también en UPDATE. Un
+  -- estado desconocido no es terminal ni confirma nada, pero deja la fila fuera de contrato
+  -- para toda lectura posterior.
+  if coalesce(new.content ->> 'confirmationState', 'pending')
+    not in ('pending', 'confirmed', 'discarded')
+  then
+    raise exception 'AUDIO_FACT_STATE_INVALID' using errcode = '23514';
   end if;
 
   if new.content ->> 'confirmationState' = 'confirmed' then
@@ -237,7 +254,9 @@ revoke all on public.transcript_segments from anon, authenticated;
 grant select on public.transcript_segments to authenticated;
 grant insert (id, listening_session_id, clinic_id, seq, started_at, ended_at, text, quality)
   on public.transcript_segments to authenticated;
-grant update (text, quality, processing_state) on public.transcript_segments to authenticated;
+-- SC-027 (revisión de la PR #29): el texto y la calidad del tramo son el origen trazable de
+-- los hechos confirmados; el cliente solo resuelve su estado de procesamiento.
+grant update (processing_state) on public.transcript_segments to authenticated;
 
 alter table public.listening_sessions enable row level security;
 
@@ -325,3 +344,100 @@ with check (
       and veterinarian.clinic_id = transcript_segments.clinic_id
   )
 );
+
+-- ---------------------------------------------------------------------------
+-- 5. Contenedor abierto y sesión activa, exigidos en el servidor (revisión de la PR #29).
+--
+-- FR-014 · US6-AC14: la escucha nunca corre sin consulta abierta. La comprobación del
+-- cliente (startListenSession) es solo una guía de interfaz; «Falla cerrado» (AGENTS.md)
+-- exige que la base la imponga. Los tramos solo se anexan a una sesión activa de la clínica
+-- cuya consulta sigue abierta, y un tramo resuelto o una sesión cerrada quedan sellados.
+--
+-- Patrón de guard_consultation_sealed (009): FOR SHARE serializa con el UPDATE que cierra la
+-- consulta (approve_clinical_record) o la sesión (endListenSession). Sin el bloqueo, bajo
+-- READ COMMITTED la lectura vería el 'open'/'active' confirmado mientras el cierre aún no
+-- confirma, y la sesión o el tramo entrarían en un contenedor que se cierra en paralelo.
+-- Son funciones de trigger sin security definer: la lectura pasa por la RLS de quien
+-- escribe, así que una consulta o sesión de otra clínica no resuelve y se rechaza.
+-- ---------------------------------------------------------------------------
+
+create or replace function public.guard_listening_session()
+returns trigger
+language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  consultation_status text;
+begin
+  if tg_op = 'INSERT' then
+    select target.content ->> 'status' into consultation_status
+    from public.clinical_records target
+    where target.id = new.consultation_id
+      and target.record_type = 'consultation'
+      and target.clinic_id = new.clinic_id
+    for share;
+
+    -- Una consulta inexistente, ajena o cerrada no es contenedor válido (falla cerrado).
+    if consultation_status is distinct from 'open' then
+      raise exception 'CONSULTATION_NOT_OPEN' using errcode = '23514';
+    end if;
+    return new;
+  end if;
+
+  -- D8: el cierre es terminal; una sesión detenida o interrumpida no se reabre.
+  if old.state <> 'active' then
+    raise exception 'LISTENING_SESSION_SEALED' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger listening_session_guard
+before insert or update on public.listening_sessions
+for each row execute function public.guard_listening_session();
+
+create or replace function public.guard_transcript_segment()
+returns trigger
+language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  session_consultation uuid;
+  consultation_status text;
+begin
+  if tg_op = 'INSERT' then
+    select session.consultation_id into session_consultation
+    from public.listening_sessions session
+    where session.id = new.listening_session_id
+      and session.clinic_id = new.clinic_id
+      and session.state = 'active'
+    for share;
+
+    if session_consultation is null then
+      raise exception 'LISTENING_SESSION_NOT_ACTIVE' using errcode = '23514';
+    end if;
+
+    select target.content ->> 'status' into consultation_status
+    from public.clinical_records target
+    where target.id = session_consultation
+      and target.record_type = 'consultation'
+      and target.clinic_id = new.clinic_id
+    for share;
+
+    if consultation_status is distinct from 'open' then
+      raise exception 'CONSULTATION_NOT_OPEN' using errcode = '23514';
+    end if;
+    return new;
+  end if;
+
+  -- SC-027 · US6-AC12: un tramo resuelto ('processed' | 'discarded') es definitivo.
+  if old.processing_state <> 'pending' then
+    raise exception 'TRANSCRIPT_SEGMENT_SEALED' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger transcript_segment_guard
+before insert or update on public.transcript_segments
+for each row execute function public.guard_transcript_segment();

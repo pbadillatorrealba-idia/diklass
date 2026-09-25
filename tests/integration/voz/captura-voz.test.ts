@@ -232,4 +232,41 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
       await expect(confirmAudioFact(bruno.client, yaConfirmado.record.id)).rejects.toThrow();
     }
   });
+
+  // Revisión de la PR #29, hallazgo 8: la consulta abierta la exige la base, no solo el servicio.
+  test("FR-014 · US6-AC14: la Data API rechaza una sesión de escucha sin consulta abierta", async () => {
+    const { error } = await ana.client
+      .from("listening_sessions")
+      .insert({
+        clinic_id: ana.clinicId,
+        consultation_id: "00000000-0000-0000-0000-000000000000",
+      })
+      .select()
+      .single();
+    expect(error?.message).toBe("CONSULTATION_NOT_OPEN");
+  });
+
+  test("SC-027 · US6-AC12: un tramo resuelto no se reescribe ni vuelve a resolverse", async () => {
+    const tramo = await saveTranscriptSegment(ana.client, {
+      listenSessionId: sessionId,
+      clinicId: ana.clinicId,
+      seq: 50,
+      startedAt: new Date().toISOString(),
+      endedAt: new Date().toISOString(),
+      text: "Ladra todos los días",
+      quality: "ok",
+    });
+    await settleTranscriptSegment(ana.client, {
+      segmentId: tramo.id,
+      processingState: "processed",
+    });
+    await expect(
+      settleTranscriptSegment(bruno.client, { segmentId: tramo.id, processingState: "discarded" }),
+    ).rejects.toMatchObject({ message: "TRANSCRIPT_SEGMENT_SEALED" });
+    const { error } = await ana.client
+      .from("transcript_segments")
+      .update({ text: "texto reescrito" } as never)
+      .eq("id", tramo.id);
+    expect(error?.code).toBe("42501");
+  });
 });
