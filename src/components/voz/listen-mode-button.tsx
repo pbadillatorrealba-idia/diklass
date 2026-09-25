@@ -26,10 +26,11 @@ export function ListenModeButton({
       accessibilityLabel={etiqueta}
       accessibilityRole="button"
       aria-pressed={active}
-      className={active ? "bg-error-500" : "bg-primary-500"}
       isDisabled={isDisabled || isBusy}
       onPress={onToggle}
       testID="listen-mode-button"
+      // Grabando, el botón detiene la captura: se distingue por texto, `aria-pressed` y color.
+      variant={active ? "destructive" : "primary"}
     >
       <ButtonText>{active ? "Detener escucha" : "Modo de escucha"}</ButtonText>
     </Button>

@@ -291,3 +291,27 @@ Capturas: [pacientes 1280 px claro](evidencia/4.3-pacientes-1280-claro.png) · [
 $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/conocimiento.spec.ts --project=chromium --workers=1   → 5 passed
 ```
 Capturas: [respuesta 1280 px claro](evidencia/4.4-respuesta-1280-claro.png) · [fuentes 320 px oscuro](evidencia/4.4-fuentes-320-oscuro.png).
+
+### 4.5 — Componentes de voz (FR-076 · escenario «Sugerencia aprobada»)
+
+**Defecto encontrado:** los componentes de voz usaban clases de la paleta numerada de gluestack
+(`bg-warning-100`, `text-warning-700`, `text-success-700`, `text-error-700`, `bg-error-500`,
+`bg-primary-500`) que no existen en el tema: se renderizaban sin color, así que la contradicción,
+el error y el estado "grabando" no se veían como tales. La guarda de `tema.test.ts` detecta ahora
+cualquier escala numerada `(bg|text|border|…)-<nombre>-<n>` (rojo: 7 hallazgos en `src/components/voz/`).
+
+- `draft-facts-panel`: pendiente → `SuggestedBlock`; confirmado → "Confirmado" (`tone="success"` +
+  icono) y `AttributionBadge` con quien confirmó (`updated_by`/`updated_at`: confirmar es un UPDATE);
+  descartado → `tone="muted"`; contradicción → `Callout warning`; "Corregir" y "Descartar" → `outline`.
+- `listen-mode-button`: grabando usa `variant="destructive"` (nueva variante de `Button`, D7: se
+  añade porque una pantalla real la necesita).
+- `listen-mode-section`: error → `Callout error`. `transcript-review`: tramos → `Card`; tramo no
+  confiable → `tone="destructive"`. `listen-status-indicator`: icono de grabación al capturar.
+
+```
+$ bun test tests/unit/voz/voz-ui.test.tsx   → rojo 4/5 antes de implementar; 5 pass después
+$ node_modules/.cache/gates.sh (biome ci, typecheck, bun test tests/unit) → OK
+```
+**Pendiente explícito:** `ListenModeSection` no está montada en ninguna pantalla (integración
+pendiente de la 004), así que no hay e2e ni capturas en la app; la verificación es por render en
+`tests/unit/voz/voz-ui.test.tsx`.

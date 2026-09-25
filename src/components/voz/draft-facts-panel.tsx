@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { ANAMNESIS_FIELD_LABELS, PROVENANCE_LABELS } from "@/components/registro/labels";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Callout } from "@/components/ui/callout";
+import { Card } from "@/components/ui/card";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
+import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
+import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { AudioFactEntry } from "@/features/voz/audio-fact-service";
@@ -35,9 +40,9 @@ export function DraftFactsPanel({
 
   return (
     <VStack className="w-full gap-3" testID="draft-facts-panel">
-      <Heading size="md">Antecedentes extraídos (borrador)</Heading>
+      <Heading level={2}>Antecedentes extraídos (borrador)</Heading>
       {facts.length === 0 ? (
-        <Text className="text-foreground/70">
+        <Text tone="muted">
           Nada extraído todavía: todo antecedente requiere tu confirmación explícita.
         </Text>
       ) : null}
@@ -45,44 +50,45 @@ export function DraftFactsPanel({
         const pendiente = fact.content.confirmationState === "pending";
         const etiquetaCampo = ANAMNESIS_FIELD_LABELS[fact.content.field];
         const editando = editId === fact.record.id;
-        return (
-          <Box
-            accessibilityLabel={`Antecedente ${
-              fact.content.confirmationState === "pending"
-                ? "pendiente de confirmación"
-                : fact.content.confirmationState === "confirmed"
-                  ? "confirmado"
-                  : "descartado"
-            }, procedencia ${PROVENANCE_LABELS[fact.content.provenance]}: ${fact.content.text}`}
-            className="rounded-xl border border-border bg-card p-3"
-            key={fact.record.id}
-            testID="draft-fact-card"
-          >
-            <Text bold>{etiquetaCampo}</Text>
+        const detalle = (
+          <VStack className="gap-1">
+            <Text variant="strong">{etiquetaCampo}</Text>
             <Text>{fact.content.text}</Text>
-            <Text className="text-foreground/70">
-              {`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}
-            </Text>
-            <Text className="text-foreground/70">
-              {`Procedencia: ${PROVENANCE_LABELS[fact.content.provenance]}`}
-            </Text>
+            <Text tone="muted">{`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}</Text>
+            <Text tone="muted">{`Procedencia: ${PROVENANCE_LABELS[fact.content.provenance]}`}</Text>
+          </VStack>
+        );
+        return (
+          <Card className="gap-2" key={fact.record.id} testID="draft-fact-card">
+            {pendiente ? <SuggestedBlock>{detalle}</SuggestedBlock> : detalle}
             {fact.content.contradiction ? (
-              <Box
-                accessibilityLabel={`Contradicción: ${fact.content.contradiction.note}`}
-                className="rounded-lg bg-warning-100 p-2"
-                testID="draft-fact-contradiction"
-              >
-                <Text bold className="text-warning-700">
-                  {`Contradicción: ${fact.content.contradiction.note}`}
-                </Text>
-              </Box>
+              <Callout testID="draft-fact-contradiction" title="Contradicción" tone="warning">
+                {fact.content.contradiction.note}
+              </Callout>
             ) : null}
             {fact.content.confirmationState === "confirmed" ? (
-              <Text bold className="text-success-700">
-                Confirmado
-              </Text>
+              // Confirmado: deja de ser sugerencia y muestra quién lo validó (FR-076).
+              <VStack className="gap-2">
+                <Box className="flex-row items-center gap-1">
+                  <Icon decorative name="check-circle-outline" size="sm" tone="success" />
+                  <Text tone="success" variant="strong">
+                    Confirmado
+                  </Text>
+                </Box>
+                {fact.record.updated_by && fact.record.updated_at ? (
+                  <AttributionBadge
+                    attribution={{
+                      action: null,
+                      actorId: fact.record.updated_by,
+                      occurredAt: fact.record.updated_at,
+                    }}
+                  />
+                ) : null}
+              </VStack>
             ) : null}
-            {fact.content.confirmationState === "discarded" ? <Text>Descartado</Text> : null}
+            {fact.content.confirmationState === "discarded" ? (
+              <Text tone="muted">Descartado</Text>
+            ) : null}
             {pendiente ? (
               <VStack className="gap-2">
                 {editando ? (
@@ -130,6 +136,7 @@ export function DraftFactsPanel({
                         setEditText(fact.content.text);
                       }}
                       testID="draft-fact-edit"
+                      variant="outline"
                     >
                       <ButtonText>Corregir</ButtonText>
                     </Button>
@@ -139,13 +146,14 @@ export function DraftFactsPanel({
                     isDisabled={busyFactId !== null}
                     onPress={() => onDiscard(fact.record.id)}
                     testID="draft-fact-discard"
+                    variant="outline"
                   >
                     <ButtonText>Descartar</ButtonText>
                   </Button>
                 </Box>
               </VStack>
             ) : null}
-          </Box>
+          </Card>
         );
       })}
     </VStack>

@@ -11,6 +11,7 @@ describe("Button", () => {
     ["primary", "bg-primary", "text-primary-foreground"],
     ["outline", "bg-card", "text-foreground"],
     ["ghost", "bg-transparent", "text-primary"],
+    ["destructive", "bg-destructive", "text-destructive-foreground"],
   ] as const)("la variante %s usa %s y %s", (variant, surface, text) => {
     const [pressable, label] = classesOf(
       renderToStaticMarkup(

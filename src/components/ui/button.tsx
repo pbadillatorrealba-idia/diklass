@@ -11,6 +11,8 @@ const VARIANTS = {
   outline: { surface: "border border-input bg-card", text: "text-foreground" },
   // Acciones terciarias ("Ver fuente"): texto `primary`, verificado AA sobre card y fondo.
   ghost: { surface: "bg-transparent", text: "text-primary" },
+  // Estado activo que detiene algo en curso (escucha clínica grabando).
+  destructive: { surface: "bg-destructive", text: "text-destructive-foreground" },
 } as const;
 
 // Ambos tamaños conservan el área táctil mínima de 44 px (design.md D6).

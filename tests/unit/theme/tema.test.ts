@@ -152,6 +152,9 @@ describe("colores fuera del tema", () => {
     /["'`]#[0-9a-fA-F]{3,8}\b/g,
     /\brgba?\([^)]*\)/g,
     /\b(?:bg|text|border|ring|outline|placeholder)-(?:white|black|(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3})\b/g,
+    // Escalas numeradas (p. ej. `text-warning-700` de gluestack): no existen en el tema y se
+    // renderizan sin color.
+    /\b(?:bg|text|border|ring|outline|placeholder)-[a-z]+-\d{2,3}\b/g,
   ];
 
   // FR-081 · SC-051: cada hallazgo se reporta como `archivo:línea literal`.

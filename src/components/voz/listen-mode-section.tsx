@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box } from "@/components/ui/box";
+import { Callout } from "@/components/ui/callout";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -48,8 +49,8 @@ export function ListenModeSection({ consultationId }: ListenModeSectionProps) {
 
   return (
     <VStack className="w-full gap-4" testID="listen-mode-section">
-      <Heading size="lg">Modo de escucha clínica</Heading>
-      <Text className="text-foreground/70">
+      <Heading level={2}>Modo de escucha clínica</Heading>
+      <Text tone="muted">
         Captura la conversación con el tutor por tramos de ~30 s. Todo antecedente extraído queda
         como borrador y requiere tu confirmación antes de entrar a la anamnesis.
       </Text>
@@ -62,9 +63,9 @@ export function ListenModeSection({ consultationId }: ListenModeSectionProps) {
         <ListenStatusIndicator state={modo.state} />
       </Box>
       {submitError ? (
-        <Text bold className="text-error-700" testID="listen-mode-error">
+        <Callout testID="listen-mode-error" tone="error">
           {submitError}
-        </Text>
+        </Callout>
       ) : null}
       <TranscriptReview segments={modo.segments} />
       <DraftFactsPanel
