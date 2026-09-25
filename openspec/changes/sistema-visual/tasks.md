@@ -46,7 +46,7 @@ Cada tarea de este grupo:
   verde (`--workers=1`) y capturas claro/oscuro a 320 px y 1280 px en `quickstart.md`.
 
 - [x] 4.1 `(auth)/login.tsx` y `login-form.tsx` (FR-074 · FR-079).
-- [ ] 4.2 `home.tsx` y el diálogo de sesión expirada (`rounded-xl`, `scrim`) (FR-081).
+- [x] 4.2 `home.tsx` y el diálogo de sesión expirada (`rounded-xl`, `scrim`) (FR-081).
 - [ ] 4.3 `patients/index.tsx`, `patients/new.tsx`, `patients/[id].tsx`, `patient-history`, `antecedents-panel` y `AttributionBadge` (tarjeta de paciente con la acción a la derecha en `lg`, D9) (FR-079 · US13-AC4).
 - [ ] 4.4 `knowledge/index.tsx`, `knowledge/sources/*`, `avisos-cobertura` (→ `Callout`, `sin_respaldo_documental` como `error` y el resto como `warning`/`info`), `segmento-respuesta` (→ `SuggestedBlock`), `cita-fragmento` y `visor-documento` (FR-075 · FR-076 · US13-AC2).
 - [ ] 4.5 Componentes de voz: `draft-facts-panel` (hechos pendientes → `SuggestedBlock`; aprobados → atribución), `transcript-review` y `listen-mode-section` (FR-076 · escenario "Sugerencia aprobada").

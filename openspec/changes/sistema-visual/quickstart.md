@@ -236,3 +236,17 @@ $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/auth.spec.ts --project=c
   8 passed
 ```
 Capturas: [320 px oscuro](evidencia/4.1-login-320-oscuro.png) · [1280 px claro](evidencia/4.1-login-1280-claro.png).
+
+### 4.2 — Panel y diálogo de sesión
+
+`home.tsx` pasa a `Screen scroll={false}` con `justify-between` (cerrar sesión al pie),
+`Heading level={1}` y `tone="muted"`; la columna queda centrada en escritorio. `LogoutButton`
+pasa a `variant="outline"`: cerrar sesión no es una acción principal y no debe tener la misma
+jerarquía que "Pacientes". El diálogo de sesión expirada ya quedó migrado en 2.4 (`bg-scrim/55`,
+`rounded-xl`, `max-w-dialog`).
+
+```
+$ bun --env-file=.env run test:e2e:web -- tests/e2e/web/auth.spec.ts --project=chromium --workers=1
+  8 passed (incluye logout y el diálogo de sesión expirada)
+```
+Capturas: [320 px oscuro](evidencia/4.2-home-320-oscuro.png) · [1280 px claro](evidencia/4.2-home-1280-claro.png).
