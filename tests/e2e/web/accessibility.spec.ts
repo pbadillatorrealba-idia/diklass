@@ -227,6 +227,37 @@ async function provisionClinicalCase(browser: Browser): Promise<SyntheticCase> {
       },
     });
 
+    // Retroalimentación sobre la consulta ya cerrada (tarea 7.13 de 005): entrada de BRUNO
+    // con un evento adverso grave y su correctiva de ANA, para que el panel de seguimiento
+    // muestre antecedentes, cronología con corrección y el reporte con versiones sustituidas.
+    const feedbackContent = {
+      consultationId: closedConsultationId,
+      adherence: "parcial",
+      evolution: "mejoriaParcial",
+      evolutionNote: null,
+      adverseEvents: [{ severity: "grave", description: "Vómito aislado (caso sintético)." }],
+      treatmentApplied: "Modificación de conducta",
+      treatmentModification: null,
+      revisedDiagnosis: null,
+    };
+    const feedbackId = await insert(brunoApi, {
+      recordType: "clinical_feedback",
+      content: feedbackContent,
+    });
+    const feedbackEventResponse = await brunoApi.get(
+      "/rest/v1/clinical_audit_events?select=id&entity_type=eq.clinical_feedback" +
+        `&entity_id=eq.${feedbackId}&action=eq.clinical_feedback_recorded`,
+    );
+    const [feedbackEvent] = (await feedbackEventResponse.json()) as Array<{ id: string }>;
+    if (!feedbackEvent) {
+      throw new Error("No se encontró el evento clinical_feedback_recorded del caso sintético.");
+    }
+    await insert(anaApi, {
+      recordType: "clinical_feedback",
+      supersedesEventId: feedbackEvent.id,
+      content: { ...feedbackContent, evolutionNote: "Corrección del caso sintético." },
+    });
+
     // Segunda consulta, abierta y retomable: anamnesis de ambas veterinarias (una con
     // corrección de procedencia recuperable) y diagnóstico, para el workspace en curso.
     await insert(anaApi, {
@@ -327,6 +358,30 @@ function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       url: `/consultations/${caseIds.closedConsultationId}`,
       readyTestID: "epicrisis-correction-history",
       keyboardTestIDs: ["consultation-patient", "epicrisis-correct"],
+    },
+    // Tarea 7.13 de 005 (D11): pantallas de seguimiento entre consultas.
+    {
+      name: "selector de paciente del seguimiento",
+      url: "/follow-up",
+      readyTestID: "follow-up-patient-list",
+      keyboardTestIDs: ["follow-up-open"],
+    },
+    {
+      name: "panel de seguimiento con entrada corregida",
+      url: `/follow-up/${caseIds.patientId}`,
+      readyTestID: "adverse-event-toggle-superseded",
+      keyboardTestIDs: [
+        "feedback-correct",
+        "adverse-event-toggle-superseded",
+        `feedback-consultation-picker-${caseIds.closedConsultationId}`,
+        "feedback-adherence-completa",
+        "feedback-evolution-mejoria",
+        "feedback-treatment-applied",
+        "feedback-treatment-modification",
+        "feedback-revised-diagnosis",
+        "feedback-evolution-note",
+        "feedback-adverse-add",
+      ],
     },
   ];
 }

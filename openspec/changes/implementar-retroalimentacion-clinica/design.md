@@ -335,8 +335,11 @@ aceptación humana de SC-037 quedan explícitamente pendientes.
 
 *Revisión de la PR #28*: la restricción de Playwright se levantó para los defectos que solo se ven
 en pantalla. `tests/e2e/web/retroalimentacion.spec.ts` cubre reporte de eventos adversos,
-corrección de la vigente, doble envío, etiquetas de antecedentes y sesión expirada. La compuerta axe
-+ teclado/foco/viewport sobre `/follow-up` sigue pendiente.
+corrección de la vigente, doble envío, etiquetas de antecedentes y sesión expirada.
+
+*Tarea 7.13 (2026-09-25)*: la compuerta axe WCAG 2.2 AA + teclado/foco/viewport cubre `/follow-up` y
+`/follow-up/[patientId]` en `tests/e2e/web/accessibility.spec.ts`, sobre el caso sintético de D12 de
+002 ampliado con una entrada de retroalimentación y su correctiva. Requisito de integración cumplido.
 
 ## Seguimiento de complejidad (Principio III)
 
@@ -384,8 +387,8 @@ SC-012/SC-013 lo fueron en 002.
   validación Zod en el cliente y **réplica en el servidor** (D5); sin secretos nuevos.
 - **Accesibilidad web (WCAG 2.2 AA)**: etiquetas programáticas, operación por teclado, foco visible
   y contraste en los componentes nuevos (D10); su compuerta automatizada (axe + teclado/foco +
-  viewport) queda como requisito de integración al no admitir esta rama Playwright (D11): declarado,
-  no cumplido.
+  viewport) sobre `/follow-up` se cumplió en la tarea 7.13 (D11). La verificación visual humana
+  sigue pendiente.
 
 ## Migración y reversión
 
