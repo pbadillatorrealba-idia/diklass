@@ -18,6 +18,8 @@ const TONES = {
   warning: "text-warning",
   success: "text-success",
   info: "text-info",
+  /** Enlaces en línea (`LinkText`), verificado AA sobre card y fondo como el botón `ghost`. */
+  primary: "text-primary",
   /** Texto sobre un relleno sólido `destructive` (severidad crítica). */
   onDestructive: "text-destructive-foreground",
 } as const;

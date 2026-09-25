@@ -32,11 +32,12 @@ describe("Text", () => {
     ["success", "text-success"],
     ["info", "text-info"],
     ["onDestructive", "text-destructive-foreground"],
+    ["primary", "text-primary"],
   ] as const)("el tono %s aplica %s y ningún otro color de texto", (tone, expected) => {
     const cls = classOf(renderToStaticMarkup(<Text tone={tone}>x</Text>));
     expect(cls).toContain(expected);
     const colors = cls.filter((c) =>
-      /^text-(foreground|muted-foreground|destructive|destructive-foreground|warning|success|info)$/.test(
+      /^text-(foreground|muted-foreground|destructive|destructive-foreground|warning|success|info|primary)$/.test(
         c,
       ),
     );

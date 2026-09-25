@@ -588,3 +588,15 @@ Resultado local en `chromium`:
   y `accessibility` 7 passed (incluye el reflujo a 320 px con 5 secciones). `typecheck`,
   `biome ci --error-on-warnings` y `bun run test` (725 pass, 75 skip, 0 fail) en verde.
 - **10.5:** `AGENTS.md` suma `Avatar`, `MonthCalendar`, la variante `nav` y la preferencia de tema.
+
+## Grupo 8 — Patrones nativos de interacción
+
+- **8.1 `Link` y `LinkText` (FR-084):**
+  - `link.test.tsx`: el mock de `expo-router` reproduce `Link asChild` como el real en web (el
+    `Slot` de Radix con `href` y `role="link"`).
+  - `Button` bajo `Link asChild` ya daba `<a href>`, porque sus props van después de
+    `role="button"`. Se comprobó por mutación: con `role="button"` después de las props, la prueba
+    falla con un `<button href>`.
+  - `LinkText`: rojo por el módulo vacío y por el doble color (`text-foreground` + `text-primary`),
+    y verde con el tono nuevo `primary` de `Text`.
+

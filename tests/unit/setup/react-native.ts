@@ -53,12 +53,29 @@ mock.module("react-native-safe-area-context", () => {
 });
 
 // `expo-router` arrastra el runtime nativo (splash, TurboModules). Las primitivas solo usan
-// `Link`, `Stack.Screen` y `Head`: `Link` se renderiza como `<a>`, `Head` deja su contenido en el
-// HTML y `Stack.Screen` guarda sus opciones en `globalThis.__stackScreenOptions`.
+// `Link`, `Stack.Screen` y `Head`: `Link` se renderiza como `<a>` (con `asChild`, como el Link real
+// en web, pasa `href` y `role="link"` al hijo con el `Slot` de Radix), `Head` deja su contenido en
+// el HTML y `Stack.Screen` guarda sus opciones en `globalThis.__stackScreenOptions`.
 (globalThis as { __stackScreenOptions?: unknown[] }).__stackScreenOptions = [];
 mock.module("expo-router", () => ({
-  Link: ({ children, href, testID }: { children?: unknown; href: string; testID?: string }) =>
-    createElement("a", { href, "data-testid": testID }, children as never),
+  Link: ({
+    asChild,
+    children,
+    href,
+    testID,
+  }: {
+    asChild?: boolean;
+    children?: unknown;
+    href: string;
+    testID?: string;
+  }) =>
+    asChild
+      ? createElement(
+          require("@radix-ui/react-slot").Slot,
+          { href, role: "link", testID },
+          children as never,
+        )
+      : createElement("a", { href, "data-testid": testID }, children as never),
   Stack: {
     Screen: ({ options }: { options: unknown }) => {
       (globalThis as { __stackScreenOptions?: unknown[] }).__stackScreenOptions?.push(options);
