@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { detectContradictions, flagContradictions } from "@/features/voz/contradictions";
+import {
+  detectContradictions,
+  esNegativo,
+  flagContradictions,
+} from "@/features/voz/contradictions";
 import { extractClinicalFacts } from "@/features/voz/extraction";
 
 // Tasks.md 2.4 — contradicciones como señal, nunca como resolución (D4 · FR-032 · US6-AC8 ·
@@ -143,5 +147,80 @@ describe("flagContradictions (lote de propuestas de un tramo)", () => {
       contexto,
     );
     expect(JSON.stringify(contexto)).toBe(antes);
+  });
+});
+
+// Revisión de la PR #29, hallazgos 6 y 7: polaridad simétrica y marcas que sí pueden coincidir.
+describe("esNegativo (polaridad compartida, revisión de la PR #29)", () => {
+  test("hallazgo 7: «sin parar» es frecuencia, no negación", () => {
+    expect(esNegativo("Ladra sin parar toda la noche")).toBe(false);
+  });
+
+  test("las negaciones reales siguen detectándose", () => {
+    expect(esNegativo("Ya no toma fluoxetina")).toBe(true);
+    expect(esNegativo("Nunca come croquetas")).toBe(true);
+    expect(esNegativo("Sin vómitos")).toBe(true);
+  });
+});
+
+describe("detectContradictions: polaridad simétrica (revisión de la PR #29)", () => {
+  test("hallazgo 7: una frecuencia con «sin parar» no contradice otra frecuencia previa", () => {
+    const [propuesta] = extractClinicalFacts({
+      text: "Ladra sin parar cuando se va",
+      quality: "ok",
+    }).filter((hecho) => hecho.field === "frecuencia");
+    expect(propuesta).toBeDefined();
+    const señales = detectContradictions(
+      {
+        id: "nuevo",
+        field: "frecuencia",
+        text: propuesta?.text ?? "",
+        negation: esNegativo(propuesta?.text ?? ""),
+      },
+      {
+        previos: [{ id: "previo", field: "frecuencia", text: "todos los días", negation: false }],
+        anamnesis: [],
+        ficha: [],
+      },
+    );
+    expect(señales).toEqual([]);
+  });
+
+  test("hallazgo 6: dos negaciones del mismo campo no se contradicen por polaridad", () => {
+    const [nuevo, previo] = extractClinicalFacts({
+      text: "Ya no toma fluoxetina. No toma ningún otro fármaco",
+      quality: "ok",
+    }).filter((hecho) => hecho.field === "tratamientos_anteriores");
+    expect(nuevo && previo).toBeTruthy();
+    const marcadas = flagContradictions(
+      [previo, nuevo].flatMap((hecho) => (hecho ? [hecho] : [])),
+      {
+        previos: [],
+        anamnesis: [],
+        ficha: [],
+      },
+    );
+    expect(marcadas.map((hecho) => hecho.contradiction ?? null)).toEqual([null, null]);
+  });
+
+  test("hallazgo 6: un hecho afirmativo que contradice una observación previa negada se marca", () => {
+    const [propuesta] = extractClinicalFacts({
+      text: "Come croquetas dos veces al día",
+      quality: "ok",
+    }).filter((hecho) => hecho.field === "alimentacion");
+    expect(propuesta).toBeDefined();
+    const marcadas = flagContradictions(propuesta ? [propuesta] : [], {
+      previos: [],
+      anamnesis: [
+        {
+          id: "anamnesis-1",
+          field: "alimentacion",
+          text: "Nunca come croquetas",
+          negation: esNegativo("Nunca come croquetas"),
+        },
+      ],
+      ficha: [],
+    });
+    expect(marcadas[0]?.contradiction?.refKind).toBe("anamnesis");
   });
 });

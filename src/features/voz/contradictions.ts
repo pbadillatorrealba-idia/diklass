@@ -39,11 +39,24 @@ export type SeñalContradicción = {
   note: string;
 };
 
-const MARCAS_CORRECCION = /perdon|mejor dicho|corrijo|en realidad|no,/;
+// El texto comparado es una cláusula ya partida por comas (extractClinicalFacts), así que una
+// marca con coma («no,») no podría coincidir nunca (revisión de la PR #29).
+const MARCAS_CORRECCION = /perdon|mejor dicho|corrijo|en realidad/;
 
-const NEGACION = /\b(no|nunca|sin|tampoco|ya no)\b/;
+// «sin» niega («sin vómitos»), salvo en las locuciones de frecuencia que extrae la regla de
+// `frecuencia` («sin parar»): tratarlas como negación marcaba falsas contradicciones.
+const NEGACION = /\b(no|nunca|tampoco|ya no)\b|\bsin\b(?! (parar|cesar|descanso)\b)/;
 
 const MINIMO_TOKEN = 5;
+
+/**
+ * Polaridad de un texto con la misma regla para el hecho nuevo y para lo ya registrado: si los
+ * previos llegaran siempre como afirmativos, cualquier hecho negado contradiría a un previo
+ * también negado (revisión de la PR #29).
+ */
+export function esNegativo(texto: string): boolean {
+  return NEGACION.test(normalizeSpanish(texto));
+}
 
 /** Sustantivos comparables: palabras de al menos 5 caracteres tras normalizar. */
 function tokensContenido(texto: string): Set<string> {
@@ -76,7 +89,7 @@ export function flagContradictions(
       id: `propuesta-${indice}`,
       field: propuesta.field,
       text: propuesta.text,
-      negation: false,
+      negation: esNegativo(propuesta.text),
     };
     const señales = detectContradictions(candidato, { ...contexto, previos });
     previos.push(candidato);
