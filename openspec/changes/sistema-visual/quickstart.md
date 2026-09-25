@@ -726,4 +726,17 @@ Resultado local en `chromium`:
     antecedentes. Se pasó a medir los contenedores de columna.
   - Verde en `chromium`: `accessibility` 10 (incluye el recorrido por teclado y el reflujo),
     `navegacion` 7, `tema` 5 y `registro-epicrisis` 2.
+- **11.4:**
+  - Axe en `chromium-dark`: `accessibility.spec.ts` 10 de 10 (incluye el reflujo a 320 px y los
+    casos de D18). En `chromium`, 10 de 10 en 11.3.
+  - Capturas en `evidencia/`: `11.4-home-1280.png`, `11.4-home-1440.png`,
+    `11.4-pacientes-1280.png`, `11.4-pacientes-1440.png`, `11.4-ficha-1280.png` y
+    `11.4-ficha-1440.png`.
+  - En la de pacientes aparece el aviso del overlay de desarrollo de `@expo/log-box`
+    (`registro.row_content_skipped`, por filas sintéticas ilegibles de la base local). No existe
+    en producción.
+- **8.9:** la sección «Sistema visual» de `AGENTS.md` suma:
+  - `Screen title`/`back`, `ScreenList`, `QueryState` y `Link`/`LinkText`;
+  - el ancho por tipo de pantalla, el texto copiable y el estilo de código;
+  - las desviaciones de D15.
 

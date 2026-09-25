@@ -72,7 +72,14 @@ Reglas para cualquier UI nueva o modificada:
   `tests/unit/theme/tema.test.ts` con su par de contraste AA. Nunca hex, `rgb()`, paleta fija de
   Tailwind ni escalas numeradas de gluestack (`text-warning-700`): la guarda de ese test falla.
 - **Primitivas** (`src/components/ui/`):
-  - Pantalla: `Screen` (`width="wide"` solo para la consulta).
+  - Pantalla: `Screen`, con `title` (en web, `h1` y `<title>`; en nativo, la cabecera del
+    `Stack`) y `back={{ href, label }}` en las pantallas de detalle. Nunca `Head` suelto.
+  - Lista no acotada (pacientes, fuentes, seguimiento): `ScreenList`, que usa `FlatList` como
+    único contenedor de desplazamiento. El título y las acciones van en `header`; carga, error y
+    vacío, en `empty`. Nunca `.map` dentro de un `ScrollView`.
+  - Datos que se cargan: `QueryState` (cargando > error con «Reintentar» > vacío > contenido),
+    con `isPending` de TanStack Query para no mostrar el vacío durante la primera carga. El vacío
+    explica qué falta y ofrece la acción para crearlo.
   - Superficie: `Card`.
   - Estado: `Callout tone="error|warning|success|info"`.
   - Contenido del sistema sin validar: `SuggestedBlock`.
@@ -91,6 +98,17 @@ Reglas para cualquier UI nueva o modificada:
   `src/theme/use-color-scheme.ts`, nunca el de `react-native`. Un token nuevo va también en los
   bloques `:root.light`/`:root.dark` de `global.css`, que `tema.test.ts` compara con claro y
   oscuro.
+- **Navegación:** todo cambio de ruta es `<Link href asChild>` con `Button` o con `LinkText`
+  (enlace en línea), para que en web sea un `<a href>`. `router.push`/`replace` solo tras una
+  operación, como guardar y abrir lo guardado. La compuerta axe falla si un control de navegación
+  tiene rol `button`.
+- **Ancho (D18):** `width="wide"` (1200 px) para la consulta, las listas (2 columnas desde
+  1280 px de ventana), Inicio, Configuración y la ficha. Los paneles de dos columnas usan
+  `lg:flex-row` sin cambiar el orden del DOM. Los formularios y la lectura larga quedan en
+  `content` (720 px).
+- **Texto copiable:** `selectable` en los datos clínicos (ficha, anamnesis, citas y fragmentos,
+  resúmenes); los mensajes de `Callout tone="error"` y `QueryState` ya lo llevan. No va en
+  etiquetas ni botones.
 - **Botones:** `primary` para la acción principal de la pantalla; `outline` para las
   secundarias y las acciones por fila; `ghost` para las terciarias; `destructive` solo para
   detener algo en curso.
@@ -98,6 +116,14 @@ Reglas para cualquier UI nueva o modificada:
   superficies y `rounded-lg` para lo anidado, y dimensiones con nombre (`max-w-content`,
   `min-h-touch`, `min-h-textarea`), nunca valores arbitrarios `[…]`.
 - **El color nunca es la única señal:** todo estado lleva texto o icono con nombre.
+- **Estilo de código (D15):** `process.env.EXPO_OS` en lugar de `Platform.OS`, y `use` de React 19
+  en lugar de `useContext` (la guarda de `tema.test.ts` falla con los antiguos).
+  `borderCurve: "continuous"` va en las superficies con radio mediante `CONTINUOUS_CURVE`.
+- **Desviaciones asumidas de `expo-native-ui` (D15):**
+  - NativeWind y no estilos en línea;
+  - la paleta de marca y no los colores del sistema operativo;
+  - `@expo/vector-icons` dentro de pantalla (SF Symbols solo en las pestañas nativas);
+  - `KeyboardAvoidingView` de RN en `Screen` y no `react-native-keyboard-controller`.
 
 ## Comandos
 

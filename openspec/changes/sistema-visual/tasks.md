@@ -113,7 +113,7 @@ como pendiente explícito en `quickstart.md`.
 - [x] 8.6 Añadir `selectable` a `Text` y activarlo en los datos clínicos y en `Callout tone="error"` según D14, con una prueba de componente en rojo primero para `Callout` (FR-087). Verificación: prueba verde; en web, el texto se puede seleccionar (e2e con triple clic y `getSelection`).
 - [x] 8.7 `KeyboardAvoidingView` en `Screen` según D14 (FR-088). Verificación: `typecheck` verde; en dispositivo, captura de `/patients/new` con el teclado abierto y el botón de guardar visible, o pendiente explícito.
 - [x] 8.8 Estilo de código de D15: `process.env.EXPO_OS` en los 4 usos de `Platform.OS`, `React.use` en los 4 de `useContext` y `borderCurve: "continuous"` en `Card`, `Callout`, `Input`, `Button` y `SuggestedBlock`. Añadir `Platform.OS` y `useContext(` a la guarda de `tema.test.ts` (rojo primero). Verificación: guarda roja→verde, `typecheck` y `bun test` verdes.
-- [ ] 8.9 Actualizar la sección «Sistema visual» de `AGENTS.md`:
+- [x] 8.9 Actualizar la sección «Sistema visual» de `AGENTS.md`:
   - navegación y títulos: `Screen title`/`back`;
   - `Link` para navegar;
   - `QueryState`;
@@ -205,7 +205,7 @@ como pendiente explícito en `quickstart.md`.
 - [x] 11.3 Pasar `/home` (panel y calendario lado a lado), `/settings` (tarjetas en 2 columnas) y
   `/patients/[id]` (2 columnas con el orden del DOM intacto) a `width="wide"`. Verificación:
   `navegacion`, `tema`, `registro-epicrisis` y el recorrido por teclado en verde.
-- [ ] 11.4 Repetir el reflujo a 320 px y axe en `chromium` y `chromium-dark`, y dejar capturas a
+- [x] 11.4 Repetir el reflujo a 320 px y axe en `chromium` y `chromium-dark`, y dejar capturas a
   1280 y 1440 px de `/home`, `/patients` y `/patients/[id]` en `quickstart.md`. Verificación:
   compuertas en verde y capturas registradas.
 
