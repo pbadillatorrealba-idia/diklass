@@ -886,3 +886,68 @@ Resultado local en `chromium`:
 - El fallo intermitente del recorrido por teclado queda explicado y corregido (5.7, 5.8 y la
   espera de `history-open`).
 
+## Revisión de la PR #38 (6.5)
+
+Informe completo: https://github.com/pbadillatorrealba-idia/diklass/pull/38#issuecomment-5839341007
+(revisión de `eb1f2e1..3d4732f`, veredicto «Con correcciones»).
+
+**Importantes, cada uno con su prueba en rojo primero:**
+
+1. **Cronología de seguimiento en «Cargando…» perpetuo si fallan las consultas:** corregido.
+   - Prueba roja en `estados.spec.ts`.
+   - Ahora `isPending` depende de `consultationsQuery.isSuccess`.
+2. **`tabIndex` -1 también en nativo (en RN, `focusable=false`):** corregido. Solo se aplica en
+   web, con prueba en `option-picker.test.tsx` para ios y android.
+3. **Días del calendario como botones sin acción (35 paradas de Tab):** corregido.
+   - `CalendarDay` propio, de solo texto: hoy con `border-2` y negrita; los días con eventos, con
+     fondo y subrayado.
+   - Pruebas: unitaria y e2e en `tema.spec.ts`.
+   - Captura: `evidencia/10.4-agenda-dias-texto.png`.
+4. **FR-093, FR-091 y FR-092 frente al código:** se enmendó la spec, alineada con D17 y con YAGNI.
+   - FR-093: el enlace «Editar datos personales» llega con `perfil-profesional`.
+   - FR-091: en nativo, el control es el selector de Apariencia.
+   - FR-092: la `uri` de la foto queda fuera de este cambio.
+5. **Regiones vivas que se montan ya con su texto:** corregido.
+   - `Callout tone="error"` pasa a `role="alert"`.
+   - El recuento del selector queda siempre montado. Rojo comprobado por mutación.
+6. **Teclado nativo:** `KeyboardAvoidingView` sale y entra `automaticallyAdjustKeyboardInsets` en
+   `Screen` y en `/login`.
+   - D14 y la Complexity Tracking, actualizados.
+   - Verificación en dispositivo: **pendiente**.
+7. **`CalendarEvent` especulativo:** se registra en la Complexity Tracking con su alternativa
+   mínima. Se conserva por la decisión del usuario en D17 y FR-094.
+
+**Menores:**
+
+- **Corregidos:**
+  - las refs de `Button` se fusionan con `type="submit"`;
+  - se retira la prop `scroll` de `Screen`, sin uso desde `ScreenList`, y se reescribe tasks 8.5;
+  - `back.href` se tipa como `Href`;
+  - el script de `+html.tsx` usa `THEME_STORAGE_KEY`;
+  - la marca de la navegación es `Text` y no `h2`;
+  - el enlace de salto no recibe clics sin foco;
+  - el filtro de tildes usa `[\u0300-\u036f]` en lugar de `\p{Diacritic}` (Hermes);
+  - Non-Goals de design.md;
+  - «Mostrar contraseña» conserva el nombre con `aria-pressed`, tras enmendar US15-AC4 según el
+    patrón ARIA.
+- **No aplicados, con motivo:**
+  - `catch {}` del almacén de tema: la degradación a `system` es el manejo que exige FR-091, no un
+    error silenciado.
+  - `aria-labelledby` en `SuggestedBlock`: FR-076 y la tarea 3.6 piden `accessibilityLabel` con el
+    prefijo.
+- **Pendientes registrados:**
+  - el error de página de `/follow-up/[patientId]` sigue siendo un `Text` sin reintento (la
+    cronología ya tiene el suyo);
+  - los estados de carga y error de la lista de pacientes del selector de `/knowledge`;
+  - una señal visible de «Reintentar» mientras vuelve a cargar (`isFetching`);
+  - confirmar `normalize("NFD")` en Hermes en dispositivo;
+  - un hash o nonce para el script de `+html.tsx` si se añade CSP;
+  - la verificación de 7.5 vive en `auth.spec.ts`, no en `navegacion.spec.ts`.
+
+**Verificación tras las correcciones:**
+
+- local: `typecheck`, `biome ci --error-on-warnings` y `bun run test` (784 pass, 0 fail);
+- e2e `chromium`: navegacion 7, tema 6, login 6, auth 8, conocimiento 6, estados 4,
+  accessibility 12, retroalimentacion 5 y registro-epicrisis 2;
+- `chromium-dark`: accessibility 12.
+

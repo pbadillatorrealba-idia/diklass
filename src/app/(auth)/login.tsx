@@ -18,6 +18,8 @@ export default function LoginScreen() {
       </Head>
       <ScrollView
         accessibilityLabel="Formulario de inicio de sesión"
+        // FR-088 (revisión de la PR #38): en iOS el teclado no tapa «Iniciar sesión».
+        automaticallyAdjustKeyboardInsets
         // Formulario centrado en vertical: solo esta pantalla lo necesita, así que no va en `Screen`.
         contentContainerClassName="grow items-center justify-center p-4 md:p-6"
         keyboardShouldPersistTaps="handled"

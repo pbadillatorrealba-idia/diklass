@@ -4,11 +4,13 @@ import { Icon } from "@/components/ui/icon";
 type PasswordToggleProps = { visible: boolean; onToggle: () => void };
 
 /**
- * «Mostrar contraseña» / «Ocultar contraseña» (FR-090 · US15-AC4 · design.md D16): botón `ghost`
- * con estado `pressed` anunciado, dentro del campo y con el área táctil mínima.
+ * «Mostrar contraseña» (FR-090 · US15-AC4 · design.md D16): botón conmutador `ghost` con estado
+ * `pressed` anunciado, dentro del campo y con el área táctil mínima.
  */
 export function PasswordToggle({ onToggle, visible }: PasswordToggleProps) {
-  const label = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+  // Nombre fijo: el estado lo anuncia `aria-pressed` (un nombre que también cambia se leería
+  // «Ocultar contraseña, presionado» · revisión de la PR #38).
+  const label = "Mostrar contraseña";
   return (
     <Button
       accessibilityLabel={label}

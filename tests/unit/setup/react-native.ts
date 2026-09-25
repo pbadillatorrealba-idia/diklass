@@ -42,7 +42,26 @@ mock.module("react-native", () => {
     ),
     Pressable: withClass(web.Pressable),
     SafeAreaView: withClass(web.SafeAreaView),
-    ScrollView: withClass(web.ScrollView),
+    // `automaticallyAdjustKeyboardInsets` (iOS) se reexpone como `data-keyboard-insets` (D14).
+    ScrollView: forwardRef(
+      (
+        props: {
+          automaticallyAdjustKeyboardInsets?: boolean;
+          className?: string;
+          dataSet?: object;
+        },
+        ref,
+      ) =>
+        createElement(web.ScrollView, {
+          ...props,
+          ref,
+          dataSet: {
+            ...props.dataSet,
+            class: props.className,
+            keyboardInsets: props.automaticallyAdjustKeyboardInsets ? "true" : undefined,
+          },
+        }),
+    ),
     Text: withClass(web.Text),
     TextInput: withClass(web.TextInput),
     View: withClass(web.View),

@@ -591,7 +591,8 @@ navegador y del sistema operativo:
 La pantalla de acceso MUST presentar el formulario dentro de un `Card`, con la marca, un título de
 nivel 1 y una descripción, centrado y con el ancho `max-w-form`. El `Card` MUST distinguirse del
 fondo en ambos esquemas con los tokens de D4. El campo de contraseña MUST ofrecer un control
-«Mostrar contraseña» / «Ocultar contraseña» operable por teclado, con estado anunciado y área
+«Mostrar contraseña» operable por teclado, con nombre fijo y estado `pressed` anunciado (patrón
+ARIA de botón conmutador), y con área
 táctil `min-h-touch`. El correo MUST pasar el foco a la contraseña con «Siguiente» del teclado. Los
 errores MUST mostrarse con `Callout tone="error"`, anunciados como región viva. Tras un error, la
 contraseña MUST vaciarse y el correo MUST conservarse.
@@ -607,8 +608,9 @@ contraseña MUST vaciarse y el correo MUST conservarse.
 
 - **GIVEN** el campo de contraseña con texto
 - **WHEN** el usuario activa «Mostrar contraseña» con el teclado
-- **THEN** la contraseña se ve en claro, el control pasa a «Ocultar contraseña» con estado
-  `pressed`, y el campo conserva el nombre accesible «Contraseña»
+- **THEN** la contraseña se ve en claro, el control conserva el nombre «Mostrar contraseña» y pasa
+  a `pressed`, y el campo conserva el nombre accesible «Contraseña». Cambiar el nombre a la vez que
+  el estado se anunciaría como «Ocultar contraseña, presionado» (revisión de la PR #38).
 
 #### Scenario: US15-AC5
 
@@ -619,10 +621,11 @@ contraseña MUST vaciarse y el correo MUST conservarse.
 ### Requirement: FR-091
 
 La app MUST ofrecer una preferencia de tema con tres valores (`system`, `light`, `dark`), con
-`system` por defecto. MUST existir un botón de tema accesible en la navegación global (barra
-lateral en web `lg`, barra superior compacta en web angosta, y Configuración en nativo) que
-alterne entre claro y oscuro, anunciando el modo resultante, y un selector de los tres valores en
-Configuración › Apariencia. La preferencia MUST persistir en el dispositivo (almacenamiento local
+`system` por defecto. En web MUST existir un botón de tema accesible en la navegación global
+(barra lateral en `lg`, barra superior compacta en web angosta) que alterne entre claro y oscuro,
+anunciando el modo resultante. En todas las plataformas, Configuración › Apariencia MUST ofrecer
+un selector de los tres valores; en nativo es el único control, porque la cabecera nativa no lleva
+acciones propias (revisión de la PR #38). La preferencia MUST persistir en el dispositivo (almacenamiento local
 del navegador en web, `expo-secure-store` en nativo), MUST NOT enviarse al servidor y MUST degradar
 a `system` si no puede leerse. En web, MUST aplicarse antes del primer pintado. Los tokens de
 `global.css` MUST resolver igual con el modo forzado que con la media query, y `tema.test.ts` MUST
@@ -646,8 +649,8 @@ verificar ambos caminos.
 La identidad del profesional MUST mostrarse con un `Avatar`. Sin foto, muestra sus iniciales en
 `text-foreground` sobre `bg-primary-surface`, con `min-h-touch` de diámetro y forma circular. El avatar
 MUST ser decorativo, con el nombre siempre presente como texto o como nombre accesible del control
-que lo contiene. El componente MUST aceptar a futuro una `uri` de foto con respaldo a las
-iniciales si la imagen falla; la carga y el almacenamiento de fotos quedan fuera de este cambio.
+que lo contiene. La foto (`uri`, con respaldo a las iniciales) y su carga y almacenamiento quedan
+fuera de este cambio y se especificarán con `perfil-profesional` (YAGNI, revisión de la PR #38).
 
 #### Scenario: US16-AC3
 
@@ -663,8 +666,9 @@ barra inferior web angosta, Configuración MUST alcanzarse desde el avatar de un
 compacta (nombre accesible «Configuración»), para que ninguna etiqueta se recorte (SC-059). En
 nativo es la quinta pestaña. La sección MUST contener:
 
-- el perfil (avatar, nombre, identificador de acceso de solo lectura, y un enlace «Editar datos
-  personales» a `/settings/profile`);
+- el perfil (avatar, nombre e identificador de acceso de solo lectura), con un aviso de que la
+  edición llegará con `perfil-profesional`. El enlace «Editar datos personales» a
+  `/settings/profile` lo añade ese cambio junto con la ruta (D17 · revisión de la PR #38);
 - la apariencia (FR-091);
 - el cierre de sesión.
 

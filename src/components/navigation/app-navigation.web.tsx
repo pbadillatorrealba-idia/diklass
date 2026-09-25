@@ -1,7 +1,7 @@
 import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
 import { View } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
-import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
 import { useAuth } from "@/features/auth/auth-provider";
 import { AccountLink } from "./account-link";
 import { NavItem } from "./nav-item";
@@ -42,7 +42,8 @@ export function AppNavigation() {
           className="flex-row items-center justify-between border-b border-border bg-card px-4 py-1 lg:hidden"
           testID="app-topbar"
         >
-          <Heading level={2}>Diklass</Heading>
+          {/* Marca, no encabezado: el `h1` de la pantalla va primero en el orden de títulos. */}
+          <Text variant="strong">Diklass</Text>
           <View className="flex-row items-center gap-2">
             <ThemeToggle />
             <AccountLink />
@@ -54,7 +55,8 @@ export function AppNavigation() {
           role="navigation"
           testID="app-sidebar"
         >
-          <Heading level={2}>Diklass</Heading>
+          {/* Marca, no encabezado: el `h1` de la pantalla va primero en el orden de títulos. */}
+          <Text variant="strong">Diklass</Text>
           <View className="flex-1 gap-1">{items("sidebar", SECTIONS)}</View>
           <View className="gap-3 border-t border-border pt-4">
             <AccountLink showName />

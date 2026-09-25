@@ -1,14 +1,7 @@
-import { Link, Stack } from "expo-router";
+import { type Href, Link, Stack } from "expo-router";
 import Head from "expo-router/head";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
-import {
-  FlatList,
-  type FlatListProps,
-  KeyboardAvoidingView,
-  ScrollView,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { FlatList, type FlatListProps, ScrollView, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "./heading";
 import { Text } from "./text";
@@ -19,7 +12,6 @@ export type ScreenProps = PropsWithChildren<{
   className?: string;
   /** `content`: una columna de lectura; `wide`: consulta, listas y paneles (design.md D9, D18). */
   width?: keyof typeof WIDTHS;
-  scroll?: boolean;
   testID?: string;
   /** Título de la pantalla: en web, `h1` + `<title>`; en nativo, la cabecera del `Stack`. */
   title?: string;
@@ -27,7 +19,7 @@ export type ScreenProps = PropsWithChildren<{
    * Retroceso explícito de las pantallas de detalle (FR-083): en web, un enlace «‹ Volver a …»;
    * en nativo lo da la cabecera. `href` es fijo para que funcione al entrar por URL directa.
    */
-  back?: { href: string; label: string };
+  back?: { href: Href; label: string };
 }>;
 
 type FrameProps = PropsWithChildren<Pick<ScreenProps, "title">>;
@@ -59,7 +51,7 @@ function ScreenHeading({ back, title }: Pick<ScreenProps, "back" | "title">) {
   return (
     <View className="gap-2">
       {back ? (
-        <Link href={back.href as never} testID="screen-back">
+        <Link href={back.href} testID="screen-back">
           <Text tone="muted" variant="label">
             ‹ Volver a {back.label}
           </Text>
@@ -79,7 +71,6 @@ export function Screen({
   back,
   children,
   className,
-  scroll = true,
   testID,
   title,
   width = "content",
@@ -95,25 +86,17 @@ export function Screen({
   );
   return (
     <ScreenFrame title={title}>
-      {scroll ? (
-        // FR-088 · design.md D14: en iOS el teclado empuja el contenido; Android ya redimensiona
-        // la ventana (`softwareKeyboardLayoutMode`, `resize` por defecto en Expo).
-        <KeyboardAvoidingView
-          behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
-        >
-          <ScrollView
-            className="flex-1"
-            contentInsetAdjustmentBehavior="automatic"
-            keyboardShouldPersistTaps="handled"
-            testID={testID ? `${testID}-scroll` : undefined}
-          >
-            {content}
-          </ScrollView>
-        </KeyboardAvoidingView>
-      ) : (
-        content
-      )}
+      {/* FR-088 · design.md D14: iOS ajusta los insets al teclado (sin desfase por la cabecera
+          nativa); Android ya redimensiona la ventana (`softwareKeyboardLayoutMode`, `resize`). */}
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+        testID={testID ? `${testID}-scroll` : undefined}
+      >
+        {content}
+      </ScrollView>
     </ScreenFrame>
   );
 }

@@ -5,11 +5,14 @@ export const MAX_COINCIDENCIAS = 8;
 
 /** Minúsculas y sin tildes: «Ñandú» y «nandu» coinciden. */
 function normalizar(texto: string) {
-  return texto
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLocaleLowerCase("es")
-    .trim();
+  return (
+    texto
+      .normalize("NFD")
+      // Marcas combinantes (U+0300–U+036F) y no `\p{Diacritic}`: más seguro en Hermes.
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es")
+      .trim()
+  );
 }
 
 function coincide({ content }: PatientEntry, termino: string) {

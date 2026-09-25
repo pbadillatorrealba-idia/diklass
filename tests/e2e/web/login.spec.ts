@@ -33,8 +33,8 @@ test.describe("acceso compatible con gestores de contraseñas", () => {
     await page.keyboard.press("Enter");
     // Sin `secureTextEntry`, RNW omite el atributo: el campo es `text` implícito.
     await expect.poll(() => clave.evaluate((el) => (el as HTMLInputElement).type)).toBe("text");
-    const ocultar = page.getByRole("button", { name: "Ocultar contraseña" });
-    await expect(ocultar).toHaveAttribute("aria-pressed", "true");
+    // Nombre fijo; el estado lo da `aria-pressed` (revisión de la PR #38).
+    await expect(mostrar).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
   });
 

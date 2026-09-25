@@ -1,9 +1,10 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 import type { PropsWithChildren } from "react";
+import { THEME_STORAGE_KEY } from "@/theme/theme-preference";
 
-// Solo acepta los dos valores que fijan el modo; cualquier otra cosa deja la media query.
-const THEME_BOOTSTRAP =
-  'try{var p=localStorage.getItem("diklass.theme");if(p==="light"||p==="dark")document.documentElement.classList.add(p)}catch(e){}';
+// Solo acepta los dos valores que fijan el modo; cualquier otra cosa deja la media query. La clave
+// sale de la constante del almacén: si divergieran, volvería el destello sin que nada fallara.
+const THEME_BOOTSTRAP = `try{var p=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(p==="light"||p==="dark")document.documentElement.classList.add(p)}catch(e){}`;
 
 const FIRST_PAINT_FONTS = ["400Regular", "500Medium", "600SemiBold", "700Bold"];
 

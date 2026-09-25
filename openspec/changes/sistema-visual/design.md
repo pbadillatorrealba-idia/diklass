@@ -64,7 +64,8 @@ compacto y nativo) y todas las mejoras de `expo-native-ui` **dentro de este camb
   zoom y hápticos. Son mejoras exclusivas de iOS o añaden una dependencia (`expo-haptics`) sin
   requisito que las pida.
 - Búsqueda en la cabecera (`Stack.SearchBar`): no hay requisito de búsqueda.
-- Cambiar la marca, añadir un selector de tema o cambiar vocabularios de datos.
+- Cambiar la marca o los vocabularios de datos. El selector de tema, que al principio estaba fuera
+  de alcance, entró con US16 (D17).
 - Animaciones, hojas nativas o sustituir `Modal` por hojas. Queda fuera; el diálogo de sesión
   expirada es una confirmación consecuente y se mantiene como modal.
 - Un catálogo visual (Storybook o similar).
@@ -386,9 +387,10 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
   - todo `Callout tone="error"`, que lo pone por defecto.
   No se activa en etiquetas ni en botones.
 - **Teclado:**
-  - `Screen` envuelve su `ScrollView` en `KeyboardAvoidingView` de React Native: `behavior`
-    `"padding"` en iOS y sin comportamiento en Android, donde `softwareKeyboardLayoutMode:
-    "resize"` en `app.json` ya redimensiona.
+  - `Screen` y `/login` activan `automaticallyAdjustKeyboardInsets` en su `ScrollView` (iOS) y
+    no usan `KeyboardAvoidingView`: este mide su marco respecto al padre y, bajo una cabecera
+    nativa, se quedaba corto sin `keyboardVerticalOffset` (revisión de la PR #38). En Android,
+    `softwareKeyboardLayoutMode: "resize"` (el valor por defecto de Expo) ya redimensiona.
   - `keyboardShouldPersistTaps="handled"` ya está en `Screen`.
   - `expo-native-ui` recomienda `react-native-keyboard-controller` para seguir el marco real del
     teclado. Se descarta por ahora, porque es una dependencia nueva y no hay animaciones ligadas
@@ -451,8 +453,8 @@ Decisión:
   - `Card` con `max-w-form` y `gap-6`, sobre `bg-background`;
   - cabecera con `Icon` de marca decorativo, `Heading level={1}` «Diklass» y `Text tone="muted"`;
   - error en `Callout tone="error"` (reemplaza el `Text` destructivo);
-  - control «Mostrar contraseña» como `Button variant="ghost"` con `Icon` `eye`/`eye-off`,
-    `aria-pressed` y `min-h-touch`, a la derecha del campo dentro de `Input`.
+  - control «Mostrar contraseña» (nombre fijo) como `Button variant="ghost"` con `Icon`
+    `eye`/`eye-off`, `aria-pressed` y `min-h-touch`, a la derecha del campo dentro de `Input`.
 - **Seguridad**: la app no guarda credenciales. Tras un error se vacía la contraseña. `action`
   apunta a la propia ruta: si el JS no cargara, el `post` no llega a ningún servidor que acepte
   credenciales (Expo web estático), así que falla cerrado.
@@ -647,7 +649,8 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 | Primitivas `QueryState` y `LinkText` | FR-084/085, con ≥ 4 y ≥ 3 usos | Repetir en cada pantalla los ternarios de carga/error/vacío: es la deriva que se midió |
 | `react-native-calendars` (dependencia nueva, MIT, JS puro; arrastra `xdate`, `lodash`, `recyclerlistview`, `memoize-one`, `prop-types`, `hoist-non-react-statics`, `react-native-swipe-gestures`) | FR-094: calendario mensual accesible y localizable hoy, con semana y agenda disponibles cuando existan citas (decisión del usuario, D17) | Vista de mes propia con `Intl`: sin dependencias, pero habría que reescribirla al llegar semana y agenda |
 | Bloques `:root.light`/`:root.dark` duplicados en `global.css` | FR-091: forzar el modo en web sin perder la media query de la que depende NativeWind en nativo | `darkMode: "class"`: rompería el modo `system` en nativo y no hay variantes `dark:` que lo necesiten. La duplicación la vigila `tema.test.ts` |
-| `KeyboardAvoidingView` (React Native) en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen |
+| `automaticallyAdjustKeyboardInsets` del `ScrollView` en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen. `KeyboardAvoidingView` se retiró en la revisión de la PR #38: necesita el alto de la cabecera |
+| Tipo `CalendarEvent` con campos de iCalendar (`end`, `allDay`, `rrule`, `location`, `patientId`, `status`) sin fuente de eventos | FR-094 lo exige por decisión del usuario (D17): el modelo sigue RFC 5545 para no rehacerlo al llegar las citas | Un tipo mínimo (`uid`, `start`, `timeZone`, `status`), ampliado con la feature que emita eventos. Es la alternativa más simple, y la revisión de la PR #38 la recomienda. Se mantiene el tipo actual por la decisión registrada, y se reduce si `perfil-profesional` o agenda no lo usan al integrarse |
 
 ## Migration Plan
 

@@ -123,7 +123,8 @@ Reglas para cualquier UI nueva o modificada:
   - NativeWind y no estilos en línea;
   - la paleta de marca y no los colores del sistema operativo;
   - `@expo/vector-icons` dentro de pantalla (SF Symbols solo en las pestañas nativas);
-  - `KeyboardAvoidingView` de RN en `Screen` y no `react-native-keyboard-controller`.
+  - `automaticallyAdjustKeyboardInsets` en el `ScrollView` de `Screen` y no
+    `react-native-keyboard-controller` ni `KeyboardAvoidingView`.
 
 ## Comandos
 

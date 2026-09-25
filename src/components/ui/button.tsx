@@ -55,6 +55,7 @@ export function Button({
   className,
   isDisabled = false,
   size = "md",
+  ref,
   style,
   type = "button",
   variant = "primary",
@@ -76,8 +77,16 @@ export function Button({
           VARIANTS[variant].surface
         } ${isDisabled ? "opacity-50" : "active:opacity-80"} ${className ?? ""}`.trim()}
         disabled={isDisabled}
-        // Sin `type="submit"`, la ref queda libre para quien la pase (`Link asChild`).
-        ref={type === "submit" ? submitRef : undefined}
+        // Con `type="submit"` se fusiona con la ref externa, para que ninguna anule a la otra.
+        ref={
+          type === "submit"
+            ? (node: View | null) => {
+                submitRef.current = node;
+                if (typeof ref === "function") ref(node);
+                else if (ref) ref.current = node;
+              }
+            : ref
+        }
         role="button"
         // La curva solo existe en iOS. En web, un `style` compuesto hace que NativeWind acumule
         // las clases de renders anteriores (un botón ya habilitado seguía con `opacity-50`).

@@ -29,27 +29,18 @@ describe("Screen", () => {
     expect(tagWith(html, 'data-testid="pantalla"')).toContain("max-w-wide");
   });
 
-  test("con scroll (por defecto) el contenido va dentro de un área desplazable", () => {
+  test("el contenido va dentro de un área desplazable", () => {
     expect(renderToStaticMarkup(<Screen testID="p" />)).toContain('data-testid="p-scroll"');
-    expect(renderToStaticMarkup(<Screen scroll={false} testID="p" />)).not.toContain("p-scroll");
   });
 
-  // sistema-visual FR-088 · design.md D14: el teclado no tapa el formulario. En iOS el contenido
-  // se desplaza con `padding`; Android ya redimensiona la ventana (`softwareKeyboardLayoutMode`).
-  test.each([
-    ["ios", "padding"],
-    ["android", "none"],
-  ])("en %s el área desplazable va dentro de KeyboardAvoidingView (%s)", (os, behavior) => {
-    const original = process.env.EXPO_OS;
-    process.env.EXPO_OS = os;
-    try {
-      const html = renderToStaticMarkup(<Screen testID="p" />);
-      const kav = html.indexOf(`data-behavior="${behavior}"`);
-      expect(kav).toBeGreaterThan(-1);
-      expect(html.indexOf('data-testid="p-scroll"')).toBeGreaterThan(kav);
-    } finally {
-      process.env.EXPO_OS = original;
-    }
+  // sistema-visual FR-088 · design.md D14 (revisión de la PR #38): el teclado no tapa el
+  // formulario. iOS ajusta los insets del `ScrollView`; Android ya redimensiona la ventana.
+  test("el área desplazable ajusta sus insets al teclado, sin KeyboardAvoidingView", () => {
+    const html = renderToStaticMarkup(<Screen testID="p" />);
+    expect(html).toMatch(
+      /data-testid="p-scroll"[^>]*data-keyboard-insets="true"|data-keyboard-insets="true"[^>]*data-testid="p-scroll"/,
+    );
+    expect(html).not.toContain("data-behavior");
   });
 
   test("className del llamador se aplica al contenido, al final", () => {

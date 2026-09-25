@@ -15,9 +15,10 @@ describe("PasswordToggle", () => {
     expect(tag).toContain('aria-pressed="false"');
   });
 
-  test("visible: se llama «Ocultar contraseña» y está pulsado", () => {
+  // Nombre fijo con `aria-pressed` (patrón ARIA de botón conmutador · revisión de la PR #38).
+  test("visible: conserva el nombre «Mostrar contraseña» y está pulsado", () => {
     const tag = boton(render(true));
-    expect(tag).toContain('aria-label="Ocultar contraseña"');
+    expect(tag).toContain('aria-label="Mostrar contraseña"');
     expect(tag).toContain('aria-pressed="true"');
   });
 
