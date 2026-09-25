@@ -25,7 +25,7 @@ export function InputField({ className, style, ...props }: InputFieldProps) {
     <TextInput
       aria-invalid={isInvalid}
       // `focus:` keeps a visible focus ring on web (WCAG 2.2 AA 2.4.7), same contract as Button.
-      className={`min-h-[44px] flex-1 px-4 py-3 font-sans text-base focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+      className={`min-h-touch flex-1 px-4 py-3 font-sans text-base focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
         className ?? ""
       }`.trim()}
       placeholderTextColor={colors["muted-foreground"]}

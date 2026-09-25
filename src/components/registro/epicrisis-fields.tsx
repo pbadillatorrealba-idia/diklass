@@ -115,7 +115,7 @@ function ListField({
         <InputField
           accessibilityLabel={label}
           aria-label={label}
-          className="min-h-[96px]"
+          className="min-h-textarea"
           editable={isEditable}
           multiline
           onChangeText={(text) => {
@@ -151,7 +151,7 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
             <InputField
               accessibilityLabel={label}
               aria-label={label}
-              className="min-h-[120px]"
+              className="min-h-textarea"
               editable={isEditable}
               multiline
               onChangeText={(text) => onChange?.({ ...content, [name]: text })}

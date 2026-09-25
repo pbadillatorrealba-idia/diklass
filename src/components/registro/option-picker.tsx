@@ -26,7 +26,7 @@ export function OptionPicker<T extends string>({
   isDisabled = false,
 }: OptionPickerProps<T>) {
   return (
-    <VStack className="w-full gap-1.5" testID={testID}>
+    <VStack className="w-full gap-2" testID={testID}>
       <FormControlLabel>
         <FormControlLabelText>{label}</FormControlLabelText>
       </FormControlLabel>

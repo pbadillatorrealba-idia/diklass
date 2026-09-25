@@ -106,7 +106,7 @@ export function AnamnesisSection({
               <InputField
                 accessibilityLabel="Texto del antecedente"
                 aria-label="Texto del antecedente"
-                className="min-h-[120px]"
+                className="min-h-textarea"
                 editable={!isBusy}
                 multiline
                 onChangeText={onTextChange}

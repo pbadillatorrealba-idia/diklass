@@ -14,7 +14,7 @@ export type FormControlProps = ViewProps & { className?: string; isInvalid?: boo
 export function FormControl({ className, isInvalid = false, ...props }: FormControlProps) {
   return (
     <FormControlContext.Provider value={{ isInvalid }}>
-      <View className={`w-full flex-col gap-1.5 ${className ?? ""}`.trim()} {...props} />
+      <View className={`w-full flex-col gap-2 ${className ?? ""}`.trim()} {...props} />
     </FormControlContext.Provider>
   );
 }

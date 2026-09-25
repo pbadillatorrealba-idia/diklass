@@ -54,7 +54,7 @@ export function DiagnosisSection({
             <InputField
               accessibilityLabel="Diagnóstico registrado por el veterinario"
               aria-label="Diagnóstico registrado por el veterinario"
-              className="min-h-[120px]"
+              className="min-h-textarea"
               editable={!isBusy}
               multiline
               onChangeText={onTextChange}

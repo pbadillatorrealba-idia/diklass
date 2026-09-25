@@ -354,3 +354,14 @@ Capturas (consulta cerrada): [1280 px oscuro](evidencia/4.6-consulta-1280-oscuro
 $ bun --env-file=.env run test:e2e:web -- tests/e2e/web/retroalimentacion.spec.ts --project=chromium --workers=1   → 5 passed
 ```
 Capturas del reporte de eventos adversos: [1280 px claro](evidencia/4.7-eventos-1280-claro.png) · [320 px oscuro](evidencia/4.7-eventos-320-oscuro.png).
+
+### 4.8 — Dimensiones del sistema en campos (D6 · FR-081)
+
+`min-h-[120px]` y `min-h-[96px]` → `min-h-textarea` (anamnesis, diagnóstico, epicrisis;
+el campo de 96 px se unifica a 120 px); `Input` `min-h-[44px]` → `min-h-touch`; `gap-1.5` →
+`gap-2` en `OptionPicker` y `FormControl`. Queda `text-xs` solo como alias deprecado de `Text`
+(se retira en 6.3).
+
+```
+$ … registro-epicrisis / accessibility / auth (chromium, --workers=1)   → 2 / 7 / 8 passed
+```
