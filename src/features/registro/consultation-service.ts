@@ -5,6 +5,7 @@ import type { DiagnosisEntry } from "@/features/registro/diagnosis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import type { EpicrisisEntry } from "@/features/registro/epicrisis-service";
 import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
+import { parseRows } from "@/features/registro/read-rows";
 import {
   type ConsultationContent,
   consultationContentSchema,
@@ -134,18 +135,7 @@ export async function listConsultationsByPatient(
     if (error) {
       throw error;
     }
-    return (data ?? []).flatMap((row) => {
-      const legible = consultationContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listConsultationsByPatient", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    return parseRows(data, consultationContentSchema, "listConsultationsByPatient");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -167,9 +157,11 @@ export async function resumeConsultation(
       return null;
     }
 
-    const anamnesis = await listAnamnesisEntries(client, consultationId);
-    const diagnoses = await listDiagnoses(client, consultationId);
-    const versiones = await listEpicrisisByConsultation(client, consultationId);
+    const [anamnesis, diagnoses, versiones] = await Promise.all([
+      listAnamnesisEntries(client, consultationId),
+      listDiagnoses(client, consultationId),
+      listEpicrisisByConsultation(client, consultationId),
+    ]);
     const borradores = versiones.filter((version) => version.record.status === "draft");
 
     return {
@@ -211,18 +203,9 @@ export async function listPatientTimeline(
       }
       // Misma frontera de lectura tolerante que las listas: una fila de epicrisis ajena o
       // malformada se omite con log en vez de tumbar el historial y el resumen completos.
-      epicrisis = (data ?? []).flatMap((row) => {
-        const legible = epicrisisContentSchema.safeParse(row.content);
-        if (!legible.success) {
-          logEvent(
-            "registro.row_content_skipped",
-            { operation: "listPatientTimeline", recordId: row.id, errorName: "ZodError" },
-            "error",
-          );
-          return [];
-        }
-        return [row];
-      });
+      epicrisis = parseRows(data, epicrisisContentSchema, "listPatientTimeline").map(
+        (entrada) => entrada.record,
+      );
     }
 
     const history = buildPatientHistory({

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { parseRows } from "@/features/registro/read-rows";
 import {
   type AntecedentGroup,
   type AntecedentItem,
@@ -255,18 +256,7 @@ export async function listPatients(client: SupabaseClient<Database>): Promise<Pa
     if (error) {
       throw error;
     }
-    return (data ?? []).flatMap((row) => {
-      const legible = patientContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listPatients", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    return parseRows(data, patientContentSchema, "listPatients");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
