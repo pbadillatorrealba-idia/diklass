@@ -82,7 +82,9 @@ export function OptionPicker<T extends string>({
                 refs.current.set(option.value, node);
               }}
               role="radio"
-              tabIndex={index === focusStop ? 0 : -1}
+              // Solo web: en RN, `tabIndex` -1 es `focusable=false` y dejaría las opciones
+              // inalcanzables con teclado físico en Android (revisión de la PR #38).
+              tabIndex={process.env.EXPO_OS === "web" ? (index === focusStop ? 0 : -1) : undefined}
               testID={`${testID}-${option.value.replace(/_/g, "-")}`}
               variant={isSelected ? "primary" : "outline"}
             >

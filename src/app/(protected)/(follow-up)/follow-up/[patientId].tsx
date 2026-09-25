@@ -278,7 +278,11 @@ export default function FollowUpPanelScreen() {
         entries={timeline}
         // La cronología depende de ambas lecturas: consultas y, sobre ellas, las entradas.
         error={consultationsQuery.error ?? feedbackQuery.error}
-        isPending={consultationsQuery.isPending || feedbackQuery.isPending}
+        // `feedbackQuery` espera a las consultas: si estas fallan queda deshabilitada y «pending»
+        // para siempre, y la carga taparía el error (revisión de la PR #38).
+        isPending={
+          consultationsQuery.isPending || (consultationsQuery.isSuccess && feedbackQuery.isPending)
+        }
         onCorrect={corregirEntrada}
         onRetry={() =>
           void (consultationsQuery.error ? consultationsQuery.refetch() : feedbackQuery.refetch())

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { OptionPicker } from "@/components/registro/option-picker";
 
@@ -47,4 +47,35 @@ describe("OptionPicker", () => {
       expect(option("sex-hembra")).toContain("border-input");
     },
   );
+});
+
+// Revisión de la PR #38 · design.md D19: el tabindex itinerante es solo de web. En RN, `tabIndex`
+// fija `focusable = !tabIndex`: un -1 dejaría las opciones inalcanzables en Android.
+describe("OptionPicker · tabindex por plataforma", () => {
+  const ORIGINAL_OS = process.env.EXPO_OS;
+  afterEach(() => {
+    process.env.EXPO_OS = ORIGINAL_OS;
+  });
+  const html = () =>
+    renderToStaticMarkup(
+      <OptionPicker
+        label="Sexo"
+        onChange={() => {}}
+        options={[...OPTIONS]}
+        testID="sex"
+        value="macho"
+      />,
+    );
+
+  test("en web solo la opción elegida es parada de Tab", () => {
+    process.env.EXPO_OS = "web";
+    expect(html()).toMatch(
+      /data-testid="sex-hembra"[^>]*tabindex="-1"|tabindex="-1"[^>]*data-testid="sex-hembra"/,
+    );
+  });
+
+  test.each(["ios", "android"])("en %s ninguna opción se marca como no enfocable", (os) => {
+    process.env.EXPO_OS = os;
+    expect(html()).not.toContain('tabindex="-1"');
+  });
 });

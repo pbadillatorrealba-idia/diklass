@@ -95,4 +95,26 @@ test.describe("estados de datos", () => {
     );
     expect(await mensaje.evaluate((el) => getComputedStyle(el).userSelect)).toBe("text");
   });
+
+  // Revisión de la PR #38 (FR-085): si falla la lectura de consultas, la cronología dependiente
+  // quedaba en «Cargando…» para siempre en vez de ofrecer el error y «Reintentar».
+  test("si fallan las consultas del seguimiento, la cronología muestra el error", async ({
+    page,
+  }) => {
+    await page.goto("/follow-up");
+    const abrir = page.getByTestId("follow-up-open").first();
+    await expect(abrir).toBeVisible({ timeout: 15_000 });
+    const href = await abrir.getAttribute("href");
+    if (!href) throw new Error("sin enlace de seguimiento");
+    await page.route("**/rest/v1/clinical_records?*", (route) =>
+      route.request().url().includes("record_type=eq.consultation")
+        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+        : route.continue(),
+    );
+    await page.goto(href);
+    const error = page.getByTestId("feedback-timeline-error");
+    await expect(error).toBeVisible({ timeout: 15_000 });
+    await expect(error.getByRole("button", { name: "Reintentar" })).toBeVisible();
+    await expect(page.getByTestId("feedback-timeline-loading")).toHaveCount(0);
+  });
 });
