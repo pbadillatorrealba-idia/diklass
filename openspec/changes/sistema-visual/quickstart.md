@@ -454,3 +454,30 @@ Capturas a 1280 px:
 
 - respuesta de `/knowledge`: [claro](evidencia/5.5-respuesta-light.png) · [oscuro](evidencia/5.5-respuesta-dark.png);
 - historial de atribución: [claro](evidencia/5.5-correcciones-light.png) · [oscuro](evidencia/5.5-correcciones-dark.png).
+
+### 5.6 — Foco visible en contenedores de desplazamiento (D3 · FR-080)
+
+Rojo: en `firefox`, «recorrido por teclado» → `Foco sin indicador visible en DIV#`. Firefox hace
+enfocable el `ScrollView` de `Screen` (`overflow-y: auto`, sin `tabindex` ni rol), que la lista
+de selectores de `:focus-visible` no cubría.
+
+Cambio: la regla pasa a `:focus-visible` para todo elemento enfocable, con el anillo hacia dentro
+(`outline-offset: -2px`). Con el anillo exterior, un contenedor de ventana completa lo recortaba:
+se computaba, pero no se veía. Los controles conservan el anillo exterior de 2 px.
+
+Verde:
+
+- `accessibility.spec.ts` completo: `chromium` 7 passed y `webkit` 7 passed.
+- En `firefox` local, el contenedor enfocado computa `solid 2px` y coincide con `:focus-visible`
+  ([captura](evidencia/5.6-firefox-scroll-foco.png)). El recorrido pasa `/patients`,
+  `/patients/new`, la ficha y las dos consultas.
+
+**Hallazgo aparte (entorno local, no del sistema visual):**
+
+- En `/knowledge`, Firefox termina con el foco en `#error-toast`, el aviso de errores del
+  servidor de desarrollo de Expo.
+- El aviso aparece porque `parseRows` registra con `console.error` las filas de paciente que omite.
+  En la base local hay cientos: datos mínimos (`{}`, `{"name": …}`) que dejan las suites de
+  integración en vivo. Esas filas se omiten como está previsto (lectura tolerante).
+- CI levanta un Supabase limpio para los e2e, así que ese estado no se reproduce allí. La
+  verificación de `firefox` queda en el job de CI de la PR #38.

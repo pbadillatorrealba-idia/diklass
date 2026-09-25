@@ -135,11 +135,20 @@
 }
 
 /*
- * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO control interactivo.
- * React Native Web renderiza Pressable/Button como <div tabindex>, que sin esta regla
- * enfoca sin indicador visible. `:focus-visible` lo aplica solo a foco por teclado.
+ * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO elemento enfocable.
+ * React Native Web renderiza Pressable/Button como <div tabindex>, y Firefox además hace
+ * enfocables los contenedores con desplazamiento (el `ScrollView` de `Screen`), sin tabindex ni
+ * rol. Por eso la regla no enumera selectores: cualquier elemento que reciba foco por teclado
+ * lo muestra, y el contenedor conserva su foco (quitarlo impediría desplazarse con el teclado).
+ * Por defecto el anillo va hacia dentro: un contenedor que ocupa toda la ventana recortaría un
+ * anillo exterior. Los controles lo llevan fuera, separado de su borde.
  */
-[tabindex]:focus-visible,
+:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: -2px;
+}
+
+[tabindex]:not([tabindex="-1"]):focus-visible,
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -148,6 +157,5 @@ select:focus-visible,
 [role="button"]:focus-visible,
 [role="radio"]:focus-visible,
 [role="checkbox"]:focus-visible {
-  outline: 2px solid rgb(var(--ring));
   outline-offset: 2px;
 }
