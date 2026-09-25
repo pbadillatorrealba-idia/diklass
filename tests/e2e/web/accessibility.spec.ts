@@ -180,7 +180,43 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     }
   });
 
+  // sistema-visual FR-080 · D19: un grupo de opciones es una sola parada de Tab y se recorre con
+  // flechas (patrón ARIA radio group).
+  test("un grupo de opciones es una parada de Tab y las flechas cambian la selección", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.goto("/settings");
+    const sistema = page.getByTestId("settings-theme-system");
+    const claro = page.getByTestId("settings-theme-light");
+    const oscuro = page.getByTestId("settings-theme-dark");
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+    await expect(sistema).toHaveAttribute("tabindex", "0");
+    await expect(claro).toHaveAttribute("tabindex", "-1");
+    await expect(oscuro).toHaveAttribute("tabindex", "-1");
+
+    await sistema.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(claro).toBeFocused();
+    await expect(claro).toHaveAttribute("aria-checked", "true");
+    await expect(claro).toHaveAttribute("tabindex", "0");
+    await page.keyboard.press("End");
+    await expect(oscuro).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(sistema, "la flecha da la vuelta").toBeFocused();
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+
+    await page.keyboard.press("Tab");
+    const dentro = await page.evaluate(
+      () => document.activeElement?.closest('[data-testid="settings-theme"]') !== null,
+    );
+    expect(dentro, "el siguiente Tab sale del grupo").toBe(false);
+  });
+
   test("recorrido por teclado con foco visible en cada control interactivo", async ({ page }) => {
+    // 12 pantallas con decenas de paradas cada una: en Firefox supera los 30 s por defecto.
+    test.setTimeout(90_000);
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {

@@ -15,6 +15,8 @@ export type SyntheticCase = {
   closedConsultationId: string;
 };
 
+// En cada grupo de opciones solo la elegida es parada de Tab (sistema-visual D19): los
+// `keyboardTestIDs` nombran esa opción, no las demás.
 export type SyntheticScreen = {
   name: string;
   url: string;
@@ -289,7 +291,6 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
         "patient-sex",
         "patient-reproductive-status",
         "tutor-mode-existing",
-        "tutor-mode-new",
         "patient-submit",
       ],
     },
@@ -302,7 +303,6 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
         "patient-edit",
         "antecedent-add-text",
         "antecedent-finding-reported",
-        "antecedent-finding-negative",
         "antecedent-add",
         "history-open",
         "open-consultation",
@@ -365,8 +365,8 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
         "feedback-correct",
         "adverse-event-toggle-superseded",
         `feedback-consultation-picker-${caseIds.closedConsultationId}`,
-        "feedback-adherence-completa",
-        "feedback-evolution-mejoria",
+        "feedback-adherence-desconocida",
+        "feedback-evolution-desconocida",
         "feedback-treatment-applied",
         "feedback-treatment-modification",
         "feedback-revised-diagnosis",

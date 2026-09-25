@@ -66,12 +66,12 @@ Cada tarea de este grupo:
   - Después: añadir los tokens a `global.css`, `colors.ts` y `tailwind.config.js`, subir la luminosidad de `muted-foreground` en oscuro y migrar los tres componentes (`AttributionBadge` → `bg-muted`).
   - FR-072 · SC-053.
   - Verificación: rojo→verde registrado, `chromium-dark` de `accessibility.spec.ts` en verde y capturas claro/oscuro de `/knowledge` y del historial de correcciones en `quickstart.md`.
-- [ ] 5.6 Foco visible en contenedores de desplazamiento (D3, corrección de 5.2):
+- [x] 5.6 Foco visible en contenedores de desplazamiento (D3, corrección de 5.2):
   - Reproducir en rojo el fallo de `firefox` en «recorrido por teclado».
   - Después, ampliar la regla `:focus-visible` de `global.css` a todo elemento enfocable.
   - FR-080.
   - Verificación: el caso pasa en `firefox`, `chromium` y `webkit`, y una captura de Firefox con el contenedor enfocado queda en `quickstart.md`.
-- [ ] 5.7 `OptionPicker` con tabindex itinerante (D19 · FR-080):
+- [x] 5.7 `OptionPicker` con tabindex itinerante (D19 · FR-080):
   - primero, en rojo, un e2e en el que Tab entra en un grupo por la opción elegida, la flecha
     cambia la selección y el foco, y el siguiente Tab sale del grupo;
   - después, la implementación;

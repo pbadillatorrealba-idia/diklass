@@ -784,3 +784,30 @@ Resultado local en `chromium`:
   - `accessibility` + `navegacion`: 18 de 18. El fallo anterior en `/knowledge` queda a observar
     en 5.2.
 
+### 5.6 y 5.7 — Foco por teclado (cierre, 2026-09-25)
+
+- **Causa del fallo intermitente del recorrido en `/knowledge`:**
+  - El mensaje de diagnóstico lo mostró en `firefox`: `OptionPicker` hacía de cada opción una
+    parada de Tab, y el selector de paciente pintaba una por ficha (más de 250 en la base local).
+    El recorrido agotaba su tope antes de llegar a la pregunta.
+  - En `chromium` solo fallaba cuando la lista llegaba antes del recorrido.
+  - Decisión del usuario: D19 (tabindex itinerante y buscador, 5.7 y 5.8).
+- **5.7:**
+  - Caso nuevo en `accessibility.spec.ts` sobre el grupo «Tema» de `/settings`:
+    - `tabindex` 0 solo en la opción elegida;
+    - flecha derecha, `End` y vuelta al inicio;
+    - el siguiente Tab sale del grupo.
+  - Rojo: todas las opciones tenían `tabindex` 0.
+  - `OptionPicker` con `tabIndex` y `onKeyDown` (web). `Button` acepta `ref` como prop.
+  - `keyboardTestIDs` del caso sintético: una parada por grupo (se quitan `tutor-mode-new` y
+    `antecedent-finding-negative`; seguimiento pasa a `desconocida`).
+  - El recorrido lleva `test.setTimeout(90_000)`, porque en `firefox` tarda unos 57 s en 12
+    pantallas.
+  - Verde: el caso nuevo y el recorrido por teclado en `chromium`, `firefox` y `webkit`.
+- **5.6:**
+  - El rojo y el arreglo (`:focus-visible` para todo elemento enfocable) ya estaban en `d59fbce`.
+  - Con 5.7, el recorrido pasa en los tres navegadores, que era la verificación pendiente.
+  - La mutación (quitar la regla genérica) ya no lo pone en rojo en `firefox`: tras `ScreenList` y
+    `KeyboardAvoidingView`, el recorrido ya no enfoca un contenedor de scroll. La regla se
+    conserva por si otro contenedor vuelve a ser enfocable.
+

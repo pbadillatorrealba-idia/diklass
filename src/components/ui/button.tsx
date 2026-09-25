@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useRef } from "react";
+import { createContext, type Ref, use, useEffect, useRef } from "react";
 import {
   Pressable,
   type PressableProps,
@@ -42,6 +42,8 @@ export type ButtonProps = Omit<PressableProps, "disabled"> & {
    * efecto: el envío va por `onPress`.
    */
   type?: "button" | "submit";
+  /** `ref` como prop (React 19): `OptionPicker` mueve el foco entre opciones (D19). */
+  ref?: Ref<View>;
 };
 
 export function Button({
