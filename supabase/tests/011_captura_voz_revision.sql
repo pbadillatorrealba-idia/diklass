@@ -66,7 +66,12 @@ values
   ('33333333-0000-4000-8000-000000000001', 'e5e5e5e5-0000-4000-8000-00000000000e',
    'consultation', '{"patientId":"44444444-0000-4000-8000-000000000001","status":"open"}', 'draft'),
   ('33333333-0000-4000-8000-000000000002', 'e5e5e5e5-0000-4000-8000-00000000000e',
-   'consultation', '{"patientId":"44444444-0000-4000-8000-000000000001","status":"closed"}', 'draft');
+   'consultation', '{"patientId":"44444444-0000-4000-8000-000000000001","status":"open"}', 'draft'),
+  ('33333333-0000-4000-8000-0000000000e2', 'e5e5e5e5-0000-4000-8000-00000000000e',
+   'epicrisis', '{"consultationId":"33333333-0000-4000-8000-000000000002","motivoConsulta":"Control"}',
+   'draft');
+-- La consulta cerrada se cierra por el único camino que admite la 013: aprobar su epicrisis.
+select public.approve_clinical_record('33333333-0000-4000-8000-0000000000e2');
 
 -- ---------------------------------------------------------------------------
 -- Hallazgo 5: anamnesisEntryId y vocabulario de confirmationState.
@@ -228,8 +233,11 @@ select throws_ok(
 insert into public.listening_sessions (id, clinic_id, consultation_id)
 values ('55555555-0000-4000-8000-000000000002', 'e5e5e5e5-0000-4000-8000-00000000000e',
         '33333333-0000-4000-8000-000000000001');
-update public.clinical_records set content = content || '{"status":"closed"}'::jsonb
-where id = '33333333-0000-4000-8000-000000000001';
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values ('33333333-0000-4000-8000-0000000000e1', 'e5e5e5e5-0000-4000-8000-00000000000e',
+  'epicrisis', '{"consultationId":"33333333-0000-4000-8000-000000000001","motivoConsulta":"Control"}',
+  'draft');
+select public.approve_clinical_record('33333333-0000-4000-8000-0000000000e1');
 select throws_ok(
   $$insert into public.transcript_segments
       (listening_session_id, clinic_id, seq, started_at, ended_at, text, quality)

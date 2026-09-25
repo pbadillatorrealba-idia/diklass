@@ -59,22 +59,29 @@ values
 
 insert into public.access_sessions (veterinarian_id, auth_session_id)
 values ('a5a5a5a5-0000-0000-0000-00000000000a', '5e5a5000-0000-0000-0000-00000000000a'),
-       ('b5b5b5b5-0000-0000-0000-00000000000b', '5e5b5000-0000-0000-0000-00000000000b');
+       ('b5b5b5b5-0000-0000-0000-00000000000b', '5e5b5000-0000-0000-0000-00000000000b'),
+       ('a6a6a6a6-0000-0000-0000-000000000006', '5e6a6000-0000-0000-0000-000000000006');
 
 -- Consulta cerrada de la clínica ajena (fabricada por su veterinaria): solo interesa
--- como referencia cruzada del gate de misma clínica (D5). Se crea directamente cerrada
--- porque el trigger solo exige content->>'status' = 'closed'.
-select set_config('request.jwt.claim.sub', 'a6a6a6a6-0000-0000-0000-000000000006', true);
+-- como referencia cruzada del gate de misma clínica (D5). Se cierra aprobando su
+-- epicrisis, el único camino que admite la 013 (SC-014 de 002).
+select set_config('request.jwt.claims',
+  '{"sub":"a6a6a6a6-0000-0000-0000-000000000006","role":"authenticated","session_id":"5e6a6000-0000-0000-0000-000000000006"}',
+  true);
+set local role authenticated;
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
-values (
-  'd5d5d5d5-0000-0000-0000-00000000000a', 'c6c6c6c6-0000-0000-0000-000000000006',
-  'consultation',
-  '{"patientId":"d5d5d5d5-0000-0000-0000-000000000001","status":"closed"}',
-  'draft'
-);
+values
+  ('d5d5d5d5-0000-0000-0000-00000000000a', 'c6c6c6c6-0000-0000-0000-000000000006',
+   'consultation', '{"patientId":"d5d5d5d5-0000-0000-0000-000000000001","status":"open"}',
+   'draft'),
+  ('d5d5d5d5-0000-0000-0000-0000000000ea', 'c6c6c6c6-0000-0000-0000-000000000006',
+   'epicrisis', '{"consultationId":"d5d5d5d5-0000-0000-0000-00000000000a","motivoConsulta":"Control"}',
+   'draft');
+select public.approve_clinical_record('d5d5d5d5-0000-0000-0000-0000000000ea');
 
-select set_config('request.jwt.claim.sub', '', true);
+reset role;
+select set_config('request.jwt.claims', '', true);
 
 -- ---------------------------------------------------------------------------
 -- Ana prepara la consulta, registra su diagnóstico y aprueba la epicrisis: el
@@ -485,17 +492,22 @@ select results_eq(
 
 -- Arrange: otra consulta cerrada de la misma clínica con su propia entrada, para
 -- fabricar una corrección que salte de consulta.
-select set_config('request.jwt.claim.sub', 'a5a5a5a5-0000-0000-0000-00000000000a', true);
+select set_config('request.jwt.claims',
+  '{"sub":"a5a5a5a5-0000-0000-0000-00000000000a","role":"authenticated","session_id":"5e5a5000-0000-0000-0000-00000000000a"}',
+  true);
+set local role authenticated;
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
-values (
-  'd5d5d5d5-0000-0000-0000-00000000000c', 'c5c5c5c5-0000-0000-0000-00000000000c',
-  'consultation',
-  '{"patientId":"d5d5d5d5-0000-0000-0000-000000000001","status":"closed"}',
-  'draft'
-);
+values
+  ('d5d5d5d5-0000-0000-0000-00000000000c', 'c5c5c5c5-0000-0000-0000-00000000000c',
+   'consultation', '{"patientId":"d5d5d5d5-0000-0000-0000-000000000001","status":"open"}',
+   'draft'),
+  ('d5d5d5d5-0000-0000-0000-0000000000ec', 'c5c5c5c5-0000-0000-0000-00000000000c',
+   'epicrisis', '{"consultationId":"d5d5d5d5-0000-0000-0000-00000000000c","motivoConsulta":"Control"}',
+   'draft');
+select public.approve_clinical_record('d5d5d5d5-0000-0000-0000-0000000000ec');
 
-select set_config('request.jwt.claim.sub', '', true);
+reset role;
 
 select set_config('request.jwt.claims',
   '{"sub":"a5a5a5a5-0000-0000-0000-00000000000a","role":"authenticated","session_id":"5e5a5000-0000-0000-0000-00000000000a"}',
