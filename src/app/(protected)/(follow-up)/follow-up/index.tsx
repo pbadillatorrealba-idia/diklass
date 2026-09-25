@@ -7,7 +7,6 @@ import { LinkText } from "@/components/ui/link-text";
 import { QueryState } from "@/components/ui/query-state";
 import { ScreenList } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import { listPatients } from "@/features/registro/ficha-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
