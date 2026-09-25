@@ -73,6 +73,12 @@ Añadido tras revisar la app con las guías `expo-native-ui` y `expo-router` (20
   - la acción principal de un formulario nunca queda bajo el teclado.
 - **Estilo de código de Expo:** `process.env.EXPO_OS` en vez de `Platform.OS`, `React.use` en vez
   de `useContext` y `borderCurve: "continuous"` en las superficies redondeadas.
+- **Acceso (pedido del usuario, 2026-09-25):**
+  - el login pasa a ser un formulario real que los gestores de contraseñas del navegador y del
+    sistema pueden guardar y rellenar;
+  - vive en una tarjeta separada del fondo, con «Mostrar contraseña», Intro para enviar y el error
+    en un `Callout`.
+  - La app sigue sin guardar credenciales propias.
 - **Correcciones de la compuerta de la tarea 5.2:**
   - En oscuro, el texto atenuado no llega a AA sobre los tintes translúcidos (`bg-primary/15`,
     `bg-secondary/15`, `bg-accent/20`): queda en 3.4–3.8:1. Se sustituyen por tokens de
@@ -89,7 +95,7 @@ No hay cambios incompatibles de datos ni de API: el vocabulario `AdverseEventSev
 - `sistema-visual`: tema de tokens, tipografía, primitivas de UI, estados semánticos,
   distinción de autoría (sistema/profesional), severidad clínica e iconografía, con layout
   adaptable y conformidad WCAG 2.2 AA en claro y oscuro. Incluye la navegación global adaptable,
-  las cabeceras con retroceso y los patrones de interacción comunes: enlaces, estados de datos,
+  las cabeceras con retroceso, el acceso compatible con gestores de contraseñas y los patrones de interacción comunes: enlaces, estados de datos,
   listas y teclado.
 
 ### Modified Capabilities

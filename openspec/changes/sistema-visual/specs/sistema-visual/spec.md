@@ -82,6 +82,40 @@ con ratón, con teclado y con lector de pantalla, a 1280 px y a 375 px.
    nada, **Then** muestra respectivamente un estado de carga, un error con reintento o un estado
    vacío explicativo, nunca el vacío antes de que termine la primera carga.
 
+### User Story 15 - Entrar sin fricción y con el gestor de contraseñas (Priority: P2)
+
+Como veterinario que entra varias veces al día desde el navegador de la clínica o desde el
+teléfono, quiero que el navegador o el sistema me ofrezca guardar y rellenar mis credenciales, y
+que el acceso se vea como un formulario claramente delimitado, para entrar rápido y sin errores de
+tecleo.
+
+**Why this priority**: el login es la puerta de todas las features. Hoy ningún gestor de
+contraseñas ofrece guardar las credenciales ni rellenarlas: en web no hay un `<form>` real, los
+campos no tienen `name`, el envío va por `onPress` y no dispara un envío de formulario, y los
+campos se renderizan `readOnly` hasta la hidratación, así que los gestores los descartan. Además, el
+formulario flota sobre el fondo sin ninguna superficie que lo separe del resto de la pantalla.
+
+**Independent Test**: en Chromium, iniciar sesión con credenciales válidas y comprobar que el
+navegador ofrece guardarlas. Al volver a `/login`, el gestor rellena ambos campos. En iOS/Android
+el teclado ofrece las credenciales guardadas.
+
+**Acceptance Scenarios**:
+
+1. **Given** `/login` en web, **When** el usuario escribe credenciales válidas y pulsa Intro o
+   «Iniciar sesión», **Then** el envío se hace como envío de formulario y el navegador ofrece
+   guardar la contraseña.
+2. **Given** credenciales guardadas en el navegador o en el llavero del sistema, **When** se abre
+   `/login`, **Then** el gestor puede rellenar el correo y la contraseña, y lo rellenado se
+   conserva tras la hidratación.
+3. **Given** `/login` en cualquier ancho, **When** se muestra, **Then** el formulario vive en una
+   tarjeta (`Card`) con título, descripción y acción principal, claramente separada del fondo en
+   claro y en oscuro.
+4. **Given** el campo de contraseña, **When** el usuario activa «Mostrar contraseña», **Then** el
+   texto se hace visible, el control anuncia su estado y el nombre accesible del campo no cambia.
+5. **Given** un error de acceso, **When** se muestra, **Then** aparece como `Callout tone="error"`
+   anunciado a lectores de pantalla, y el foco o la lectura llega a él sin perder lo escrito en el
+   correo.
+
 ### Edge Cases
 
 - Texto ampliado por el sistema (Dynamic Type / zoom del navegador al 200 %): las filas crecen y el
@@ -100,6 +134,13 @@ con ratón, con teclado y con lector de pantalla, a 1280 px y a 375 px.
   nombre completo disponible en el contenido y en la etiqueta accesible.
 - Texto ampliado con la barra de pestañas: las etiquetas pueden ajustarse o reducirse según la
   plataforma, pero cada pestaña conserva su nombre accesible.
+- El gestor de contraseñas rellena los campos antes de que React hidrate: el valor rellenado se
+  adopta como valor del formulario, no se borra.
+- Credenciales incorrectas guardadas: el error se muestra igual que con credenciales tecleadas, y
+  la contraseña se limpia sin borrar el correo.
+- En iOS, ofrecer *guardar* en el llavero requiere Associated Domains (`webcredentials:`) con un
+  dominio publicado. Sin despliegue, en nativo se cubre el relleno, y el guardado queda como
+  pendiente de despliegue.
 
 ### Trazabilidad de requisitos
 
@@ -123,6 +164,8 @@ con ratón, con teclado y con lector de pantalla, a 1280 px y a 375 px.
 | FR-086 Listas virtualizadas | — | Pendiente |
 | FR-087 Datos clínicos copiables | — | Pendiente |
 | FR-088 Formularios con teclado | — | Pendiente (verificación nativa sujeta a dispositivo) |
+| FR-089 Login compatible con gestores de contraseñas | US15-AC1/AC2 | Pendiente (guardado en iOS sujeto a dominio desplegado) |
+| FR-090 Login en tarjeta con controles completos | US15-AC3/AC4/AC5 | Pendiente |
 
 ## Success Criteria
 
@@ -142,6 +185,9 @@ con ratón, con teclado y con lector de pantalla, a 1280 px y a 375 px.
 - **SC-055**: 0 elementos que cambian de ruta expuestos con rol de botón en las pantallas cubiertas
   por la compuerta.
 - **SC-056**: 0 pantallas que cargan datos sin sus estados de carga, error y vacío.
+- **SC-057**: en web, un inicio de sesión válido produce 1 envío de formulario con los campos
+  `username`/`current-password` identificables por el gestor, y 0 campos de acceso con `readOnly`
+  cuando el gestor intenta rellenarlos.
 
 ## Assumptions
 
@@ -435,3 +481,61 @@ teclado abierto.
 - **GIVEN** el formulario de nuevo paciente en un teléfono con el teclado abierto
 - **WHEN** el foco está en el último campo
 - **THEN** el botón de guardar sigue visible o alcanzable desplazando, y responde al primer toque
+
+### Requirement: FR-089
+
+El formulario de acceso MUST poder guardarse y rellenarse con el gestor de contraseñas del
+navegador y del sistema operativo:
+
+- En web, MUST ser un elemento `<form>` con `method="post"` y `action` propia, cuyos campos tengan
+  `name` (`username`, `password`), `id` estables y `autocomplete="username"` y
+  `autocomplete="current-password"`. El envío MUST producirse como evento `submit` del formulario,
+  tanto con Intro como con el botón, y MUST NOT recargar la página.
+- En iOS, los campos MUST declarar `textContentType` `username` y `password`. En Android, MUST
+  declarar `autoComplete` `username`/`password` y ser relevantes para Autofill.
+- Los campos MUST NOT estar en `readOnly` en el momento del relleno: el valor que un gestor escriba
+  antes de la hidratación MUST adoptarse como valor inicial del formulario.
+- Las credenciales MUST NOT persistirse en almacenamiento propio de la app (`localStorage`,
+  `AsyncStorage`, `SecureStore`): el guardado es solo del gestor del usuario.
+
+#### Scenario: US15-AC1
+
+- **GIVEN** `/login` en web con el backend disponible
+- **WHEN** el usuario escribe credenciales válidas y pulsa Intro en la contraseña
+- **THEN** se dispara un único `submit` del `<form>`, la sesión se inicia y la URL no se recarga
+
+#### Scenario: US15-AC2
+
+- **GIVEN** el HTML estático de `/login`, antes de la hidratación
+- **WHEN** un gestor escribe el correo y la contraseña
+- **THEN** tras la hidratación ambos valores siguen en los campos y el envío los usa
+
+### Requirement: FR-090
+
+La pantalla de acceso MUST presentar el formulario dentro de un `Card`, con la marca, un título de
+nivel 1 y una descripción, centrado y con el ancho `max-w-form`. El `Card` MUST distinguirse del
+fondo en ambos esquemas con los tokens de D4. El campo de contraseña MUST ofrecer un control
+«Mostrar contraseña» / «Ocultar contraseña» operable por teclado, con estado anunciado y área
+táctil `min-h-touch`. El correo MUST pasar el foco a la contraseña con «Siguiente» del teclado. Los
+errores MUST mostrarse con `Callout tone="error"`, anunciados como región viva. Tras un error, la
+contraseña MUST vaciarse y el correo MUST conservarse.
+
+#### Scenario: US15-AC3
+
+- **GIVEN** `/login` a 320 px y a 1280 px, en claro y en oscuro
+- **WHEN** se muestra
+- **THEN** el formulario está en una tarjeta con borde visible sobre el fondo, sin desbordamiento
+  horizontal y con 0 violaciones axe
+
+#### Scenario: US15-AC4
+
+- **GIVEN** el campo de contraseña con texto
+- **WHEN** el usuario activa «Mostrar contraseña» con el teclado
+- **THEN** la contraseña se ve en claro, el control pasa a «Ocultar contraseña» con estado
+  `pressed`, y el campo conserva el nombre accesible «Contraseña»
+
+#### Scenario: US15-AC5
+
+- **GIVEN** credenciales incorrectas
+- **WHEN** se envía el formulario
+- **THEN** aparece un `Callout` de error anunciado, el correo se conserva y la contraseña queda vacía

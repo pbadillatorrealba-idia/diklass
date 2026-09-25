@@ -121,3 +121,33 @@ como pendiente explícito en `quickstart.md`.
   - `selectable`;
   - las desviaciones de D15.
   Verificación: sección revisada.
+
+## 9. Acceso con gestor de contraseñas y tarjeta (D16 · US15)
+
+- [ ] 9.1 Escribir en rojo `tests/e2e/web/login.spec.ts`:
+  - existe un `form` que contiene los dos campos con `name` `username` y `password` y
+    `autocomplete` `username` y `current-password`;
+  - Intro en la contraseña dispara 1 `submit` (contado con un listener en `page.evaluate`) y la
+    sesión se inicia sin recargar;
+  - un valor escrito en el DOM antes de la hidratación (`page.addInitScript`) sigue en el campo y
+    permite entrar;
+  - tras un error, el correo se conserva y la contraseña queda vacía;
+  - «Mostrar contraseña» cambia el `type` a `text` y `aria-pressed` a `true`.
+  FR-089 · FR-090 · SC-057. Verificación: rojo por cada caso.
+- [ ] 9.2 Implementar `src/components/auth/auth-form.web.tsx` (`<form>` con `preventDefault`) y
+  `auth-form.tsx` (`View`), el botón `submit` en web, los atributos de campo de D16 y la adopción
+  del valor prerrellenado, retirando `editable={isHydrated}` (FR-089). Verificación: los casos
+  de 9.1 en verde en `chromium`, `firefox` y `webkit`, y `auth.spec.ts` en verde en los tres.
+- [ ] 9.3 Rediseñar `/login` con `Card`, cabecera de marca, `Callout` de error y el control
+  «Mostrar contraseña», con prueba de componente en rojo primero para el control (nombre
+  accesible, `aria-pressed`, área táctil) (FR-090). Verificación: prueba verde, axe en `chromium`
+  y `chromium-dark` en verde, reflujo a 320 px en verde, y capturas a 320/1280 px en claro y en
+  oscuro en `quickstart.md`.
+- [ ] 9.4 Verificar el guardado de credenciales:
+  - en Chromium con perfil persistente (`launchPersistentContext`), comprobar que tras entrar el
+    gestor ofrece guardar, y registrarlo con captura;
+  - en iOS/Android, comprobar que el teclado ofrece credenciales guardadas, o dejarlo como
+    pendiente de dispositivo;
+  - el guardado en el llavero de iOS queda como pendiente de dominio desplegado (Associated
+    Domains).
+  FR-089. Verificación: evidencia o pendientes explícitos en `quickstart.md`.

@@ -406,6 +406,59 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
 | `Text selectable`, cuatro estados, `FlatList`, `keyboardShouldPersistTaps` | **Se adoptan** | D13–D14 |
 | Hápticos, `Link.Preview`, menús contextuales | **Fuera de alcance** | Non-Goals |
 
+### D16 — Acceso compatible con gestores de contraseñas (FR-089 · FR-090)
+
+Diagnóstico (2026-09-25) del motivo por el que ningún gestor guarda ni rellena las credenciales:
+
+- React Native Web no genera `<form>`: los campos son `<input>` sueltos, sin `name`. Chromium,
+  Firefox y Safari asocian las credenciales a un formulario enviado.
+- El botón es un `Pressable` con `onPress`: nunca hay evento `submit`, así que el navegador no
+  detecta un inicio de sesión que pueda ofrecer guardar.
+- `editable={isHydrated}` renderiza `readonly` en el HTML estático: los gestores no rellenan
+  campos de solo lectura, y si rellenan antes de la hidratación, React sobrescribe el valor.
+- En nativo falta `textContentType` (iOS) y el correo usa `autoComplete="email"` en vez de
+  `username`, que es lo que asocian los gestores.
+
+Decisión:
+
+- **`auth-form.web.tsx`**: envoltorio que renderiza un `<form method="post" action="/login"
+  noValidate>` real, solo en web (resolución por extensión de plataforma, como la navegación de
+  D12). Su `onSubmit` hace `preventDefault()` y llama a `form.handleSubmit()`. Es un elemento DOM
+  permitido: la guía `expo-native-ui` excluye DOM intrínseco salvo en código específico de web, y
+  este es el único caso. En nativo, `auth-form.tsx` devuelve un `View`.
+- **Envío**:
+  - el botón principal es `type="submit"` en web (prop `web` de `Button`, sin cambiar su
+    variante), y en nativo sigue con `onPress`;
+  - Intro en la contraseña envía (`onSubmitEditing` en nativo; `submit` implícito en web);
+  - el correo usa `returnKeyType="next"` y enfoca la contraseña.
+- **Campos**:
+  - `name`/`id` `username` y `password`;
+  - `autoComplete` `username`/`current-password`;
+  - `textContentType` `username`/`password`;
+  - `importantForAutofill="yes"`.
+- **Hidratación sin `readOnly`**:
+  - se retira `editable={isHydrated}`;
+  - al hidratar, el formulario adopta como valor inicial lo que ya haya en el DOM (lectura única
+    de `input.value` por `id`, solo en web);
+  - el botón sigue deshabilitado hasta la hidratación.
+  - Así se conserva la protección que motivó `isHydrated` (pulsaciones perdidas en WebKit) sin
+    bloquear el relleno. La regresión se cubre con `auth.spec.ts` en `webkit`.
+- **Diseño**:
+  - `Card` con `max-w-form` y `gap-6`, sobre `bg-background`;
+  - cabecera con `Icon` de marca decorativo, `Heading level={1}` «Diklass» y `Text tone="muted"`;
+  - error en `Callout tone="error"` (reemplaza el `Text` destructivo);
+  - control «Mostrar contraseña» como `Button variant="ghost"` con `Icon` `eye`/`eye-off`,
+    `aria-pressed` y `min-h-touch`, a la derecha del campo dentro de `Input`.
+- **Seguridad**: la app no guarda credenciales. Tras un error se vacía la contraseña. `action`
+  apunta a la propia ruta: si el JS no cargara, el `post` no llega a ningún servidor que acepte
+  credenciales (Expo web estático), así que falla cerrado.
+- **Fuera de alcance**: guardar en el llavero de iOS exige Associated Domains
+  (`webcredentials:<dominio>`) y un `apple-app-site-association` publicado. Sin dominio
+  desplegado queda como pendiente explícito. No se añaden passkeys ni «recordarme».
+- **Alternativa descartada**: sustituir los `Input` por `<input>` DOM en todo el formulario. Así el
+  login dejaría de compartir la primitiva `Input` (tema, foco, invalidez), y el `<form>`
+  envolvente basta para que los gestores asocien los campos.
+
 ## Risks / Trade-offs
 
 - **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
@@ -482,5 +535,7 @@ Resueltas con el usuario el 2026-09-25:
 - Resumen de seguimiento en la consulta a partir de `lg`: **columna lateral**, junto con los
   antecedentes y el historial de correcciones; la principal lleva anamnesis, diagnóstico y
   epicrisis.
+- Login (2026-09-25): el usuario pide que el acceso permita guardar contraseñas y que el
+  formulario vaya en una tarjeta. Se incorpora a este cambio como US15 (D16).
 - Patrón de navegación: **adaptable** (barra lateral ≥ 1024 px en web; pestañas inferiores en
   compacto y en nativo). Alcance de las mejoras de `expo-native-ui`: **dentro de este cambio**.
