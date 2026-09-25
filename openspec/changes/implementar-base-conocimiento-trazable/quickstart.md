@@ -139,6 +139,49 @@ con 33), unidad 58 pass / 0 fail, integración viva 14 pass / 0 fail con el arn�
 (SC-002 100%, SC-025 100%, 0 incumplimientos sobre 16 citas), `bun run typecheck` limpio y
 `bunx biome check` sin advertencias sobre los archivos propios.
 
+## Evidencia de la revisión de la PR #30 (2026-09-24, tareas 7.x)
+
+Ejecutado en local sobre la rama con Supabase local (`DOCKER_HOST` al socket rootless de podman),
+`supabase db reset` desde este worktree y los veterinarios sintéticos provisionados con
+`bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json`:
+
+| Compuerta | Comando | Resultado |
+|---|---|---|
+| Lint estricto | `bunx biome ci --error-on-warnings .` | verde (152 archivos) |
+| Tipos | `bun run typecheck` | verde |
+| pgTap | `supabase db reset && supabase test db` | 193 aserciones en 11 archivos, «All tests successful» (nueva suite `010_base_conocimiento_revision.sql`: 20) |
+| Tipos generados | `bun run db:types` + `git diff` | sin diff tras regenerar (incluye `knowledge_fragments` y `terminos_pregunta`) |
+| Unidad | `SUPABASE_LIVE_TESTS= bun run test` | 265 pass, 57 skip (vivas), 0 fail |
+| Integración viva | `SUPABASE_LIVE_TESTS=1 bun run test:integration` | 53 pass, 0 fail (conocimiento: 16) |
+| Web e2e (Chromium) | `bunx playwright test --project=chromium` | 21 pass, 0 fail (incluye `conocimiento.spec.ts`: 3) |
+
+Rojos observados antes de cada arreglo:
+
+| Tarea | Prueba | Rojo |
+|---|---|---|
+| 7.1 | pgTap «el ranking puntúa el lexema «ansied»» | `rank_cd = 0` (`to_tsquery('spanish', '''ansied''')` → `'ansi'`) |
+| 7.2 | pgTap corte con `p_limit = 1` | have `(e1e1…0002, 1)`, want `(e1e1…0003, 1)` |
+| 7.3 | cinco aserciones pgTap de forma · unidad de lectura tolerante | «caught: no exception» ×5 · `ZodError` («expected number, received string») que tumbaba la consulta |
+| 7.4 | tres aserciones pgTap del paciente de contexto (con la 010 anterior) | «no exception» (paciente ajeno), «no exception» (tutor como paciente), `23503` de la FK (inexistente) |
+| 7.5 | e2e «la colección refleja al momento…» | la fuente recién incorporada no aparece a los 5 s (lista servida de caché) |
+| 7.6 | e2e «pulsar Enter otra vez con la consulta en curso…» | 2 turnos con la misma pregunta |
+| 7.7 | pgTap `terminos_pregunta` · unidad `answer`/`consulta-service` | columna inexistente · `noCubiertos = ["tratamient"]` en vez de `["tratamiento"]` |
+| 7.8 | pgTap de materialización | relación `public.knowledge_fragments` inexistente |
+| 7.9 | e2e «una fuente inexistente o ilegible…» | `fuente-no-encontrada` ausente: «Cargando la fuente…» indefinido |
+| 7.10 | `tests/unit/scripts/corpus-conocimiento.test.ts` | módulo `scripts/lib/corpus-conocimiento` inexistente |
+
+Coste de la recuperación (7.8), medido con 10 000 fragmentos sintéticos (20 fuentes × 500) en una
+transacción revertida:
+
+| Consulta | Tiempo | Plan |
+|---|---|---|
+| Antes: `ts_debug` sobre cada fragmento de `content` en cada pregunta | 78,6 ms | recorrido completo del corpus |
+| Después: `vector @@ tsquery` sobre `knowledge_fragments` | 4,3 ms | `Bitmap Index Scan on knowledge_fragments_vector_idx` |
+
+Guion del corpus (7.10), ejecutado contra el stack local: sin `CORPUS_VET_EMAIL` sale con código 1
+(«Falta CORPUS_VET_EMAIL…»); con `SUPABASE_URL=https://abcd.supabase.co` sale con código 1 («no es
+un Supabase local…»); con las credenciales sintéticas de Ana incorpora el corpus completo.
+
 ## Transiciones sin acción enumerada (D3 · tarea 1.3)
 
 Las transiciones de fuente (incorporar/retirar) devuelven `Attribution.action = null`: la
@@ -156,4 +199,8 @@ además `log_server_event('knowledge_source_lifecycle', …)` (Constitución IV)
 - **Corpus real y conjunto anotado del equipo clínico** (sustituyen los sintéticos; HD7).
 - **Aceptación humana**: SC-003 por revisión manual de referencias; SC-015 con ≥ 3 especialistas
   sobre ≥ 5 casos; SC-002 medido sobre el conjunto real.
-- **Verificación visual interactiva** de las pantallas nuevas y **e2e funcional web**.
+- **Verificación visual interactiva** de las pantallas nuevas y **e2e funcional web** completo:
+  `tests/e2e/web/conocimiento.spec.ts` cubre tres pruebas acotadas de la revisión de la PR #30
+  (caché y retiro confirmado, visor sin cuelgues, un envío por consulta); el resto del recorrido
+  lo cargan pgTap y la integración viva.
+- **Sesión caducada frente a fuente inexistente en el visor** (tarea 7.12).

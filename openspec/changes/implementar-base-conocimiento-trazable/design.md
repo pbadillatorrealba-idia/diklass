@@ -128,12 +128,25 @@ más objetos, invariantes de offset y riesgo de drift entre texto íntegro y fra
 visible sobre un corpus acotado. Con fragmentos embebidos, incorporar una fuente es **una fila =
 una transición atómica** y el texto citado no puede desincronizarse jamás del documento.
 
+*Revisión de la PR #30*: existe una tabla `knowledge_fragments`, pero como **índice derivado**, no
+como fuente de verdad (D4): la rellena un trigger AFTER INSERT en la misma transacción que el
+documento, copia verbatim `ordinal`, `seccion` y `texto` de `content` y no tiene privilegios para
+la API. La cita y su texto siguen saliendo del `content` embebido; la alternativa rechazada
+(offsets sobre un texto íntegro, ingesta no atómica) sigue rechazada.
+
 ### D3. Ciclo de vida de la fuente: dos transiciones, sin borrado, atribución sellada
 
 - **Incorporar** = `INSERT` en `knowledge_documents` (vía PostgREST desde el servicio). Trigger
   BEFORE `guard_knowledge_source_lifecycle`: sella `created_by = auth.uid()` (rechaza con
-  `ATTRIBUTION_IMMUTABLE` 23514 todo intento de fijarlo por cliente) y valida forma mínima del
-  `content`. Trigger AFTER: `log_server_event('knowledge_source_lifecycle', …)`.
+  `ATTRIBUTION_IMMUTABLE` 23514 todo intento de fijarlo por cliente) y valida la forma del
+  `content`. Trigger AFTER: `log_server_event('knowledge_source_lifecycle', …)` y
+  materialización de los fragmentos en `knowledge_fragments` (D4).
+- *Forma validada en el servidor (revisión de la PR #30)*: la misma que exige la lectura
+  (`fuenteContentSchema`), para que una fila incorporada por PostgREST no deje ilegible la
+  recuperación de la clínica: título y tipo de licencia de texto no vacío, opcionales de texto o
+  `null`, `anio` entero positivo, `autores` lista de nombres no vacíos, y cada fragmento con
+  `ordinal` igual a su posición (1, 2, …: sin huecos, repetidos ni permutaciones) y `texto` no
+  vacío (`KNOWLEDGE_SOURCE_INVALID` 22023).
 - **Retirar** = la **única** `UPDATE` permitida: el trigger solo acepta la transición
   `available → withdrawn` y sella él mismo `withdrawn_by = auth.uid()` y `withdrawn_at`; cualquier
   otra modificación (metadatos, fragmentos, `created_*`, resurrección) fracasa con
@@ -162,10 +175,26 @@ a fuentes `available`) recupera candidatos:
   implementación usó `websearch_to_tsquery`, que conjunta todos los términos y devolvía cero
   evidencias ante una sola palabra ausente; el assert 18 de la suite `009` delata esa regresión.
 - **Ranking**: `ts_rank_cd` sobre la consulta formada por la unión de lexemas; desempate
-  determinista por documento y `ordinal`.
+  determinista por documento y `ordinal`. El `tsquery` se construye con el cast de texto, que no
+  normaliza: `to_tsquery('spanish', …)` volvía a talar cada lexema aunque fuera entre comillas
+  («ansied» → «ansi») y `ts_rank_cd` daba 0 (revisión de la PR #30).
+- **Orden y corte**: la RPC ordena primero por cuántos lemas de la pregunta cubre el fragmento y
+  después por `ts_rank_cd`. Así el corte `p_limit` no deja fuera un fragmento que califica por
+  detrás de otros que solo cruzan un lema; si más de `p_limit` califican, `composeAnswer` recibe
+  más calificados que su tope de 5 y declara `evidencia_truncada` (FR-052: el descarte nunca es
+  silencioso).
+- **Índice precalculado** (revisión de la PR #30): los fragmentos son inmutables (solo existe la
+  retirada), así que se materializan una vez al incorporar en `knowledge_fragments` con su
+  `tsvector` español como columna generada e índice GIN. La RPC filtra con `@@` indexado y calcula
+  la cobertura contra `tsvector_to_array` del vector guardado, en vez de ejecutar `ts_debug` y
+  `to_tsvector` sobre cada fragmento del corpus en cada pregunta. Medido en local con 10 000
+  fragmentos: 78,6 ms (antes) frente a 4,3 ms (después, `Bitmap Index Scan` sobre
+  `knowledge_fragments_vector_idx`). El estado disponible/retirada se sigue leyendo de
+  `knowledge_documents`.
 - **Cobertura de lemas**: con `ts_debug('spanish', …)` devuelve `lemasPregunta` (lexemas de la
-  pregunta, ya filtrados por el diccionario español) y, por candidato, `lemasCubiertos`
-  (intersección con los lexemas del fragmento). La regla de producto —un fragmento **califica** si
+  pregunta, ya filtrados por el diccionario español), en paralelo `terminosPregunta` (la primera
+  palabra de la pregunta que originó cada lexema, para nombrar la cobertura) y, por candidato,
+  `lemasCubiertos` (intersección con los lexemas del fragmento). La regla de producto —un fragmento **califica** si
   cubre ≥ 50% de los lemas de la pregunta (redondeo hacia arriba) y la respuesta muestra como
   máximo 5 referencias calificadas— vive en `composeAnswer` (TS puro, testeable), no en SQL.
 - Cada ejecución emite `log_server_event` (operación, resultado, duración, nº de candidatos).
@@ -200,6 +229,9 @@ Las reglas del contrato (todas unit-testeadas):
 - **FR-022 · US5-AC8**: `cobertura = { cubiertos: string[], noCubiertos: string[], estado }` con
   `estado ∈ 'sin_evidencia' | 'parcial' | 'cubre'`, derivado de la cobertura de lemas; cuando
   `noCubiertos` no está vacío, aviso `cobertura_parcial` que **nombra** qué parte queda sin cubrir.
+  La cobertura se calcula con lexemas, pero `cubiertos`/`noCubiertos` (y la inferencia) llevan la
+  palabra de la pregunta que originó cada lexema (`terminosPregunta`): un tallo como «ansied» no
+  es legible para el veterinario (revisión de la PR #30).
 - **FR-021 · US5-AC3**: los tres orígenes van en grupos visiblemente distintos con su chip de
   procedencia (reutilizando `Provenance` de 002).
 - **FR-051 · US5-AC10**: sin `patientId` → cero segmentos de ficha + aviso
@@ -249,6 +281,13 @@ asistente no requieren atribución»; solo la gestión del corpus la exige, FR-0
 registrar `asked_by`; queda como decisión dura reversible (HD5) con cambio acotado a la tabla y al
 servicio.
 
+*Paciente de contexto acotado (revisión de la PR #30)*: el trigger BEFORE INSERT
+`guard_knowledge_query_patient` exige que `patient_id`, si no es nulo, sea un registro
+`record_type = 'patient'` de la misma clínica. Corre con los derechos de quien inserta (la RLS de
+`clinical_records` ya oculta lo ajeno) y antes que la FK, de modo que un UUID inexistente, uno de
+otra clínica y uno que no es paciente fallan igual (`KNOWLEDGE_QUERY_PATIENT_INVALID` 23514) y la
+FK deja de servir de oráculo de existencia.
+
 *Endurecimiento (revisión de la PR)*: `answer` exige por CHECK SQL la forma mínima del contrato
 (`pregunta`, `segmentos`, `cobertura`, `avisos`): un cliente no puede fabricar por PostgREST una
 respuesta vacía. **Riesgo residual y su reverso**: la validación semántica completa del `answer`
@@ -297,7 +336,10 @@ hay que reconstruir). *Alternativa rechazada*: estado de componente — se pierd
   mismo camino que la UI (`incorporateSource`), validado con Zod. Un guion delgado
   `scripts/cargar-corpus-conocimiento.ts` (ejecutable con `bun scripts/cargar-corpus-conocimiento.ts`,
   sin tocar `package.json` ni `seed.sql`) lo carga en un entorno vivo para demostración y
-  evaluación. La suite pgTap 009 lleva sus propios fixtures SQL en línea.
+  evaluación. Falla cerrado como `provision:veterinarians` (revisión de la PR #30): rechaza un
+  Supabase no local salvo `--allow-remote` (y avisa por consola cuando está activo) y exige
+  `CORPUS_VET_EMAIL`/`CORPUS_VET_PASSWORD` sin valor por defecto en el código; ambas variables
+  están en `.env.example` y `SETUP.md`. La suite pgTap 009 lleva sus propios fixtures SQL en línea.
 
 ### D10. Interfaz: rutas `/knowledge/**`, componentes propios, WCAG 2.2 AA
 
@@ -309,6 +351,19 @@ hay que reconstruir). *Alternativa rechazada*: estado de componente — se pierd
   cuándo — FR-069/US5-AC13), `/knowledge/sources/new` (ingesta con vista previa de fragmentos,
   FR-028/FR-030) y `/knowledge/sources/[id]` (visor con el fragmento citado en su contexto,
   FR-007/US5-AC7, y retiro de la fuente, FR-053).
+
+Comportamiento añadido en la revisión de la PR #30:
+
+- **Caché**: `invalidateConocimiento` (`src/features/conocimiento/query-cache.ts`, patrón de
+  `invalidateRegistro`) invalida el prefijo `['conocimiento']` tras incorporar y tras retirar, para
+  que la colección, el visor y las reconstrucciones no salgan desfasados de la caché de 30 s. El
+  selector de paciente de la conversación usa la clave `['registro', 'patients']`, la de la lista
+  del registro: `invalidateRegistro`, que ya corre al crear un paciente, también lo refresca.
+- **Un envío por consulta**: `consultar()` ignora Enter con una consulta en curso (candado
+  síncrono con `useRef`) o con la pregunta vacía, igual que el botón deshabilitado.
+- **Visor de fuente**: distingue cargando, no encontrada (`getSource` → `null`) y error de lectura;
+  un error de sesión caducada abre el diálogo como en la colección; el retiro, irreversible (HD3),
+  pide confirmación explícita en un segundo paso.
 
 Componentes kebab-case en `src/components/conocimiento/` (`cita-fragmento`, `segmento-respuesta`,
 `avisos-cobertura`, `respuesta-conocimiento`, `formulario-fuente`, `visor-documento`,
@@ -327,9 +382,10 @@ colisiones entre worktrees hermanos; una colisión real (un `db reset` ajeno bor
 mitad de una corrida viva) confirmó el riesgo y motivó el protocolo acordado con el orquestador.
 El clúster scratch queda como alternativa si el stack está ocupado. La verificación oficial vive en
 el job `database` de CI (suites pgTap +
-`SUPABASE_LIVE_TESTS=1`); las pruebas de unidad corren localmente con `bun test`. Sin e2e web
-propio (restricción del entorno; la compuerta de accesibilidad la cubre 002): queda como pendiente
-declarado, no como compuerta cumplida.
+`SUPABASE_LIVE_TESTS=1`); las pruebas de unidad corren localmente con `bun test`. En la revisión
+de la PR #30 Playwright ya corre en local y se añadió `tests/e2e/web/conocimiento.spec.ts` (caché
+de la colección, retiro confirmado, visor sin cuelgues y un solo envío por consulta); el resto del
+recorrido funcional web sigue como pendiente declarado.
 
 ## Seguimiento de complejidad (Principio III)
 
@@ -338,6 +394,8 @@ declarado, no como compuerta cumplida.
 | Tablas `knowledge_documents` y `knowledge_queries` | FR-006 (corpus), FR-020 (reconstrucción); el corpus no es dato clínico (D1) | No aplica |
 | Trigger `guard_knowledge_source_lifecycle` + log AFTER | FR-069 (atribución sellada), FR-053 (retirada única, sin borrado), IV (log estructurado) | Nunca mientras la spec exija trazabilidad del corpus |
 | RPC `search_knowledge_fragments` | FR-006/SC-002: stemming y ranking de FTS en el servidor (D4) | Si se adopta similitud vectorial (HD2) |
+| Tabla derivada `knowledge_fragments` + trigger de materialización + índice GIN | Coste por pregunta independiente del tamaño del corpus en el camino caliente del asistente (D4, revisión de la PR #30) | Si se adopta similitud vectorial (HD2), que traería su propio índice |
+| Trigger `guard_knowledge_query_patient` | Principio V · FR-020: el paciente de contexto es de la clínica y la FK no revela UUID ajenos (D6) | No aplica |
 | Cobertura de lemas (`ts_debug`) en la RPC | FR-022/FR-023/SC-025: umbral de respaldo y aviso de qué queda sin cubrir (D4/D5) | Si se adopta un clasificador semántico (HD6) |
 | `composeAnswer` extractivo + avisos | FR-021/022/023/051/052 y SC-010 por construcción (D5) | Si se adopta generación con LLM (HD1), conservando el contrato |
 | Store de conversación (Zustand) | FR-026: contexto del paciente en la sesión (D8) | No aplica |
@@ -415,6 +473,10 @@ expresa del orquestador y se re-verifica sin diff tras cada merge.
 - **Corpus y conjunto anotado sintéticos (D9/HD7)** → SC-002/SC-003/SC-015 no son aceptables hasta
   corpus real, conjunto del equipo clínico y revisión/evaluación humanas. Se diferencia en todo
   artefacto entre verificado por máquina y aceptado.
+- **`knowledge_fragments` es una copia derivada (D4)** → su coherencia con `content` descansa en
+  la inmutabilidad del contenido (el guard solo admite la retirada) y en que la materialización
+  ocurre en la misma transacción que el INSERT. Si HD3 se invirtiera (fuentes editables), el
+  trigger de materialización tendría que rehacer los fragmentos en cada edición.
 - **Citas como referencias dentro de `answer jsonb` (D6)** → sin FK de las citas hacia el fragmento
   (mismo coste `jsonb` que asumió 002 en D1). Mitigación: el registro es append-only, el corpus es
   inmutable salvo retirada y el texto citado viaja verbatim en la propia cita (siempre resoluble).
@@ -424,7 +486,9 @@ expresa del orquestador y se re-verifica sin diff tras cada merge.
   arranca (`omp.browser.headed` falla con exit=21) y no hay Playwright: la verificación visual
   interactiva queda **pendiente declarado** (D11), no compuerta cumplida. La compilación web
   completa sí quedó verificada (`expo export --platform web` exporta las cuatro rutas de
-  `/knowledge`) y el shell responde HTTP 200 con el título de la app.
+  `/knowledge`) y el shell responde HTTP 200 con el título de la app. En la revisión de la PR #30
+  Playwright ya corre en local: `tests/e2e/web/conocimiento.spec.ts` cubre tres pruebas
+  acotados; la verificación visual humana y el recorrido funcional completo siguen pendientes.
 
 ### Decisiones duras (reversibles por el usuario)
 

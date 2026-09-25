@@ -173,3 +173,25 @@ ajuste de la enumeración de funciones del test 23 de `supabase/tests/004_functi
   autorizada). Verificación: reporte publicado y coherente con `quickstart.md`.
 - [x] 6.2 Si la implementación desvía `design.md` o estas tareas, actualizar los artefactos con
   `openspec-update-change` antes del merge. Verificación: artefactos coherentes entre sí.
+
+## 7. Revisión de la PR #30 (2026-09-24)
+
+Hallazgos de `/code-review high` publicados en la PR (10 comentarios en línea sobre `cfe1a2a`).
+Numeración de esta sección: 1 re-talado de `to_tsquery`, 2 corte `p_limit` antes de calificar,
+3 fuente malformada que tumba la consulta, 4 `patient_id` sin acotar, 5 invalidación de caché,
+6 doble consulta con Enter, 7 cobertura nombrada con tallos, 8 coste O(corpus) por pregunta,
+9 visor de fuente colgado en «Cargando…», 10 guion del corpus sin fallo cerrado. Cada rojo se
+observó en local antes del arreglo (evidencia en `quickstart.md`).
+
+- [x] 7.1 Construir el `tsquery` de la RPC sin normalizar (cast de texto), de modo que `ts_rank_cd` puntúe los lexemas tal cual (FR-006 · SC-002 · D4). Verificación: aserción pgTap «el ranking puntúa el lexema «ansied»» en `supabase/tests/010_base_conocimiento_revision.sql`, roja (rank 0) → verde.
+- [x] 7.2 Ordenar los candidatos por lemas cubiertos antes que por `rank_cd` para que el corte `p_limit` no descarte evidencia que califica (FR-052 · FR-022 · D4). Verificación: aserción pgTap con `p_limit = 1` (have `…0002`, want `…0003`) roja → verde.
+- [x] 7.3 Cerrar en el trigger la forma del `content` que exige la lectura y leer los fragmentos de la RPC fila a fila, omitiendo el ilegible con log estructurado (FR-006 · FR-030 · Principio V · D2/D3). Verificación: cinco aserciones pgTap de forma (rojas «no exception» → verdes) y prueba unitaria en `tests/unit/conocimiento/consulta-service.test.ts` (ZodError → evidencia del fragmento legible y `conocimiento.row_content_skipped`).
+- [x] 7.4 Exigir que `patient_id` sea un paciente de la misma clínica, con un único error para ajeno, inexistente o de otro tipo (FR-020 · FR-051 · Principio V · D6). Verificación: tres aserciones pgTap (rojas: dos «no exception» y una 23503 de la FK) → verdes; aserción de la suite 009 ajustada al nuevo error; prueba viva en `tests/integration/conocimiento/consulta.test.ts`.
+- [x] 7.5 Invalidar `['conocimiento']` tras incorporar y retirar, y colgar el selector de pacientes de la clave del registro (FR-028 · FR-053 · US5-AC6/AC12 · D10). Verificación: `tests/unit/conocimiento/query-cache.test.ts` y el e2e «la colección refleja al momento…» de `tests/e2e/web/conocimiento.spec.ts`, rojo (fuente nueva ausente a los 5 s) → verde.
+- [x] 7.6 Un solo envío por consulta: Enter respeta la consulta en curso y la pregunta vacía (FR-020 · D6/D10). Verificación: e2e «pulsar Enter otra vez con la consulta en curso…», rojo (2 turnos) → verde (1 turno, 1 fila).
+- [x] 7.7 Nombrar la cobertura con las palabras de la pregunta: la RPC devuelve `terminos_pregunta` y `composeAnswer` los usa (FR-022 · US5-AC8 · D4/D5). Verificación: aserción pgTap de `terminos_pregunta`, pruebas unitarias en `answer.test.ts` y `consulta-service.test.ts` (rojas con tallos → verdes) y prueba viva de cobertura parcial.
+- [x] 7.8 Materializar los fragmentos al incorporar en `knowledge_fragments` con `tsvector` precalculado e índice GIN, sin privilegios para la API (FR-006 · presupuestos de rendimiento · D4). Verificación: aserciones pgTap de materialización, índice GIN y privilegios; `EXPLAIN` con 10 000 fragmentos (`Bitmap Index Scan`, 78,6 ms → 4,3 ms) en `quickstart.md`.
+- [x] 7.9 Visor de fuente con estados de carga, no encontrada y error, diálogo de sesión caducada y confirmación del retiro (FR-007 · FR-053 · US5-AC7/AC12 · D10). Verificación: e2e «una fuente inexistente o ilegible…» rojo («Cargando…» indefinido) → verde, y paso de confirmación en el e2e de la colección.
+- [x] 7.10 Guion del corpus con fallo cerrado (`--allow-remote`), sin credenciales por defecto y con sus variables en `.env.example` y `SETUP.md` (AGENTS.md · Principio V · D9). Verificación: `tests/unit/scripts/corpus-conocimiento.test.ts` (rojo por módulo inexistente → 7 pass) y ejecución real del guion (rechazo remoto, falta de variables y carga local).
+- [x] 7.11 Actualizar `design.md` (D2, D3, D4, D5, D6, D9, D10, D11, complejidad y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-base-conocimiento-trazable` y artefactos coherentes con el código de la rama.
+- [ ] 7.12 Distinguir en el visor de fuente la sesión caducada de la fuente inexistente: con la sesión de acceso caducada, la RLS devuelve cero filas (no un error) y el visor muestra «no encontrada»; el diálogo solo aparece si lo abre el rastreador de actividad del layout (`useSessionActivity`). Pendiente declarado: exige que `getSource` consulte el estado de la sesión o una RPC que distinga ambos casos.
