@@ -1,13 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaView, ScrollView } from "react-native";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { AdverseEventReport } from "@/components/retroalimentacion/adverse-event-report";
 import { FeedbackForm } from "@/components/retroalimentacion/feedback-form";
 import { FeedbackTimeline } from "@/components/retroalimentacion/feedback-timeline";
+import { ADHERENCE_LABELS, EVOLUTION_LABELS } from "@/components/retroalimentacion/labels";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -36,8 +37,11 @@ import {
   buildFeedbackTimeline,
   collectAdverseEvents,
 } from "@/features/retroalimentacion/feedback-summary";
-import { supabase } from "@/lib/supabase/client";
+import { isAuthenticationRequired } from "@/lib/errors";
+import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
+import { useUiStore } from "@/stores/ui-store";
 
 /**
  * Panel de evolución del seguimiento del paciente (US10 en la superficie propia de D10):
@@ -50,6 +54,8 @@ export default function FollowUpPanelScreen() {
   const { patientId: routePatientId } = useLocalSearchParams<{ patientId: string }>();
   const patientId = String(routePatientId);
   const clinicId = useSessionStore((state) => state.clinicId);
+  const setAccessState = useSessionStore((state) => state.setAccessState);
+  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const queryClient = useQueryClient();
   const guard = useClinicalGuard();
 
@@ -59,6 +65,9 @@ export default function FollowUpPanelScreen() {
   const [correctionTargetId, setCorrectionTargetId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  // `isBusy` solo deshabilita el botón tras el siguiente render: un doble toque llega antes.
+  // Lo registrado es inmutable e inborrable (D4), así que el cerrojo es síncrono.
+  const guardando = useRef(false);
 
   const patientQuery = useQuery({
     queryKey: ["registro", "patient", patientId],
@@ -116,11 +125,24 @@ export default function FollowUpPanelScreen() {
 
   const queryError =
     patientQuery.error ?? consultationsQuery.error ?? feedbackQuery.error ?? epicrisisQuery.error;
+  const sesionExpirada = queryError ? isAuthenticationRequired(queryError) : false;
+  // Patrón de `follow-up/index.tsx`: la sesión caducada abre su diálogo; el resto se reporta.
+  // El aviso de carga se deriva del error vigente, así que desaparece al recuperarse.
   useEffect(() => {
-    if (queryError) {
-      setStatus("No pudimos cargar la evolución del paciente. Vuelve a intentarlo.");
+    if (!queryError) {
+      return;
     }
-  }, [queryError]);
+    if (isAuthenticationRequired(queryError)) {
+      setAccessState("expired");
+      openExpiredDialog();
+      return;
+    }
+    void captureClientError(errorReporter, {
+      error: queryError,
+      operation: "follow_up_panel_load",
+      requestId: makeRequestId(),
+    });
+  }, [queryError, openExpiredDialog, setAccessState]);
 
   const cambiarCampo = (patch: Partial<FeedbackFormValues>) => {
     setFormValues((prev) => ({ ...prev, ...patch }));
@@ -162,6 +184,9 @@ export default function FollowUpPanelScreen() {
   };
 
   const guardar = async () => {
+    if (guardando.current) {
+      return;
+    }
     if (!clinicId) {
       setStatus("La sesión no tiene una clínica asociada.");
       return;
@@ -173,6 +198,7 @@ export default function FollowUpPanelScreen() {
       return;
     }
     setFormErrors({});
+    guardando.current = true;
     setIsBusy(true);
     const desenlace = await guard(
       correctionTargetId === null ? "createFeedbackEntry" : "correctFeedbackEntry",
@@ -187,6 +213,7 @@ export default function FollowUpPanelScreen() {
         });
       },
     );
+    guardando.current = false;
     setIsBusy(false);
     if (desenlace === "ok") {
       setCorrectionTargetId(null);
@@ -216,6 +243,12 @@ export default function FollowUpPanelScreen() {
             Seguimiento de {patientQuery.data?.content.name ?? "este paciente"}
           </Heading>
 
+          {queryError && !sesionExpirada ? (
+            <Text accessibilityLiveRegion="polite" testID="feedback-load-error">
+              No pudimos cargar la evolución del paciente. Vuelve a intentarlo.
+            </Text>
+          ) : null}
+
           <Box
             className="rounded-xl border border-border bg-white p-4"
             testID="feedback-antecedents"
@@ -224,7 +257,7 @@ export default function FollowUpPanelScreen() {
               <Heading size="lg">Evolución previa (antecedentes)</Heading>
               {antecedentes.length === 0 ? (
                 <Text testID="feedback-antecedents-empty">
-                  Sin evolución registrada antes de hoy.
+                  Sin evolución registrada para este paciente.
                 </Text>
               ) : (
                 antecedentes.map((antecedente) => (
@@ -235,7 +268,8 @@ export default function FollowUpPanelScreen() {
                       : new Date(antecedente.consultationDate).toLocaleString("es-CL")}
                     , evolución registrada el{" "}
                     {new Date(antecedente.registeredAt).toLocaleString("es-CL")}: adherencia{" "}
-                    {antecedente.adherence}, evolución {antecedente.evolution}
+                    {ADHERENCE_LABELS[antecedente.adherence]}, evolución{" "}
+                    {EVOLUTION_LABELS[antecedente.evolution]}
                     {antecedente.revisedDiagnosis === null
                       ? ""
                       : `; cambio de diagnóstico: ${antecedente.revisedDiagnosis}`}

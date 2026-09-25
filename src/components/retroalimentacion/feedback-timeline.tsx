@@ -110,13 +110,17 @@ export function FeedbackTimeline({ entries, onCorrect }: FeedbackTimelineProps) 
               {correcciones.length > 0 ? (
                 <CorrectionHistory entries={correcciones.map(attributionDe)} />
               ) : null}
-              <Button
-                accessibilityLabel={`Corregir la entrada registrada el ${registradoEl}`}
-                onPress={() => onCorrect(entry)}
-                testID="feedback-correct"
-              >
-                <ButtonText>Corregir entrada</ButtonText>
-              </Button>
+              {/* Solo la vigente se corrige: corregir una sustituida prellenaría su contenido
+                  viejo y revertiría en silencio la corrección posterior (D7). */}
+              {entry.effective ? (
+                <Button
+                  accessibilityLabel={`Corregir la entrada registrada el ${registradoEl}`}
+                  onPress={() => onCorrect(entry)}
+                  testID="feedback-correct"
+                >
+                  <ButtonText>Corregir entrada</ButtonText>
+                </Button>
+              ) : null}
             </Box>
           );
         })
