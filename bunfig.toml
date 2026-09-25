@@ -1,0 +1,3 @@
+[test]
+# Sustituye react-native por react-native-web en las pruebas de componentes (design.md D11 de sistema-visual).
+preload = ["./tests/unit/setup/react-native.ts"]

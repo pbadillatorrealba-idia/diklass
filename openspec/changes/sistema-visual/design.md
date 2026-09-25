@@ -214,6 +214,22 @@ archivo y línea (FR-081, SC-051). Es Bun test puro, sin dependencias nuevas.
 320×640, visita las rutas cubiertas y afirma
 `document.documentElement.scrollWidth <= clientWidth`.
 
+La guarda de literales ya existía en `tests/unit/theme/tema.test.ts` (describe "colores fuera del
+tema": hex entre comillas y paleta fija de Tailwind). La tarea 2.1 la amplía allí (`rgb()`/`rgba()`)
+en lugar de crear un archivo nuevo. La prueba de desborde ya existía en `accessibility.spec.ts`
+(375/1280 px): la tarea 5.1 añade 320 px y las rutas que no cubre.
+
+### D11 — Pruebas de componentes sin dependencias nuevas
+
+Bun no puede importar `react-native` (código fuente en Flow) y el repo no tiene renderer de
+componentes. En lugar de añadir `@testing-library/react-native` y Jest, un preload de Bun
+(`tests/unit/setup/react-native.ts`, registrado en `bunfig.toml`) sustituye `react-native` por
+`react-native-web`, que ya es dependencia para la web, y reexpone `className` como `data-class`
+(NativeWind no transforma JSX en Bun). Las pruebas renderizan con `renderToStaticMarkup` de
+`react-dom/server` (también presente) y comprueban el HTML real de la web: `role`, `aria-*`,
+`data-testid` y las clases de variante. Límite asumido: no se ejecutan estilos nativos; el
+aspecto final lo verifican la compuerta axe y las capturas.
+
 ## Risks / Trade-offs
 
 - **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
