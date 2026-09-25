@@ -365,3 +365,27 @@ el campo de 96 px se unifica a 120 px); `Input` `min-h-[44px]` → `min-h-touch`
 ```
 $ … registro-epicrisis / accessibility / auth (chromium, --workers=1)   → 2 / 7 / 8 passed
 ```
+
+## Grupo 5 — Compuertas de accesibilidad y adaptabilidad
+
+### 5.1 — Reflujo a 320 px y rutas nuevas en la compuerta (FR-079 · SC-052)
+
+- `expectNoHorizontalOverflow` mide 320, 375 y 1280 px.
+- `syntheticScreens` suma `/knowledge`, `/knowledge/sources`, `/knowledge/sources/new`,
+  `/follow-up` y `/follow-up/<paciente>`; así las pruebas de axe, teclado y desborde cubren
+  también esas pantallas.
+- **Defecto encontrado (preexistente, 003):** las cuatro pantallas de conocimiento no tenían
+  `<title>` (axe `document-title`, WCAG 2.4.2). Al sumarlas, la compuerta falló; se añadió `<Head>`
+  con título a cada una.
+- **Punto ciego de la prueba de desborde (preexistente):** solo medía `document.documentElement`,
+  pero el `ScrollView` de RN Web es un contenedor con scroll propio y un desborde dentro de él no
+  agranda el documento. Una mutación (`min-w-[340px]` en `Screen`) pasaba la prueba. Ahora también
+  mide cada contenedor que recorta o desplaza en horizontal (salvo campos de texto). La misma
+  mutación falla con «Desbordamiento horizontal a 320 px en lista de pacientes: div 330 > 320», y
+  sin ella pasa.
+
+No hubo rojo por pantallas sin migrar: al llegar a 5.1 todas estaban migradas (grupo 4 completo).
+
+```
+$ … accessibility.spec.ts --project=chromium --workers=1   → 7 passed (con las 5 rutas nuevas)
+```

@@ -56,7 +56,7 @@ Cada tarea de este grupo:
 
 ## 5. Compuertas de accesibilidad y adaptabilidad
 
-- [ ] 5.1 Escribir en rojo el caso de reflujo en `accessibility.spec.ts` (viewport 320×640 en todas las rutas cubiertas; `scrollWidth <= clientWidth`) antes de terminar el grupo 4. Debe fallar en al menos una pantalla sin migrar, o documentar que ya pasa (FR-079 · SC-052). Verificación: rojo→verde registrado.
+- [x] 5.1 Escribir en rojo el caso de reflujo en `accessibility.spec.ts` (viewport 320×640 en todas las rutas cubiertas; `scrollWidth <= clientWidth`) antes de terminar el grupo 4. Debe fallar en al menos una pantalla sin migrar, o documentar que ya pasa (FR-079 · SC-052). Verificación: rojo→verde registrado.
 - [ ] 5.2 Ejecutar la compuerta axe completa en `chromium` y `chromium-dark` y los proyectos `firefox`/`webkit` requeridos por la constitución, de uno en uno (SC-050). Verificación: 0 violaciones, con resultados y URLs de CI en `quickstart.md`.
 - [ ] 5.3 Revisión en escala de grises (emulación `forced-colors`/grayscale de Chromium) de `/knowledge`, `/consultations/[id]` y `/follow-up/[patientId]`: sugerido vs validado y severidades distinguibles sin color (US13-AC2/AC3). Verificación: capturas en `quickstart.md`.
 - [ ] 5.4 Prueba de texto ampliado: zoom del navegador al 200 % y, si hay dispositivo, Dynamic Type al máximo en `/patients` y `/consultations/[id]`, sin recortes (FR-074 · escenario "Texto ampliado"). Verificación: capturas o pendiente explícito en `quickstart.md`.

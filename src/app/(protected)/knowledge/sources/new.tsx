@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import Head from "expo-router/head";
 import { useState } from "react";
 import { z } from "zod";
 import {
@@ -89,6 +90,9 @@ export default function NewKnowledgeSourceScreen() {
 
   return (
     <Screen>
+      <Head>
+        <title>Incorporar fuente · Diklass</title>
+      </Head>
       <Heading level={2}>Base de conocimiento · Incorporar fuente</Heading>
       <Text tone="muted" variant="caption">
         Una fuente incorporada queda atribuida a tu identidad y no puede editarse después: si hay

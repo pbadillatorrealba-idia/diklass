@@ -328,6 +328,37 @@ function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       readyTestID: "epicrisis-correction-history",
       keyboardTestIDs: ["consultation-patient", "epicrisis-correct"],
     },
+    // sistema-visual 5.1: rutas que la compuerta no cubría (quickstart 1.4).
+    {
+      name: "consulta a la base de conocimiento",
+      url: "/knowledge",
+      readyTestID: "conocimiento-pregunta",
+      keyboardTestIDs: ["conocimiento-pregunta"],
+    },
+    {
+      name: "colección de fuentes",
+      url: "/knowledge/sources",
+      readyTestID: "conocimiento-incorporar",
+      keyboardTestIDs: ["conocimiento-incorporar"],
+    },
+    {
+      name: "incorporar fuente",
+      url: "/knowledge/sources/new",
+      readyTestID: "fuente-texto",
+      keyboardTestIDs: ["fuente-texto"],
+    },
+    {
+      name: "seguimiento: selector de paciente",
+      url: "/follow-up",
+      readyTestID: "follow-up-patient-list",
+      keyboardTestIDs: ["follow-up-open"],
+    },
+    {
+      name: "seguimiento del paciente",
+      url: `/follow-up/${caseIds.patientId}`,
+      readyTestID: "feedback-antecedents",
+      keyboardTestIDs: [],
+    },
   ];
 }
 
@@ -380,20 +411,36 @@ async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
   }
 }
 
-/** Adaptabilidad al viewport (D12): 375 px y 1280 px sin desbordamiento horizontal. */
+/**
+ * Adaptabilidad al viewport (D12; sistema-visual FR-079 · SC-052): sin desbordamiento horizontal
+ * desde 320 px (WCAG 1.4.10), en móvil y en escritorio.
+ */
 async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
-  for (const width of [375, 1280]) {
+  for (const width of [320, 375, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto(screen.url);
     await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
-    const measured = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      clientWidth: document.documentElement.clientWidth,
-    }));
-    expect(
-      measured.scrollWidth,
-      `Desbordamiento horizontal a ${width} px en ${screen.name}`,
-    ).toBeLessThanOrEqual(measured.clientWidth);
+    // El `ScrollView` de RN Web es un contenedor con scroll propio: un desborde dentro de él no
+    // agranda el documento. Se mide también cada contenedor que recorta o desplaza en horizontal
+    // (salvo campos de texto, cuyo contenido desplazable es esperable).
+    const desbordes = await page.evaluate(() => {
+      const hallazgos: string[] = [];
+      const root = document.documentElement;
+      if (root.scrollWidth > root.clientWidth) {
+        hallazgos.push(`documento ${root.scrollWidth} > ${root.clientWidth}`);
+      }
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) continue;
+        const overflowX = getComputedStyle(el).overflowX;
+        if (overflowX === "visible" || el.clientWidth === 0) continue;
+        if (el.scrollWidth > el.clientWidth + 1) {
+          const id = el.getAttribute("data-testid") ?? el.tagName.toLowerCase();
+          hallazgos.push(`${id} ${el.scrollWidth} > ${el.clientWidth}`);
+        }
+      }
+      return hallazgos;
+    });
+    expect(desbordes, `Desbordamiento horizontal a ${width} px en ${screen.name}`).toEqual([]);
   }
 }
 
@@ -487,9 +534,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     expect(Math.abs(angosto.lateral.x - angosto.principal.x)).toBeLessThan(2);
   });
 
-  test("las pantallas nuevas no desbordan horizontalmente a 375 px ni a 1280 px", async ({
-    page,
-  }) => {
+  test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {

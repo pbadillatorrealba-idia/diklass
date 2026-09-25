@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
+import Head from "expo-router/head";
 import { useEffect, useState } from "react";
 import { VisorDocumento } from "@/components/conocimiento/visor-documento";
 import { Box } from "@/components/ui/box";
@@ -85,6 +86,9 @@ export default function KnowledgeSourceScreen() {
 
   return (
     <Screen>
+      <Head>
+        <title>Fuente clínica · Diklass</title>
+      </Head>
       <Heading level={2}>Base de conocimiento · Fuente clínica</Heading>
       {fuenteQuery.data ? (
         <>

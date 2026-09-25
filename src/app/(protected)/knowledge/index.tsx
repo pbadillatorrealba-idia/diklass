@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import Head from "expo-router/head";
 import { useRef, useState } from "react";
 import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conocimiento";
 import { SelectorPacienteContexto } from "@/components/conocimiento/selector-paciente-contexto";
@@ -87,6 +88,9 @@ export default function KnowledgeConversationScreen() {
 
   return (
     <Screen>
+      <Head>
+        <title>Base de conocimiento · Diklass</title>
+      </Head>
       <Heading level={2}>Base de conocimiento · Consulta</Heading>
       <Text tone="muted" variant="caption">
         Pregunta en lenguaje natural sobre protocolos, literatura o medicamentos. Toda respuesta se

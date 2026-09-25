@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import Head from "expo-router/head";
 import { useEffect } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { Box } from "@/components/ui/box";
@@ -45,6 +46,9 @@ export default function KnowledgeCollectionScreen() {
 
   return (
     <Screen>
+      <Head>
+        <title>Colección de fuentes · Diklass</title>
+      </Head>
       <Heading level={2}>Base de conocimiento · Colección</Heading>
       <Text tone="muted" variant="caption">
         Fuentes clínicas disponibles para las consultas. Retirar una fuente la excluye de consultas
