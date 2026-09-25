@@ -184,7 +184,9 @@ un Supabase local…»); con las credenciales sintéticas de Ana incorpora el co
 
 ## Pendientes cerrados (2026-09-25, tareas 7.12 y 8.x)
 
-Rama `feat/003-pendientes` sobre `main` (`4513f95`, specs 001–005 mergeadas), stack local.
+Rama `feat/003-pendientes` sobre `main` (`4513f95`, specs 001–005 mergeadas), stack local. Las
+compuertas se repitieron tras mergear `origin/main` (migración 013 y arreglo de `auth.spec.ts` de
+la PR #33); la tabla recoge esa corrida.
 
 | Pendiente | Commit | Prueba | Rojo observado |
 |---|---|---|---|
@@ -199,12 +201,12 @@ abra el diálogo por su cuenta: así el diálogo solo puede venir del visor.
 |---|---|---|
 | Lint estricto | `bunx biome ci --error-on-warnings .` | verde (199 archivos) |
 | Tipos | `bun run typecheck` | verde |
-| pgTap | `supabase db reset && supabase test db` | 276 aserciones en 14 archivos, «All tests successful» (sin SQL nuevo) |
+| pgTap | `supabase db reset && supabase test db` | 288 aserciones en 15 archivos (migraciones 001–013), «All tests successful» (sin SQL nuevo en esta rama) |
 | Tipos generados | `bun run db:types` + `git diff` | sin diff |
 | Unidad | `SUPABASE_LIVE_TESTS= bun run test` | 388 pass, 75 skip (vivas), 0 fail |
 | Unidad + vivas | `bun run test` (con `SUPABASE_LIVE_TESTS=1`) | 453 pass, 0 fail |
 | Integración viva | `bun run test:integration` | 69 pass, 0 fail |
-| Web e2e (Chromium) | `bunx playwright test --project=chromium` | 27 pass, 1 fail: `auth.spec.ts` «unsaved notes survive an expired session…», fallo conocido solo en local (en CI pasa); `conocimiento.spec.ts`: 5 pass |
+| Web e2e (Chromium) | `bunx playwright test --project=chromium` | 28 pass, 0 fail (`conocimiento.spec.ts`: 5) |
 
 ## Transiciones sin acción enumerada (D3 · tarea 1.3)
 
