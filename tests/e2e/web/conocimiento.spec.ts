@@ -3,6 +3,7 @@ import {
   ANA,
   expect,
   readSupabaseSession,
+  SERVICE_ROLE_KEY,
   SUPABASE_ANON_KEY,
   SUPABASE_URL,
   submitLogin,
@@ -26,6 +27,15 @@ async function iniciarSesion(page: Page): Promise<APIRequestContext> {
       "Content-Type": "application/json",
     },
   });
+}
+
+/** Id de la sesión de Auth del token: identifica solo la sesión de acceso de esta página. */
+function authSessionIdDe(accessToken: string): string {
+  const { session_id } = JSON.parse(
+    Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8"),
+  ) as { session_id?: string };
+  if (!session_id) throw new Error("El token de acceso no trae el claim session_id.");
+  return session_id;
 }
 
 async function escribir(page: Page, etiqueta: string, texto: string) {
@@ -150,6 +160,98 @@ test.describe("base de conocimiento web", () => {
       await expect(page.getByTestId("conocimiento-status")).toBeHidden();
     } finally {
       await api.dispose();
+    }
+  });
+  // Tarea 7.12: con la sesión de acceso caducada la RLS devuelve cero filas, no un error, y el
+  // visor mostraba «no encontrada» en vez de pedir que se vuelva a iniciar sesión.
+  test("con la sesión de acceso caducada el visor pide reautenticación, no «no encontrada»", async ({
+    page,
+  }) => {
+    test.skip(!SERVICE_ROLE_KEY, "Necesita la service role para envejecer la sesión de acceso.");
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 10_000 });
+    const { accessToken, userId } = await readSupabaseSession(page);
+    const authSessionId = authSessionIdDe(accessToken);
+    const titulo = `Guía E2E de sesión caducada ${Date.now()}`;
+
+    // La fuente se incorpora con el token de Ana: los triggers sellan la atribución con auth.uid().
+    const ana = await apiRequest.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SUPABASE_ANON_KEY as string,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const admin = await apiRequest.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SERVICE_ROLE_KEY as string,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+    });
+    try {
+      const vet = await ana.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
+      const [{ clinic_id: clinicId } = { clinic_id: "" }] = (await vet.json()) as Array<{
+        clinic_id: string;
+      }>;
+      if (!clinicId) throw new Error("No se encontró la clínica del veterinario.");
+      const incorporada = await ana.post("/rest/v1/knowledge_documents", {
+        data: {
+          clinic_id: clinicId,
+          status: "available",
+          content: {
+            bibliografia: {
+              titulo,
+              autores: ["Dra. Ficticia"],
+              anio: 2026,
+              revista: null,
+              editorial: null,
+              edicion: null,
+              doi: null,
+              url: null,
+            },
+            licencia: { tipo: "CC BY 4.0 (ficticia)", nota: null },
+            fragmentos: [{ ordinal: 1, seccion: null, texto: "Fragmento sintético de la prueba." }],
+          },
+        },
+        headers: { Prefer: "return=representation" },
+      });
+      expect(incorporada.ok()).toBeTruthy();
+      const [fuente] = (await incorporada.json()) as Array<{ id: string }>;
+      if (!fuente) throw new Error("La fuente incorporada no volvió en la representación.");
+
+      await page.goto("/knowledge/sources");
+      const verFuente = page.getByTestId(`ver-fuente-${fuente.id}`).filter({ visible: true });
+      await expect(verFuente).toBeVisible();
+
+      // Aísla el visor del rastreador de actividad: el clic tocaría la sesión, recibiría
+      // «inactiva» y abriría el diálogo por su cuenta, ocultando lo que se prueba aquí.
+      await page.route("**/rest/v1/rpc/touch_access_session", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: "true" }),
+      );
+      // Envejece solo la sesión de acceso de esta página, como ocho horas de inactividad.
+      const ahora = Date.now();
+      const envejecida = await admin.patch(
+        `/rest/v1/access_sessions?auth_session_id=eq.${authSessionId}&revoked_at=is.null`,
+        {
+          data: {
+            last_activity_at: new Date(ahora - 9 * 3_600_000).toISOString(),
+            expires_at: new Date(ahora - 3_600_000).toISOString(),
+          },
+          headers: { Prefer: "return=representation" },
+        },
+      );
+      expect(envejecida.ok()).toBeTruthy();
+      expect((await envejecida.json()) as unknown[]).toHaveLength(1);
+
+      await verFuente.click();
+      await expect(page).toHaveURL(new RegExp(`/knowledge/sources/${fuente.id}`));
+      await expect(page.getByText("Sesión expirada")).toBeVisible();
+      await expect(page.getByTestId("fuente-no-encontrada")).toBeHidden();
+    } finally {
+      await ana.dispose();
+      await admin.dispose();
     }
   });
 });

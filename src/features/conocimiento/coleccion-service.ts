@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { assertNoClientAttributionFields } from "@/lib/attribution/guards";
 import type { Attribution, ClinicalMutationResult } from "@/lib/attribution/types";
+import { AuthenticationRequiredError } from "@/lib/errors";
 import {
   captureClientError,
   type ErrorReporterClient,
@@ -162,6 +163,15 @@ export async function getSource(
       throw error;
     }
     if (!data) {
+      // Con la sesión de acceso caducada la RLS no falla: devuelve cero filas. Solo es «no
+      // encontrada» si la sesión sigue activa; si no, el visor abre el diálogo (tarea 7.12).
+      const activa = await client.rpc("is_active_access", {});
+      if (activa.error) {
+        throw activa.error;
+      }
+      if (activa.data !== true) {
+        throw new AuthenticationRequiredError();
+      }
       return null;
     }
     const entrada = construirEntradaFuente(data as KnowledgeDocumentRow);

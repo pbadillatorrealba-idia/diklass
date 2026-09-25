@@ -69,6 +69,20 @@ export class AccessDeniedError extends Error {
 }
 
 /**
+ * The access session is no longer active although the read itself did not fail: RLS answers
+ * with zero rows instead of an error. Carries the same SQLSTATE the server raises with
+ * `AUTHENTICATION_REQUIRED`, so `isAuthenticationRequired` treats both alike.
+ */
+export class AuthenticationRequiredError extends Error {
+  readonly code = "42501";
+
+  constructor(message = "AUTHENTICATION_REQUIRED") {
+    super(message);
+    this.name = "AuthenticationRequiredError";
+  }
+}
+
+/**
  * RLS denial (42501) or a rejected JWT (PGRST3xx): the session is no longer valid.
  *
  * A grant refusal also surfaces as 42501 (PostgreSQL: "permission denied for table ..."),
