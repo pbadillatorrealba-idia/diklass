@@ -23,6 +23,10 @@
 --     evento original (D7). El sello de 009 ya impide el UPDATE mientras la consulta siga
 --     cerrada; este trigger lo hace estructural incluso si una consulta cerrada se reabriera
 --     por un UPDATE directo (agujero heredado del modelo de amenazas T055).
+--   * D7 (revisión de la PR #28): una fila 'corrective' exige supersedes_event_id y ese
+--     evento es el `clinical_feedback_recorded` de un original de la misma clínica y la
+--     misma consulta; ninguna otra fila declara sustituir a otra. El consultationId se
+--     exige en su forma canónica, la única que las lecturas por igualdad de texto recuperan.
 --
 -- D6: SOLO funciones `returns trigger` y sus triggers. Ninguna función callable nueva:
 -- `supabase gen types` incluye en database.types.ts toda función no-trigger del esquema
@@ -137,7 +141,12 @@ begin
     consultation_id := null;
   end;
 
-  if consultation_id is null then
+  -- Forma canónica (revisión de la PR #28, hallazgo 2): el cast acepta mayúsculas, llaves
+  -- y la forma sin guiones, pero toda lectura filtra `content->>'consultationId'` por
+  -- igualdad de TEXTO. Una variante resolvería la consulta y dejaría la entrada invisible
+  -- (e inborrable, D4): SC-023 y SC-035 exigen recuperar el 100 %.
+  if consultation_id is null
+    or consultation_id::text <> new.content ->> 'consultationId' then
     raise exception 'CLINICAL_FEEDBACK_INVALID_CONTENT' using errcode = '23514';
   end if;
 
@@ -150,6 +159,29 @@ begin
   if target_clinic is null
     or target_clinic is distinct from new.clinic_id
     or target_status is distinct from 'closed' then
+    raise exception 'CLINICAL_FEEDBACK_INVALID_CONTENT' using errcode = '23514';
+  end if;
+
+  -- D7 (revisión de la PR #28, hallazgo 1): el vínculo de una corrección lo garantiza el
+  -- servidor. Solo una fila 'corrective' sustituye a otra, y siempre al evento
+  -- `clinical_feedback_recorded` de un ORIGINAL de la misma clínica (RLS de
+  -- clinical_records oculta el de otra) y de la misma consulta. Sin esto, un INSERT
+  -- directo que apunte al `corrective_record_created` de otra correctiva abre una segunda
+  -- cadena con dos versiones vigentes y el agregado cuenta dos veces la entrada (SC-023).
+  if (new.status = 'corrective') is distinct from (new.supersedes_event_id is not null) then
+    raise exception 'CLINICAL_FEEDBACK_INVALID_CONTENT' using errcode = '23514';
+  end if;
+
+  if new.supersedes_event_id is not null and not exists (
+    select 1
+    from public.clinical_audit_events evento
+    join public.clinical_records original on original.id = evento.entity_id
+    where evento.id = new.supersedes_event_id
+      and evento.action = 'clinical_feedback_recorded'
+      and original.record_type = 'clinical_feedback'
+      and original.clinic_id = new.clinic_id
+      and original.content ->> 'consultationId' = new.content ->> 'consultationId'
+  ) then
     raise exception 'CLINICAL_FEEDBACK_INVALID_CONTENT' using errcode = '23514';
   end if;
 

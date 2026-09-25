@@ -17,9 +17,11 @@
 -- (FR-063 · FR-070 · SC-049 · US10-AC13). Los asserts 14–24 son los que exigen la
 -- migración 012: en rojo fallan exactamente ellos, por la razón prevista (sin los
 -- triggers todo INSERT vive y el UPDATE cae en el sello genérico de 009, no en el propio).
+-- Los asserts 31–37 (revisión de la PR #28) exigen además el vínculo de la corrección
+-- (D7) y la forma canónica del consultationId: sin ellos, los siete INSERT viven.
 
 begin;
-select plan(31);
+select plan(38);
 
 -- ---------------------------------------------------------------------------
 -- Arrange: dos veterinarios de una clínica con sesión de acceso activa y una
@@ -472,6 +474,118 @@ select results_eq(
       and action = 'clinical_feedback_recorded'$$,
   'D7 · US10-AC5: las correctivas sucesivas apuntan todas al mismo evento del original'
 );
+
+-- ---------------------------------------------------------------------------
+-- Revisión de la PR #28 (hallazgos 1 y 2): el vínculo de una corrección y la forma
+-- canónica del consultationId son garantías del servidor, no del servicio. Sin ellas,
+-- un INSERT directo por PostgREST abre una segunda cadena que el agregado cuenta dos
+-- veces (SC-023) o registra una entrada que ninguna lectura por igualdad de texto
+-- recupera (SC-023 · SC-035).
+-- ---------------------------------------------------------------------------
+
+-- Arrange: otra consulta cerrada de la misma clínica con su propia entrada, para
+-- fabricar una corrección que salte de consulta.
+select set_config('request.jwt.claim.sub', 'a5a5a5a5-0000-0000-0000-00000000000a', true);
+
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values (
+  'd5d5d5d5-0000-0000-0000-00000000000c', 'c5c5c5c5-0000-0000-0000-00000000000c',
+  'consultation',
+  '{"patientId":"d5d5d5d5-0000-0000-0000-000000000001","status":"closed"}',
+  'draft'
+);
+
+select set_config('request.jwt.claim.sub', '', true);
+
+select set_config('request.jwt.claims',
+  '{"sub":"a5a5a5a5-0000-0000-0000-00000000000a","role":"authenticated","session_id":"5e5a5000-0000-0000-0000-00000000000a"}',
+  true);
+set local role authenticated;
+
+insert into public.clinical_records (id, clinic_id, record_type, content, status)
+values (
+  'd5d5d5d5-0000-0000-0000-00000000000d', 'c5c5c5c5-0000-0000-0000-00000000000c',
+  'clinical_feedback',
+  '{"consultationId":"d5d5d5d5-0000-0000-0000-00000000000c","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+  'draft'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+  values ('c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"d5d5d5d5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'corrective')$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'FR-024 · D7: una corrección sin supersedes_event_id no encadena a nada y se rechaza'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status, supersedes_event_id)
+  select 'c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"d5d5d5d5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'corrective', id
+  from public.clinical_audit_events
+  where entity_id = 'd5d5d5d5-0000-0000-0000-000000000007'
+    and action = 'corrective_record_created'$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'D7 · SC-023: una corrección que apunta al evento de otra correctiva (segunda cadena) se rechaza'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status, supersedes_event_id)
+  select 'c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"d5d5d5d5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'corrective', id
+  from public.clinical_audit_events
+  where entity_id = 'd5d5d5d5-0000-0000-0000-000000000004'
+    and action = 'epicrisis_approved'$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'D7: una corrección de retroalimentación no puede encadenar al evento de otro tipo de registro'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status, supersedes_event_id)
+  select 'c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"d5d5d5d5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'corrective', id
+  from public.clinical_audit_events
+  where entity_id = 'd5d5d5d5-0000-0000-0000-00000000000d'
+    and action = 'clinical_feedback_recorded'$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'D7: la corrección no reasocia la entrada a otra consulta (el original refiere otra)'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status, supersedes_event_id)
+  select 'c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"d5d5d5d5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'draft', id
+  from public.clinical_audit_events
+  where entity_id = 'd5d5d5d5-0000-0000-0000-000000000005'
+    and action = 'clinical_feedback_recorded'$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'D7: una entrada que no es correctiva no puede declarar que sustituye a otra'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+  values ('c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"D5D5D5D5-0000-0000-0000-000000000002","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'draft')$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'SC-023 · SC-035: un consultationId en mayúsculas resolvería la consulta pero ninguna lectura lo recuperaría'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+  values ('c5c5c5c5-0000-0000-0000-00000000000c', 'clinical_feedback',
+    '{"consultationId":"{d5d5d5d5-0000-0000-0000-000000000002}","adherence":"completa","evolution":"mejoria","adverseEvents":[]}',
+    'draft')$$,
+  '23514', 'CLINICAL_FEEDBACK_INVALID_CONTENT',
+  'SC-023 · SC-035: el consultationId se exige en su forma canónica (sin llaves ni otras variantes)'
+);
+
+reset role;
 
 -- ---------------------------------------------------------------------------
 -- FR-024 · SC-022 · US10-AC3/AC4: comparación final contra el snapshot — el
