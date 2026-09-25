@@ -96,7 +96,7 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
   test("todas las rutas cubiertas siguen resolviendo", async ({ page }) => {
     for (const screen of syntheticScreens(caso)) {
       await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID), screen.name).toBeVisible({
+      await expect(page.getByTestId(screen.readyTestID).first(), screen.name).toBeVisible({
         timeout: 15_000,
       });
     }

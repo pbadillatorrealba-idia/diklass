@@ -101,7 +101,7 @@ async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
   for (const width of [320, 375, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto(screen.url);
-    await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
     // El `ScrollView` de RN Web es un contenedor con scroll propio: un desborde dentro de él no
     // agranda el documento. Se mide también cada contenedor que recorta o desplaza en horizontal
     // (salvo campos de texto, cuyo contenido desplazable es esperable).
@@ -165,7 +165,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {
       await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await expectNoViolations(page);
     }
   });
@@ -175,7 +175,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     for (const screen of syntheticScreens(caso)) {
       await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await walkKeyboard(page, screen.keyboardTestIDs);
     }
   });
@@ -228,7 +228,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     const encontrados = new Set<string>();
     for (const pantalla of pantallas) {
       await page.goto(pantalla.url);
-      await expect(page.getByTestId(pantalla.readyTestID)).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId(pantalla.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await page.waitForLoadState("networkidle");
       const controles = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))

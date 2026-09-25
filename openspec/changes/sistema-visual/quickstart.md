@@ -647,4 +647,16 @@ Resultado local en `chromium`:
     retrasada 400 ms.
   - Sin causa raíz confirmada no se cambia la prueba. Su mensaje ahora incluye la URL, la primera
     parada y las paradas alcanzadas.
+- **8.5 Listas con `FlatList` (FR-086):**
+  - `screen-list.test.tsx`, en rojo primero:
+    - con 200 filas no las pinta todas;
+    - en web, el título y las acciones van dentro de la lista, antes de las filas;
+    - no hay `-scroll` anidado;
+    - el vacío va dentro de la lista.
+  - `ScreenList` sustituye la combinación `Screen scroll={false}` + `FlatList` de D13 (design.md
+    actualizado).
+  - Los `readyTestID` de `/patients` y `/follow-up` pasan a la primera fila (`patient-item`,
+    `follow-up-patient-item`): el `FlatList` existe antes de que lleguen los datos.
+  - Verde en `chromium`, de una en una: `accessibility` 8 (incluye el reflujo a 320 px),
+    `navegacion` 7, `tema` 5, `estados` 2, `conocimiento` 5 y `retroalimentacion` 5.
 

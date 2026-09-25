@@ -5,7 +5,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LinkText } from "@/components/ui/link-text";
 import { QueryState } from "@/components/ui/query-state";
-import { Screen } from "@/components/ui/screen";
+import { ScreenList } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { listPatients } from "@/features/registro/ficha-service";
@@ -46,50 +46,58 @@ export default function FollowUpIndexScreen() {
   }, [queryError, openExpiredDialog, setAccessState]);
 
   return (
-    <Screen title="Seguimiento entre consultas">
-      <Text tone="muted">
-        Elige un paciente para registrar o revisar su evolución, adherencia y eventos adversos.
-      </Text>
-      <QueryState
-        empty={
-          <Card className="gap-3" testID="follow-up-empty">
-            <Text>
-              Aún no hay pacientes registrados. El seguimiento empieza cuando registras al primero.
-            </Text>
-            <Link asChild href="/patients/new">
-              <LinkText>Registrar paciente</LinkText>
-            </Link>
-          </Card>
-        }
-        error={queryError}
-        errorMessage="No pudimos cargar los pacientes."
-        isEmpty={patientsQuery.isSuccess && patientsQuery.data.length === 0}
-        isPending={patientsQuery.isPending}
-        onRetry={() => void patientsQuery.refetch()}
-        testID="follow-up"
-      >
-        <VStack className="w-full gap-3" testID="follow-up-patient-list">
-          {(patientsQuery.data ?? []).map((entry) => (
-            // Como en /patients: en escritorio la acción va a la derecha (design.md D9).
-            <Card
-              className="gap-2 lg:flex-row lg:items-center lg:justify-between"
-              key={entry.record.id}
-              testID="follow-up-patient-item"
-            >
-              <Text variant="strong">{entry.content.name}</Text>
-              <Link asChild href={`/follow-up/${entry.record.id}`}>
-                <Button
-                  accessibilityLabel={`Ver el seguimiento de ${entry.content.name}`}
-                  testID="follow-up-open"
-                  variant="outline"
-                >
-                  <ButtonText>Ver seguimiento</ButtonText>
-                </Button>
+    <ScreenList
+      // Con error, como en `QueryState`, el aviso tiene precedencia sobre filas antiguas.
+      data={queryError ? [] : (patientsQuery.data ?? [])}
+      empty={
+        <QueryState
+          empty={
+            <Card className="gap-3" testID="follow-up-empty">
+              <Text>
+                Aún no hay pacientes registrados. El seguimiento empieza cuando registras al
+                primero.
+              </Text>
+              <Link asChild href="/patients/new">
+                <LinkText>Registrar paciente</LinkText>
               </Link>
             </Card>
-          ))}
-        </VStack>
-      </QueryState>
-    </Screen>
+          }
+          error={queryError}
+          errorMessage="No pudimos cargar los pacientes."
+          isEmpty={patientsQuery.isSuccess && patientsQuery.data.length === 0}
+          isPending={patientsQuery.isPending}
+          onRetry={() => void patientsQuery.refetch()}
+          testID="follow-up"
+        >
+          {null}
+        </QueryState>
+      }
+      header={
+        <Text tone="muted">
+          Elige un paciente para registrar o revisar su evolución, adherencia y eventos adversos.
+        </Text>
+      }
+      keyExtractor={(entry) => entry.record.id}
+      renderItem={({ item: entry }) => (
+        // Como en /patients: en escritorio la acción va a la derecha (design.md D9).
+        <Card
+          className="gap-2 lg:flex-row lg:items-center lg:justify-between"
+          testID="follow-up-patient-item"
+        >
+          <Text variant="strong">{entry.content.name}</Text>
+          <Link asChild href={`/follow-up/${entry.record.id}`}>
+            <Button
+              accessibilityLabel={`Ver el seguimiento de ${entry.content.name}`}
+              testID="follow-up-open"
+              variant="outline"
+            >
+              <ButtonText>Ver seguimiento</ButtonText>
+            </Button>
+          </Link>
+        </Card>
+      )}
+      testID="follow-up-patient-list"
+      title="Seguimiento entre consultas"
+    />
   );
 }

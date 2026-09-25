@@ -368,7 +368,11 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
   - `/patients`, `/follow-up` y `/knowledge/sources` renderizan `FlatList` como contenedor de
     desplazamiento, con cabecera (título y acciones) en `ListHeaderComponent`, el vacío en
     `ListEmptyComponent` y `contentInsetAdjustmentBehavior="automatic"`.
-  - `Screen` gana `scroll={false}` para esas pantallas y no anida el `ScrollView`.
+  - Las tres usan `ScreenList` (`src/components/ui/screen.tsx`). Comparte con `Screen` el área
+    segura, el título, el retroceso, el ancho de lectura y el margen, pero su único contenedor de
+    desplazamiento es el `FlatList`. Así la configuración no se repite en cada pantalla, y el
+    título y las acciones se desplazan con la lista.
+  - El `ListEmptyComponent` es un `QueryState` sin contenido: carga, error o vacío.
   - Las listas acotadas dentro de una ficha (antecedentes, historial de una consulta) siguen con
     `.map`, porque son cortas y viven dentro del desplazamiento de su pantalla.
 

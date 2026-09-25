@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QueryState } from "@/components/ui/query-state";
-import { Screen } from "@/components/ui/screen";
+import { ScreenList } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { listPatients } from "@/features/registro/ficha-service";
@@ -55,49 +55,56 @@ export default function PatientsScreen() {
   );
 
   return (
-    <Screen title="Pacientes">
-      {isEmpty ? null : registerLink}
-      <QueryState
-        empty={
-          <Card className="gap-3" testID="patients-empty">
-            <Text>Aún no hay pacientes registrados. Registra el primero para abrir su ficha.</Text>
-            {registerLink}
-          </Card>
-        }
-        error={queryError}
-        errorMessage="No pudimos cargar los pacientes."
-        isEmpty={isEmpty}
-        isPending={patientsQuery.isPending}
-        onRetry={() => void patientsQuery.refetch()}
-        testID="patients"
-      >
-        <VStack className="w-full gap-3" testID="patients-list">
-          {patients.map((entry) => (
-            // En escritorio la acción va a la derecha de los datos (design.md D9).
-            <Card
-              className="gap-2 lg:flex-row lg:items-center lg:justify-between"
-              key={entry.record.id}
-              testID="patient-item"
-            >
-              <VStack className="gap-1">
-                <Text variant="strong">{entry.content.name}</Text>
-                <Text tone="muted">
-                  {entry.content.species} · {entry.content.breed}
-                </Text>
-              </VStack>
-              <Link asChild href={`/patients/${entry.record.id}`}>
-                <Button
-                  accessibilityLabel={`Ver ficha de ${entry.content.name}`}
-                  testID="patient-open"
-                  variant="outline"
-                >
-                  <ButtonText>Ver ficha</ButtonText>
-                </Button>
-              </Link>
+    <ScreenList
+      // Con error, como en `QueryState`, el aviso tiene precedencia sobre filas antiguas.
+      data={queryError ? [] : patients}
+      empty={
+        <QueryState
+          empty={
+            <Card className="gap-3" testID="patients-empty">
+              <Text>
+                Aún no hay pacientes registrados. Registra el primero para abrir su ficha.
+              </Text>
+              {registerLink}
             </Card>
-          ))}
-        </VStack>
-      </QueryState>
-    </Screen>
+          }
+          error={queryError}
+          errorMessage="No pudimos cargar los pacientes."
+          isEmpty={isEmpty}
+          isPending={patientsQuery.isPending}
+          onRetry={() => void patientsQuery.refetch()}
+          testID="patients"
+        >
+          {null}
+        </QueryState>
+      }
+      header={isEmpty ? null : registerLink}
+      keyExtractor={(entry) => entry.record.id}
+      renderItem={({ item: entry }) => (
+        // En escritorio la acción va a la derecha de los datos (design.md D9).
+        <Card
+          className="gap-2 lg:flex-row lg:items-center lg:justify-between"
+          testID="patient-item"
+        >
+          <VStack className="gap-1">
+            <Text variant="strong">{entry.content.name}</Text>
+            <Text tone="muted">
+              {entry.content.species} · {entry.content.breed}
+            </Text>
+          </VStack>
+          <Link asChild href={`/patients/${entry.record.id}`}>
+            <Button
+              accessibilityLabel={`Ver ficha de ${entry.content.name}`}
+              testID="patient-open"
+              variant="outline"
+            >
+              <ButtonText>Ver ficha</ButtonText>
+            </Button>
+          </Link>
+        </Card>
+      )}
+      testID="patients-list"
+      title="Pacientes"
+    />
   );
 }

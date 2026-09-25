@@ -59,11 +59,11 @@ test.describe("estados de datos", () => {
     const error = page.getByTestId("patients-error");
     await expect(error).toBeVisible({ timeout: 15_000 });
     await expect(error).toContainText("No pudimos cargar los pacientes");
-    await expect(page.getByTestId("patients-list")).toHaveCount(0);
+    await expect(page.getByTestId("patient-item")).toHaveCount(0);
 
     fallar = false;
     await error.getByRole("button", { name: "Reintentar" }).click();
-    await expect(page.getByTestId("patients-list")).toBeVisible();
+    await expect(page.getByTestId("patient-item").first()).toBeVisible();
     await expect(page.getByTestId("patients-error")).toHaveCount(0);
   });
 });

@@ -272,7 +272,7 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
     {
       name: "lista de pacientes",
       url: "/patients",
-      readyTestID: "patients-list",
+      readyTestID: "patient-item",
       keyboardTestIDs: ["patients-register", "patient-open"],
     },
     {
@@ -353,7 +353,7 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
     {
       name: "selector de paciente del seguimiento",
       url: "/follow-up",
-      readyTestID: "follow-up-patient-list",
+      readyTestID: "follow-up-patient-item",
       keyboardTestIDs: ["follow-up-open"],
     },
     {
