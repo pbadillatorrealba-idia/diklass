@@ -359,8 +359,9 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     ]);
 
     const final = await getPatient(ana.client, alta.record.id);
-    expect(
-      final?.content.antecedentes.currentMedications.map((item) => item.text).sort(),
-    ).toEqual(["Fluoxetina 20 mg", "Omeprazol 10 mg"]);
+    expect(final?.content.antecedentes.currentMedications.map((item) => item.text).sort()).toEqual([
+      "Fluoxetina 20 mg",
+      "Omeprazol 10 mg",
+    ]);
   });
 });

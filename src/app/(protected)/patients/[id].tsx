@@ -17,18 +17,14 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import {
-  listConsultationsByPatient,
-  openConsultation,
-} from "@/features/registro/consultation-service";
-import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
+import { listPatientTimeline, openConsultation } from "@/features/registro/consultation-service";
 import {
   addAntecedentItem,
   getPatient,
   updatePatientFicha,
 } from "@/features/registro/ficha-service";
+import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { AntecedentGroup, AntecedentItem } from "@/features/registro/schema";
-import { buildPatientHistory } from "@/features/registro/summaries";
 import { listTutors } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
@@ -61,18 +57,9 @@ export default function PatientDetailScreen() {
   });
   const historyQuery = useQuery({
     queryKey: ["registro", "patient-history", patientId],
-    queryFn: async () => {
-      const consultations = await listConsultationsByPatient(supabase, patientId);
-      const epicrisisByConsultation = await Promise.all(
-        consultations.map((entry) => listEpicrisisByConsultation(supabase, entry.record.id)),
-      );
-      // El historial lo deriva la función pura del modelo (FR-002 · US4-AC4): consultas y
-      // epicrisis en orden cronológico, con la versión efectiva de cada consulta.
-      return buildPatientHistory({
-        consultations: consultations.map((entry) => entry.record),
-        epicrisis: epicrisisByConsultation.flatMap((list) => list.map((entry) => entry.record)),
-      });
-    },
+    // Una sola lectura de las epicrisis de todas las consultas (listPatientTimeline), con la
+    // misma lectura tolerante que el resto del registro.
+    queryFn: async () => (await listPatientTimeline(supabase, patientId)).history,
     enabled: patientQuery.isSuccess && patientQuery.data !== null,
   });
 
@@ -132,7 +119,7 @@ export default function PatientDetailScreen() {
     setIsBusy(true);
     const outcome = await guard("update_patient_ficha", async () => {
       await updatePatientFicha(supabase, patientId, ficha);
-      await queryClient.invalidateQueries({ queryKey: ["registro", "patient", patientId] });
+      await invalidateRegistro(queryClient);
       setIsEditing(false);
     });
     setIsBusy(false);
@@ -152,7 +139,7 @@ export default function PatientDetailScreen() {
     setIsBusy(true);
     const outcome = await guard("add_antecedent", async () => {
       await addAntecedentItem(supabase, patientId, group, item);
-      await queryClient.invalidateQueries({ queryKey: ["registro", "patient", patientId] });
+      await invalidateRegistro(queryClient);
     });
     setIsBusy(false);
     if (outcome === "ok") {
@@ -172,6 +159,7 @@ export default function PatientDetailScreen() {
     setIsBusy(true);
     const outcome = await guard("open_consultation", async () => {
       const result = await openConsultation(supabase, { clinicId, patientId });
+      await invalidateRegistro(queryClient);
       router.push(`/consultations/${result.record.id}`);
     });
     setIsBusy(false);

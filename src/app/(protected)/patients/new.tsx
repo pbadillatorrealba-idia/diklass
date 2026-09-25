@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect, useState } from "react";
@@ -25,6 +25,7 @@ import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { createPatientFicha } from "@/features/registro/ficha-service";
+import { invalidateRegistro } from "@/features/registro/query-cache";
 import {
   type PatientContent,
   type TutorContent,
@@ -74,6 +75,7 @@ export default function NewPatientScreen() {
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const queryClient = useQueryClient();
   const tutorsQuery = useQuery({
     queryKey: ["registro", "tutors"],
     queryFn: () => listTutors(supabase),
@@ -132,6 +134,7 @@ export default function NewPatientScreen() {
         ficha: fichaValue,
         tutor: tutorChoice,
       });
+      await invalidateRegistro(queryClient);
       setStatus("Paciente registrado.");
       router.push(`/patients/${result.record.id}`);
     });

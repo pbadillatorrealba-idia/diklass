@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
@@ -44,6 +44,7 @@ import {
   listEpicrisisByConsultation,
   updateEpicrisisDraft,
 } from "@/features/registro/epicrisis-service";
+import { invalidateRegistro } from "@/features/registro/query-cache";
 import {
   type AnamnesisField,
   anamnesisContentSchema,
@@ -147,6 +148,7 @@ export default function ConsultationScreen() {
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const guard = useClinicalGuard();
+  const queryClient = useQueryClient();
 
   const [composerField, setComposerField] = useState<AnamnesisField>("motivo_consulta");
   const [composerText, setComposerText] = useState("");
@@ -261,9 +263,9 @@ export default function ConsultationScreen() {
           attribution: attributionFromRow(entry.record),
         }));
 
-  const refetchWorkspace = async () => {
-    await Promise.all([workspaceQuery.refetch(), followUpQuery.refetch()]);
-  };
+  // Tras cada escritura se invalida todo el registro, no solo esta pantalla: la ficha y el
+  // historial del paciente también cambian al abrir, registrar o cerrar la consulta.
+  const refetchWorkspace = () => invalidateRegistro(queryClient);
 
   // Resuelve si el borrador llegó de verdad al storage: el usuario merece la verdad y no un
   // «se conservó» de trámite (mismo criterio que la pantalla de la 001).
