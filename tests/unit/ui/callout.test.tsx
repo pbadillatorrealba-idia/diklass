@@ -58,6 +58,8 @@ describe("Callout", () => {
         Queda sin cubrir: «{faltante}».
       </Callout>,
     );
-    expect(html).toMatch(/<div dir="auto"[^>]*>Queda sin cubrir: «(<!-- -->)?dosis(<!-- -->)?»\.<\/div>/);
+    expect(html).toMatch(
+      /<div dir="auto"[^>]*>Queda sin cubrir: «(<!-- -->)?dosis(<!-- -->)?»\.<\/div>/,
+    );
   });
 });
