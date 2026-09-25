@@ -488,7 +488,7 @@ expresa del orquestador y se re-verifica sin diff tras cada merge.
   completa sí quedó verificada (`expo export --platform web` exporta las cuatro rutas de
   `/knowledge`) y el shell responde HTTP 200 con el título de la app. En la revisión de la PR #30
   Playwright ya corre en local: `tests/e2e/web/conocimiento.spec.ts` cubre tres pruebas
-  acotados; la verificación visual humana y el recorrido funcional completo siguen pendientes.
+  acotadas; la verificación visual humana y el recorrido funcional completo siguen pendientes.
 
 ### Decisiones duras (reversibles por el usuario)
 
