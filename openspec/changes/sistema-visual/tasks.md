@@ -312,3 +312,11 @@ commit con sus pruebas en verde.
   Después, revisión final de `impeccable` contra el contrato de dirección y `DESIGN.md` +
   `.impeccable/design.json` generados desde lo construido. Actualizar la sección «Sistema visual»
   de `AGENTS.md`.
+- [x] 12.11 Corrección (fuera de D20, decisión del usuario del 2026-09-30): `listPatients` y
+  `listTutors` leen todas las filas de la clínica en páginas de 1000, porque PostgREST corta en
+  1000 y, ordenadas de la más antigua a la más reciente, las fichas nuevas desaparecían del
+  selector de `/knowledge`, de `/patients` y del tutor de la ficha. Primero una prueba de regresión
+  en rojo con 1005 filas. `listSources` y `listQueries` quedan como hallazgo abierto: ordenan de la
+  más reciente a la más antigua y, pasado el tope, perderían las más antiguas. Verificación: la
+  prueba en verde y `conocimiento.spec.ts:273` en verde sobre la base local con más de 1000
+  pacientes.

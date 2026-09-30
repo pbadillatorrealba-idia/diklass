@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseRows } from "@/features/registro/read-rows";
+import { parseRows, readAllPages } from "@/features/registro/read-rows";
 import { type TutorContent, tutorContentSchema } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
@@ -74,15 +74,15 @@ export async function updateTutor(
 export async function listTutors(client: SupabaseClient<Database>): Promise<TutorEntry[]> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await client
-      .from("clinical_records")
-      .select("*")
-      .eq("record_type", "tutor")
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true });
-    if (error) {
-      throw error;
-    }
+    const data = await readAllPages((from, to) =>
+      client
+        .from("clinical_records")
+        .select("*")
+        .eq("record_type", "tutor")
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
     return parseRows(data, tutorContentSchema, "listTutors");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {

@@ -27,6 +27,7 @@ function fakeClient(data: unknown): SupabaseClient<Database> {
     in: () => query,
     order: () => query,
     limit: () => query,
+    range: () => query,
     single: () => Promise.resolve(result),
     maybeSingle: () => Promise.resolve(result),
   });

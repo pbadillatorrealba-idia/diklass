@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { parseRows } from "@/features/registro/read-rows";
+import { parseRows, readAllPages } from "@/features/registro/read-rows";
 import {
   type AntecedentGroup,
   type AntecedentItem,
@@ -247,15 +247,15 @@ export async function getPatient(
 export async function listPatients(client: SupabaseClient<Database>): Promise<PatientEntry[]> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await client
-      .from("clinical_records")
-      .select("*")
-      .eq("record_type", "patient")
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true });
-    if (error) {
-      throw error;
-    }
+    const data = await readAllPages((from, to) =>
+      client
+        .from("clinical_records")
+        .select("*")
+        .eq("record_type", "patient")
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
     return parseRows(data, patientContentSchema, "listPatients");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
