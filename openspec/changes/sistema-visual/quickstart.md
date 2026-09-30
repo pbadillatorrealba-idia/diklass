@@ -973,7 +973,8 @@ equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
   - modo oscuro (1.2) y peso 600 de la fuente (1.3);
   - capturas de `NativeTabs` y de las cabeceras (7.4, 7.7);
   - flujos de Maestro (7.8);
-  - teclado en `/patients/new` y `/login` (8.7 y la revisión);
+  - teclado en `/patients/new` y `/login` (8.7 y la revisión) y en el formulario del pie de
+    `/follow-up/[patientId]` (segunda revisión);
   - Dynamic Type (5.4);
   - autocompletado de credenciales en iOS/Android (9.4);
   - `normalize("NFD")` en Hermes.
@@ -984,7 +985,8 @@ equivale a **aceptado**: la aceptación la da la revisión humana de la PR #38.
   usan en esas features.
 - **Menores de la revisión** registrados arriba: la señal de reintento y el CSP. Los estados de
   error y reintento del seguimiento y del selector de `/knowledge` se corrigieron tras la revisión
-  profunda de `85b265f` (detalle abajo).
+  profunda de `85b265f`, y los vacíos prematuros y el pie sin acotar del seguimiento tras la
+  segunda revisión de `9f8acb6` (detalle abajo).
 
 ### 9.4 — Guardado de credenciales (FR-089 · US15-AC1/AC2)
 
@@ -1021,3 +1023,24 @@ tras 19 casos por OOM del servidor Metro (heap de 2 GB); la repetición aislada 
 `NODE_OPTIONS=--max-old-space-size=4096` pasó 12/12. No hay `adb` ni simulador iOS disponibles:
 la verificación nativa de la lista de pendientes anterior sigue abierta y no hay aceptación de la
 PR.
+
+### Segunda revisión de la PR #38 (2026-09-25)
+
+El informe sobre `85b265f..9f8acb6` está en el último comentario de la PR #38. El veredicto fue
+«No» por tres problemas importantes. Se corrigieron en `e09d6aa`:
+
+- **FR-085:** mientras cargan o fallan las consultas o la retroalimentación, el seguimiento ya no
+  afirma que no hay evolución, eventos ni consultas cerradas, y no monta el formulario. En error,
+  solo muestra el aviso con «Reintentar».
+- **FR-086:** los eventos adversos son filas de la `FlatList` de la cronología. Los de versiones
+  corregidas solo se renderizan tras su conmutador. Hay pruebas con 200 eventos vigentes y con 200
+  sustituidos.
+- **FR-088:** `ScreenList` declara `automaticallyAdjustKeyboardInsets`, con prueba de componente.
+  El comportamiento real del teclado en iOS sigue pendiente de dispositivo.
+
+**Verificación:**
+
+- `typecheck` y `biome ci --error-on-warnings` en verde.
+- `bun run test`: 795 aprobadas, 75 omitidas por entorno y 0 fallidas.
+- e2e en `chromium` con Supabase local (`retroalimentacion`, `estados` y `accessibility`): 23/23.
+- No se ejecutaron Firefox/WebKit ni Maestro.

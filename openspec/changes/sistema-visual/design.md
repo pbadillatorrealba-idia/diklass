@@ -376,6 +376,13 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
   - El `ListEmptyComponent` es un `QueryState` sin contenido: carga, error o vacío.
   - Las listas acotadas dentro de una ficha (antecedentes, historial de una consulta) siguen con
     `.map`, porque son cortas y viven dentro del desplazamiento de su pantalla.
+  - El seguimiento de un paciente (`/follow-up/[patientId]`) es un único `ScreenList`
+    (`FeedbackTimeline`): sus filas son las entradas de la cronología y, a continuación, los
+    eventos adversos vigentes. Los de versiones corregidas se añaden como filas solo tras su
+    conmutador. El agregado y el formulario van en el pie (segunda revisión de la PR #38).
+  - Mientras la cronología carga o falla, `FeedbackTimeline` no monta la cabecera ni el pie que
+    dependen de los datos: antecedentes, «sin eventos», «sin consultas cerradas» y el formulario.
+    Solo queda el `QueryState` con «Cargando…» o con el error y «Reintentar».
 
 ### D14 — Texto copiable y teclado (FR-087 · FR-088)
 
@@ -391,6 +398,8 @@ El botón «Cerrar sesión» queda en nativo y en web angosta; en `lg` vive en l
     no usan `KeyboardAvoidingView`: este mide su marco respecto al padre y, bajo una cabecera
     nativa, se quedaba corto sin `keyboardVerticalOffset` (revisión de la PR #38). En Android,
     `softwareKeyboardLayoutMode: "resize"` (el valor por defecto de Expo) ya redimensiona.
+  - `ScreenList` activa también `automaticallyAdjustKeyboardInsets` en su `FlatList`, porque hay
+    formularios en su pie, como el del seguimiento (segunda revisión de la PR #38).
   - `keyboardShouldPersistTaps="handled"` ya está en `Screen`.
   - `expo-native-ui` recomienda `react-native-keyboard-controller` para seguir el marco real del
     teclado. Se descarta por ahora, porque es una dependencia nueva y no hay animaciones ligadas
