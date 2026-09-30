@@ -14,12 +14,15 @@ export const PROVENANCE_CODES: Record<Provenance, string> = {
   desconocida: "?",
 };
 
-/** Recuadro del código: la letra da la forma y `desconocida` además va en trazo discontinuo. */
+/**
+ * Recuadro del código: la letra da la forma y `desconocida` además va en trazo discontinuo. Su
+ * tamaño es mínimo y no fijo, para no recortar el código con el texto al máximo (FR-074).
+ */
 function CodeBox({ provenance, ...props }: ViewProps & { provenance: Provenance }) {
   return (
     <View
       {...props}
-      className={`h-6 w-6 items-center justify-center rounded-sm border border-primary ${
+      className={`min-h-6 min-w-6 items-center justify-center rounded-sm border border-primary ${
         provenance === "desconocida" ? "border-dashed" : ""
       }`}
     >

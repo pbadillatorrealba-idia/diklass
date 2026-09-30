@@ -29,6 +29,18 @@ describe("ProvenanceMark", () => {
     expect(html).toContain("font-mono");
   });
 
+  // Revisión de la PR #41: con el texto al máximo (FR-074), una caja fija recortaba el código.
+  test("el recuadro crece con el texto: tamaño mínimo y no fijo", () => {
+    const html = renderToStaticMarkup(<ProvenanceMark provenance="inferida" testID="m" />);
+    const clases =
+      tagWith(html, 'data-testid="m"')
+        .match(/data-class="([^"]*)"/)?.[1]
+        ?.split(/\s+/) ?? [];
+    expect(clases).toEqual(expect.arrayContaining(["min-h-6", "min-w-6"]));
+    expect(clases).not.toContain("h-6");
+    expect(clases).not.toContain("w-6");
+  });
+
   test("«desconocida» tiene además un recuadro discontinuo, no solo otra letra", () => {
     const unknown = renderToStaticMarkup(<ProvenanceMark provenance="desconocida" testID="m" />);
     const reported = renderToStaticMarkup(<ProvenanceMark provenance="reportada" testID="m" />);
