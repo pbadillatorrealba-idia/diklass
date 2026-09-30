@@ -1,0 +1,838 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T00:00:00Z",
+  "title": "Design System: Diklass",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Mesa",
+        "canonical": "rgb(236 238 233)",
+        "oklch": "oklch(94.6% 0.007 124)",
+        "dark": "#111414",
+        "darkCanonical": "rgb(17 20 20)",
+        "cssVar": "--background",
+        "tonalRamp": [
+          "#0A0C09",
+          "#232521",
+          "#3F403C",
+          "#5D5E5A",
+          "#7C7E79",
+          "#9D9F9A",
+          "#C3C5C0",
+          "#EDEFEA"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Hoja",
+        "canonical": "rgb(255 255 255)",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "dark": "#1B1F1F",
+        "darkCanonical": "rgb(27 31 31)",
+        "cssVar": "--card",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      },
+      "popover": {
+        "role": "neutral",
+        "displayName": "Hoja de diálogo",
+        "canonical": "rgb(255 255 255)",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "dark": "#242929",
+        "darkCanonical": "rgb(36 41 41)",
+        "cssVar": "--popover",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Tinta del veterinario",
+        "canonical": "rgb(27 29 31)",
+        "oklch": "oklch(22.9% 0.005 248)",
+        "dark": "#ECEEE8",
+        "darkCanonical": "rgb(236 238 232)",
+        "cssVar": "--foreground",
+        "tonalRamp": [
+          "#0A0B0D",
+          "#222426",
+          "#3E4042",
+          "#5B5E60",
+          "#7B7D80",
+          "#9C9FA1",
+          "#C2C4C7",
+          "#ECEFF2"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Papel apagado",
+        "canonical": "rgb(232 235 229)",
+        "oklch": "oklch(93.6% 0.009 129)",
+        "dark": "#242928",
+        "darkCanonical": "rgb(36 41 40)",
+        "cssVar": "--muted",
+        "tonalRamp": [
+          "#0A0C08",
+          "#232520",
+          "#3E413C",
+          "#5C5F59",
+          "#7C7E79",
+          "#9D9F9A",
+          "#C2C5BF",
+          "#EDF0EA"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Tinta secundaria",
+        "canonical": "rgb(80 87 82)",
+        "oklch": "oklch(44.9% 0.012 155)",
+        "dark": "#A4ACA5",
+        "darkCanonical": "rgb(164 172 165)",
+        "cssVar": "--muted-foreground",
+        "tonalRamp": [
+          "#070D09",
+          "#202621",
+          "#3B423D",
+          "#59605B",
+          "#787F7A",
+          "#99A19B",
+          "#BEC6C1",
+          "#E9F1EB"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Verde de formulario",
+        "canonical": "rgb(51 96 58)",
+        "oklch": "oklch(44.6% 0.079 148)",
+        "dark": "#8FC49A",
+        "darkCanonical": "rgb(143 196 154)",
+        "cssVar": "--primary",
+        "tonalRamp": [
+          "#001300",
+          "#002E0A",
+          "#1E4B26",
+          "#3D6A43",
+          "#5C8A62",
+          "#7DAC82",
+          "#A2D3A7",
+          "#CBFED1"
+        ]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Papel sobre tinta",
+        "canonical": "rgb(255 255 255)",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "dark": "#111414",
+        "darkCanonical": "rgb(17 20 20)",
+        "cssVar": "--primary-foreground",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      },
+      "primary-surface": {
+        "role": "primary",
+        "displayName": "Banda preimpresa",
+        "canonical": "rgb(231 238 232)",
+        "oklch": "oklch(94.2% 0.011 150)",
+        "dark": "#29332E",
+        "darkCanonical": "rgb(41 51 46)",
+        "cssVar": "--primary-surface",
+        "tonalRamp": [
+          "#080C09",
+          "#202621",
+          "#3C413D",
+          "#595F5A",
+          "#797F7A",
+          "#9AA09B",
+          "#BFC6C0",
+          "#EAF1EB"
+        ]
+      },
+      "secondary-surface": {
+        "role": "secondary",
+        "displayName": "Pizarra de ficha",
+        "canonical": "rgb(232 236 238)",
+        "oklch": "oklch(94.1% 0.005 229)",
+        "dark": "#282E30",
+        "darkCanonical": "rgb(40 46 48)",
+        "cssVar": "--secondary-surface",
+        "tonalRamp": [
+          "#090C0D",
+          "#222526",
+          "#3D4042",
+          "#5B5E60",
+          "#7A7E80",
+          "#9B9FA1",
+          "#C1C5C7",
+          "#EBEFF1"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Regla",
+        "canonical": "rgb(204 215 206)",
+        "oklch": "oklch(86.8% 0.017 151)",
+        "dark": "#38483E",
+        "darkCanonical": "rgb(56 72 62)",
+        "cssVar": "--border",
+        "tonalRamp": [
+          "#060D08",
+          "#1E2620",
+          "#39423B",
+          "#576059",
+          "#768078",
+          "#97A299",
+          "#BDC7BF",
+          "#E7F2E9"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Borde de campo",
+        "canonical": "rgb(104 126 108)",
+        "oklch": "oklch(57.0% 0.038 150)",
+        "dark": "#708475",
+        "darkCanonical": "rgb(112 132 117)",
+        "cssVar": "--input",
+        "tonalRamp": [
+          "#010F04",
+          "#16291A",
+          "#314635",
+          "#4F6453",
+          "#6E8472",
+          "#8EA592",
+          "#B4CBB8",
+          "#DDF6E2"
+        ]
+      },
+      "ring": {
+        "role": "primary",
+        "displayName": "Anillo de foco",
+        "canonical": "rgb(51 96 58)",
+        "oklch": "oklch(44.6% 0.079 148)",
+        "dark": "#8FC49A",
+        "darkCanonical": "rgb(143 196 154)",
+        "cssVar": "--ring",
+        "tonalRamp": [
+          "#001300",
+          "#002E0A",
+          "#1E4B26",
+          "#3D6A43",
+          "#5C8A62",
+          "#7DAC82",
+          "#A2D3A7",
+          "#CBFED1"
+        ]
+      },
+      "suggested": {
+        "role": "tertiary",
+        "displayName": "Contorno ocre de lo sugerido",
+        "canonical": "rgb(122 97 0)",
+        "oklch": "oklch(50.3% 0.103 91)",
+        "dark": "#E8CF5C",
+        "darkCanonical": "rgb(232 207 92)",
+        "cssVar": "--suggested",
+        "tonalRamp": [
+          "#1B0400",
+          "#361F00",
+          "#543C00",
+          "#735A00",
+          "#947A29",
+          "#B69C4E",
+          "#DDC274",
+          "#FFED9D"
+        ]
+      },
+      "suggested-surface": {
+        "role": "tertiary",
+        "displayName": "Pliego canario",
+        "canonical": "rgb(251 239 168)",
+        "oklch": "oklch(94.5% 0.090 100)",
+        "dark": "#3A3312",
+        "darkCanonical": "rgb(58 51 18)",
+        "cssVar": "--suggested-surface",
+        "tonalRamp": [
+          "#150900",
+          "#2F2300",
+          "#4B4000",
+          "#6A5E15",
+          "#8A7E3A",
+          "#ACA05B",
+          "#D2C680",
+          "#FDF1A9"
+        ]
+      },
+      "correction": {
+        "role": "tertiary",
+        "displayName": "Granate de corrección",
+        "canonical": "rgb(158 43 69)",
+        "oklch": "oklch(47.4% 0.151 12)",
+        "dark": "#F29AAE",
+        "darkCanonical": "rgb(242 154 174)",
+        "cssVar": "--correction",
+        "tonalRamp": [
+          "#2C0001",
+          "#57000F",
+          "#7B002A",
+          "#A02D47",
+          "#C55065",
+          "#EC7285",
+          "#FF98AA",
+          "#FFCDD9"
+        ]
+      },
+      "correction-surface": {
+        "role": "tertiary",
+        "displayName": "Pliego rosa",
+        "canonical": "rgb(246 221 232)",
+        "oklch": "oklch(92.1% 0.031 349)",
+        "dark": "#361C30",
+        "darkCanonical": "rgb(54 28 48)",
+        "cssVar": "--correction-surface",
+        "tonalRamp": [
+          "#15060D",
+          "#301E26",
+          "#4D3942",
+          "#6C5760",
+          "#8C7680",
+          "#AE97A1",
+          "#D5BCC7",
+          "#FFE7F2"
+        ]
+      },
+      "stamp": {
+        "role": "tertiary",
+        "displayName": "Índigo de tampón",
+        "canonical": "rgb(58 63 154)",
+        "oklch": "oklch(41.9% 0.146 276)",
+        "dark": "#A3A8F2",
+        "darkCanonical": "rgb(163 168 242)",
+        "cssVar": "--stamp",
+        "tonalRamp": [
+          "#08003C",
+          "#190B68",
+          "#2F308A",
+          "#4951AE",
+          "#6772D2",
+          "#8695F8",
+          "#AABBFF",
+          "#D8E8FF"
+        ]
+      },
+      "destructive": {
+        "role": "state",
+        "displayName": "Rojo destructivo",
+        "canonical": "rgb(176 40 24)",
+        "oklch": "oklch(49.7% 0.175 31)",
+        "dark": "#FF8C78",
+        "darkCanonical": "rgb(255 140 120)",
+        "cssVar": "--destructive",
+        "tonalRamp": [
+          "#2D0000",
+          "#5F0000",
+          "#840000",
+          "#AA2111",
+          "#D14937",
+          "#F86D58",
+          "#FF947D",
+          "#FFD0BE"
+        ]
+      },
+      "destructive-foreground": {
+        "role": "state",
+        "displayName": "Papel sobre rojo",
+        "canonical": "rgb(255 255 255)",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "dark": "#111414",
+        "darkCanonical": "rgb(17 20 20)",
+        "cssVar": "--destructive-foreground",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      },
+      "destructive-surface": {
+        "role": "state",
+        "displayName": "Pliego de error",
+        "canonical": "rgb(251 227 214)",
+        "oklch": "oklch(93.2% 0.032 50)",
+        "dark": "#3D1E12",
+        "darkCanonical": "rgb(61 30 18)",
+        "cssVar": "--destructive-surface",
+        "tonalRamp": [
+          "#160702",
+          "#312016",
+          "#4E3B31",
+          "#6D594E",
+          "#8D786D",
+          "#AF998D",
+          "#D6BFB2",
+          "#FFE9DC"
+        ]
+      },
+      "warning": {
+        "role": "state",
+        "displayName": "Ocre anaranjado",
+        "canonical": "rgb(150 84 0)",
+        "oklch": "oklch(51.3% 0.119 61)",
+        "dark": "#ECA454",
+        "darkCanonical": "rgb(236 164 84)",
+        "cssVar": "--warning",
+        "tonalRamp": [
+          "#280000",
+          "#490A00",
+          "#6A2B00",
+          "#8C4B00",
+          "#AF6B26",
+          "#D38C4B",
+          "#FCB271",
+          "#FFDC9B"
+        ]
+      },
+      "warning-surface": {
+        "role": "state",
+        "displayName": "Fondo de aviso",
+        "canonical": "rgb(245 238 220)",
+        "oklch": "oklch(95.0% 0.025 89)",
+        "dark": "#32281C",
+        "darkCanonical": "rgb(50 40 28)",
+        "cssVar": "--warning-surface",
+        "tonalRamp": [
+          "#0F0B02",
+          "#292416",
+          "#453F31",
+          "#635D4E",
+          "#837D6D",
+          "#A59E8D",
+          "#CAC4B2",
+          "#F5EEDC"
+        ]
+      },
+      "success": {
+        "role": "state",
+        "displayName": "Verde correcto",
+        "canonical": "rgb(38 108 58)",
+        "oklch": "oklch(47.4% 0.106 150)",
+        "dark": "#7CC88C",
+        "darkCanonical": "rgb(124 200 140)",
+        "cssVar": "--success",
+        "tonalRamp": [
+          "#001400",
+          "#003001",
+          "#004E1E",
+          "#286E3C",
+          "#4A8F5B",
+          "#6CB17B",
+          "#91D89F",
+          "#BBFFC9"
+        ]
+      },
+      "success-surface": {
+        "role": "state",
+        "displayName": "Fondo correcto",
+        "canonical": "rgb(229 241 231)",
+        "oklch": "oklch(94.6% 0.018 151)",
+        "dark": "#1C3224",
+        "darkCanonical": "rgb(28 50 36)",
+        "cssVar": "--success-surface",
+        "tonalRamp": [
+          "#060D07",
+          "#1E271F",
+          "#39433B",
+          "#566158",
+          "#768178",
+          "#97A299",
+          "#BCC8BE",
+          "#E6F2E8"
+        ]
+      },
+      "info": {
+        "role": "state",
+        "displayName": "Pizarra azulada",
+        "canonical": "rgb(70 94 124)",
+        "oklch": "oklch(47.5% 0.057 254)",
+        "dark": "#98AECC",
+        "darkCanonical": "rgb(152 174 204)",
+        "cssVar": "--info",
+        "tonalRamp": [
+          "#000A22",
+          "#0F253F",
+          "#2A415D",
+          "#475F7D",
+          "#667F9F",
+          "#87A1C2",
+          "#ABC7E9",
+          "#D5F1FF"
+        ]
+      },
+      "info-surface": {
+        "role": "state",
+        "displayName": "Fondo informativo",
+        "canonical": "rgb(230 235 241)",
+        "oklch": "oklch(93.8% 0.010 253)",
+        "dark": "#202834",
+        "darkCanonical": "rgb(32 40 52)",
+        "cssVar": "--info-surface",
+        "tonalRamp": [
+          "#080B0F",
+          "#212429",
+          "#3C4045",
+          "#5A5E63",
+          "#797E83",
+          "#9A9FA4",
+          "#C0C5CA",
+          "#EAEFF5"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Capa modal",
+        "canonical": "rgb(0 0 0)",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "dark": "#000000",
+        "darkCanonical": "rgb(0 0 0)",
+        "cssVar": "--scrim",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Título de pantalla",
+        "purpose": "Heading nivel 1; h1 en web."
+      },
+      "title": {
+        "displayName": "Título de sección",
+        "purpose": "Heading nivel 2; banda de FormSection con el número en data semibold."
+      },
+      "title-sm": {
+        "displayName": "Subsección",
+        "purpose": "Heading nivel 3."
+      },
+      "body": {
+        "displayName": "Texto",
+        "purpose": "Texto y valores de campo."
+      },
+      "body-strong": {
+        "displayName": "Texto fuerte",
+        "purpose": "Nombres de paciente y profesional, títulos de aviso, texto de botón."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas de control y enlace «Volver a»."
+      },
+      "caption": {
+        "displayName": "Leyenda",
+        "purpose": "Metadatos y leyenda de la clave de procedencia; mínimo de 14 px."
+      },
+      "rubric": {
+        "displayName": "Rótulo preimpreso",
+        "purpose": "Rótulo de campo del formulario, en mayúsculas y en primary; «Firmado» del timbre.",
+        "textTransform": "uppercase"
+      },
+      "data": {
+        "displayName": "Datos",
+        "purpose": "Número de consulta, fechas y horas, peso, edad, dosis y códigos de procedencia; cifras tabulares."
+      },
+      "nav": {
+        "displayName": "Navegación",
+        "purpose": "Solo etiquetas de la barra de pestañas web (12 px)."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "signature",
+        "value": "240ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Firma de la epicrisis (SIGNATURE_MS = 240, Easing.out(Easing.exp)): el pliego canario de la sección 3 se funde a papel (opacidad 1 → 0) y el timbre entra con opacidad 0 → 1 y escala 0.96 → 1. Inmediato con Reduce Motion / prefers-reduced-motion. Única animación de autor."
+      },
+      {
+        "name": "press",
+        "value": "opacity: 0.8",
+        "purpose": "Estado pulsado de los botones; sin transición."
+      },
+      {
+        "name": "disabled",
+        "value": "opacity: 0.5",
+        "purpose": "Control deshabilitado; conserva su variante."
+      }
+    ],
+    "focus": {
+      "value": "outline: 2px solid rgb(var(--ring))",
+      "offsetControls": "2px",
+      "offsetContainers": "-2px"
+    },
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ],
+    "dimensions": [
+      {
+        "name": "max-w-content",
+        "value": "720px",
+        "purpose": "Una columna de lectura."
+      },
+      {
+        "name": "max-w-wide",
+        "value": "1200px",
+        "purpose": "Consulta a dos columnas, listas y paneles."
+      },
+      {
+        "name": "max-w-form",
+        "value": "480px",
+        "purpose": "Formularios centrados (login)."
+      },
+      {
+        "name": "max-w-dialog",
+        "value": "440px",
+        "purpose": "Diálogos."
+      },
+      {
+        "name": "w-sidebar",
+        "value": "240px",
+        "purpose": "Barra lateral de navegación web desde lg."
+      },
+      {
+        "name": "min-h-touch",
+        "value": "44px",
+        "purpose": "Área táctil mínima."
+      },
+      {
+        "name": "min-h-textarea",
+        "value": "120px",
+        "purpose": "Altura inicial de un campo multilínea, que crece con su contenido."
+      }
+    ],
+    "modes": {
+      "source": "src/global.css",
+      "blocks": [
+        ":root (claro)",
+        "@media (prefers-color-scheme: dark) :root",
+        ":root.light",
+        ":root.dark"
+      ],
+      "mirror": "src/theme/colors.ts",
+      "guard": "tests/unit/theme/tema.test.ts"
+    },
+    "verification": {
+      "finishReview": "ship (web)",
+      "evidence": [
+        "openspec/changes/sistema-visual/evidencia/12.10-*.png",
+        "openspec/changes/sistema-visual/evidencia/12.9-*.png"
+      ],
+      "pending": "Capturas nativas iOS y Android: sin simulador ni emulador en esta máquina."
+    }
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal en la tinta del formulario; p. ej. «Firmar y cerrar consulta» al pie de la sección 3.",
+      "html": "<button class=\"ds-btn-primary\">Firmar y cerrar consulta</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: 2px; border: 1px solid transparent; background: rgb(var(--primary)); color: rgb(var(--primary-foreground)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; font-weight: 600; cursor: pointer; } .ds-btn-primary:active { opacity: 0.8; } .ds-btn-primary:disabled { opacity: 0.5; } .ds-btn-primary:focus-visible { outline: 2px solid rgb(var(--ring)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón de contorno",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria y opción no elegida de un grupo; hoja con borde de campo.",
+      "html": "<button class=\"ds-btn-outline\">Guardar borrador</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: 2px; border: 1px solid rgb(var(--input)); background: rgb(var(--card)); color: rgb(var(--foreground)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; font-weight: 600; cursor: pointer; } .ds-btn-outline:active { opacity: 0.8; } .ds-btn-outline:disabled { opacity: 0.5; } .ds-btn-outline:focus-visible { outline: 2px solid rgb(var(--ring)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acción terciaria en texto primary, sin fondo.",
+      "html": "<button class=\"ds-btn-ghost\">Ver fuente</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: 2px; border: 1px solid transparent; background: transparent; color: rgb(var(--primary)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; font-weight: 600; cursor: pointer; } .ds-btn-ghost:active { opacity: 0.8; } .ds-btn-ghost:disabled { opacity: 0.5; } .ds-btn-ghost:focus-visible { outline: 2px solid rgb(var(--ring)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo editable: hoja con contorno input de 1 px y 2 px de radio; en error, contorno destructive.",
+      "html": "<label class=\"ds-input-label\">Motivo de consulta<input class=\"ds-input\" placeholder=\"Escribe el motivo\" /></label>",
+      "css": ".ds-input-label { display: flex; flex-direction: column; gap: 8px; font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 14px; line-height: 20px; font-weight: 500; color: rgb(var(--foreground)); } .ds-input { min-height: 44px; padding: 12px 16px; border: 1px solid rgb(var(--input)); border-radius: 2px; background: rgb(var(--card)); color: rgb(var(--foreground)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; } .ds-input::placeholder { color: rgb(var(--muted-foreground)); } .ds-input:focus-visible { outline: 2px solid rgb(var(--ring)); outline-offset: 2px; } .ds-input[aria-invalid=\"true\"] { border-color: rgb(var(--destructive)); }"
+    },
+    {
+      "name": "Sección del formulario",
+      "kind": "card",
+      "refersTo": "form-section-band-active",
+      "description": "Sección numerada del protocolo con banda preimpresa; la activa invierte a primary sólido. Contiene un campo de solo lectura con rótulo preimpreso y código de procedencia al margen.",
+      "html": "<section class=\"ds-form-section\"><div class=\"ds-form-section-band ds-active\"><h2><span class=\"ds-num\">1</span>  Anamnesis</h2></div><div class=\"ds-form-section-body\"><div class=\"ds-field\"><div class=\"ds-field-main\"><span class=\"ds-rubric\">Motivo de consulta</span><span class=\"ds-field-value\">Destruye objetos al quedarse sola</span></div><span class=\"ds-prov\" role=\"img\" aria-label=\"Procedencia: reportada\">R</span></div><div class=\"ds-field\"><div class=\"ds-field-main\"><span class=\"ds-rubric\">Peso</span><span class=\"ds-data\">18,4 kg</span></div><span class=\"ds-prov ds-prov-unknown\" role=\"img\" aria-label=\"Procedencia: desconocida\">?</span></div></div></section>",
+      "css": ".ds-form-section { border: 1px solid rgb(var(--border)); border-radius: 2px; background: rgb(var(--card)); overflow: hidden; font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: rgb(var(--foreground)); } .ds-form-section-band { padding: 8px 16px; border-bottom: 1px solid rgb(var(--border)); background: rgb(var(--primary-surface)); } .ds-form-section-band h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; color: rgb(var(--primary)); white-space: pre; } .ds-form-section-band.ds-active { background: rgb(var(--primary)); } .ds-form-section-band.ds-active h2 { color: rgb(var(--primary-foreground)); } .ds-num { font-family: 'Atkinson Hyperlegible Mono', 'Atkinson Hyperlegible Mono Fallback', monospace; font-variant-numeric: tabular-nums; } .ds-form-section-body { padding: 16px; display: flex; flex-direction: column; } .ds-field { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgb(var(--border)); } .ds-field-main { flex: 1; display: flex; flex-direction: column; gap: 4px; } .ds-rubric { font-size: 14px; line-height: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; color: rgb(var(--primary)); } .ds-field-value { font-size: 16px; line-height: 24px; } .ds-data { font-family: 'Atkinson Hyperlegible Mono', 'Atkinson Hyperlegible Mono Fallback', monospace; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; } .ds-prov { width: 24px; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgb(var(--primary)); border-radius: 2px; font-family: 'Atkinson Hyperlegible Mono', 'Atkinson Hyperlegible Mono Fallback', monospace; font-weight: 600; font-size: 16px; line-height: 20px; color: rgb(var(--primary)); } .ds-prov-unknown { border-style: dashed; }"
+    },
+    {
+      "name": "Pliego canario (sugerencia)",
+      "kind": "custom",
+      "refersTo": "suggested-block",
+      "description": "Contenido del sistema sin validar: pliego suggested-surface con contorno suggested de 1 px y la etiqueta visible como primer hijo.",
+      "html": "<div class=\"ds-suggested\" role=\"group\" aria-label=\"Sugerencia del sistema · copia sin firmar\"><span class=\"ds-suggested-label\">Sugerencia del sistema · copia sin firmar</span><strong class=\"ds-suggested-title\">Borrador de epicrisis</strong><p class=\"ds-suggested-body\">No es un registro definitivo: nada entra al historial sin tu validación explícita.</p></div>",
+      "css": ".ds-suggested { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid rgb(var(--suggested)); border-radius: 2px; background: rgb(var(--suggested-surface)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: rgb(var(--foreground)); } .ds-suggested-label { font-size: 14px; line-height: 20px; font-weight: 500; color: rgb(var(--muted-foreground)); } .ds-suggested-title { font-size: 16px; line-height: 24px; font-weight: 600; } .ds-suggested-body { margin: 0; font-size: 16px; line-height: 24px; }"
+    },
+    {
+      "name": "Renglón de corrección (pliego rosa)",
+      "kind": "custom",
+      "refersTo": "correction-sheet",
+      "description": "Valor anterior tachado y legible, y el vigente en pliego rosa con su atribución.",
+      "html": "<div class=\"ds-correction\"><span class=\"ds-correction-rubric\">Diagnóstico registrado</span><div class=\"ds-replaced\"><span class=\"ds-replaced-label\">Reemplazado</span><s class=\"ds-replaced-value\">Ansiedad por separación</s></div><div class=\"ds-correction-sheet\"><span>Ansiedad por separación con hiperapego</span><div class=\"ds-attr\"><strong>Dra. Ana Rojas</strong><span class=\"ds-attr-date\">30-09-2026, 11:42:10</span></div></div></div>",
+      "css": ".ds-correction { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgb(var(--border)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: rgb(var(--foreground)); font-size: 16px; line-height: 24px; } .ds-correction-rubric { font-size: 14px; line-height: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; color: rgb(var(--primary)); } .ds-replaced { display: flex; flex-direction: column; gap: 4px; } .ds-replaced-label { font-size: 14px; line-height: 20px; color: rgb(var(--correction)); } .ds-replaced-value { color: rgb(var(--muted-foreground)); text-decoration: line-through; } .ds-correction-sheet { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid rgb(var(--correction)); border-radius: 2px; background: rgb(var(--correction-surface)); } .ds-attr { display: flex; flex-direction: column; padding-top: 8px; border-top: 1px solid rgb(var(--border)); } .ds-attr-date { font-family: 'Atkinson Hyperlegible Mono', 'Atkinson Hyperlegible Mono Fallback', monospace; font-variant-numeric: tabular-nums; color: rgb(var(--muted-foreground)); }"
+    },
+    {
+      "name": "Timbre de firma",
+      "kind": "custom",
+      "refersTo": "signature-stamp",
+      "description": "Marco de tampón índigo con nombre y hora de quien aprobó; entra en 240 ms (opacidad y escala 0.96 → 1), inmediato con reduced motion.",
+      "html": "<div class=\"ds-stamp\" role=\"group\" aria-label=\"Firmado por Dra. Ana Rojas el 30-09-2026, 11:45:02\"><span class=\"ds-stamp-rubric\">Firmado</span><strong class=\"ds-stamp-name\">Dra. Ana Rojas</strong><span class=\"ds-stamp-date\">30-09-2026, 11:45:02</span></div>",
+      "css": "@keyframes ds-stamp-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } } .ds-stamp { display: inline-flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid rgb(var(--stamp)); border-radius: 2px; color: rgb(var(--stamp)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; animation: ds-stamp-in 240ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-stamp-rubric { font-size: 14px; line-height: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; } .ds-stamp-name { font-size: 16px; line-height: 24px; font-weight: 600; } .ds-stamp-date { font-family: 'Atkinson Hyperlegible Mono', 'Atkinson Hyperlegible Mono Fallback', monospace; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; } @media (prefers-reduced-motion: reduce) { .ds-stamp { animation: none; } }"
+    },
+    {
+      "name": "Aviso (renglón impreso)",
+      "kind": "custom",
+      "refersTo": "callout-warning",
+      "description": "Aviso con estado como renglón dentro de su sección: reglas de 1 px arriba y abajo, superficie del tono e icono con nombre.",
+      "html": "<div class=\"ds-callout\" role=\"status\"><svg class=\"ds-callout-icon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" role=\"img\" aria-label=\"Aviso\"><path fill=\"currentColor\" d=\"M13 14H11V9H13M13 18H11V16H13M1 21H23L12 2L1 21Z\"/></svg><span>Falta la edad del paciente: el diferencial puede cambiar.</span></div>",
+      "css": ".ds-callout { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid rgb(var(--warning)); border-bottom: 1px solid rgb(var(--warning)); background: rgb(var(--warning-surface)); color: rgb(var(--foreground)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; } .ds-callout-icon { flex: none; color: rgb(var(--warning)); }"
+    },
+    {
+      "name": "Badge de severidad (grave)",
+      "kind": "chip",
+      "refersTo": "severity-badge-grave",
+      "description": "Escala única de cuatro niveles: icono, nombre y barra de cuatro segmentos (llenos sólidos, vacíos solo contorno).",
+      "html": "<span class=\"ds-sev\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M13 14H11V10H13M13 18H11V16H13M1 21H23L12 2L1 21Z\"/></svg><strong>Grave</strong><span class=\"ds-sev-bar\" aria-hidden=\"true\"><i class=\"ds-on\"></i><i class=\"ds-on\"></i><i class=\"ds-on\"></i><i></i></span></span>",
+      "css": ".ds-sev { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid rgb(var(--destructive)); border-radius: 2px; background: rgb(var(--destructive-surface)); color: rgb(var(--foreground)); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; font-size: 16px; line-height: 24px; } .ds-sev svg { color: rgb(var(--destructive)); } .ds-sev-bar { display: inline-flex; gap: 4px; } .ds-sev-bar i { width: 6px; height: 12px; box-sizing: border-box; border: 1px solid rgb(var(--destructive)); } .ds-sev-bar i.ds-on { background: rgb(var(--destructive)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El formulario en copias",
+    "overview": "Diklass es un formulario clínico normalizado, impreso sobre papel frío casi blanco en una sola tinta verde de formulario: reglas de 1 px, recuadros, rótulos y números de sección. Lo que escribe el veterinario va en tinta negra. Lo que propone el sistema, sin validar, llega en pliego canario, como la copia amarilla de un formulario autocopiativo; lo corregido llega en pliego rosa, con el renglón anterior tachado de una sola línea y todavía legible. Solo la firma del veterinario, un timbre de tampón índigo con nombre y hora, vuelve original la copia.\n\nLa densidad es la de un formulario bien compuesto, no la de un tablero: un solo eje vertical de secciones numeradas según el protocolo clínico (1 Anamnesis, 2 Diagnóstico, 3 Epicrisis y firma), campos con rótulo preimpreso sobre su regla y, al margen, el código de procedencia de cada dato (R, I, F, ?). La jerarquía la dan la regla, el pliego y la tinta; nunca la elevación, el degradado ni el color decorativo. El sistema rechaza de forma explícita el tablero de tarjetas con panel de «Hallazgos IA», los destellos y el violeta con que la categoría marca la IA, lo frío-hospitalario (gris clínico sin tinta) y lo lúdico (patitas, ilustraciones de perros).\n\nLa misma paleta sirve a iOS, Android y web, en claro y en oscuro (pizarra con tinte verde, con los pliegos convertidos en tintes cálidos opacos). La revisión final de `impeccable` sobre la consulta dio veredicto «ship» en web (capturas en `openspec/changes/sistema-visual/evidencia/12.10-*` y la revisión en grises `12.9-*`); las capturas nativas de iOS y Android quedan como pendiente explícito, porque en esta máquina no hay simulador ni emulador.",
+    "keyCharacteristics": [
+      "Una sola tinta de estructura (`primary`) para reglas, rótulos, números, banda de sección y acción principal.",
+      "Los pliegos (canario y rosa) son el único color de superficie con significado de registro.",
+      "Datos en mono con cifras tabulares; UI y texto en Atkinson Hyperlegible Next.",
+      "Esquinas de 2 px en todo salvo el avatar; ninguna sombra; reglas de 1 px.",
+      "Toda distinción clínica lleva forma además de color: letra de procedencia, contorno, tachado, segmentos de severidad, etiqueta visible.",
+      "Una única animación de autor: la firma."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Toda la estructura preimpresa (reglas, rótulos, números, banda activa, acción principal) va en `primary`. Ninguna otra tinta dibuja el formulario.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Sheets Rule",
+        "body": "Los pliegos `suggested-surface` y `correction-surface` son el único color de superficie con significado de registro. No se pinta una superficie de color por decoración, y ningún tinte es translúcido salvo `scrim`: un tinte translúcido no se puede verificar.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stamp Names a Person Rule",
+        "body": "La tinta `stamp` solo aparece en el timbre de firma, junto al nombre y la hora de quien aprobó. Nunca pinta una superficie ni marca contenido generado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Correction Is Not an Error Rule",
+        "body": "`correction-surface` y `destructive-surface` se separan por ΔE*ab (CIE76) ≥ 10 en los cuatro bloques del tema (12.4 en claro y 22.7 en oscuro), además de por icono y texto. Entre dos pasteles no basta el contraste de luminancia.",
+        "section": "colors"
+      },
+      {
+        "name": "The Data in Mono Rule",
+        "body": "Una cifra o un código que el veterinario puede tener que comparar o copiar (fecha, hora, n.º de consulta, dosis, peso, código de procedencia) va en `data`. El texto corrido nunca va en mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The 14 px Floor Rule",
+        "body": "Ningún texto baja de 14 px; la única excepción son las etiquetas de navegación a 12 px. `text-xs` está prohibido por la guarda.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper-Flat Rule",
+        "body": "Nada flota. La jerarquía la dan la regla, el pliego y la tinta; si una superficie necesita destacar, cambia de pliego o de banda, no de elevación.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two-Pixel Rule",
+        "body": "`rounded-sm` (2 px) en todo; `rounded-full` solo en el avatar. `rounded-lg`, `rounded-xl` y `rounded-2xl` están prohibidos por la guarda.",
+        "section": "shapes"
+      },
+      {
+        "name": "The No Side Stripe Rule",
+        "body": "Ninguna superficie se marca con un borde lateral grueso (`border-l-2` a `border-l-8`). Lo sugerido se marca con pliego y contorno de 1 px; la sección activa, con la banda sólida.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** dibujar toda la estructura preimpresa (reglas, rótulos, números, banda activa) en `primary`, con reglas de 1 px en `border`.",
+      "**Do** poner lo que propone el sistema sin validar en un `SuggestedBlock` (pliego canario, contorno de 1 px y la etiqueta «Sugerencia del sistema · copia sin firmar» como primer hijo).",
+      "**Do** mostrar una corrección como `CorrectionLine`: «Reemplazado», el valor anterior tachado de una línea y legible, y el vigente en pliego rosa con su atribución.",
+      "**Do** llevar cifras, fechas, horas, dosis y códigos de procedencia en `data` (mono, cifras tabulares).",
+      "**Do** dar a cada distinción clínica una forma además del color: letra de procedencia, trazo discontinuo, tachado, segmentos de severidad, icono con nombre, etiqueta visible.",
+      "**Do** usar solo tokens del tema, opacos y verificados AA en claro y oscuro en `tema.test.ts`; un token nuevo entra en los cuatro bloques de `global.css` y en el espejo `colors.ts`.",
+      "**Do** mantener la firma como la única animación de autor: ≤ 300 ms (hoy 240 ms), salida exponencial e inmediata con Reduce Motion."
+    ],
+    "donts": [
+      "**Don't** usar sombras, degradados, destellos ni violeta de «IA»; el tablero de tarjetas con panel de «Hallazgos IA» es la anti-referencia de este sistema.",
+      "**Don't** redondear más de 2 px (`rounded-lg`, `rounded-xl`, `rounded-2xl`) ni usar `rounded-full` fuera del avatar.",
+      "**Don't** marcar nada con un borde lateral grueso (`border-l-2` a `border-l-8`); la sección activa se marca con la banda sólida.",
+      "**Don't** usar colores literales (hex, `rgb()`, paleta de Tailwind), escalas numeradas ni tintes translúcidos salvo `bg-scrim/55`.",
+      "**Don't** usar la tinta `stamp` fuera del timbre de firma ni sin el nombre de un profesional.",
+      "**Don't** confundir corrección con error: `correction-surface` y `destructive-surface` mantienen ΔE*ab ≥ 10.",
+      "**Don't** bajar de 14 px (salvo las etiquetas `nav` de 12 px) ni poner texto corrido en mono.",
+      "**Don't** convertir un aviso en caja flotante o temporal; es un renglón dentro de su sección.",
+      "**Don't** añadir ilustraciones de perros, patitas ni gris clínico sin tinta."
+    ]
+  }
+}

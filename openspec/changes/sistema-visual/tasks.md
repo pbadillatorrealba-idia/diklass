@@ -305,7 +305,7 @@ commit con sus pruebas en verde.
   - axe en `chromium` y `chromium-dark` (de a uno, `--workers=1`), `firefox` y `webkit`;
   - reflujo a 320 px;
   - revisión en escala de grises de `/consultations/[id]` y `/follow-up/[patientId]` (SC-061).
-- [ ] 12.10 Capturas en `evidencia/12.*`:
+- [x] 12.10 Capturas en `evidencia/12.*`:
   - web: consulta a 1440 y 375 px, en claro y oscuro;
   - iOS y Android si hay simulador o emulador; si no, queda como pendiente explícito en
     `quickstart.md`.

@@ -1194,3 +1194,22 @@ y `accessibility` (12/12).
   («Por Dra. X · fecha», `AttributionBadge inline`), con prueba de componente en rojo primero.
 - **Verificación:** unitarias 895/895; `chromium` 65/65 en la suite completa; `chromium-dark`
   12/12; `evidencia/12.10-*` capturada de nuevo.
+
+### 12.10 — Cierre de la revisión `impeccable`
+
+- **Veredicto final del revisor: «ship» en web**, tras 12.12 y 12.13.
+  - El nativo (iOS y Android) sigue **sin verificar**: no hay simulador ni emulador.
+- **`DESIGN.md` y `.impeccable/design.json`**, derivados de lo construido:
+  - tokens de los cuatro bloques de `global.css`, rampa tipográfica y primitivas;
+  - reglas: una tinta y dos pliegos, el timbre nombra a una persona, la corrección no es un
+    error, forma de 2 px y sin bordes laterales.
+- **Hallazgos abiertos del documentador, fuera de D20:**
+  - el borrador generado de la epicrisis escribe la procedencia como texto
+    («[procedencia: reportada]») dentro de «Hallazgos de la anamnesis», en lugar de la marca al
+    margen. Es un asunto de generación de contenido (`epicrisis-draft.ts`);
+  - el «‹» de «Volver a …» (D12) es un glifo de texto y no un `Icon`;
+  - `accent` y `secondary` sólido están definidos, pero ningún componente los usa.
+- **Pendientes explícitos que impiden la aceptación:**
+  - capturas iOS y Android en claro y oscuro;
+  - Atkinson Mono y crecimiento de campos multilínea en nativo;
+  - flujos de Maestro.
