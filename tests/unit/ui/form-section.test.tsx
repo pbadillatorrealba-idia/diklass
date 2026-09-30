@@ -49,9 +49,16 @@ describe("ConsultationHeader", () => {
       createdAt="2026-09-30T13:05:00Z"
       ordinal={3}
       patientName="Kira"
+      status="open"
       tutorName="Sra. Tania Rojas"
     />,
   ).replace(/<!-- -->/g, "");
+
+  // Aclaración de D20: el estado es un campo rotulado del encabezado.
+  test("el estado de la consulta es un campo rotulado", () => {
+    expect(html).toMatch(/uppercase[^>]*>Estado</);
+    expect(html).toContain(">Abierta<");
+  });
 
   test("muestra paciente, tutor y «Consulta n.º N»", () => {
     expect(html).toContain(">Kira<");
@@ -74,6 +81,7 @@ describe("ConsultationHeader", () => {
         createdAt="2026-09-30T13:05:00Z"
         ordinal={null}
         patientName="Kira"
+        status="closed"
         tutorName={null}
       />,
     );

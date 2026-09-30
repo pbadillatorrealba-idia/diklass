@@ -748,6 +748,21 @@ regla, el pliego y la tinta, no la elevación.
 **Anti-referencias** (`PRODUCT.md`): nada frío-hospitalario (sin gris clínico sin tinta), nada
 lúdico (sin patitas ni ilustraciones de perros), y ningún degradado, destello ni violeta de «IA».
 
+**Aclaraciones tras la revisión final de `impeccable`** (decisión del usuario, 2026-09-30):
+
+- **Sección activa:**
+  - al cargar, la banda sólida marca el paso siguiente del protocolo: 1 en una consulta abierta
+    sin borrador, 3 si hay borrador y ninguna si está cerrada;
+  - después, la última sección editada.
+- **Grupos de opciones:** las opciones de `OptionPicker` fluyen en fila con salto de línea, en
+  todas las pantallas. El tabindex itinerante de D19 no cambia.
+  - «Corregir procedencia» queda tras un botón en cada entrada de anamnesis, para no repetir
+    cuatro opciones bajo cada registro.
+- **Encabezado:**
+  - el estado de la consulta (abierta o cerrada) es un campo rotulado del encabezado;
+  - los mensajes de las operaciones siguen en su región viva;
+  - se retira «Ver ficha del paciente», que repetía «Volver a la ficha» de `Screen` (D12).
+
 **Alternativas descartadas** en la ronda de direcciones:
 
 - «Etograma» (grilla de registro etológico): la más obvia para la categoría y densa para el

@@ -1165,3 +1165,19 @@ y `accessibility` (12/12).
     - (8) estado en el encabezado y retirar «Ver ficha del paciente».
 - **Tras las correcciones**, en `chromium`: `accessibility`, `consulta-formulario`,
   `registro-epicrisis` y `auth`, 26/26.
+
+### 12.12 — Correcciones de la revisión final (aclaraciones de D20)
+
+- Pruebas en rojo primero:
+  - `OptionPicker` en fila (`VStack` imponía `flex-col`);
+  - `initialActiveSection`;
+  - el estado como campo del encabezado;
+  - «Corregir procedencia» plegado.
+- **Regresión encontrada:** en fila, una opción con etiqueta larga desbordaba
+  `feedback-timeline` a 320 px (368 > 320). Se reprodujo en rojo y se corrigió con `max-w-full`
+  en cada opción.
+- **e2e actualizados:** «‹ Volver a la ficha» (`screen-back`) sustituye a «Ver ficha del
+  paciente» en `registro-epicrisis`, `accessibility` y `caso-sintetico`.
+- **Verificación:** unitarias 894/894; `chromium` 64/64 en la suite completa; `chromium-dark`
+  12/12. `evidencia/12.10-*` se volvió a capturar: las tres secciones entran a 1440×2600 y la
+  banda 3 está activa con borrador.

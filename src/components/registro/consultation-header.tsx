@@ -9,6 +9,7 @@ export type ConsultationHeaderProps = {
   /** Posición de la consulta entre las del paciente, por `created_at`; `null` si no se sabe. */
   ordinal: number | null;
   createdAt: string;
+  status: "open" | "closed";
 };
 
 /**
@@ -20,6 +21,7 @@ export function ConsultationHeader({
   tutorName,
   ordinal,
   createdAt,
+  status,
 }: ConsultationHeaderProps) {
   const fecha = new Date(createdAt).toLocaleDateString("es-CL", {
     day: "2-digit",
@@ -48,6 +50,10 @@ export function ConsultationHeader({
           <Text selectable variant="data">
             {fecha}
           </Text>
+        </View>
+        <View className="gap-1">
+          <Text variant="rubric">Estado</Text>
+          <Text testID="consultation-state">{status === "closed" ? "Cerrada" : "Abierta"}</Text>
         </View>
         {ordinal === null ? null : (
           <View className="justify-end">

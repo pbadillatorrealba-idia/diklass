@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Animated, StyleSheet } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { CorrectionLine } from "@/components/clinical/correction-line";
+import { initialActiveSection, type SectionNumber } from "@/components/registro/active-section";
 import { type AnamnesisEntryView, AnamnesisSection } from "@/components/registro/anamnesis-section";
 import { ConsultationHeader } from "@/components/registro/consultation-header";
 import { type DiagnosisEntryView, DiagnosisSection } from "@/components/registro/diagnosis-section";
@@ -199,7 +200,7 @@ export default function ConsultationScreen() {
   const [savedAttribution, setSavedAttribution] = useState<Attribution | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   // Última sección editada (D20): su banda se marca en `primary` sólido.
-  const [activeSection, setActiveSection] = useState<1 | 2 | 3 | null>(null);
+  const [editedSection, setActiveSection] = useState<SectionNumber | null>(null);
   const colors = useThemeColors();
 
   const workspaceQuery = useQuery({
@@ -294,6 +295,12 @@ export default function ConsultationScreen() {
       : draftEdits !== null && draftEdits.sourceId === draftEntry.record.id
         ? draftEdits.content
         : draftEntry.content;
+  // Última sección editada o, al cargar, el paso siguiente del protocolo (aclaración de D20).
+  const activeSection =
+    editedSection ??
+    (data === null
+      ? null
+      : initialActiveSection({ isClosed: data.isClosed, hasDraft: draftEntry !== null }));
   const signature = useSignatureMotion(data !== null && !data.isClosed && draftContent !== null);
   const anamnesisViews: AnamnesisEntryView[] =
     data === null
@@ -585,22 +592,14 @@ export default function ConsultationScreen() {
             createdAt={data.consultation.record.created_at}
             ordinal={data.header.ordinal}
             patientName={data.header.patientName}
+            status={data.isClosed ? "closed" : "open"}
             tutorName={data.header.tutorName}
           />
+          {/* Mensajes de las operaciones; el estado de la consulta va en el encabezado (D20). */}
           <Text accessibilityLiveRegion="polite" testID="consultation-status">
-            {status ?? (data.isClosed ? "Consulta cerrada." : "Consulta abierta.")}
+            {status ?? ""}
           </Text>
           {savedAttribution ? <AttributionBadge attribution={savedAttribution} /> : null}
-          <Link asChild href={`/patients/${data.consultation.content.patientId}`}>
-            <Button
-              accessibilityLabel="Ver ficha del paciente"
-              className="self-start"
-              testID="consultation-patient"
-              variant="outline"
-            >
-              <ButtonText>Ver ficha del paciente</ButtonText>
-            </Button>
-          </Link>
           {/*
            * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
            * DOM —como en móvil, donde precede a la anamnesis— y a la derecha en escritorio. Al no

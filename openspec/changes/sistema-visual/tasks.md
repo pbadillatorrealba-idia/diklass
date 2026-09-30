@@ -320,3 +320,14 @@ commit con sus pruebas en verde.
   más reciente a la más antigua y, pasado el tope, perderían las más antiguas. Verificación: la
   prueba en verde y `conocimiento.spec.ts:273` en verde sobre la base local con más de 1000
   pacientes.
+- [x] 12.12 Correcciones de la revisión final (aclaraciones de D20 del 2026-09-30), con prueba en
+  rojo primero:
+  - `OptionPicker` en fila con salto de línea (hoy `VStack` impone `flex-col`);
+  - «Corregir procedencia» tras un botón por entrada;
+  - banda activa inicial según el paso siguiente del protocolo;
+  - estado de la consulta como campo del encabezado;
+  - retirada de «Ver ficha del paciente», con los e2e (`registro-epicrisis`, `accessibility`,
+    `caso-sintetico`) actualizados a «Volver a la ficha».
+  Verificación: pruebas de componente, `consulta-formulario`, `registro-epicrisis`, `auth` y
+  `accessibility` en verde (`chromium` y `chromium-dark`), y capturas nuevas en
+  `evidencia/12.10-*`.

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
@@ -64,6 +65,8 @@ export function AnamnesisSection({
   onSubmit,
   onCorrectProvenance,
 }: AnamnesisSectionProps) {
+  // Entrada cuya procedencia se está corrigiendo; el resto muestra solo el botón.
+  const [correcting, setCorrecting] = useState<string | null>(null);
   const unknownFields = ANAMNESIS_STRUCTURED_ORDER.filter(
     (candidate) => !entries.some((entry) => entry.content.field === candidate),
   );
@@ -158,14 +161,30 @@ export function AnamnesisSection({
               {entry.content.text}
             </Field>
             <AttributionBadge attribution={entry.attribution} />
-            {isSealed ? null : (
+            {isSealed ? null : correcting === entry.id ? (
               <OptionPicker
                 label="Corregir procedencia"
-                onChange={(next) => onCorrectProvenance(entry.id, next)}
+                onChange={(next) => {
+                  setCorrecting(null);
+                  onCorrectProvenance(entry.id, next);
+                }}
                 options={PROVENANCE_OPTIONS}
                 testID="anamnesis-provenance-correct"
                 value={entry.content.provenance}
               />
+            ) : (
+              // Plegado tras un botón para no repetir cuatro opciones bajo cada registro (D20).
+              <Button
+                accessibilityLabel={`Corregir procedencia de ${ANAMNESIS_FIELD_LABELS[entry.content.field]}`}
+                className="self-start"
+                isDisabled={isBusy}
+                onPress={() => setCorrecting(entry.id)}
+                size="sm"
+                testID="anamnesis-provenance-correct-toggle"
+                variant="ghost"
+              >
+                <ButtonText>Corregir procedencia</ButtonText>
+              </Button>
             )}
           </VStack>
         ))
