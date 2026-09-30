@@ -12,6 +12,8 @@ module.exports = {
       // cubre la web mientras carga la fuente.
       fontFamily: {
         sans: ["Atkinson Hyperlegible Next", "system-ui", "sans-serif"],
+        // Datos (D20): número de consulta, fechas, pesos, dosis y códigos de procedencia.
+        mono: ["Atkinson Hyperlegible Mono", "Atkinson Hyperlegible Mono Fallback", "monospace"],
       },
       // Dimensiones del sistema visual (design.md D6).
       maxWidth: {

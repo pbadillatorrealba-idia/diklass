@@ -267,7 +267,7 @@ describe("colores fuera del tema", () => {
   });
 });
 
-describe("tipografía Atkinson Hyperlegible Next", () => {
+describe("tipografía Atkinson Hyperlegible Next y Mono", () => {
   const FAMILY = "Atkinson Hyperlegible Next";
   const WEIGHTS = { 400: "400Regular", 500: "500Medium", 600: "600SemiBold", 700: "700Bold" };
   const app = JSON.parse(readFileSync("app.json", "utf8"));
@@ -297,6 +297,50 @@ describe("tipografía Atkinson Hyperlegible Next", () => {
       expect(face).toContain(`font-weight: ${weight}`);
     },
   );
+
+  // Atkinson Hyperlegible Mono (D20): solo para datos, en 400 y 600. En web se sirve el
+  // subconjunto latino y no se precarga (no aparece en el primer pintado de `/login`); el
+  // `@font-face` de respaldo con métricas de reemplazo evita el salto al cambiar de fuente.
+  const MONO = "Atkinson Hyperlegible Mono";
+  test.each([
+    [400, "400Regular"],
+    [600, "600SemiBold"],
+  ])("mono %d: TTF nativo, WOFF2 web y @font-face con swap", (weight, file) => {
+    const ttf = `./assets/fonts/AtkinsonHyperlegibleMono_${file}.ttf`;
+    expect(statSync(ttf).size).toBeGreaterThan(0);
+    expect(statSync(`public/fonts/AtkinsonHyperlegibleMono_${file}.woff2`).size).toBeGreaterThan(0);
+    const android = fontPlugin[1].android.fonts.find(
+      (font: { fontFamily: string }) => font.fontFamily === MONO,
+    );
+    expect(android?.fontDefinitions).toContainEqual({ path: ttf, weight });
+    expect(fontPlugin[1].ios.fonts).toContain(ttf);
+
+    const face = CSS.split("@font-face").find((block) =>
+      block.includes(`AtkinsonHyperlegibleMono_${file}.woff2`),
+    );
+    expect(face).toContain(`font-family: "${MONO}"`);
+    expect(face).toContain(`font-weight: ${weight}`);
+    expect(face).toContain("font-display: swap");
+  });
+
+  test("la mono tiene respaldo con métricas de reemplazo y no se precarga", () => {
+    const fallback = CSS.split("@font-face").find((block) =>
+      block.includes(`font-family: "${MONO} Fallback"`),
+    );
+    expect(fallback).toContain("size-adjust:");
+    expect(fallback).toContain("ascent-override:");
+    expect(readFileSync("src/app/+html.tsx", "utf8")).not.toContain("AtkinsonHyperlegibleMono");
+    const tailwind = readFileSync("tailwind.config.js", "utf8");
+    expect(tailwind).toContain(`mono: ["${MONO}", "${MONO} Fallback"`);
+  });
+
+  // Presupuesto de fuentes de texto en web (design.md, Performance budgets): ≤ 140 KB.
+  test("las fuentes de texto web caben en 140 KB", () => {
+    const total = readdirSync("public/fonts")
+      .filter((name) => name.endsWith(".woff2"))
+      .reduce((sum, name) => sum + statSync(join("public/fonts", name)).size, 0);
+    expect(total).toBeLessThanOrEqual(140 * 1024);
+  });
 
   // React Native no hereda la fuente: cada primitivo de texto debe declararla.
   const primitives = sourceFiles(join("src", "components", "ui")).filter((path) =>

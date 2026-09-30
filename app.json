@@ -44,6 +44,19 @@
                     "weight": 700
                   }
                 ]
+              },
+              {
+                "fontFamily": "Atkinson Hyperlegible Mono",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/AtkinsonHyperlegibleMono_400Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/AtkinsonHyperlegibleMono_600SemiBold.ttf",
+                    "weight": 600
+                  }
+                ]
               }
             ]
           },
@@ -52,7 +65,9 @@
               "./assets/fonts/AtkinsonHyperlegibleNext_400Regular.ttf",
               "./assets/fonts/AtkinsonHyperlegibleNext_500Medium.ttf",
               "./assets/fonts/AtkinsonHyperlegibleNext_600SemiBold.ttf",
-              "./assets/fonts/AtkinsonHyperlegibleNext_700Bold.ttf"
+              "./assets/fonts/AtkinsonHyperlegibleNext_700Bold.ttf",
+              "./assets/fonts/AtkinsonHyperlegibleMono_400Regular.ttf",
+              "./assets/fonts/AtkinsonHyperlegibleMono_600SemiBold.ttf"
             ]
           }
         }
