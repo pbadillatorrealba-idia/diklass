@@ -240,7 +240,7 @@ commit con sus pruebas en verde.
   - exponer los tokens nuevos en `tailwind.config.js`.
   FR-071 · FR-072. Verificación: rojo por tokens ausentes y por la ΔE actual (4.8), después verde,
   con `sin-literales` en verde.
-- [ ] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
+- [x] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
   (woff2): plugin de `expo-font` en `app.json`, `@font-face` con `font-display: swap` en
   `global.css`, `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS ≤ 0.1 en
   `/login` y en `/consultations/[id]`, y presupuesto de fuentes ≤ 140 KB medido con `ls -l`.
@@ -283,7 +283,7 @@ commit con sus pruebas en verde.
   FR-077 · FR-100. Verificación: pruebas de componente, y `conocimiento`, `retroalimentacion`
   (severidad en el seguimiento) y `accessibility` (ficha con `missing-fields-panel`) en verde, de
   a uno.
-- [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
+- [x] 12.8 Consulta como formulario (`consultations/[id].tsx`):
   - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2 (a 1280×800 y
     375×667) y AC4, con códigos y clave visibles, y firma con timbre y reducción de movimiento
     emulada;

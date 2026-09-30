@@ -1,14 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
+import { Animated, StyleSheet } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { CorrectionLine } from "@/components/clinical/correction-line";
 import { type AnamnesisEntryView, AnamnesisSection } from "@/components/registro/anamnesis-section";
+import { ConsultationHeader } from "@/components/registro/consultation-header";
 import { type DiagnosisEntryView, DiagnosisSection } from "@/components/registro/diagnosis-section";
 import { epicrisisChanges } from "@/components/registro/epicrisis-changes";
 import { EpicrisisFields } from "@/components/registro/epicrisis-fields";
 import { FollowUpSummaryPanel } from "@/components/registro/follow-up-summary";
+import { useSignatureMotion } from "@/components/registro/signature-motion";
 import {
   type ClinicalGuardOutcome,
   useClinicalGuard,
@@ -17,6 +20,7 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
+import { FormSection } from "@/components/ui/form-section";
 import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
@@ -32,6 +36,7 @@ import {
 import {
   type ConsultationEntry,
   getConsultation,
+  listConsultationsByPatient,
   listPatientTimeline,
   resumeConsultation,
 } from "@/features/registro/consultation-service";
@@ -48,6 +53,7 @@ import {
   listEpicrisisByConsultation,
   updateEpicrisisDraft,
 } from "@/features/registro/epicrisis-service";
+import { getPatient } from "@/features/registro/ficha-service";
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import {
   type AnamnesisField,
@@ -61,6 +67,7 @@ import {
   type ClinicalRecordRow,
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
+import { getTutor } from "@/features/registro/tutor-service";
 import type { Attribution } from "@/lib/attribution/types";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { getFieldErrors } from "@/lib/forms/errors";
@@ -69,9 +76,14 @@ import type { ConsultationDraft } from "@/lib/storage/drafts";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useThemeColors } from "@/theme/use-theme-colors";
+
+/** Encabezado del formulario (D20): solo datos que ya existen, leídos por id. */
+type HeaderData = { patientName: string; tutorName: string | null; ordinal: number | null };
 
 type WorkspaceData = {
   consultation: ConsultationEntry;
+  header: HeaderData;
   anamnesis: AnamnesisEntry[];
   diagnoses: DiagnosisEntry[];
   epicrisisRows: EpicrisisEntry[];
@@ -83,11 +95,27 @@ type WorkspaceData = {
  * `resumeConsultation` devuelve una consulta no cerrada tal como quedó al interrumpirse;
  * solo si no es retomable (cerrada o inexistente) se leen las listas de la consulta.
  */
+async function loadHeader(consultation: ConsultationEntry): Promise<HeaderData> {
+  const { patientId } = consultation.content;
+  const [patient, consultations] = await Promise.all([
+    getPatient(supabase, patientId),
+    listConsultationsByPatient(supabase, patientId),
+  ]);
+  const tutor = patient ? await getTutor(supabase, patient.content.tutorId) : null;
+  const position = consultations.findIndex((entry) => entry.record.id === consultation.record.id);
+  return {
+    patientName: patient?.content.name ?? "Paciente no disponible",
+    tutorName: tutor?.content.name ?? null,
+    ordinal: position < 0 ? null : position + 1,
+  };
+}
+
 async function loadWorkspace(consultationId: string): Promise<WorkspaceData | null> {
   const resumed = await resumeConsultation(supabase, consultationId);
   if (resumed) {
     return {
       consultation: resumed.consultation,
+      header: await loadHeader(resumed.consultation),
       anamnesis: resumed.anamnesis,
       diagnoses: resumed.diagnoses,
       epicrisisRows: resumed.epicrisisDraft ? [resumed.epicrisisDraft] : [],
@@ -98,13 +126,15 @@ async function loadWorkspace(consultationId: string): Promise<WorkspaceData | nu
   if (!consultation) {
     return null;
   }
-  const [anamnesis, diagnoses, epicrisisRows] = await Promise.all([
+  const [anamnesis, diagnoses, epicrisisRows, header] = await Promise.all([
     listAnamnesisEntries(supabase, consultationId),
     listDiagnoses(supabase, consultationId),
     listEpicrisisByConsultation(supabase, consultationId),
+    loadHeader(consultation),
   ]);
   return {
     consultation,
+    header,
     anamnesis,
     diagnoses,
     epicrisisRows,
@@ -168,6 +198,9 @@ export default function ConsultationScreen() {
   const [status, setStatus] = useState<string | null>(null);
   const [savedAttribution, setSavedAttribution] = useState<Attribution | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  // Última sección editada (D20): su banda se marca en `primary` sólido.
+  const [activeSection, setActiveSection] = useState<1 | 2 | 3 | null>(null);
+  const colors = useThemeColors();
 
   const workspaceQuery = useQuery({
     queryKey: ["registro", "consultation-workspace", consultationId],
@@ -261,6 +294,7 @@ export default function ConsultationScreen() {
       : draftEdits !== null && draftEdits.sourceId === draftEntry.record.id
         ? draftEdits.content
         : draftEntry.content;
+  const signature = useSignatureMotion(data !== null && !data.isClosed && draftContent !== null);
   const anamnesisViews: AnamnesisEntryView[] =
     data === null
       ? []
@@ -339,6 +373,7 @@ export default function ConsultationScreen() {
         void captureClientError(errorReporter, { error, operation: "clear_draft", requestId });
       }
       setSavedAttribution(result.attribution);
+      setActiveSection(1);
       setComposerText("");
       setDraft(null);
       setStatus("Antecedente de anamnesis registrado.");
@@ -374,6 +409,7 @@ export default function ConsultationScreen() {
     setIsBusy(true);
     const outcome = await guard("correct_anamnesis_provenance", async () => {
       await correctProvenance(supabase, entryId, provenance);
+      setActiveSection(1);
       await refetchWorkspace();
     });
     setIsBusy(false);
@@ -404,6 +440,7 @@ export default function ConsultationScreen() {
         text: parsed.data.text,
       });
       setSavedAttribution(result.attribution);
+      setActiveSection(2);
       setDiagnosisText("");
       await refetchWorkspace();
     });
@@ -421,6 +458,7 @@ export default function ConsultationScreen() {
     const outcome = await guard("generate_epicrisis_draft", async () => {
       const result = await generateEpicrisisDraft(supabase, { clinicId, consultationId });
       setSavedAttribution(result.attribution);
+      setActiveSection(3);
       setDraftEdits(null);
       await refetchWorkspace();
     });
@@ -447,6 +485,7 @@ export default function ConsultationScreen() {
     setIsBusy(true);
     const outcome = await guard("update_epicrisis_draft", async () => {
       await updateEpicrisisDraft(supabase, draftEntry.record.id, draftContent);
+      setActiveSection(3);
       await refetchWorkspace();
     });
     setIsBusy(false);
@@ -470,6 +509,9 @@ export default function ConsultationScreen() {
       await updateEpicrisisDraft(supabase, draftEntry.record.id, draftContent);
       const result = await approveEpicrisis(supabase, draftEntry.record.id);
       setSavedAttribution(result.attribution);
+      setActiveSection(3);
+      // La firma (FR-099): el timbre queda listo para entrar cuando la recarga lo monte.
+      signature.prepare();
       try {
         await draftSession?.discard();
       } catch (error) {
@@ -502,6 +544,7 @@ export default function ConsultationScreen() {
       // La corrección es un registro ADICIONAL que conserva el original (FR-024 · US3-AC4).
       const result = await correctEpicrisis(supabase, effectiveEntry.record.id, correctionContent);
       setSavedAttribution(result.attribution);
+      setActiveSection(3);
       setCorrectionContent(null);
       await refetchWorkspace();
     });
@@ -538,6 +581,12 @@ export default function ConsultationScreen() {
       ) : null}
       {data ? (
         <>
+          <ConsultationHeader
+            createdAt={data.consultation.record.created_at}
+            ordinal={data.header.ordinal}
+            patientName={data.header.patientName}
+            tutorName={data.header.tutorName}
+          />
           <Text accessibilityLiveRegion="polite" testID="consultation-status">
             {status ?? (data.isClosed ? "Consulta cerrada." : "Consulta abierta.")}
           </Text>
@@ -566,159 +615,195 @@ export default function ConsultationScreen() {
                 </Card>
               ) : null}
             </VStack>
+            {/* Un solo eje vertical con las secciones numeradas del protocolo (D20). */}
             <VStack className="gap-6 lg:flex-1" testID="consultation-main">
-              <AnamnesisSection
-                entries={anamnesisViews}
-                field={composerField}
-                isBusy={isBusy}
-                isSealed={data.isClosed}
-                onCorrectProvenance={(entryId, provenance) =>
-                  void correctAnamnesisProvenance(entryId, provenance)
+              <FormSection active={activeSection === 1} number={1} title="Anamnesis">
+                <AnamnesisSection
+                  entries={anamnesisViews}
+                  field={composerField}
+                  isBusy={isBusy}
+                  isSealed={data.isClosed}
+                  onCorrectProvenance={(entryId, provenance) =>
+                    void correctAnamnesisProvenance(entryId, provenance)
+                  }
+                  onFieldChange={setComposerField}
+                  onProvenanceChange={setComposerProvenance}
+                  onSubmit={() => void submitAnamnesis()}
+                  onTextChange={handleComposerTextChange}
+                  provenance={composerProvenance}
+                  text={composerText}
+                  textError={composerError}
+                />
+              </FormSection>
+              <FormSection active={activeSection === 2} number={2} title="Diagnóstico">
+                <DiagnosisSection
+                  entries={diagnosisViews}
+                  isBusy={isBusy}
+                  isSealed={data.isClosed}
+                  onSubmit={() => void submitDiagnosis()}
+                  onTextChange={setDiagnosisText}
+                  text={diagnosisText}
+                  textError={diagnosisError}
+                />
+              </FormSection>
+              {/*
+               * El contenedor de la sección 3 persiste entre el borrador y la epicrisis firmada: al
+               * firmar, su pliego canario se funde a papel (FR-099 · D20).
+               */}
+              <FormSection
+                active={activeSection === 3}
+                number={3}
+                title="Epicrisis y firma"
+                underlay={
+                  <Animated.View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: colors["suggested-surface"],
+                        opacity: signature.paper,
+                        pointerEvents: "none",
+                      },
+                    ]}
+                    testID="epicrisis-paper"
+                  />
                 }
-                onFieldChange={setComposerField}
-                onProvenanceChange={setComposerProvenance}
-                onSubmit={() => void submitAnamnesis()}
-                onTextChange={handleComposerTextChange}
-                provenance={composerProvenance}
-                text={composerText}
-                textError={composerError}
-              />
-              <DiagnosisSection
-                entries={diagnosisViews}
-                isBusy={isBusy}
-                isSealed={data.isClosed}
-                onSubmit={() => void submitDiagnosis()}
-                onTextChange={setDiagnosisText}
-                text={diagnosisText}
-                textError={diagnosisError}
-              />
-              <VStack className="w-full gap-4" testID="epicrisis-section">
-                <Heading level={2}>Epicrisis</Heading>
-                {data.isClosed ? (
-                  effectiveEntry === null ? (
-                    <Text testID="epicrisis-empty">Sin epicrisis aprobada para esta consulta.</Text>
-                  ) : (
-                    <>
-                      <Card className="gap-2" testID="epicrisis-effective">
-                        <Text variant="strong">Epicrisis efectiva — registro definitivo</Text>
-                        {effectiveEntry.record.status === "corrective" ? (
-                          <Text>
-                            Corrige una versión anterior, que permanece registrada y recuperable.
-                          </Text>
-                        ) : null}
-                        <AttributionBadge
-                          approved
-                          attribution={attributionFromRow(effectiveEntry.record)}
-                        />
-                      </Card>
-                      {epicrisisCorrections.length > 0 ? (
-                        <VStack className="gap-2" testID="epicrisis-corrections">
-                          <Heading level={3}>Correcciones</Heading>
-                          {epicrisisCorrections.map((change) => (
-                            <CorrectionLine
-                              attribution={attributionFromRow(effectiveEntry.record)}
-                              current={change.current}
-                              key={change.field}
-                              label={change.label}
-                              previous={change.previous}
-                              testID={`epicrisis-correction-${change.field}`}
-                            />
-                          ))}
-                        </VStack>
-                      ) : null}
-                      <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
-                      {correctionContent === null ? (
-                        <Button
-                          accessibilityLabel="Corregir epicrisis"
-                          isDisabled={isBusy}
-                          onPress={() => setCorrectionContent(effectiveEntry.content)}
-                          testID="epicrisis-correct"
-                        >
-                          <ButtonText>Corregir epicrisis</ButtonText>
-                        </Button>
-                      ) : (
-                        <VStack className="w-full gap-4">
-                          <Text variant="strong">Corrección de la epicrisis</Text>
-                          <Text tone="muted">
-                            La corrección crea un registro adicional: la versión original permanece
-                            legible e intocable.
-                          </Text>
-                          <EpicrisisFields
-                            content={correctionContent}
-                            isEditable
-                            onChange={setCorrectionContent}
-                          />
-                          <Button
-                            accessibilityLabel="Guardar corrección de la epicrisis"
-                            isDisabled={isBusy}
-                            onPress={() => void submitCorrection()}
-                            testID="epicrisis-correct-save"
-                          >
-                            <ButtonText>Guardar corrección</ButtonText>
-                          </Button>
-                          <Button
-                            accessibilityLabel="Cancelar la corrección"
-                            isDisabled={isBusy}
-                            onPress={() => setCorrectionContent(null)}
-                            testID="epicrisis-correct-cancel"
-                            variant="outline"
-                          >
-                            <ButtonText>Cancelar</ButtonText>
-                          </Button>
-                        </VStack>
-                      )}
-                    </>
-                  )
-                ) : draftEntry === null ? (
-                  <>
-                    <Text tone="muted">
-                      El borrador se arma con lo registrado en la sesión y en la ficha. No forma
-                      parte del historial clínico hasta que lo apruebes.
-                    </Text>
-                    <Button
-                      accessibilityLabel="Generar borrador de epicrisis"
-                      isDisabled={isBusy}
-                      onPress={() => void generateDraft()}
-                      testID="epicrisis-generate"
-                    >
-                      <ButtonText>Generar borrador</ButtonText>
-                    </Button>
-                  </>
-                ) : draftContent === null ? null : (
-                  <>
-                    {/* Lo arma el sistema y no está validado (FR-076). */}
-                    <SuggestedBlock testID="consultation-draft-label">
-                      <Text variant="strong">Borrador de epicrisis</Text>
-                      <Text tone="muted">
-                        No es un registro definitivo: nada entra al historial sin tu validación
-                        explícita.
+              >
+                <VStack className="w-full gap-4" testID="epicrisis-section">
+                  {data.isClosed ? (
+                    effectiveEntry === null ? (
+                      <Text testID="epicrisis-empty">
+                        Sin epicrisis aprobada para esta consulta.
                       </Text>
-                    </SuggestedBlock>
-                    <EpicrisisFields
-                      content={draftContent}
-                      isEditable
-                      onChange={changeDraftContent}
-                    />
-                    <Button
-                      accessibilityLabel="Guardar borrador de epicrisis"
-                      isDisabled={isBusy}
-                      onPress={() => void saveEpicrisisDraft()}
-                      testID="epicrisis-save-draft"
-                      variant="outline"
-                    >
-                      <ButtonText>Guardar borrador</ButtonText>
-                    </Button>
-                    <Button
-                      accessibilityLabel="Aprobar y cerrar consulta"
-                      isDisabled={isBusy}
-                      onPress={() => void approveAndClose()}
-                      testID="epicrisis-approve"
-                    >
-                      <ButtonText>Aprobar y cerrar consulta</ButtonText>
-                    </Button>
-                  </>
-                )}
-              </VStack>
+                    ) : (
+                      <>
+                        <Card className="gap-2" testID="epicrisis-effective">
+                          <Text variant="strong">Epicrisis efectiva — registro definitivo</Text>
+                          {effectiveEntry.record.status === "corrective" ? (
+                            <Text>
+                              Corrige una versión anterior, que permanece registrada y recuperable.
+                            </Text>
+                          ) : null}
+                          <Animated.View
+                            style={[{ alignSelf: "flex-start" }, signature.stampStyle]}
+                            testID="signature-motion"
+                          >
+                            <AttributionBadge
+                              approved
+                              attribution={attributionFromRow(effectiveEntry.record)}
+                            />
+                          </Animated.View>
+                        </Card>
+                        {epicrisisCorrections.length > 0 ? (
+                          <VStack className="gap-2" testID="epicrisis-corrections">
+                            <Heading level={3}>Correcciones</Heading>
+                            {epicrisisCorrections.map((change) => (
+                              <CorrectionLine
+                                attribution={attributionFromRow(effectiveEntry.record)}
+                                current={change.current}
+                                key={change.field}
+                                label={change.label}
+                                previous={change.previous}
+                                testID={`epicrisis-correction-${change.field}`}
+                              />
+                            ))}
+                          </VStack>
+                        ) : null}
+                        <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
+                        {correctionContent === null ? (
+                          <Button
+                            accessibilityLabel="Corregir epicrisis"
+                            isDisabled={isBusy}
+                            onPress={() => setCorrectionContent(effectiveEntry.content)}
+                            testID="epicrisis-correct"
+                          >
+                            <ButtonText>Corregir epicrisis</ButtonText>
+                          </Button>
+                        ) : (
+                          <VStack className="w-full gap-4">
+                            <Text variant="strong">Corrección de la epicrisis</Text>
+                            <Text tone="muted">
+                              La corrección crea un registro adicional: la versión original
+                              permanece legible e intocable.
+                            </Text>
+                            <EpicrisisFields
+                              content={correctionContent}
+                              isEditable
+                              onChange={setCorrectionContent}
+                            />
+                            <Button
+                              accessibilityLabel="Guardar corrección de la epicrisis"
+                              isDisabled={isBusy}
+                              onPress={() => void submitCorrection()}
+                              testID="epicrisis-correct-save"
+                            >
+                              <ButtonText>Guardar corrección</ButtonText>
+                            </Button>
+                            <Button
+                              accessibilityLabel="Cancelar la corrección"
+                              isDisabled={isBusy}
+                              onPress={() => setCorrectionContent(null)}
+                              testID="epicrisis-correct-cancel"
+                              variant="outline"
+                            >
+                              <ButtonText>Cancelar</ButtonText>
+                            </Button>
+                          </VStack>
+                        )}
+                      </>
+                    )
+                  ) : draftEntry === null ? (
+                    <>
+                      <Text tone="muted">
+                        El borrador se arma con lo registrado en la sesión y en la ficha. No forma
+                        parte del historial clínico hasta que lo apruebes.
+                      </Text>
+                      <Button
+                        accessibilityLabel="Generar borrador de epicrisis"
+                        isDisabled={isBusy}
+                        onPress={() => void generateDraft()}
+                        testID="epicrisis-generate"
+                      >
+                        <ButtonText>Generar borrador</ButtonText>
+                      </Button>
+                    </>
+                  ) : draftContent === null ? null : (
+                    <>
+                      {/* Lo arma el sistema y no está validado (FR-076). */}
+                      <SuggestedBlock testID="consultation-draft-label">
+                        <Text variant="strong">Borrador de epicrisis</Text>
+                        <Text tone="muted">
+                          No es un registro definitivo: nada entra al historial sin tu validación
+                          explícita.
+                        </Text>
+                      </SuggestedBlock>
+                      <EpicrisisFields
+                        content={draftContent}
+                        isEditable
+                        onChange={changeDraftContent}
+                      />
+                      <Button
+                        accessibilityLabel="Guardar borrador de epicrisis"
+                        isDisabled={isBusy}
+                        onPress={() => void saveEpicrisisDraft()}
+                        testID="epicrisis-save-draft"
+                        variant="outline"
+                      >
+                        <ButtonText>Guardar borrador</ButtonText>
+                      </Button>
+                      {/* Firmar es aprobar y cerrar (FR-010): la etiqueta visible y la accesible
+                        coinciden (WCAG 2.5.3). */}
+                      <Button
+                        accessibilityLabel="Firmar y cerrar consulta"
+                        isDisabled={isBusy}
+                        onPress={() => void approveAndClose()}
+                        testID="epicrisis-approve"
+                      >
+                        <ButtonText>Firmar y cerrar consulta</ButtonText>
+                      </Button>
+                    </>
+                  )}
+                </VStack>
+              </FormSection>
             </VStack>
           </Box>
         </>

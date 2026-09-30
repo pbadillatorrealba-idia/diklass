@@ -8,7 +8,7 @@ import {
 } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import {
   FormControl,
   FormControlError,
@@ -16,9 +16,7 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
-import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { AnamnesisContent, AnamnesisField, Provenance } from "@/features/registro/schema";
@@ -72,9 +70,8 @@ export function AnamnesisSection({
 
   return (
     <VStack className="w-full gap-4" testID="anamnesis-section">
-      <Heading level={2}>Anamnesis</Heading>
       {unknownFields.length > 0 ? (
-        <Card testID="anamnesis-unknown-panel">
+        <VStack className="gap-1 border-b border-border pb-3" testID="anamnesis-unknown-panel">
           <Text variant="strong">Campos estructurados sin información</Text>
           <Text tone="muted">
             Aparecen como desconocidos: sin información no es un hallazgo negativo.
@@ -84,14 +81,14 @@ export function AnamnesisSection({
               {ANAMNESIS_FIELD_LABELS[candidate]}: Desconocido
             </Text>
           ))}
-        </Card>
+        </VStack>
       ) : null}
       {isSealed ? (
         <Text tone="muted">
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-sm border border-border bg-card p-4 gap-4">
+        <VStack className="gap-4 border-b border-border pb-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}
@@ -143,17 +140,23 @@ export function AnamnesisSection({
         <Text testID="anamnesis-empty">Sin antecedentes registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
-            <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
-            <Text selectable>{entry.content.text}</Text>
-            {entry.content.provenanceHistory?.length ? (
-              <ProvenanceCorrection
-                current={entry.content.provenance}
-                previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
-              />
-            ) : (
-              <ProvenanceMark provenance={entry.content.provenance} />
-            )}
+          <VStack className="gap-2" key={entry.id} testID="anamnesis-entry">
+            {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
+                deja la procedencia anterior tachada junto al vigente (FR-098). */}
+            <Field
+              label={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+              mark={
+                entry.content.provenanceHistory?.length ? (
+                  <ProvenanceCorrection
+                    current={entry.content.provenance}
+                    previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
+                  />
+                ) : undefined
+              }
+              provenance={entry.content.provenance}
+            >
+              {entry.content.text}
+            </Field>
             <AttributionBadge attribution={entry.attribution} />
             {isSealed ? null : (
               <OptionPicker
@@ -164,7 +167,7 @@ export function AnamnesisSection({
                 value={entry.content.provenance}
               />
             )}
-          </Card>
+          </VStack>
         ))
       )}
     </VStack>

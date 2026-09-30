@@ -11,6 +11,8 @@ export type FieldProps = {
   children: ReactNode;
   /** Solo cuando el dato tiene procedencia en el modelo (FR-021; hoy, la anamnesis). */
   provenance?: Provenance;
+  /** Marca al margen propia, p. ej. la procedencia corregida; sustituye a `provenance`. */
+  mark?: ReactNode;
   testID?: string;
 };
 
@@ -18,14 +20,14 @@ export type FieldProps = {
  * Campo del formulario (design.md D20): rótulo preimpreso y valor sobre una regla de 1 px, con el
  * código de procedencia al margen cuando existe (FR-097).
  */
-export function Field({ label, children, provenance, testID }: FieldProps) {
+export function Field({ label, children, provenance, mark, testID }: FieldProps) {
   return (
     <View className="flex-row items-start gap-3 border-b border-border py-2" testID={testID}>
       <View className="flex-1 gap-1">
         <Text variant="rubric">{label}</Text>
         {typeof children === "string" ? <Text selectable>{children}</Text> : children}
       </View>
-      {provenance ? <ProvenanceMark provenance={provenance} /> : null}
+      {mark ?? (provenance ? <ProvenanceMark provenance={provenance} /> : null)}
     </View>
   );
 }

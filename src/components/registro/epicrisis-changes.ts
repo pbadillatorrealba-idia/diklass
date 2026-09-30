@@ -11,7 +11,7 @@ export type EpicrisisChange = {
 };
 
 /** Valor de lectura de un campo: las listas, un ítem por línea, como se editan. */
-function display(content: EpicrisisContent, field: EpicrisisField): string {
+export function epicrisisDisplay(content: EpicrisisContent, field: EpicrisisField): string {
   switch (field) {
     case "hipotesis":
       return content.hipotesis.map(({ texto, estado }) => `${texto} (${estado})`).join("\n");
@@ -35,7 +35,7 @@ export function epicrisisChanges(
   current: EpicrisisContent,
 ): EpicrisisChange[] {
   return (Object.keys(EPICRISIS_FIELD_LABELS) as EpicrisisField[]).flatMap((field) => {
-    const [before, after] = [display(previous, field), display(current, field)];
+    const [before, after] = [epicrisisDisplay(previous, field), epicrisisDisplay(current, field)];
     return before === after
       ? []
       : [{ field, label: EPICRISIS_FIELD_LABELS[field], previous: before, current: after }];

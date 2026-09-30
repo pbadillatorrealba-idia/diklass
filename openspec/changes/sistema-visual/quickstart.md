@@ -1044,3 +1044,61 @@ El informe sobre `85b265f..9f8acb6` está en el último comentario de la PR #38.
 - `bun run test`: 795 aprobadas, 75 omitidas por entorno y 0 fallidas.
 - e2e en `chromium` con Supabase local (`retroalimentacion`, `estados` y `accessibility`): 23/23.
 - No se ejecutaron Firefox/WebKit ni Maestro.
+
+## Grupo 12 — Identidad «Formulario en copias» (D20 · US18)
+
+Rama `feat/formulario-en-copias-impl`, 2026-09-30. Supabase local (Podman), un worker, un
+proyecto de Playwright a la vez. Estado: **implementado, no aceptado**.
+
+### 12.1 — Tokens
+
+`tema.test.ts` falló primero por los cuatro tokens ausentes (`suggested-surface`, `correction`,
+`correction-surface`, `stamp`) y por `primary` sobre `primary-surface`; con los valores de la
+tabla de D20 (solo se ajustó luminosidad) pasa 284/284. ΔE*ab entre `correction-surface` y
+`destructive-surface`: 12.4 en claro y 22.7 en oscuro (mínimo 10), en los cuatro bloques.
+
+### 12.2 — Atkinson Hyperlegible Mono
+
+- Archivos: TTF 400/600 de Google Fonts para `expo-font` y WOFF2 del subconjunto latino (fontsource)
+  en `public/fonts/`, ambos OFL 1.1 (`OFL-AtkinsonHyperlegibleMono.txt`).
+- Presupuesto (`ls -l public/fonts/*.woff2`): 93 212 bytes (91 KB) para las seis fuentes de texto;
+  límite 140 KB.
+- Sin precarga: la mono no se pide en `/login`. El respaldo `Atkinson Hyperlegible Mono Fallback`
+  ajusta Courier al avance de la mono (`size-adjust: 105.33%`, 632/600).
+- CLS medido con `PerformanceObserver` (`layout-shift`) en Chromium contra el servidor de
+  desarrollo (no el export estático de 1.3):
+
+| Esquema | `/login` | `/consultations/[id]` | Mono cargada en la consulta |
+|---|---|---|---|
+| claro | 0.0051 | 0.0005 | sí (400 y 600) |
+| oscuro | 0.0051 | 0.0005 | sí (400 y 600) |
+
+**Pendiente explícito:** en nativo, comprobar en dispositivo que `font-mono` resuelve a la familia
+embebida.
+
+### 12.3 – 12.7 — Primitivas
+
+Cada tarea con su prueba en rojo primero:
+
+- `Text` `data`/`rubric`;
+- la guarda de radios y bordes laterales, que falló en 21 archivos;
+- `ProvenanceMark`, `ProvenanceKey` y `Field`;
+- `SignatureStamp` y la copia canaria;
+- `CorrectionLine` y `ProvenanceCorrection`;
+- `Callout` como renglón, la barra de `SeverityBadge` y `AvisosCobertura` con
+  `sin_respaldo_documental`.
+
+En Chromium pasaron `registro-epicrisis` (2/2), `conocimiento` (6/6), `retroalimentacion` (5/5)
+y `accessibility` (12/12).
+
+### 12.8 — Consulta como formulario
+
+- `consulta-formulario.spec.ts` falló primero por las secciones, el encabezado y la etiqueta
+  «Firmar y cerrar consulta». Después pasó 4/4 en Chromium: AC1, AC2 a 1280×800 y a 375×667, y
+  AC4 con movimiento reducido.
+- Control negativo del caso AC4: sin reducción de movimiento, la opacidad del timbre al aparecer
+  fue 0.92, es decir, la transición existe; con reducción, 1.
+- `SIGNATURE_MS = 240` (prueba ≤ 300).
+- `getTutor`: la prueba unitaria de filas malformadas y la integración viva pasaron 10/10 con
+  `SUPABASE_LIVE_TESTS=1`.
+- `registro-epicrisis` 2/2 y `accessibility` 12/12 en Chromium, incluidas las dos columnas de D9.

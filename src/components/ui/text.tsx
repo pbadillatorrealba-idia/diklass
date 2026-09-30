@@ -31,6 +31,8 @@ const TONES = {
   stamp: "text-stamp",
   /** Marca de corrección (D20); solo en `CorrectionLine`. */
   correction: "text-correction",
+  /** Texto sobre la banda sólida `primary` de la sección activa (D20). */
+  onPrimary: "text-primary-foreground",
   /** Texto sobre un relleno sólido `destructive` (severidad crítica). */
   onDestructive: "text-destructive-foreground",
 } as const;
