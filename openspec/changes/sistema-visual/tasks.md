@@ -254,7 +254,7 @@ commit con sus pruebas en verde.
   - pasar `Button`, `Input`, `Card`, `Callout`, los badges y el diálogo a `rounded-sm` hasta dejarla
     en verde.
   Verificación: pruebas de `ui/` y la guarda en verde.
-- [ ] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
+- [x] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
   - códigos R/I/F/? a partir de `Provenance`;
   - `role="img"` y nombre «Procedencia: » + `PROVENANCE_LABELS`;
   - recuadro con forma propia;
