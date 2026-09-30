@@ -3,14 +3,13 @@ import { Link } from "expo-router";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Callout } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
 import { Input, InputField } from "@/components/ui/input";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 
 // sistema-visual design.md D15: esquinas continuas de iOS en las superficies y controles con
-// radio. En web no tiene efecto (RNW lo deja como estilo en línea).
+// radio. `Callout` ya no tiene radio: es un renglón (D20). En web no tiene efecto (RNW lo deja como estilo en línea).
 const CURVE = "border-curve:continuous";
 
 const ORIGINAL_OS = process.env.EXPO_OS;
@@ -21,12 +20,6 @@ afterEach(() => {
 describe("borderCurve continuo", () => {
   test.each([
     ["Card", <Card key="c" />],
-    [
-      "Callout",
-      <Callout key="a" tone="info">
-        x
-      </Callout>,
-    ],
     [
       "Input",
       <Input key="i">

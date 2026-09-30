@@ -272,7 +272,7 @@ commit con sus pruebas en verde.
   - en la anamnesis, la procedencia anterior (`provenanceHistory`) tachada junto al código vigente.
   `CorrectionHistory` no cambia, porque también la usa 005. FR-098 · US18-AC3. Verificación: la
   prueba de componente y `registro-epicrisis` en verde; `feedback-timeline` sin cambios.
-- [ ] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
+- [x] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
   - `Callout` pasa a renglón dentro de su sección;
   - `SeverityBadge` suma la barra de 4 segmentos decorativos, con prueba en rojo primero de los
     segmentos llenos por nivel y de que el nombre del nivel sigue siendo la etiqueta accesible;

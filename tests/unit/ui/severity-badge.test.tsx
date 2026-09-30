@@ -22,6 +22,30 @@ describe("SeverityBadge", () => {
     expect(/font-semibold[^>]*>[^<]*</.test(html)).toBe(strong);
   });
 
+  // FR-077 · US13-AC3 · D20: barra de 4 segmentos, tantos llenos como la posición en la escala.
+  // Lleno es sólido y vacío solo contorno: se distinguen también en escala de grises.
+  test.each([
+    ["leve", 1],
+    ["moderado", 2],
+    ["grave", 3],
+    ["critico", 4],
+  ] as const)("%s llena %d de 4 segmentos", (level, filled) => {
+    const html = renderToStaticMarkup(<SeverityBadge level={level} />);
+    expect(html.match(/data-testid="severity-segment-filled"/g)?.length ?? 0).toBe(filled);
+    expect(html.match(/data-testid="severity-segment-empty"/g)?.length ?? 0).toBe(4 - filled);
+  });
+
+  test("la barra es decorativa y el nombre del nivel sigue siendo el texto accesible", () => {
+    const html = renderToStaticMarkup(<SeverityBadge level="grave" />);
+    const bar = tagWith(html, 'data-testid="severity-bar"');
+    expect(bar).toContain('aria-hidden="true"');
+    const visibleText = html
+      // Quita el icono (un glifo) y la barra (segmentos vacíos), ambos ocultos.
+      .replace(/<div[^>]*aria-hidden="true"[^>]*>(?:[^<]*|(?:<div[^>]*><\/div>)*)<\/div>/g, "")
+      .replace(/<[^>]+>/g, "");
+    expect(visibleText.trim()).toBe("Grave");
+  });
+
   test("crítico es un relleno sólido con texto sobre destructive", () => {
     const html = renderToStaticMarkup(<SeverityBadge level="critico" />);
     expect(html).toContain("text-destructive-foreground");
