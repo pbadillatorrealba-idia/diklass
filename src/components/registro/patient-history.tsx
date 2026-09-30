@@ -38,7 +38,9 @@ export function PatientHistory({ entries, error, isPending, onRetry }: PatientHi
           const openedAt = new Date(entry.openedAt).toLocaleString("es-CL");
           return (
             <Card key={entry.consultationId} testID="history-item">
-              <Text variant="strong">Consulta del {openedAt}</Text>
+              <Text variant="strong">
+                Consulta del <Text variant="data">{openedAt}</Text>
+              </Text>
               <Text>{entry.status === "closed" ? "Cerrada" : "Abierta"}</Text>
               {entry.epicrisis ? (
                 <Text testID="history-epicrisis">

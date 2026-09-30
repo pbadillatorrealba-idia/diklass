@@ -73,7 +73,7 @@ export function Button({
         accessibilityState={{ disabled: isDisabled }}
         // `focus:` keeps a visible focus ring on web, required by WCAG 2.2 AA 2.4.7.
         // Disabled keeps the variant so a selected radio (OptionPicker) still reads as selected.
-        className={`min-h-touch items-center justify-center rounded-xl ${SIZES[size].box} focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+        className={`min-h-touch items-center justify-center rounded-sm ${SIZES[size].box} focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
           VARIANTS[variant].surface
         } ${isDisabled ? "opacity-50" : "active:opacity-80"} ${className ?? ""}`.trim()}
         disabled={isDisabled}

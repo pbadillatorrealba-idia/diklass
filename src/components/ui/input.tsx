@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import { type Ref, useState } from "react";
 import { TextInput, type TextInputProps, View, type ViewProps } from "react-native";
 import { useFormControl } from "@/components/ui/form-control";
 import { useThemeColors } from "@/theme/use-theme-colors";
@@ -10,7 +10,7 @@ export function Input({ className, style, ...props }: InputProps) {
   const { isInvalid } = useFormControl();
   return (
     <View
-      className={`w-full flex-row items-center rounded-xl border bg-card ${
+      className={`w-full flex-row items-center rounded-sm border bg-card ${
         isInvalid ? "border-destructive" : "border-input"
       } ${className ?? ""}`.trim()}
       style={[CONTINUOUS_CURVE, style]}
@@ -23,9 +23,15 @@ export function Input({ className, style, ...props }: InputProps) {
 type InputFieldHandle = TextInput;
 export type InputFieldProps = TextInputProps & { className?: string; ref?: Ref<InputFieldHandle> };
 
-export function InputField({ className, style, ...props }: InputFieldProps) {
+// Relleno vertical de `py-3`: en web `contentSize` ya lo incluye (`scrollHeight`); en nativo no.
+const VERTICAL_PADDING = process.env.EXPO_OS === "web" ? 0 : 24;
+
+export function InputField({ className, style, onContentSizeChange, ...props }: InputFieldProps) {
   const { isInvalid } = useFormControl();
   const colors = useThemeColors();
+  // Un campo multilínea crece con su contenido desde su mínimo (`min-h-textarea`), para que el
+  // texto no quede oculto tras un desplazamiento interno (revisión final de D20).
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
   return (
     <TextInput
       aria-invalid={isInvalid}
@@ -37,7 +43,17 @@ export function InputField({ className, style, ...props }: InputFieldProps) {
       placeholderTextColor={colors["muted-foreground"]}
       // Inline on purpose: on web, React Native Web's TextInput reset outranks a
       // `text-foreground` utility and left typed text at 2.53:1 (axe color-contrast).
-      style={[{ color: colors.foreground }, style]}
+      onContentSizeChange={(event) => {
+        if (props.multiline) {
+          setContentHeight(event.nativeEvent.contentSize.height + VERTICAL_PADDING);
+        }
+        onContentSizeChange?.(event);
+      }}
+      style={[
+        { color: colors.foreground },
+        props.multiline && contentHeight !== null ? { height: contentHeight } : null,
+        style,
+      ]}
       {...props}
     />
   );

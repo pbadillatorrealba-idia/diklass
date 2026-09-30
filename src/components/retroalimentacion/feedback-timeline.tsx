@@ -192,10 +192,11 @@ export function FeedbackTimeline({
               </Text>
             ) : null}
             <Text variant="strong" testID="feedback-timeline-registered-at">
-              Entrada registrada el {registradoEl}
+              Entrada registrada el <Text variant="data">{registradoEl}</Text>
             </Text>
             <Text selectable>
-              Consulta referida: {entry.content.consultationId} · Registrado el {registradoEl}
+              Consulta referida: {entry.content.consultationId} · Registrado el{" "}
+              <Text variant="data">{registradoEl}</Text>
             </Text>
             {entry.correctsRecordId !== null ? (
               <Text testID="feedback-correction-mark">Corrección (registro nuevo)</Text>

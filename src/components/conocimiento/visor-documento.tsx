@@ -29,7 +29,7 @@ export function VisorDocumento({
 
   return (
     <VStack className="gap-3" testID="visor-documento">
-      <Box className="rounded-xl bg-muted p-4">
+      <Box className="rounded-sm bg-muted p-4">
         <Text selectable variant="strong">
           {fuente.content.bibliografia.titulo}
         </Text>
@@ -68,7 +68,7 @@ export function VisorDocumento({
 
       {contexto.fragmentos.map((fragmento) => (
         <Box
-          className={`rounded-lg border p-3 ${
+          className={`rounded-sm border p-3 ${
             fragmento.citado ? "border-primary bg-primary-surface" : "border-border bg-card"
           }`}
           key={fragmento.ordinal}

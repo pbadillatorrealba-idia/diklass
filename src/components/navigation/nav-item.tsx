@@ -5,13 +5,13 @@ import { Text } from "@/components/ui/text";
 
 const VARIANTS = {
   sidebar: {
-    item: "min-h-touch flex-row items-center gap-3 rounded-lg px-3 py-2",
-    indicator: "absolute bottom-2 left-0 top-2 w-1 rounded-full bg-primary",
+    item: "min-h-touch flex-row items-center gap-3 rounded-sm px-3 py-2",
+    indicator: "absolute bottom-2 left-0 top-2 w-1 rounded-sm bg-primary",
     text: "body",
   },
   tabbar: {
     item: "min-h-touch min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2",
-    indicator: "absolute left-4 right-4 top-0 h-1 rounded-full bg-primary",
+    indicator: "absolute left-4 right-4 top-0 h-1 rounded-sm bg-primary",
     text: "nav",
   },
 } as const;

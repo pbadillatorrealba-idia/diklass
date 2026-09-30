@@ -6,7 +6,8 @@ import { SuggestedBlock } from "@/components/ui/suggested-block";
 const tagWith = (html: string, needle: string) =>
   html.match(new RegExp(`<[^>]*${needle}[^>]*>`))?.[0] ?? "";
 
-// FR-076 · US13-AC2 · design.md D7: lo sugerido se distingue por etiqueta y borde, no solo por color.
+// FR-076 · US13-AC2 · design.md D7/D20: lo sugerido se distingue por etiqueta, pliego y contorno,
+// no solo por color.
 describe("SuggestedBlock", () => {
   const html = renderToStaticMarkup(
     <SuggestedBlock testID="s">
@@ -15,23 +16,30 @@ describe("SuggestedBlock", () => {
   );
   const box = tagWith(html, 'data-testid="s"');
 
-  test("lleva el borde lateral del token suggested", () => {
-    expect(box).toContain("border-l-4");
-    expect(box).toContain("border-suggested");
+  // D20: pliego canario con contorno de 1 px; el borde lateral grueso queda prohibido.
+  test("es un pliego suggested-surface con contorno de 1 px suggested", () => {
+    const cls = box.match(/data-class="([^"]*)"/)?.[1]?.split(/\s+/) ?? [];
+    expect(cls).toEqual(
+      expect.arrayContaining(["bg-suggested-surface", "border", "border-suggested", "rounded-sm"]),
+    );
+    expect(cls.some((c) => /^border-l-/.test(c))).toBe(false);
   });
 
-  test("es un grupo con nombre «Sugerencia del sistema»", () => {
+  // D20: la copia canaria todavía no está firmada; el nombre accesible repite la etiqueta visible.
+  test("es un grupo con nombre «Sugerencia del sistema · copia sin firmar»", () => {
     expect(box).toContain('role="group"');
-    expect(box).toContain('aria-label="Sugerencia del sistema"');
+    expect(box).toContain('aria-label="Sugerencia del sistema · copia sin firmar"');
   });
 
   test("la etiqueta es texto visible y va antes del contenido", () => {
-    const label = html.indexOf(">Sugerencia del sistema<");
+    const label = html.indexOf(">Sugerencia del sistema · copia sin firmar<");
     expect(label).toBeGreaterThan(-1);
     expect(label).toBeLessThan(html.indexOf("Motivo de consulta"));
   });
 
-  test("el icono de la etiqueta es decorativo (el texto ya la nombra)", () => {
-    expect(html).toContain('aria-hidden="true"');
+  // D20: sin el emblema de «IA» (robot, destellos); el pliego y la etiqueta ya lo dicen.
+  test("no lleva icono: la etiqueta y el pliego bastan", () => {
+    expect(html).not.toContain('aria-hidden="true"');
+    expect(html).not.toContain("material-community");
   });
 });

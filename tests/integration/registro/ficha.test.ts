@@ -21,7 +21,7 @@ import {
   computeMissingFichaFields,
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
-import { listTutors, updateTutor } from "@/features/registro/tutor-service";
+import { getTutor, listTutors, updateTutor } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
 import {
   ANA,
@@ -167,6 +167,14 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const simon = await getPatient(ana.client, segundo.record.id);
     expect(luna?.content.tutorId).toBe(alta.tutorId);
     expect(simon?.content.tutorId).toBe(alta.tutorId);
+  });
+
+  // sistema-visual D20: el encabezado de la consulta lee un solo tutor por id, sin listar todos.
+  test("getTutor lee el tutor de la clínica por id y un id inexistente resuelve null", async () => {
+    const tutor = await getTutor(ana.client, tutorId);
+    expect(tutor?.record.id).toBe(tutorId);
+    expect(tutor?.content.name).toBe("Sra. Pérez compartida");
+    await expect(getTutor(ana.client, crypto.randomUUID())).resolves.toBeNull();
   });
 
   test("ampliación con antecedentes sin perder los datos previos (FR-001 · US1-AC2)", async () => {

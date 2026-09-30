@@ -57,7 +57,7 @@ describe("Card", () => {
       </Card>,
     );
     const card = tagWith(html, 'data-testid="tarjeta"');
-    for (const c of ["rounded-xl", "border", "border-border", "bg-card", "p-4", "gap-3"]) {
+    for (const c of ["rounded-sm", "border", "border-border", "bg-card", "p-4", "gap-3"]) {
       expect(card).toContain(c);
     }
   });

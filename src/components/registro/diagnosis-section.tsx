@@ -1,6 +1,5 @@
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlError,
@@ -8,7 +7,6 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -44,7 +42,6 @@ export function DiagnosisSection({
 }: DiagnosisSectionProps) {
   return (
     <VStack className="w-full gap-4" testID="diagnosis-section">
-      <Heading level={2}>Diagnóstico</Heading>
       {isSealed ? null : (
         <FormControl isInvalid={Boolean(textError)}>
           <FormControlLabel>
@@ -83,11 +80,17 @@ export function DiagnosisSection({
       {entries.length === 0 ? (
         <Text testID="diagnosis-empty">Sin diagnósticos registrados en esta consulta.</Text>
       ) : (
-        entries.map((entry) => (
-          <Card className="gap-2" key={entry.id} testID="diagnosis-entry">
-            <Text>{entry.content.text}</Text>
+        entries.map((entry, index) => (
+          <VStack
+            // La regla separa cada entrada de lo anterior; con la consulta cerrada, la primera no tiene
+            // nada encima y quedaría pegada a la banda.
+            className={`gap-2 ${isSealed && index === 0 ? "" : "border-t border-border pt-3"}`}
+            key={entry.id}
+            testID="diagnosis-entry"
+          >
+            <Text selectable>{entry.content.text}</Text>
             <AttributionBadge attribution={entry.attribution} />
-          </Card>
+          </VStack>
         ))
       )}
     </VStack>

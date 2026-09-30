@@ -313,13 +313,12 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       url: `/consultations/${caseIds.openConsultationId}`,
       readyTestID: "anamnesis-section",
       keyboardTestIDs: [
-        "consultation-patient",
+        "screen-back",
         "anamnesis-field-motivo-consulta",
         "anamnesis-text",
         "anamnesis-provenance-reportada",
         "anamnesis-submit",
-        "anamnesis-provenance-correct-reportada",
-        "anamnesis-provenance-correct-inferida",
+        "anamnesis-provenance-correct-toggle",
         "diagnosis-text",
         "diagnosis-submit",
         "epicrisis-generate",
@@ -329,7 +328,7 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       name: "consulta cerrada con epicrisis corregida",
       url: `/consultations/${caseIds.closedConsultationId}`,
       readyTestID: "epicrisis-correction-history",
-      keyboardTestIDs: ["consultation-patient", "epicrisis-correct"],
+      keyboardTestIDs: ["screen-back", "epicrisis-correct"],
     },
     // sistema-visual 5.1: rutas que la compuerta no cubría (quickstart 1.4).
     {

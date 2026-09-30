@@ -142,7 +142,7 @@ export function FeedbackForm({
         <Text tone="muted">Vacío significa «sin eventos adversos en esta entrada».</Text>
         {values.adverseEvents.map((evento, index) => (
           <Box
-            className="rounded-lg border border-border bg-card p-3 gap-2"
+            className="rounded-sm border border-border bg-card p-3 gap-2"
             key={`adverse-${index}`}
           >
             <OptionPicker

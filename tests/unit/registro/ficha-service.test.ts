@@ -32,6 +32,7 @@ type FakeQuery = Promise<FakeResult> & {
   in: (...args: unknown[]) => FakeQuery;
   order: (...args: unknown[]) => FakeQuery;
   limit: (...args: unknown[]) => FakeQuery;
+  range: (...args: unknown[]) => FakeQuery;
   single: () => Promise<FakeResult>;
   maybeSingle: () => Promise<FakeResult>;
 };
@@ -77,6 +78,7 @@ function fakeClient(queues: Partial<Record<string, FakeResult[]>> = {}) {
         in: chain("in"),
         order: chain("order"),
         limit: chain("limit"),
+        range: chain("range"),
         single: (): Promise<FakeResult> => {
           calls.push({ table, method: "single", args: [] });
           return query;

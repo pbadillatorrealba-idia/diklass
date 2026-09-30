@@ -1,14 +1,15 @@
+import { useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
   ANAMNESIS_FIELD_LABELS,
   ANAMNESIS_FIELD_OPTIONS,
   ANAMNESIS_STRUCTURED_ORDER,
-  PROVENANCE_LABELS,
   PROVENANCE_OPTIONS,
 } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import {
   FormControl,
   FormControlError,
@@ -16,7 +17,6 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -65,15 +65,16 @@ export function AnamnesisSection({
   onSubmit,
   onCorrectProvenance,
 }: AnamnesisSectionProps) {
+  // Entrada cuya procedencia se está corrigiendo; el resto muestra solo el botón.
+  const [correcting, setCorrecting] = useState<string | null>(null);
   const unknownFields = ANAMNESIS_STRUCTURED_ORDER.filter(
     (candidate) => !entries.some((entry) => entry.content.field === candidate),
   );
 
   return (
     <VStack className="w-full gap-4" testID="anamnesis-section">
-      <Heading level={2}>Anamnesis</Heading>
       {unknownFields.length > 0 ? (
-        <Card testID="anamnesis-unknown-panel">
+        <VStack className="gap-1 border-b border-border pb-3" testID="anamnesis-unknown-panel">
           <Text variant="strong">Campos estructurados sin información</Text>
           <Text tone="muted">
             Aparecen como desconocidos: sin información no es un hallazgo negativo.
@@ -83,14 +84,14 @@ export function AnamnesisSection({
               {ANAMNESIS_FIELD_LABELS[candidate]}: Desconocido
             </Text>
           ))}
-        </Card>
+        </VStack>
       ) : null}
       {isSealed ? (
         <Text tone="muted">
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-xl border border-border bg-card p-4 gap-4">
+        <VStack className="gap-4 border-b border-border pb-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}
@@ -142,27 +143,50 @@ export function AnamnesisSection({
         <Text testID="anamnesis-empty">Sin antecedentes registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
-            <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
-            <Text selectable>{entry.content.text}</Text>
-            <Text>Procedencia: {PROVENANCE_LABELS[entry.content.provenance]}</Text>
-            {(entry.content.provenanceHistory ?? []).map((previous, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; la misma procedencia puede repetirse y no aporta identidad.
-              <Text key={`${previous.provenance}-${index}`} testID="anamnesis-provenance-history">
-                Corrección registrada; antes: {PROVENANCE_LABELS[previous.provenance]}
-              </Text>
-            ))}
+          <VStack className="gap-2" key={entry.id} testID="anamnesis-entry">
+            {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
+                deja la procedencia anterior tachada junto al vigente (FR-098). */}
+            <Field
+              label={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+              mark={
+                entry.content.provenanceHistory?.length ? (
+                  <ProvenanceCorrection
+                    current={entry.content.provenance}
+                    previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
+                  />
+                ) : undefined
+              }
+              provenance={entry.content.provenance}
+            >
+              {entry.content.text}
+            </Field>
             <AttributionBadge attribution={entry.attribution} />
-            {isSealed ? null : (
+            {isSealed ? null : correcting === entry.id ? (
               <OptionPicker
                 label="Corregir procedencia"
-                onChange={(next) => onCorrectProvenance(entry.id, next)}
+                onChange={(next) => {
+                  setCorrecting(null);
+                  onCorrectProvenance(entry.id, next);
+                }}
                 options={PROVENANCE_OPTIONS}
                 testID="anamnesis-provenance-correct"
                 value={entry.content.provenance}
               />
+            ) : (
+              // Plegado tras un botón para no repetir cuatro opciones bajo cada registro (D20).
+              <Button
+                accessibilityLabel={`Corregir procedencia de ${ANAMNESIS_FIELD_LABELS[entry.content.field]}`}
+                className="self-start"
+                isDisabled={isBusy}
+                onPress={() => setCorrecting(entry.id)}
+                size="sm"
+                testID="anamnesis-provenance-correct-toggle"
+                variant="ghost"
+              >
+                <ButtonText>Corregir procedencia</ButtonText>
+              </Button>
             )}
-          </Card>
+          </VStack>
         ))
       )}
     </VStack>

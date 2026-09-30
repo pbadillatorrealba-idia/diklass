@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { View } from "react-native";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { VStack } from "@/components/ui/vstack";
@@ -59,7 +59,8 @@ export function OptionPicker<T extends string>({
       <FormControlLabel>
         <FormControlLabelText>{label}</FormControlLabelText>
       </FormControlLabel>
-      <VStack
+      {/* `View` y no `VStack`: su `flex-col` ganaba a `flex-row` y apilaba las opciones. */}
+      <View
         accessibilityLabel={label}
         accessibilityRole="radiogroup"
         className="flex-row flex-wrap gap-2"
@@ -75,6 +76,8 @@ export function OptionPicker<T extends string>({
               accessibilityRole="radio"
               aria-checked={isSelected}
               accessibilityState={{ checked: isSelected, disabled: isDisabled }}
+              // En una fila, RN no encoge a los hijos: sin tope, una etiqueta larga desborda.
+              className="max-w-full"
               isDisabled={isDisabled}
               key={option.value}
               onPress={() => onChange(option.value)}
@@ -92,7 +95,7 @@ export function OptionPicker<T extends string>({
             </Button>
           );
         })}
-      </VStack>
+      </View>
     </VStack>
   );
 }
