@@ -9,6 +9,7 @@ import {
   type FichaFormValues,
   parseFichaValues,
 } from "@/components/registro/ficha-form";
+import { FichaSummary } from "@/components/registro/ficha-summary";
 import { MissingFieldsPanel } from "@/components/registro/missing-fields-panel";
 import { PatientHistory } from "@/components/registro/patient-history";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
@@ -199,20 +200,18 @@ export default function PatientDetailScreen() {
                 testID="patient-ficha"
               >
                 <Text variant="strong">Ficha de {content.name}</Text>
-                <Text selectable>Nombre: {content.name}</Text>
-                <Text selectable>Especie: {content.species}</Text>
-                <Text selectable>Raza: {content.breed}</Text>
-                <Text selectable>Fecha de nacimiento: {content.birthDate ?? "Sin dato"}</Text>
-                <Text selectable>Edad (meses): {content.ageMonths ?? "Sin dato"}</Text>
-                <Text selectable>Peso (kg): {content.weightKg ?? "Sin dato"}</Text>
-                <Text selectable>Sexo: {content.sex}</Text>
-                <Text selectable>Estado reproductivo: {content.reproductiveStatus}</Text>
-                <Text selectable>
-                  Tutor:{" "}
-                  {tutor
-                    ? `${tutor.content.name} — ${tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}`
-                    : "Sin tutor asociado"}
-                </Text>
+                <FichaSummary
+                  content={content}
+                  tutor={
+                    tutor
+                      ? {
+                          name: tutor.content.name,
+                          contact:
+                            tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto",
+                        }
+                      : null
+                  }
+                />
               </VStack>
               <MissingFieldsPanel content={content} />
               {isEditing && fichaValues ? (

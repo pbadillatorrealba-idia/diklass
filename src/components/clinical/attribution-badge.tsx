@@ -31,7 +31,9 @@ export function AttributionBadge({
       testID="attribution-badge"
     >
       <Text variant="strong">{actor}</Text>
-      <Text tone="muted">{occurredAt}</Text>
+      <Text tone="muted" variant="data">
+        {occurredAt}
+      </Text>
     </Box>
   );
 }

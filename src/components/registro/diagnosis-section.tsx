@@ -80,9 +80,11 @@ export function DiagnosisSection({
       {entries.length === 0 ? (
         <Text testID="diagnosis-empty">Sin diagnósticos registrados en esta consulta.</Text>
       ) : (
-        entries.map((entry) => (
+        entries.map((entry, index) => (
           <VStack
-            className="gap-2 border-t border-border pt-3"
+            // La regla separa cada entrada de lo anterior; con la consulta cerrada, la primera no tiene
+            // nada encima y quedaría pegada a la banda.
+            className={`gap-2 ${isSealed && index === 0 ? "" : "border-t border-border pt-3"}`}
             key={entry.id}
             testID="diagnosis-entry"
           >

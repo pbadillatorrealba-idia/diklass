@@ -24,8 +24,8 @@ export function AdverseEventItem({
           {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}: {entry.event.description}
         </Text>
         <Text selectable tone="muted">
-          Registrado el {registradoEl} · Consulta {entry.consultationId} · en una versión ya
-          corregida; permanece registrado.
+          Registrado el <Text variant="data">{registradoEl}</Text> · Consulta {entry.consultationId}{" "}
+          · en una versión ya corregida; permanece registrado.
         </Text>
       </Box>
     );
@@ -45,7 +45,7 @@ export function AdverseEventItem({
         {entry.event.description}
       </Text>
       <Text selectable tone="muted">
-        Registrado el {registradoEl} · Consulta {entry.consultationId}
+        Registrado el <Text variant="data">{registradoEl}</Text> · Consulta {entry.consultationId}
       </Text>
     </Box>
   );

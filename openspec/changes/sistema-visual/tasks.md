@@ -299,7 +299,7 @@ commit con sus pruebas en verde.
     `tests/e2e/web/registro-epicrisis.spec.ts:140`.
   FR-097 · FR-099. Verificación: el e2e nuevo, la prueba de duración, `registro-epicrisis` y
   `accessibility` en verde, de a uno.
-- [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
+- [x] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
   seguimiento, conocimiento y Configuración. Datos en `data` y procedencia al margen donde exista.
   Después:
   - axe en `chromium` y `chromium-dark` (de a uno, `--workers=1`), `firefox` y `webkit`;

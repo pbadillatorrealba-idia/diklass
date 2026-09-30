@@ -32,6 +32,25 @@ describe("PatientHistory", () => {
     expect(html).not.toContain("history-empty");
   });
 
+  // sistema-visual D20 (12.9): las fechas son datos y van en la mono.
+  test("la fecha de cada consulta va en la mono de datos", () => {
+    const html = renderToStaticMarkup(
+      <PatientHistory
+        {...estado}
+        entries={[
+          {
+            consultationId: "c1",
+            openedAt: "2026-09-25T12:00:00Z",
+            status: "closed",
+            epicrisis: null,
+            epicrisisSuperseded: false,
+          },
+        ]}
+      />,
+    );
+    expect(html).toMatch(/font-mono[^>]*>\d{2}-\d{2}-2026/);
+  });
+
   test("sin consultas tras cargar lo dice", () => {
     const html = renderToStaticMarkup(<PatientHistory {...estado} entries={[]} />);
     expect(html).toContain('data-testid="history-empty"');
@@ -51,6 +70,8 @@ test("el dato clínico de una ficha usado en una respuesta se puede seleccionar"
     />,
   );
   expect(html).toMatch(/r-userSelect-[^" ]+"[^>]*>Antecedente clínico copiable/);
+  // D20 (12.9): la procedencia del dato de ficha va al margen como código con nombre.
+  expect(html).toContain('aria-label="Procedencia: Reportada"');
 });
 
 test("la descripción de un evento adverso en el reporte se puede seleccionar", () => {
@@ -67,6 +88,7 @@ test("la descripción de un evento adverso en el reporte se puede seleccionar", 
     />,
   );
   expect(html).toMatch(/r-userSelect-[^" ]+"[^>]*>Reacción adversa copiable/);
+  expect(html).toMatch(/font-mono[^>]*>\d{2}-\d{2}-2026/);
 });
 
 describe("FeedbackTimeline", () => {

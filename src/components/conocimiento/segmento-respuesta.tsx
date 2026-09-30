@@ -1,4 +1,5 @@
 import { Box } from "@/components/ui/box";
+import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import type { SegmentoRespuesta } from "@/features/conocimiento/schema";
@@ -26,19 +27,23 @@ export function SegmentoRespuestaView({ segmento }: { segmento: SegmentoRespuest
       ? `${ETIQUETA_ORIGEN.ficha} · ${segmento.provenance}`
       : ETIQUETA_ORIGEN[segmento.kind];
 
+  // La procedencia del segmento va al margen como código con nombre (FR-097 · D20).
   const contenido = (
-    <>
-      <Text tone="muted" variant="label">
-        {etiqueta}
-      </Text>
-      <Text selectable>
-        {segmento.texto}
-        {segmento.kind === "ficha" && segmento.provenance !== "desconocida"
-          ? ` (${segmento.fichaRef})`
-          : ""}
-      </Text>
-      {segmento.kind === "evidencia" ? <CitaFragmento cita={segmento.cita} /> : null}
-    </>
+    <Box className="flex-row items-start gap-3">
+      <Box className="flex-1 gap-1">
+        <Text tone="muted" variant="label">
+          {etiqueta}
+        </Text>
+        <Text selectable>
+          {segmento.texto}
+          {segmento.kind === "ficha" && segmento.provenance !== "desconocida"
+            ? ` (${segmento.fichaRef})`
+            : ""}
+        </Text>
+        {segmento.kind === "evidencia" ? <CitaFragmento cita={segmento.cita} /> : null}
+      </Box>
+      <ProvenanceMark provenance={segmento.provenance} />
+    </Box>
   );
 
   // Una inferencia es una afirmación del propio sistema, sin validar: se marca como sugerencia

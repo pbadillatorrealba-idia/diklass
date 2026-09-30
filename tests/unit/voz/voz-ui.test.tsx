@@ -55,6 +55,13 @@ describe("DraftFactsPanel", () => {
     expect(html).not.toContain('data-testid="attribution-badge"');
   });
 
+  // sistema-visual D20 (12.9): la procedencia del hecho va al margen como código con nombre.
+  test("la procedencia del hecho es un código al margen con nombre", () => {
+    const html = panel(fact("pending"));
+    expect(html).toContain('aria-label="Procedencia: Inferida"');
+    expect(html).not.toContain(">Procedencia: Inferida<");
+  });
+
   test("un hecho confirmado deja de ser sugerencia y muestra su atribución", () => {
     const html = panel(fact("confirmed"));
     expect(html).not.toContain("Sugerencia del sistema");

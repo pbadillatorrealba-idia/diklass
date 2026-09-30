@@ -1102,3 +1102,39 @@ y `accessibility` (12/12).
 - `getTutor`: la prueba unitaria de filas malformadas y la integración viva pasaron 10/10 con
   `SUPABASE_LIVE_TESTS=1`.
 - `registro-epicrisis` 2/2 y `accessibility` 12/12 en Chromium, incluidas las dos columnas de D9.
+
+### 12.9 — Barrido y compuertas
+
+- **Barrido**, con prueba de componente en rojo primero:
+  - la ficha pasa a `FichaSummary` (rótulo preimpreso y dato; fecha, edad y peso en `data`);
+  - los hechos de voz y los segmentos de `/knowledge` llevan la procedencia al margen
+    (`ProvenanceMark`) en lugar del texto «Procedencia: …»;
+  - las fechas del historial, la cronología, los eventos adversos y la atribución van en
+    `data`;
+  - las fechas de `visor-documento` (líneas en `caption`) quedan en la cara de UI para no mezclar
+    tamaños en una línea.
+  Login, inicio, seguimiento, conocimiento y Configuración heredan la forma de las primitivas
+  (12.3–12.7) sin cambios propios.
+- **Suite completa en `chromium`**:
+  - La primera ejecución se cortó por OOM de Metro (heap de 2 GB). Se repitió con
+    `NODE_OPTIONS=--max-old-space-size=4096`: 62/64.
+  - `tema.spec.ts` fijaba los canales de `--background` anteriores a D20. Corregido en `e5186d4`;
+    después, 6/6.
+  - `conocimiento.spec.ts:273` destapó un defecto previo a D20: `listPatients` perdía los
+    pacientes más allá de la fila 1000 (tope de PostgREST), porque la base local tiene más de 1100.
+    Se corrigió en 12.11 (`37d17d7`), con prueba de regresión en rojo; después, `conocimiento`
+    6/6.
+- **Axe**, uno a la vez y con `--workers=1`:
+  - `chromium`: 12/12 en la suite completa;
+  - `chromium-dark`: 12/12;
+  - `firefox`: 16/16, con `consulta-formulario`;
+  - `webkit`: 16/16, con `consulta-formulario`.
+  El reflujo a 320 px va dentro de `accessibility.spec.ts`.
+- **Escala de grises (SC-061)**, en `evidencia/`:
+  - `12.9-consulta-borrador-grises.png`: lo sugerido conserva la etiqueta «Sugerencia del
+    sistema · copia sin firmar», su contorno y el icono;
+  - `12.9-consulta-corregida-grises.png`: se ven el tachado con «Reemplazado» y el timbre
+    «Firmado»;
+  - `12.9-seguimiento-grises.png`: «Grave» con icono, negrita y barra de 3/4 segmentos llenos.
+- **Revisión visual**: quité una regla sobrante bajo la banda de la sección 2 con la consulta
+  cerrada. Es un cambio solo de clases, posterior a las ejecuciones de arriba.
