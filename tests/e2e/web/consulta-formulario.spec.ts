@@ -94,6 +94,25 @@ test.describe("consulta como formulario", () => {
     });
   }
 
+  // Revisión final de D20: el borrador se lee entero antes de firmarlo.
+  test("un campo largo del borrador crece y no esconde texto", async ({ page }) => {
+    const { api, patientId, crear } = await prepararPaciente(page, "Nieve E2E campo largo");
+    try {
+      const consultationId = await crear("consultation", { patientId, status: "open" });
+      await page.goto(`/consultations/${consultationId}`);
+      await page.getByRole("button", { name: "Generar borrador de epicrisis" }).click();
+      const campo = page.getByLabel("Observaciones", { exact: true });
+      await campo.fill(
+        Array.from({ length: 12 }, (_, i) => `Línea ${i + 1} de observación`).join("\n"),
+      );
+      await expect
+        .poll(() => campo.evaluate((el) => el.scrollHeight - el.clientHeight))
+        .toBeLessThanOrEqual(1);
+    } finally {
+      await api.dispose();
+    }
+  });
+
   // US18-AC4 · FR-099: con Reduce Motion, el timbre aparece sin animación y el pliego se va.
   test("al firmar con movimiento reducido, el timbre aparece de inmediato y el pliego desaparece", async ({
     page,

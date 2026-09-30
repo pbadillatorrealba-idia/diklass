@@ -12,6 +12,7 @@ mock.module("@/features/clinical/use-veterinarian-display-name", () => ({
 const { CorrectionLine, ProvenanceCorrection } = await import(
   "@/components/clinical/correction-line"
 );
+const { AttributionBadge } = await import("@/components/clinical/attribution-badge");
 
 const render = (node: ReactNode) =>
   renderToStaticMarkup(
@@ -120,5 +121,26 @@ describe("ProvenanceCorrection", () => {
   test("junto al código vigente", () => {
     expect(html).toContain('aria-label="Procedencia: Reportada"');
     expect(html.indexOf("Inferida")).toBeLessThan(html.indexOf("Procedencia: Reportada"));
+  });
+});
+
+// Revisión final de D20: lo recién guardado se atribuye en la línea del mensaje, no como firma
+// suelta sobre el formulario.
+describe("AttributionBadge en línea", () => {
+  const html = render(
+    <AttributionBadge
+      attribution={{ actorId: "v2", occurredAt: "2026-09-30T10:00:00Z", action: null }}
+      inline
+    />,
+  );
+
+  test("dice quién y cuándo en una línea de texto", () => {
+    expect(html).toContain("Por Dr. Bruno Soto");
+    expect(html).toMatch(/font-mono[^>]*>\d{2}-\d{2}-2026/);
+  });
+
+  test("no es una línea de firma ni cuenta como insignia de un registro", () => {
+    expect(html).not.toContain("border-t");
+    expect(html).not.toContain('data-testid="attribution-badge"');
   });
 });

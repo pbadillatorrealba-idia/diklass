@@ -1181,3 +1181,16 @@ y `accessibility` (12/12).
 - **Verificación:** unitarias 893/893; `chromium` 64/64 en la suite completa; `chromium-dark`
   12/12. `evidencia/12.10-*` se volvió a capturar: las tres secciones entran a 1440×2600 y la
   banda 3 está activa con borrador.
+
+### 12.13 — Segunda revisión final
+
+- **Campos multilínea:** crecen con su contenido desde `min-h-textarea`. El e2e
+  `consulta-formulario` («un campo largo del borrador…») falló primero con 240 px ocultos;
+  ahora 0.
+  - En web crecen pero no encogen al borrar, porque `scrollHeight` no baja de la altura fijada.
+  - En nativo, el relleno se suma a mano (`contentSize` no lo incluye). Queda **pendiente de
+    dispositivo**.
+- **Atribución de lo recién guardado:** va en la línea del mensaje de la operación
+  («Por Dra. X · fecha», `AttributionBadge inline`), con prueba de componente en rojo primero.
+- **Verificación:** unitarias 895/895; `chromium` 65/65 en la suite completa; `chromium-dark`
+  12/12; `evidencia/12.10-*` capturada de nuevo.

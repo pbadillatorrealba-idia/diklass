@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { CorrectionLine } from "@/components/clinical/correction-line";
@@ -596,10 +596,12 @@ export default function ConsultationScreen() {
             tutorName={data.header.tutorName}
           />
           {/* Mensajes de las operaciones; el estado de la consulta va en el encabezado (D20). */}
-          <Text accessibilityLiveRegion="polite" testID="consultation-status">
-            {status ?? ""}
-          </Text>
-          {savedAttribution ? <AttributionBadge attribution={savedAttribution} /> : null}
+          <View className="flex-row flex-wrap items-baseline gap-x-2">
+            <Text accessibilityLiveRegion="polite" testID="consultation-status">
+              {status ?? ""}
+            </Text>
+            {savedAttribution ? <AttributionBadge attribution={savedAttribution} inline /> : null}
+          </View>
           {/*
            * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
            * DOM —como en móvil, donde precede a la anamnesis— y a la derecha en escritorio. Al no

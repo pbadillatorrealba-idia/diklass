@@ -763,6 +763,11 @@ lúdico (sin patitas ni ilustraciones de perros), y ningún degradado, destello 
   - los mensajes de las operaciones siguen en su región viva;
   - se retira «Ver ficha del paciente», que repetía «Volver a la ficha» de `Screen` (D12).
 
+- **Campos multilínea:** crecen con su contenido desde el mínimo `min-h-textarea`, para que el
+  borrador se lea entero antes de firmarlo.
+- **Atribución de lo recién guardado:** va en la misma línea que el mensaje de la operación
+  («Por Dra. X · fecha»), no como firma suelta sobre el formulario. Cada registro conserva la suya.
+
 **Alternativas descartadas** en la ronda de direcciones:
 
 - «Etograma» (grilla de registro etológico): la más obvia para la categoría y densa para el

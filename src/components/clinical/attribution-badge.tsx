@@ -6,19 +6,33 @@ import type { Attribution } from "@/lib/attribution/types";
 
 /**
  * Autor y momento de un registro. `approved` marca contenido aprobado (una sugerencia confirmada o
- * la epicrisis firmada), que se muestra como timbre de firma (FR-076 · D20).
+ * la epicrisis firmada), que se muestra como timbre de firma (FR-076 · D20). `inline` es la
+ * atribución de lo recién guardado, en la línea del mensaje de la operación (aclaración de D20).
  */
 export function AttributionBadge({
   attribution,
   approved = false,
+  inline = false,
 }: {
   attribution: Attribution;
   approved?: boolean;
+  inline?: boolean;
 }) {
   const { data: displayName } = useVeterinarianDisplayName(attribution.actorId);
   // Never fall back to the raw uuid: an attribution has to name a person (US12/AC2).
   const actor = displayName ?? "Profesional de la clínica";
   const occurredAt = new Date(attribution.occurredAt).toLocaleString("es-CL");
+
+  if (inline) {
+    return (
+      <Text tone="muted">
+        {`Por ${actor} · `}
+        <Text tone="muted" variant="data">
+          {occurredAt}
+        </Text>
+      </Text>
+    );
+  }
 
   if (approved) {
     return <SignatureStamp actor={actor} occurredAt={occurredAt} testID="attribution-badge" />;

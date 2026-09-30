@@ -331,3 +331,10 @@ commit con sus pruebas en verde.
   Verificación: pruebas de componente, `consulta-formulario`, `registro-epicrisis`, `auth` y
   `accessibility` en verde (`chromium` y `chromium-dark`), y capturas nuevas en
   `evidencia/12.10-*`.
+- [x] 12.13 Segunda revisión final (decisión del usuario del 2026-09-30), con prueba en rojo
+  primero:
+  - los campos multilínea crecen con el contenido (el borrador de la epicrisis se cortaba);
+  - la atribución de lo recién guardado va junto al mensaje de la operación y no suelta.
+  Verificación: e2e del campo largo sin desplazamiento interno, prueba de componente de la
+  atribución en línea, `auth`, `registro-epicrisis`, `consulta-formulario` y `accessibility` en
+  verde, y capturas nuevas.
