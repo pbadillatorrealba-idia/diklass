@@ -232,42 +232,67 @@ commit con sus pruebas en verde.
   - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
     `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
     `:root.light`/`:root.dark`;
+  - añadir la aserción ΔE*ab ≥ 10 entre `correction-surface` y `destructive-surface` en ambos
+    esquemas (D20);
   - cambiar los valores de `src/global.css` y `src/theme/colors.ts` a la tabla de D20, ajustando
-    solo la luminosidad hasta AA;
+    solo la luminosidad hasta AA, incluido el reajuste de `warning`, `info` y
+    `destructive-surface`;
   - exponer los tokens nuevos en `tailwind.config.js`.
-  FR-071 · FR-072. Verificación: rojo por tokens ausentes y después verde, con `sin-literales`
-  en verde.
+  FR-071 · FR-072. Verificación: rojo por tokens ausentes y por la ΔE actual (4.8), después verde,
+  con `sin-literales` en verde.
 - [ ] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
-  (woff2): plugin de `expo-font` en `app.json`, `@font-face` en `global.css`,
-  `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS de `/login` ≤ 0.1 y
-  presupuesto de fuentes ≤ 140 KB.
-- [ ] 12.3 `Text`: variantes `data` (mono tabular) y `label` (rótulo preimpreso), con prueba de
-  componente en rojo primero (D20 · FR-074). Radios: `rounded-xl`/`rounded-lg` → `rounded-sm` en
-  `Button`, `Input`, `Card` y el diálogo. La guarda de D10 prohíbe `rounded-xl`/`rounded-2xl` y
-  `border-l-[2-8]`. Verificación: pruebas de `ui/` y `sin-literales` en verde.
+  (woff2): plugin de `expo-font` en `app.json`, `@font-face` con `font-display: swap` en
+  `global.css`, `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS ≤ 0.1 en
+  `/login` y en `/consultations/[id]`, y presupuesto de fuentes ≤ 140 KB medido con `ls -l`.
+- [ ] 12.3 `Text` y forma:
+  - prueba de componente en rojo primero para las variantes nuevas `data` (mono tabular) y
+    `rubric` (rótulo preimpreso), comprobando además que `label` conserva `text-sm font-medium`
+    (D20 · FR-074);
+  - ampliar en rojo la guarda de D10 en `tema.test.ts` para que prohíba `rounded-xl`,
+    `rounded-lg`, `rounded-2xl` y `border-l-[2-8]` en `src/`, y confirmar que falla nombrando los
+    archivos actuales;
+  - pasar `Button`, `Input`, `Card`, `Callout`, los badges y el diálogo a `rounded-sm` hasta dejarla
+    en verde.
+  Verificación: pruebas de `ui/` y la guarda en verde.
 - [ ] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
   - códigos R/I/F/? a partir de `Provenance`;
-  - `role="img"` y nombre «Procedencia: <nombre>»;
-  - recuadro con forma propia.
-  FR-097. Verificación: prueba de componente verde.
+  - `role="img"` y nombre «Procedencia: » + `PROVENANCE_LABELS`;
+  - recuadro con forma propia;
+  - `Field` con `ProvenanceMark` opcional.
+  FR-097. Verificación: prueba de componente verde para los cuatro códigos y para `Field` sin
+  procedencia.
 - [ ] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
   sistema · copia sin firmar». `SignatureStamp` (nombre y momento, `stamp`) para el contenido
   aprobado; `AttributionBadge` lo usa en `approved`. Pruebas en rojo primero. FR-076.
   Verificación: prueba de componente y la guarda sin `border-l-4` en verde.
-- [ ] 12.6 `CorrectionLine`: contenido anterior tachado y legible, anunciado como reemplazado, y la
-  corrección en `correction-surface` con atribución. Adoptarla en `CorrectionHistory`. Prueba en
-  rojo primero. FR-098 · US18-AC3.
-- [ ] 12.7 `Callout` como renglón dentro de su sección y `SeverityBadge` con la barra de 4
-  segmentos, con prueba en rojo primero de los segmentos llenos por nivel. FR-077 · FR-100.
-  Adoptarlos en `missing-fields-panel` y `avisos-cobertura` sin toasts.
+- [ ] 12.6 `CorrectionLine`, con prueba de componente en rojo primero:
+  - por cada campo de la epicrisis que cambió entre la versión aprobada y la correctiva
+    (`epicrisisRows`), el valor anterior tachado, legible y anunciado como reemplazado, y el
+    vigente en `correction-surface` con su atribución;
+  - en la anamnesis, la procedencia anterior (`provenanceHistory`) tachada junto al código vigente.
+  `CorrectionHistory` no cambia, porque también la usa 005. FR-098 · US18-AC3. Verificación: la
+  prueba de componente y `registro-epicrisis` en verde; `feedback-timeline` sin cambios.
+- [ ] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
+  - `Callout` pasa a renglón dentro de su sección;
+  - `SeverityBadge` suma la barra de 4 segmentos decorativos, con prueba en rojo primero de los
+    segmentos llenos por nivel y de que el nombre del nivel sigue siendo la etiqueta accesible;
+  - adoptarlos en `avisos-cobertura` y `missing-fields-panel`, sin toasts;
+  - US18-AC5: un caso en rojo en `conocimiento.spec.ts` que pida el aviso
+    `sin_respaldo_documental` como renglón dentro de la respuesta.
+  FR-077 · FR-100. Verificación: pruebas de componente, `conocimiento` y `seguimiento` en verde, de
+  a uno.
 - [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
-  - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2, AC4 y AC5:
-    códigos y clave visibles, firma con timbre y reducción de movimiento emulada;
-  - después, `FormSection` y `Field` con las secciones 1 a 4 y el encabezado con número de consulta
-    en `data`;
-  - por último, «Firmar» con la transición de ≤ 300 ms (FR-099), manteniendo el orden del DOM y las
-    dos columnas de D9.
-  Verificación: el e2e nuevo, `registro-epicrisis` y `accessibility` en verde, de a uno.
+  - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2 (a 1280×800 y
+    375×667) y AC4, con códigos y clave visibles, y firma con timbre y reducción de movimiento
+    emulada;
+  - prueba unitaria en rojo de `SIGNATURE_MS ≤ 300`;
+  - después, el encabezado con los orígenes de D20: paciente y tutor desde `getPatient`, «Consulta
+    n.º N» como ordinal en `listConsultationsByPatient` y fecha en `data`;
+  - `FormSection` y `Field` con las secciones 1 Anamnesis, 2 Diagnóstico y 3 Epicrisis y firma;
+  - por último, «Firmar y cerrar consulta» con la transición de D20 (`Animated` +
+    `AccessibilityInfo`), manteniendo el orden del DOM y las dos columnas de D9.
+  FR-097 · FR-099. Verificación: el e2e nuevo, la prueba de duración, `registro-epicrisis` y
+  `accessibility` en verde, de a uno.
 - [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
   seguimiento, conocimiento y Configuración. Datos en `data` y procedencia al margen donde exista.
   Después:

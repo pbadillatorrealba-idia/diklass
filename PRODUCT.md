@@ -66,8 +66,8 @@ captura de voz procesa el audio en ventanas de unos 30 segundos, no en tiempo re
     (FR-022, FR-023);
   - los registros aprobados son inmutables y las correcciones se agregan (FR-024);
   - toda acción clínica queda atribuida a quien la hizo, con su momento (FR-063).
-- Stack fijado por `docs/constitution.md`: Expo SDK 57, Expo Router, NativeWind, gluestack-ui v3,
-  Supabase. El cambio `openspec/changes/sistema-visual` especifica el sistema de tokens, la escala de
+- Stack fijado por `docs/constitution.md`: Expo SDK 57, Expo Router, gluestack-ui v3 y Supabase.
+  El estilo usa NativeWind (dependencia de gluestack-ui v3 en `package.json`). El cambio `openspec/changes/sistema-visual` especifica el sistema de tokens, la escala de
   severidad clínica de 4 niveles y la navegación adaptable.
 - Terminología en uso: consulta, anamnesis, antecedentes, epicrisis, seguimiento, tutor, evento
   adverso, severidad (leve, moderado, grave, crítico).

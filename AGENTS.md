@@ -113,7 +113,8 @@ Reglas para cualquier UI nueva o modificada:
   secundarias y las acciones por fila; `ghost` para las terciarias; `destructive` solo para
   detener algo en curso.
 - **Layout:** espaciado de la escala (`gap`/`p` 1, 2, 3, 4, 6, 8), `rounded-xl` para controles y
-  superficies y `rounded-lg` para lo anidado, y dimensiones con nombre (`max-w-content`,
+  superficies y `rounded-lg` para lo anidado (revisado por D20 de `sistema-visual`: la UI nueva usa
+  `rounded-sm` y ningún borde lateral grueso; el grupo 12 migra el resto), y dimensiones con nombre (`max-w-content`,
   `min-h-touch`, `min-h-textarea`), nunca valores arbitrarios `[…]`.
 - **El color nunca es la única señal:** todo estado lleva texto o icono con nombre.
 - **Estilo de código (D15):** `process.env.EXPO_OS` en lugar de `Platform.OS`, y `use` de React 19

@@ -21,7 +21,8 @@ auditoría de la rama `feat/tema-visual` (2026-09-25) encontró:
     por el sistema.
 
 Decisiones de producto tomadas con el usuario el 2026-09-25: estados warning/success/info,
-distinción sistema/profesional con borde lateral y etiqueta, severidad de 4 niveles, paleta y modo
+distinción sistema/profesional con borde lateral y etiqueta (reemplazado por pliego y etiqueta
+en D20), severidad de 4 niveles, paleta y modo
 automático sin cambios, iconos con `@expo/vector-icons` y layout adaptable según el caso
 (escritorio y tablet/móvil).
 
@@ -622,8 +623,8 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 Decisión del usuario del 2026-09-30, tras una ronda de direcciones de `impeccable`. El contrato de
 dirección vive en `.impeccable/surfaces/src-app-protected-patients-consultations-id-tsx.md`, que
 solo lee el desarrollo. Esta decisión **reemplaza** los valores de D4, el tratamiento de
-`SuggestedBlock` de D7 y los radios de D6. Amplía D2, D5 y D9. Los mecanismos de D1 (CSS + espejo
-TS verificado), D3, D8 y D10 a D19 no cambian.
+`SuggestedBlock` de D7 y los radios de D6. Amplía D2, D5, D9 y la guarda de D10 (radios y bordes
+laterales). Los mecanismos de D1 (CSS + espejo TS verificado), D3, D8 y D11 a D19 no cambian.
 
 **Tesis.** Lo que sugiere el sistema es la copia canaria de un formulario autocopiativo, y solo la
 firma del veterinario la vuelve original. Rechaza el tablero de tarjetas con un panel de
@@ -641,14 +642,24 @@ la luminosidad hasta AA).**
 | `border` | verde de `primary` al ~25 % sobre `card`, opaco | ídem | reglas del formulario (decorativas) |
 | `suggested-surface` (nuevo) | `#FBEFA8` | `#3A3312` | pliego canario |
 | `suggested` | ≈ `#7A6100` (≥ 3:1 sobre card) | ≈ `#E8CF5C` | contorno y marca de lo sugerido |
-| `correction-surface` (nuevo) | `#F9DDE2` | `#3B1F26` | pliego rosa |
+| `correction-surface` (nuevo) | ≈ `#F6DDE8` | ≈ `#361C30` | pliego rosa (frío, hacia el magenta) |
 | `correction` (nuevo) | ≈ `#9E2B45` | ≈ `#F29AAE` | tachado y marca de corrección |
 | `stamp` (nuevo) | ≈ `#3A3F9A` | ≈ `#A3A8F2` | tampón de firma (atribución aprobada) |
+
+`stamp` es índigo de tampón, cercano en tono al violeta anterior de `suggested`. No se confunde con
+la marca de «IA»: nunca pinta una superficie ni un contenido generado; solo aparece como marco y
+texto del `SignatureStamp`, y siempre junto al nombre de un profesional.
 
 - `warning`, `info`, `success` y `destructive` conservan su función y su triple de tokens (D4).
   Se reajustan para no confundirse con el canario, el rosa ni el tampón:
   - `warning` pasa a ocre anaranjado (el canario es de lo sugerido);
-  - `info`, a pizarra azulada, más gris que `stamp`.
+  - `info`, a pizarra azulada, más gris que `stamp`;
+  - `destructive-surface` se aleja del rosa de corrección: hoy `#FAE6E5` frente a `#F9DDE2` da
+    1.06:1 de contraste y una diferencia de color ΔE*ab de 4.8. Pasa a un rojo cálido
+    (≈ `#FBE3D6`; oscuro ≈ `#3D1E12`), y `correction-surface` a un rosa frío (≈ `#F6DDE8`; oscuro
+    ≈ `#361C30`), con ΔE*ab de 12.4 en claro y 22.7 en oscuro. Entre dos pasteles el contraste de
+    luminancia no sirve: `tema.test.ts` exige ΔE*ab ≥ 10 entre ambas superficies en los dos
+    esquemas, además del icono y del texto que ya distinguen un error de una corrección.
 - `secondary`, `accent`, `primary-surface` y `secondary-surface` se reajustan dentro de la misma
   familia de tintas.
 - **Estrategia de color: restringida.** Todo el color de superficie se concentra en los pliegos
@@ -662,8 +673,9 @@ la luminosidad hasta AA).**
   - Se embebe igual que en D2: `expo-font` en nativo y `@font-face` + `preload` en web.
 - **Variantes de `Text`:**
   - `data`: mono con cifras tabulares;
-  - `label`: rótulo preimpreso en `text-sm`, mayúsculas con `tracking-wide`, `font-semibold` y
-    color `primary`.
+  - `rubric` (nueva): rótulo preimpreso en `text-sm`, mayúsculas con `tracking-wide`,
+    `font-semibold` y color `primary`. La variante `label` existente (`text-sm font-medium`, con
+    siete usos fuera de la consulta) no cambia.
 - El mínimo de 14 px de D5 sigue vigente.
 
 **Forma (reemplaza los radios de D6).** Superficies y controles con radio de 2 px (`rounded-sm`);
@@ -675,31 +687,37 @@ regla, el pliego y la tinta, no la elevación.
 | Primitiva | Qué es | Reemplaza o cambia |
 |---|---|---|
 | `FormSection` (nueva) | sección numerada del formulario: número y título en la banda preimpresa (fondo `primary-surface`), cuerpo con reglas de 1 px | `Card` en la consulta |
-| `Field` (nueva) | rótulo preimpreso + valor + `ProvenanceMark` al margen | filas sueltas de anamnesis y epicrisis |
-| `ProvenanceMark` (nueva) | recuadro con R / I / F / ?, `role="img"` y nombre accesible (FR-097) | la etiqueta de procedencia en texto |
+| `Field` (nueva) | rótulo preimpreso (`rubric`) + valor + `ProvenanceMark` opcional al margen, solo cuando el dato tiene procedencia en el modelo (hoy, la anamnesis) | filas sueltas de anamnesis y epicrisis |
+| `ProvenanceMark` (nueva) | recuadro con R / I / F / ?, `role="img"` y nombre accesible «Procedencia: » + `PROVENANCE_LABELS` (FR-097). «F» (fuente) marca `recuperada` para no repetir la «R» de `reportada` | la etiqueta de procedencia en texto |
 | `ProvenanceKey` (nueva) | clave de los cuatro códigos en el encabezado de la consulta | — |
 | `SignatureStamp` (nueva) | marco de tampón con nombre y momento del aprobador (FR-099) | `AttributionBadge` para `approved` |
-| `CorrectionLine` (nueva) | renglón anterior tachado y legible + corrección en pliego rosa (FR-098) | el listado de `CorrectionHistory` |
+| `CorrectionLine` (nueva) | por cada campo de la epicrisis que cambió entre la versión aprobada y la correctiva (`epicrisisRows`): valor anterior tachado y legible + valor vigente en pliego rosa con su atribución. Para la anamnesis, procedencia anterior tachada junto al código vigente (`provenanceHistory`) (FR-098) | nada: `CorrectionHistory` sigue como está, porque también la usa 005 (`feedback-timeline`) |
 | `SuggestedBlock` | pliego `suggested-surface` + contorno de 1 px `suggested` + etiqueta «Sugerencia del sistema · copia sin firmar» | el `border-l-4` (el borde lateral grueso queda prohibido) |
 | `Callout` | renglón impreso dentro de su sección: icono + texto sobre la superficie del tono (FR-100) | la caja flotante |
-| `SeverityBadge` | añade la barra de 4 segmentos (FR-077) | — |
+| `SeverityBadge` | añade la barra de 4 segmentos (FR-077); los segmentos son decorativos y el nombre del nivel sigue siendo la etiqueta accesible | — |
 
 `Card` sigue existiendo para las listas y los paneles fuera de la consulta, con la nueva forma.
 
 **Consulta (amplía D9).**
 
-- **Encabezado del formulario:** paciente, tutor, número de consulta y fecha en mono, y la
-  `ProvenanceKey`.
-- **Secciones numeradas** en el orden del flujo clínico: 1 Anamnesis, 2 Información faltante,
-  3 Diagnóstico, 4 Epicrisis y firma.
+- **Encabezado del formulario**, con estos orígenes:
+  - paciente y tutor: `getPatient(patientId)` y su tutor, con una consulta más en `loadWorkspace`;
+  - «Consulta n.º N»: el ordinal de la consulta en `listConsultationsByPatient`, ordenado por
+    `created_at`, que ya lee `listPatientTimeline`;
+  - fecha: `created_at` de la consulta, en `data`;
+  - la `ProvenanceKey`.
+  No se agregan columnas ni datos nuevos.
+- **Secciones numeradas**, solo las que existen hoy en la consulta y en el orden del flujo clínico:
+  1 Anamnesis, 2 Diagnóstico, 3 Epicrisis y firma.
   - La numeración se justifica porque la secuencia es el protocolo.
-  - 006 y 007 insertarán sus secciones cuando existan.
+  - Información faltante y diferencial (006) y plan (007) insertarán sus secciones cuando existan.
 - **Eje único:** todas las secciones bajan por un mismo eje vertical. La sección con foco o la
   última editada se marca con la banda preimpresa en `primary` sólido y su número en
   `primary-foreground`, nunca con un borde lateral de color.
 - **Columna lateral** (`lg`): se mantiene según D9.
-- **«Firmar»:** la acción de aprobar la epicrisis queda al pie de su sección. En compacto se
-  mantiene visible sobre el teclado (FR-088).
+- **«Firmar y cerrar consulta»:** reemplaza a «Aprobar y cerrar consulta», con la misma etiqueta
+  accesible (FR-010: la aprobación cierra la consulta). Queda al pie de su sección y, en
+  compacto, visible sobre el teclado (FR-088).
 
 **Firma (FR-099).**
 
@@ -707,6 +725,13 @@ regla, el pliego y la tinta, no la elevación.
   - el pliego canario se funde a papel;
   - el `SignatureStamp` entra con una ligera escala (0.96 → 1) y opacidad.
 - Con `prefers-reduced-motion` / Reduce Motion, el cambio es inmediato.
+- **Mecanismo:** `Animated` de React Native con `useNativeDriver` en nativo y
+  `AccessibilityInfo.isReduceMotionEnabled()` (que en web lee `prefers-reduced-motion`). No se agrega
+  `react-native-reanimated`. La duración vive en una constante exportada (`SIGNATURE_MS = 240`)
+  que una prueba unitaria acota a ≤ 300.
+- **Qué se anima:** el contenedor de la sección 3 persiste entre el borrador y la epicrisis
+  vigente, y lo que se anima es su fondo, no el `SuggestedBlock` que se desmonta. El timbre se
+  monta con su entrada propia.
 - Es la única animación de autor de la pantalla.
 
 **Nativo.**
@@ -760,6 +785,9 @@ lúdico (sin patitas ni ilustraciones de perros), y ningún degradado, destello 
   grises (12.9) lo comprueba.
 - **[Riesgo] El modo oscuro de un mundo de papel se lee frío o apagado.** → Pizarra con un leve
   tinte verde y pliegos como tintes cálidos opacos, verificados por AA; revisión visual en 12.9.
+- **[Riesgo] El rosa de corrección se confunde con `destructive-surface`.** → D20 separa ambas
+  superficies en tono, `tema.test.ts` exige ΔE*ab ≥ 10 entre ellas, y el error siempre lleva su
+  icono y su texto.
 - **[Riesgo] Una segunda familia (mono) suma peso.** → Dos pesos woff2 (≈ 40 KB) sin superar el
   presupuesto ampliado; la precarga solo cubre los pesos del primer pintado.
 - **[Trade-off] En web el título está dentro de la página y no en una cabecera.** → Es
@@ -770,7 +798,9 @@ lúdico (sin patitas ni ilustraciones de perros), y ningún degradado, destello 
 
 - Fuentes de texto en web: ≤ 100 KB en total en woff2 (hoy 80 KB en 4 archivos). Precarga solo
   de esos 4 archivos. Con D20: ≤ 140 KB con los 2 pesos de Atkinson Hyperlegible Mono, que se
-  precargan solo si aparecen en el primer pintado de `/login`.
+  precargan solo si aparecen en el primer pintado de `/login`. La mono usa `font-display: swap`
+  con métricas de reemplazo y se mide CLS ≤ 0.1 también en `/consultations/[id]`, que es donde se
+  usa.
 - Fuente de iconos: ≤ 1.2 MB, sin precarga; no bloquea el primer pintado.
 - Sin salto de maquetación atribuible a la fuente de texto en el primer pintado (FR-073). Se
   verifica con la traza de rendimiento de Playwright en `/login`: CLS ≤ 0.1.
