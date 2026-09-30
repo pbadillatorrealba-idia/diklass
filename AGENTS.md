@@ -112,8 +112,10 @@ Reglas para cualquier UI nueva o modificada:
 - **Botones:** `primary` para la acción principal de la pantalla; `outline` para las
   secundarias y las acciones por fila; `ghost` para las terciarias; `destructive` solo para
   detener algo en curso.
-- **Layout:** espaciado de la escala (`gap`/`p` 1, 2, 3, 4, 6, 8), `rounded-xl` para controles y
-  superficies y `rounded-lg` para lo anidado, y dimensiones con nombre (`max-w-content`,
+- **Layout:** espaciado de la escala (`gap`/`p` 1, 2, 3, 4, 6, 8), `rounded-sm` (2 px) para
+  controles y superficies, `rounded-full` solo para el avatar y ningún borde lateral grueso (D20 de
+  `sistema-visual`). En transición: hasta la tarea 12.3 quedan `rounded-xl`/`rounded-lg` heredados,
+  que no deben copiarse en UI nueva, y dimensiones con nombre (`max-w-content`,
   `min-h-touch`, `min-h-textarea`), nunca valores arbitrarios `[…]`.
 - **El color nunca es la única señal:** todo estado lleva texto o icono con nombre.
 - **Estilo de código (D15):** `process.env.EXPO_OS` en lugar de `Platform.OS`, y `use` de React 19

@@ -222,3 +222,93 @@ como pendiente explícito en `quickstart.md`.
   1280 y 1440 px de `/home`, `/patients` y `/patients/[id]` en `quickstart.md`. Verificación:
   compuertas en verde y capturas registradas.
 
+
+## 12. Identidad «Formulario en copias» (D20 · FR-076 · FR-077 · FR-097 – FR-100 · US18)
+
+Orden: tokens → fuente → primitivas → consulta → resto de pantallas → compuertas. Cada tarea es un
+commit con sus pruebas en verde.
+
+- [ ] 12.1 Tokens de D20 en rojo primero:
+  - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
+    `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
+    `:root.light`/`:root.dark`;
+  - añadir la aserción ΔE*ab (CIE76) ≥ 10 entre `correction-surface` y `destructive-surface`
+    sobre los valores finales de los cuatro bloques (D20);
+  - cambiar los valores de `src/global.css` y `src/theme/colors.ts` al tono de la tabla de D20,
+    incluido el cambio de tono de `warning`, `info` y `destructive-surface`; después, ajustar solo
+    la luminosidad hasta AA;
+  - exponer los tokens nuevos en `tailwind.config.js`.
+  FR-071 · FR-072. Verificación: rojo por tokens ausentes y por la ΔE actual (4.8), después verde,
+  con `sin-literales` en verde.
+- [ ] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
+  (woff2): plugin de `expo-font` en `app.json`, `@font-face` con `font-display: swap` en
+  `global.css`, `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS ≤ 0.1 en
+  `/login` y en `/consultations/[id]`, y presupuesto de fuentes ≤ 140 KB medido con `ls -l`.
+- [ ] 12.3 `Text` y forma:
+  - prueba de componente en rojo primero para las variantes nuevas `data` (mono tabular) y
+    `rubric` (rótulo preimpreso), comprobando además que `label` conserva `text-sm font-medium`
+    (D20 · FR-074);
+  - ampliar en rojo la guarda de D10 en `tema.test.ts` para que prohíba `rounded-xl`,
+    `rounded-lg`, `rounded-2xl` y `border-l-[2-8]` en `src/`, y confirmar que falla nombrando los
+    archivos actuales;
+  - pasar `Button`, `Input`, `Card`, `Callout`, los badges y el diálogo a `rounded-sm` hasta dejarla
+    en verde.
+  Verificación: pruebas de `ui/` y la guarda en verde.
+- [ ] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
+  - códigos R/I/F/? a partir de `Provenance`;
+  - `role="img"` y nombre «Procedencia: » + `PROVENANCE_LABELS`;
+  - recuadro con forma propia;
+  - `Field` con `ProvenanceMark` opcional.
+  FR-097. Verificación: prueba de componente verde para los cuatro códigos y para `Field` sin
+  procedencia.
+- [ ] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
+  sistema · copia sin firmar». `SignatureStamp` (nombre y momento, `stamp`) para el contenido
+  aprobado; `AttributionBadge` lo usa en `approved`. Pruebas en rojo primero. FR-076.
+  Verificación: prueba de componente y la guarda sin `border-l-4` en verde.
+- [ ] 12.6 `CorrectionLine`, con prueba de componente en rojo primero:
+  - por cada campo de la epicrisis que cambió entre la versión aprobada y la correctiva
+    (`epicrisisRows`), el valor anterior tachado, legible y anunciado como reemplazado, y el
+    vigente en `correction-surface` con su atribución;
+  - en la anamnesis, la procedencia anterior (`provenanceHistory`) tachada junto al código vigente.
+  `CorrectionHistory` no cambia, porque también la usa 005. FR-098 · US18-AC3. Verificación: la
+  prueba de componente y `registro-epicrisis` en verde; `feedback-timeline` sin cambios.
+- [ ] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
+  - `Callout` pasa a renglón dentro de su sección;
+  - `SeverityBadge` suma la barra de 4 segmentos decorativos, con prueba en rojo primero de los
+    segmentos llenos por nivel y de que el nombre del nivel sigue siendo la etiqueta accesible;
+  - adoptarlos en `avisos-cobertura` y `missing-fields-panel`, sin toasts;
+  - US18-AC5: una prueba de componente en rojo de `AvisosCobertura` con el aviso
+    `sin_respaldo_documental`: renglón con icono y texto dentro de la respuesta, sin región
+    temporal. Ningún e2e produce hoy ese aviso de forma determinista.
+  FR-077 · FR-100. Verificación: pruebas de componente, y `conocimiento`, `retroalimentacion`
+  (severidad en el seguimiento) y `accessibility` (ficha con `missing-fields-panel`) en verde, de
+  a uno.
+- [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
+  - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2 (a 1280×800 y
+    375×667) y AC4, con códigos y clave visibles, y firma con timbre y reducción de movimiento
+    emulada;
+  - prueba unitaria en rojo de `SIGNATURE_MS ≤ 300`;
+  - `getTutor(tutorId)` en `tutor-service.ts`, con prueba de integración en rojo primero (tutor de
+    la clínica, id inexistente → `null`, fila malformada omitida);
+  - después, el encabezado con los orígenes de D20: paciente desde `getPatient`, tutor desde
+    `getTutor`, «Consulta n.º N» como ordinal en `listConsultationsByPatient` y fecha en `data`;
+  - `FormSection` y `Field` con las secciones 1 Anamnesis, 2 Diagnóstico y 3 Epicrisis y firma;
+  - por último, «Firmar y cerrar consulta» como etiqueta visible y `accessibilityLabel`
+    (`consultations/[id].tsx:680`), con la transición de D20 (`Animated` + `AccessibilityInfo`),
+    manteniendo el orden del DOM y las dos columnas de D9. Se actualiza el selector de
+    `tests/e2e/web/registro-epicrisis.spec.ts:140`.
+  FR-097 · FR-099. Verificación: el e2e nuevo, la prueba de duración, `registro-epicrisis` y
+  `accessibility` en verde, de a uno.
+- [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
+  seguimiento, conocimiento y Configuración. Datos en `data` y procedencia al margen donde exista.
+  Después:
+  - axe en `chromium` y `chromium-dark` (de a uno, `--workers=1`), `firefox` y `webkit`;
+  - reflujo a 320 px;
+  - revisión en escala de grises de `/consultations/[id]` y `/follow-up/[patientId]` (SC-061).
+- [ ] 12.10 Capturas en `evidencia/12.*`:
+  - web: consulta a 1440 y 375 px, en claro y oscuro;
+  - iOS y Android si hay simulador o emulador; si no, queda como pendiente explícito en
+    `quickstart.md`.
+  Después, revisión final de `impeccable` contra el contrato de dirección y `DESIGN.md` +
+  `.impeccable/design.json` generados desde lo construido. Actualizar la sección «Sistema visual»
+  de `AGENTS.md`.

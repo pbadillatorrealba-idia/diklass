@@ -39,7 +39,7 @@ con la compuerta axe y una revisión en escala de grises.
 1. **Given** el sistema operativo en modo oscuro, **When** se abre cualquier pantalla, **Then**
    toda la interfaz usa la paleta oscura y cumple contraste AA.
 2. **Given** un bloque generado por el sistema junto a uno validado, **When** se ven en escala de
-   grises, **Then** siguen siendo distinguibles por su etiqueta y su borde.
+   grises, **Then** siguen siendo distinguibles por su etiqueta, su pliego y su contorno.
 3. **Given** eventos adversos de distinta severidad, **When** se presentan, **Then** cada uno
    muestra el nombre del nivel y un icono además del color, y `grave`/`critico` destacan sobre
    `leve`.
@@ -150,14 +150,61 @@ clínica futura sin comprometer todavía un modelo de citas.
    (semana desde el lunes, hoy destacado con algo más que el color), navegable entre meses, y un
    estado vacío «Sin eventos agendados» sin inventar datos.
 
+### User Story 18 - Leer la consulta como un formulario (Priority: P2)
+
+Durante la consulta, con el tutor y el perro presentes, el veterinario recorre la consulta como un
+formulario clínico numerado:
+
+- 1 Anamnesis;
+- 2 Diagnóstico;
+- 3 Epicrisis y firma.
+
+Ve de dónde viene cada dato sin abrir nada, distingue lo que propone el sistema de lo que ya firmó
+y ve cada corrección junto al renglón que corrige. Ante evaluadores, esa lectura se entiende en
+segundos. Los avisos del sistema como renglones (FR-100) valen en toda la app: hoy se ven en
+`/knowledge` (AC5), y la consulta los recibirá con 006.
+
+**Why this priority**: la separación entre dato e inferencia (FR-021), la validación (FR-010) y la
+inmutabilidad (FR-024) ya existen como datos, pero hoy no se leen de un vistazo. Es la
+demostración central del PoC.
+
+**Independent Test**: abrir una consulta con anamnesis de las cuatro procedencias, un diagnóstico,
+una epicrisis en borrador y una corrección, a 1280 px y a 375 px, en claro, en oscuro y en escala
+de grises.
+
+**Acceptance Scenarios**:
+
+1. **Given** una entrada de anamnesis `inferida`, **When** se muestra, **Then** lleva al margen el
+   código «I», con nombre accesible «Procedencia: Inferida».
+2. **Given** la consulta abierta a 1280×800 o a 375×667, **When** el usuario busca qué significan
+   los códigos, **Then** la clave de procedencia es visible sin desplazarse en el encabezado de la
+   consulta.
+3. **Given** una epicrisis aprobada y corregida, **When** se muestra, **Then** el texto anterior se
+   ve tachado con una línea y legible, y la corrección aparece en pliego de corrección con su
+   atribución.
+4. **Given** una epicrisis en borrador generada por el sistema, **When** el profesional la aprueba,
+   **Then** el pliego de sugerido pasa a papel y aparece el timbre de firma con su nombre y hora;
+   con Reduce Motion, sin animación.
+5. **Given** una respuesta de `/knowledge` sin respaldo documental, **When** se muestra, **Then**
+   el aviso aparece como renglón dentro de la respuesta, con icono y texto, y no como
+   notificación flotante.
+
 ### Edge Cases
 
+- Procedencia `desconocida`: se marca con «?» y se nombra; nunca se omite el código ni se muestra
+  como reportada.
+- Varias correcciones sobre el mismo registro: cada una tacha la anterior y todas quedan
+  legibles en orden, con su atribución.
+- Información faltante y diferencial (006) y plan (007) todavía no existen en la consulta: el
+  formulario numera solo las secciones presentes y los números nuevos se insertan cuando lleguen.
+- Datos sin procedencia en el modelo (diagnóstico, epicrisis): no llevan código al margen; nunca
+  se les asigna una procedencia que el dato no tiene.
 - Texto ampliado por el sistema (Dynamic Type / zoom del navegador al 200 %): las filas crecen y el
   texto se ajusta de línea; nunca se desactiva el escalado.
 - Un icono que no carga no puede dejar un control sin nombre: el texto o la etiqueta accesible
   sigue presente.
-- Contenido sugerido que el profesional aprueba: pasa a mostrarse como validado, con su
-  atribución, sin el tratamiento de sugerido.
+- Contenido sugerido que el profesional aprueba: pasa a mostrarse como validado, con el timbre
+  de firma, sin el tratamiento de sugerido.
 - La severidad `critico` no existe hoy en ningún vocabulario de datos; se muestra solo cuando una
   feature la emita (006/007).
 - Abrir por URL directa una pantalla de detalle (sin historial previo): el retroceso de la
@@ -193,8 +240,8 @@ clínica futura sin comprometer todavía un modelo de citas.
 | FR-073 Tipografía legible sin salto | US13-AC6 | Implementado (sin aceptar) |
 | FR-074 Rampa tipográfica con nombre | US13-AC1 | Pendiente |
 | FR-075 Estados semánticos | US13-AC2/AC3 | Pendiente |
-| FR-076 Sugerido vs validado | US13-AC2 | Pendiente |
-| FR-077 Severidad clínica de 4 niveles | US13-AC3 | Pendiente |
+| FR-076 Sugerido vs validado | US13-AC2 | Pendiente (revisado por D20, grupo 12) |
+| FR-077 Severidad clínica de 4 niveles | US13-AC3 | Pendiente (revisado por D20, grupo 12) |
 | FR-078 Iconografía accesible | US13-AC3 | Pendiente |
 | FR-079 Layout adaptable | US13-AC4/AC5 | Pendiente |
 | FR-080 Foco visible | — | Implementado (sin aceptar) |
@@ -213,6 +260,10 @@ clínica futura sin comprometer todavía un modelo de citas.
 | FR-093 Sección Configuración | US16-AC4 | Pendiente (edición de perfil en `perfil-profesional`) |
 | FR-094 Calendario en Inicio | US16-AC5 | Pendiente (eventos: fuera de alcance) |
 | FR-095 Selector de paciente con búsqueda | US14-AC6 | Pendiente |
+| FR-097 Procedencia al margen | US18-AC1/AC2 | Pendiente |
+| FR-098 Corrección tachada y en pliego | US18-AC3 | Pendiente |
+| FR-099 Firma | US18-AC4 | Pendiente |
+| FR-100 Avisos del sistema como renglones | US18-AC5 | Pendiente |
 
 ## Success Criteria
 
@@ -239,11 +290,21 @@ clínica futura sin comprometer todavía un modelo de citas.
   tras 1 recarga; 0 violaciones axe en claro y oscuro forzados.
 - **SC-059**: 0 etiquetas de navegación recortadas y 0 desbordamientos horizontales a 320 px con
   las 5 secciones.
+- **SC-061**: en una consulta con anamnesis, diagnóstico y epicrisis, el 100 % de los datos con
+  procedencia en el modelo (FR-021; hoy, las entradas de anamnesis) muestra su código, y el 100 %
+  del contenido sugerido muestra su pliego y su etiqueta. Se cumple en claro, en oscuro y en escala
+  de grises, con 0 violaciones axe.
 
 ## Assumptions
 
-- La paleta de marca vigente (verde azulado primario, azul secundario, ámbar de acento) se
-  mantiene. El modo sigue al sistema operativo por defecto; desde US16 el profesional puede fijar
+- La identidad visual es «Formulario en copias» (decisión del usuario, 2026-09-30):
+  - estructura en tinta verde de formulario sobre papel;
+  - lo sugerido en pliego canario;
+  - las correcciones en pliego rosa;
+  - la validación con timbre de firma.
+
+  Reemplaza a la paleta anterior (verde azulado primario, azul secundario, ámbar de acento). El
+  nombre «Diklass» es provisional y la identidad no depende de él. El modo sigue al sistema operativo por defecto; desde US16 el profesional puede fijar
   claro u oscuro por dispositivo (la preferencia no viaja con la cuenta).
 - La severidad visual `critico` se define ahora por decisión de producto para 006/007; el
   vocabulario de eventos adversos de 005 sigue siendo `leve`/`moderado`/`grave`.
@@ -326,38 +387,45 @@ accesible (el color MUST NOT ser la única señal).
 
 ### Requirement: FR-076
 
-Todo contenido generado por el sistema y aún no validado por un profesional MUST mostrarse con un
-tratamiento "sugerido": borde lateral del token `suggested` y la etiqueta visible "Sugerencia del
-sistema". El contenido validado o registrado por un profesional MUST NOT llevar ese tratamiento y
-MUST mostrar su atribución.
+Todo contenido generado por el sistema y aún no validado por un profesional MUST mostrarse con el
+tratamiento de sugerido:
+
+- el pliego del token `suggested-surface`, con un contorno de 1 px del token `suggested`;
+- la etiqueta visible «Sugerencia del sistema».
+
+El contenido validado o registrado por un profesional MUST NOT llevar ese tratamiento y MUST
+mostrar su atribución. El contenido aprobado MUST mostrarla como timbre de firma, con nombre y
+momento (FR-063).
 
 #### Scenario: US13-AC2
 
 - **GIVEN** un hecho extraído por voz pendiente de revisión y un antecedente registrado por un
   profesional en la misma pantalla
 - **WHEN** se ven en escala de grises
-- **THEN** el primero conserva la etiqueta "Sugerencia del sistema" y el borde lateral, y el
-  segundo muestra la insignia de atribución
+- **THEN** el primero conserva la etiqueta «Sugerencia del sistema», su pliego y su contorno, y el
+  segundo muestra su atribución
 
 #### Scenario: Sugerencia aprobada
 
 - **GIVEN** un contenido sugerido
 - **WHEN** el profesional lo aprueba
-- **THEN** deja de mostrarse como sugerido y pasa a mostrar su atribución
+- **THEN** deja de mostrarse como sugerido y pasa a mostrar el timbre de firma con su nombre y el
+  momento de la aprobación
 
 ### Requirement: FR-077
 
 La severidad clínica MUST presentarse en una escala visual única de cuatro niveles en orden
-creciente (`leve`, `moderado`, `grave`, `critico`), cada uno con su nombre visible, un icono y un
-color. `grave` y `critico` MUST destacar visualmente sobre `leve` y `moderado`. Esta escala MUST NOT
-modificar ningún vocabulario de datos existente.
+creciente (`leve`, `moderado`, `grave`, `critico`). Cada nivel MUST mostrar su nombre visible, un
+icono, un color y una barra de cuatro segmentos con tantos segmentos llenos como su posición en la
+escala. `grave` y `critico` MUST destacar visualmente sobre `leve` y `moderado`. Esta escala MUST
+NOT modificar ningún vocabulario de datos existente.
 
 #### Scenario: US13-AC3
 
 - **GIVEN** un reporte con eventos adversos `leve` y `grave`
 - **WHEN** se presenta
-- **THEN** cada evento muestra el nombre de su nivel y su icono, y el `grave` destaca sobre el
-  `leve` también en escala de grises
+- **THEN** cada evento muestra el nombre de su nivel, su icono y su barra (1 y 3 segmentos
+  llenos), y el `grave` destaca sobre el `leve` también en escala de grises
 
 ### Requirement: FR-078
 
@@ -722,3 +790,67 @@ misma lista acotada: las 8 primeras fichas.
 - **THEN** solo aparecen sus coincidencias (como máximo 8), se anuncia cuántas hay, y elegir una
   fija el contexto de la conversación como antes
 
+### Requirement: FR-097
+
+Todo dato clínico con procedencia (FR-021) MUST mostrar al margen un código de una letra en
+recuadro: «R» reportada, «I» inferida, «F» recuperada de una fuente, «?» desconocida. El código
+MUST tener nombre accesible «Procedencia: <etiqueta>», con la etiqueta de `PROVENANCE_LABELS`, y
+forma propia además del color. Una clave con
+los cuatro códigos y su nombre MUST estar visible en el encabezado de la consulta. Esta marca MUST
+NOT modificar el vocabulario de datos `Provenance`.
+
+#### Scenario: US18-AC1
+
+- **GIVEN** una entrada de anamnesis `inferida`
+- **WHEN** se muestra en la consulta
+- **THEN** lleva al margen el código «I» y un lector de pantalla anuncia «Procedencia: Inferida»
+
+#### Scenario: US18-AC2
+
+- **GIVEN** la consulta abierta a 1280×800 o a 375×667
+- **WHEN** se pinta el encabezado
+- **THEN** la clave de procedencia con los cuatro códigos es visible sin desplazarse
+
+### Requirement: FR-098
+
+Una epicrisis aprobada y corregida (FR-024) MUST mostrar, campo por campo, el contenido anterior
+de cada campo que cambió tachado con una sola línea y legible, y la corrección sobre la superficie `correction-surface` con su atribución. El
+tachado MUST acompañarse de un texto accesible que identifique el contenido como reemplazado.
+
+La corrección de procedencia de una entrada de anamnesis (`provenanceHistory`) MUST mostrar la
+procedencia anterior tachada junto al código vigente.
+
+#### Scenario: US18-AC3
+
+- **GIVEN** una epicrisis aprobada y después corregida
+- **WHEN** se muestra
+- **THEN** el texto anterior aparece tachado, legible y anunciado como reemplazado, y la corrección
+  aparece en pliego de corrección con su autor y momento
+
+### Requirement: FR-099
+
+Aprobar contenido sugerido MUST cambiar su tratamiento de sugerido a validado en un solo gesto
+visual: el pliego pasa a papel y aparece el timbre de firma con nombre y momento. La transición
+MUST durar como máximo 300 ms y MUST ser inmediata cuando el sistema pide reducir el movimiento.
+La acción de aprobar la epicrisis MUST seguir diciendo en su etiqueta visible y accesible que
+cierra la consulta (FR-010), por ejemplo «Firmar y cerrar consulta».
+
+#### Scenario: US18-AC4
+
+- **GIVEN** una epicrisis en borrador y Reduce Motion activado
+- **WHEN** el profesional la aprueba
+- **THEN** el timbre de firma aparece con su nombre y hora sin animación, y el pliego de sugerido
+  desaparece
+
+### Requirement: FR-100
+
+Los avisos del sistema de información insuficiente (FR-022) y de ausencia de respaldo documental
+(FR-023) MUST mostrarse como renglones dentro de la sección a la que se refieren, con icono y texto.
+MUST NOT mostrarse solo como notificaciones flotantes ni temporales.
+
+#### Scenario: US18-AC5
+
+- **GIVEN** una respuesta de `/knowledge` con el aviso `sin_respaldo_documental`
+- **WHEN** se muestra
+- **THEN** el aviso aparece como renglón dentro de la respuesta con icono y texto, y permanece
+  mientras la respuesta está visible
