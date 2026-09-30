@@ -27,6 +27,10 @@ const TONES = {
   info: "text-info",
   /** Enlaces en línea (`LinkText`), verificado AA sobre card y fondo como el botón `ghost`. */
   primary: "text-primary",
+  /** Tinta del timbre de firma (D20); solo dentro de `SignatureStamp`. */
+  stamp: "text-stamp",
+  /** Marca de corrección (D20); solo en `CorrectionLine`. */
+  correction: "text-correction",
   /** Texto sobre un relleno sólido `destructive` (severidad crítica). */
   onDestructive: "text-destructive-foreground",
 } as const;

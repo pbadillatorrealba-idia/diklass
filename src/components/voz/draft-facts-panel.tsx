@@ -80,6 +80,7 @@ export function DraftFactsPanel({
                 </Box>
                 {fact.record.updated_by && fact.record.updated_at ? (
                   <AttributionBadge
+                    approved
                     attribution={{
                       action: null,
                       actorId: fact.record.updated_by,

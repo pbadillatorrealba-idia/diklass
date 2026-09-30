@@ -261,7 +261,7 @@ commit con sus pruebas en verde.
   - `Field` con `ProvenanceMark` opcional.
   FR-097. Verificación: prueba de componente verde para los cuatro códigos y para `Field` sin
   procedencia.
-- [ ] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
+- [x] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
   sistema · copia sin firmar». `SignatureStamp` (nombre y momento, `stamp`) para el contenido
   aprobado; `AttributionBadge` lo usa en `approved`. Pruebas en rojo primero. FR-076.
   Verificación: prueba de componente y la guarda sin `border-l-4` en verde.

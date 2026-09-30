@@ -592,7 +592,10 @@ export default function ConsultationScreen() {
                             Corrige una versión anterior, que permanece registrada y recuperable.
                           </Text>
                         ) : null}
-                        <AttributionBadge attribution={attributionFromRow(effectiveEntry.record)} />
+                        <AttributionBadge
+                          approved
+                          attribution={attributionFromRow(effectiveEntry.record)}
+                        />
                       </Card>
                       <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
                       {correctionContent === null ? (

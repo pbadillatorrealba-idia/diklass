@@ -25,13 +25,14 @@ describe("SuggestedBlock", () => {
     expect(cls.some((c) => /^border-l-/.test(c))).toBe(false);
   });
 
-  test("es un grupo con nombre «Sugerencia del sistema»", () => {
+  // D20: la copia canaria todavía no está firmada; el nombre accesible repite la etiqueta visible.
+  test("es un grupo con nombre «Sugerencia del sistema · copia sin firmar»", () => {
     expect(box).toContain('role="group"');
-    expect(box).toContain('aria-label="Sugerencia del sistema"');
+    expect(box).toContain('aria-label="Sugerencia del sistema · copia sin firmar"');
   });
 
   test("la etiqueta es texto visible y va antes del contenido", () => {
-    const label = html.indexOf(">Sugerencia del sistema<");
+    const label = html.indexOf(">Sugerencia del sistema · copia sin firmar<");
     expect(label).toBeGreaterThan(-1);
     expect(label).toBeLessThan(html.indexOf("Motivo de consulta"));
   });

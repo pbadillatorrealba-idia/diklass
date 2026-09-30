@@ -4,7 +4,8 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { CONTINUOUS_CURVE } from "./border-curve";
 
-const LABEL = "Sugerencia del sistema";
+/** D20: la copia canaria todavía no está firmada; la etiqueta visible es también el nombre. */
+const LABEL = "Sugerencia del sistema · copia sin firmar";
 
 export type SuggestedBlockProps = PropsWithChildren<{ className?: string; testID?: string }>;
 
