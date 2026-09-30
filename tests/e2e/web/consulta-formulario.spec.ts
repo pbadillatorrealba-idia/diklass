@@ -171,6 +171,70 @@ test.describe("consulta como formulario", () => {
     }
   });
 
+  // US18-AC4 · FR-099, camino normal (revisión de la PR #41): con movimiento, el timbre entra desde
+  // opacidad 0 y debe terminar entero; Playwright da por visible un `opacity: 0`, así que se mide.
+  test("al firmar con movimiento, el timbre termina opaco y el pliego se funde a papel", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const { api, patientId, crear } = await prepararPaciente(page, "Ceniza E2E firma animada");
+    try {
+      const consultationId = await crear("consultation", { patientId, status: "open" });
+      await page.goto(`/consultations/${consultationId}`);
+      await page.getByRole("button", { name: "Generar borrador de epicrisis" }).click();
+      await page.getByRole("button", { name: "Firmar y cerrar consulta" }).click();
+
+      await expect(
+        page.getByRole("group", { name: new RegExp(`^Firmado por ${ANA.displayName} el `) }),
+      ).toBeVisible();
+      const opacidad = (testID: string) =>
+        page.getByTestId(testID).evaluate((el) => Number(getComputedStyle(el).opacity));
+      await expect.poll(() => opacidad("signature-motion"), { timeout: 2_000 }).toBe(1);
+      await expect.poll(() => opacidad("epicrisis-paper"), { timeout: 2_000 }).toBe(0);
+    } finally {
+      await api.dispose();
+    }
+  });
+
+  // US18-AC3 · FR-098 en pantalla (revisión de la PR #41): al corregir una epicrisis firmada, el
+  // valor anterior queda tachado, legible y anunciado como reemplazado junto al vigente.
+  test("corregir una epicrisis firmada deja el valor anterior tachado junto al vigente", async ({
+    page,
+  }) => {
+    const { api, patientId, crear } = await prepararPaciente(page, "Sal E2E corrección");
+    try {
+      const consultationId = await crear("consultation", { patientId, status: "open" });
+      await page.goto(`/consultations/${consultationId}`);
+      await page.getByRole("button", { name: "Generar borrador de epicrisis" }).click();
+      await page.getByLabel("Observaciones", { exact: true }).fill("Control en diez días");
+      await page.getByRole("button", { name: "Firmar y cerrar consulta" }).click();
+
+      await page.getByRole("button", { name: "Corregir epicrisis" }).click();
+      await page.getByLabel("Observaciones", { exact: true }).fill("Control en cinco días");
+      await page.getByRole("button", { name: "Guardar corrección de la epicrisis" }).click();
+
+      const renglon = page.getByTestId("epicrisis-correction-observaciones");
+      await expect(renglon).toContainText("Observaciones");
+      await expect(renglon).toContainText("Reemplazado");
+      const anterior = renglon.getByText("Control en diez días", { exact: true });
+      await expect(anterior).toBeVisible();
+      expect(await anterior.evaluate((el) => getComputedStyle(el).textDecorationLine)).toBe(
+        "line-through",
+      );
+      // El vigente va en el pliego de corrección, con su atribución.
+      const vigente = renglon.getByText("Control en cinco días", { exact: true });
+      await expect(vigente).toBeVisible();
+      const [pliego, token] = await vigente.evaluate((el) => [
+        getComputedStyle(el.parentElement as Element).backgroundColor,
+        getComputedStyle(document.documentElement).getPropertyValue("--correction-surface").trim(),
+      ]);
+      expect(pliego).toBe(`rgb(${token.split(/\s+/).join(", ")})`);
+      await expect(renglon).toContainText(ANA.displayName);
+    } finally {
+      await api.dispose();
+    }
+  });
+
   // US18-AC4 · FR-099: con Reduce Motion, el timbre aparece sin animación y el pliego se va.
   test("al firmar con movimiento reducido, el timbre aparece de inmediato y el pliego desaparece", async ({
     page,

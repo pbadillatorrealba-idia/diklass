@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AccessibilityInfo, Animated, Easing } from "react-native";
 
 /** Duración de la firma (FR-099 · design.md D20): un solo movimiento de ≤ 300 ms. */
@@ -6,6 +6,13 @@ export const SIGNATURE_MS = 240;
 
 // `backgroundColor` no admite el driver nativo; la opacidad y la escala, sí.
 const useNativeDriver = process.env.EXPO_OS !== "web";
+
+/**
+ * Salida exponencial (easeOutExpo) como curva de Bézier: termina exactamente en 1.
+ * `Easing.out(Easing.exp)` se queda en 1 − 2⁻¹⁰ y dejaba el timbre en opacidad 0.999 y el
+ * pliego en 0.001 (revisión de la PR #41).
+ */
+export const SIGNATURE_EASING = Easing.bezier(0.16, 1, 0.3, 1);
 
 /**
  * Firma de la epicrisis (FR-099 · D20): al aprobar, el pliego canario de la sección 3 se funde a
@@ -47,7 +54,7 @@ export function useSignatureMotion(isSuggested: boolean) {
       return;
     }
     pending.current = false;
-    const easing = Easing.out(Easing.exp);
+    const easing = SIGNATURE_EASING;
     Animated.parallel([
       Animated.timing(paper, { toValue: 0, duration: SIGNATURE_MS, easing, useNativeDriver }),
       Animated.timing(stamp, { toValue: 1, duration: SIGNATURE_MS, easing, useNativeDriver }),
@@ -60,9 +67,13 @@ export function useSignatureMotion(isSuggested: boolean) {
     stamp.setValue(0);
   };
 
-  const stampStyle = {
-    opacity: stamp,
-    transform: [{ scale: stamp.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }],
-  };
+  // Un solo nodo interpolado: recrearlo en cada render lo re-engancharía a mitad de la firma.
+  const stampStyle = useMemo(
+    () => ({
+      opacity: stamp,
+      transform: [{ scale: stamp.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }],
+    }),
+    [stamp],
+  );
   return { paper, stampStyle, prepare };
 }
