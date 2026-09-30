@@ -12,11 +12,13 @@ import { type DiagnosisEntryView, DiagnosisSection } from "@/components/registro
 import { epicrisisChanges } from "@/components/registro/epicrisis-changes";
 import { EpicrisisFields } from "@/components/registro/epicrisis-fields";
 import { FollowUpSummaryPanel } from "@/components/registro/follow-up-summary";
-import { useSignatureMotion } from "@/components/registro/signature-motion";
 import {
-  type ClinicalGuardOutcome,
-  useClinicalGuard,
-} from "@/components/registro/use-clinical-guard";
+  notice,
+  type OperationStatus,
+  operationStatus,
+} from "@/components/registro/operation-status";
+import { useSignatureMotion } from "@/components/registro/signature-motion";
+import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -166,13 +168,6 @@ function attributionFromRow(record: ClinicalRecordRow): Attribution {
   return { actorId: record.created_by, occurredAt: record.created_at, action: null };
 }
 
-function statusMessage(outcome: ClinicalGuardOutcome, success: string, failure: string): string {
-  if (outcome === "expired") {
-    return "La sesión ya no es válida.";
-  }
-  return outcome === "error" ? failure : success;
-}
-
 export default function ConsultationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const consultationId = String(id);
@@ -196,11 +191,10 @@ export default function ConsultationScreen() {
     content: EpicrisisContent;
   } | null>(null);
   const [draft, setDraft] = useState<ConsultationDraft | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [savedAttribution, setSavedAttribution] = useState<Attribution | null>(null);
+  const [status, setStatus] = useState<OperationStatus | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   // Última sección editada (D20): su banda se marca en `primary` sólido.
-  const [editedSection, setActiveSection] = useState<SectionNumber | null>(null);
+  const [editedSection, setEditedSection] = useState<SectionNumber | null>(null);
   const colors = useThemeColors();
 
   const workspaceQuery = useQuery({
@@ -241,7 +235,7 @@ export default function ConsultationScreen() {
 
   const handleRestore = useCallback((restored: ConsultationDraft) => {
     setComposerText(restored.notes);
-    setStatus("Se recuperó un borrador no guardado de esta consulta.");
+    setStatus(notice("Se recuperó un borrador no guardado de esta consulta."));
   }, []);
   const draftSession = useDraftPreserver({
     veterinarianId,
@@ -357,9 +351,11 @@ export default function ConsultationScreen() {
       const preserved = await preserveComposer();
       openExpiredDialog();
       setStatus(
-        preserved
-          ? "La sesión ya no es válida. El borrador se conservó."
-          : "La sesión ya no es válida. No pudimos conservar el borrador: no cierres esta pantalla.",
+        notice(
+          preserved
+            ? "La sesión ya no es válida. El borrador se conservó."
+            : "La sesión ya no es válida. No pudimos conservar el borrador: no cierres esta pantalla.",
+        ),
       );
       return;
     }
@@ -379,11 +375,10 @@ export default function ConsultationScreen() {
         // El registro ya está guardado: solo falló limpiar el borrador local.
         void captureClientError(errorReporter, { error, operation: "clear_draft", requestId });
       }
-      setSavedAttribution(result.attribution);
-      setActiveSection(1);
+      setEditedSection(1);
       setComposerText("");
       setDraft(null);
-      setStatus("Antecedente de anamnesis registrado.");
+      setStatus({ text: "Antecedente de anamnesis registrado.", attribution: result.attribution });
       await refetchWorkspace();
     } catch (error) {
       const preserved = await preserveComposer();
@@ -391,9 +386,11 @@ export default function ConsultationScreen() {
         setAccessState("expired");
         openExpiredDialog();
         setStatus(
-          preserved
-            ? "La sesión ya no es válida. El borrador se conservó."
-            : "La sesión ya no es válida. No pudimos conservar el borrador: no cierres esta pantalla.",
+          notice(
+            preserved
+              ? "La sesión ya no es válida. El borrador se conservó."
+              : "La sesión ya no es válida. No pudimos conservar el borrador: no cierres esta pantalla.",
+          ),
         );
       } else {
         void captureClientError(errorReporter, {
@@ -402,9 +399,11 @@ export default function ConsultationScreen() {
           requestId,
         });
         setStatus(
-          preserved
-            ? "No pudimos registrar el antecedente. El borrador se conservó."
-            : "No pudimos registrar el antecedente ni conservar el borrador: no cierres esta pantalla.",
+          notice(
+            preserved
+              ? "No pudimos registrar el antecedente. El borrador se conservó."
+              : "No pudimos registrar el antecedente ni conservar el borrador: no cierres esta pantalla.",
+          ),
         );
       }
     } finally {
@@ -416,12 +415,12 @@ export default function ConsultationScreen() {
     setIsBusy(true);
     const outcome = await guard("correct_anamnesis_provenance", async () => {
       await correctProvenance(supabase, entryId, provenance);
-      setActiveSection(1);
+      setEditedSection(1);
       await refetchWorkspace();
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(
+      operationStatus(
         outcome,
         "Procedencia corregida. La corrección queda registrada y es recuperable.",
         "No pudimos corregir la procedencia.",
@@ -440,20 +439,26 @@ export default function ConsultationScreen() {
       return;
     }
     setIsBusy(true);
+    let attribution: Attribution | null = null;
     const outcome = await guard("record_diagnosis", async () => {
       const result = await recordDiagnosis(supabase, {
         clinicId,
         consultationId,
         text: parsed.data.text,
       });
-      setSavedAttribution(result.attribution);
-      setActiveSection(2);
+      attribution = result.attribution;
+      setEditedSection(2);
       setDiagnosisText("");
       await refetchWorkspace();
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(outcome, "Diagnóstico registrado.", "No pudimos registrar el diagnóstico."),
+      operationStatus(
+        outcome,
+        "Diagnóstico registrado.",
+        "No pudimos registrar el diagnóstico.",
+        attribution,
+      ),
     );
   };
 
@@ -462,19 +467,21 @@ export default function ConsultationScreen() {
       return;
     }
     setIsBusy(true);
+    let attribution: Attribution | null = null;
     const outcome = await guard("generate_epicrisis_draft", async () => {
       const result = await generateEpicrisisDraft(supabase, { clinicId, consultationId });
-      setSavedAttribution(result.attribution);
-      setActiveSection(3);
+      attribution = result.attribution;
+      setEditedSection(3);
       setDraftEdits(null);
       await refetchWorkspace();
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(
+      operationStatus(
         outcome,
         "Borrador de epicrisis generado. No es un registro definitivo hasta que lo apruebes.",
         "No pudimos generar el borrador.",
+        attribution,
       ),
     );
   };
@@ -492,12 +499,12 @@ export default function ConsultationScreen() {
     setIsBusy(true);
     const outcome = await guard("update_epicrisis_draft", async () => {
       await updateEpicrisisDraft(supabase, draftEntry.record.id, draftContent);
-      setActiveSection(3);
+      setEditedSection(3);
       await refetchWorkspace();
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(
+      operationStatus(
         outcome,
         "Borrador guardado. Sigue sin ser un registro definitivo.",
         "No pudimos guardar el borrador.",
@@ -510,13 +517,14 @@ export default function ConsultationScreen() {
       return;
     }
     setIsBusy(true);
+    let attribution: Attribution | null = null;
     const outcome = await guard("approve_epicrisis", async () => {
       // US3-AC2: se almacena la versión editada y la RPC aprueba y cierra la consulta en la
       // misma transacción (D4).
       await updateEpicrisisDraft(supabase, draftEntry.record.id, draftContent);
       const result = await approveEpicrisis(supabase, draftEntry.record.id);
-      setSavedAttribution(result.attribution);
-      setActiveSection(3);
+      attribution = result.attribution;
+      setEditedSection(3);
       // La firma (FR-099): el timbre queda listo para entrar cuando la recarga lo monte.
       signature.prepare();
       try {
@@ -534,10 +542,11 @@ export default function ConsultationScreen() {
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(
+      operationStatus(
         outcome,
         "Epicrisis aprobada y consulta cerrada en la misma operación.",
         "No pudimos aprobar la epicrisis.",
+        attribution,
       ),
     );
   };
@@ -547,20 +556,22 @@ export default function ConsultationScreen() {
       return;
     }
     setIsBusy(true);
+    let attribution: Attribution | null = null;
     const outcome = await guard("correct_epicrisis", async () => {
       // La corrección es un registro ADICIONAL que conserva el original (FR-024 · US3-AC4).
       const result = await correctEpicrisis(supabase, effectiveEntry.record.id, correctionContent);
-      setSavedAttribution(result.attribution);
-      setActiveSection(3);
+      attribution = result.attribution;
+      setEditedSection(3);
       setCorrectionContent(null);
       await refetchWorkspace();
     });
     setIsBusy(false);
     setStatus(
-      statusMessage(
+      operationStatus(
         outcome,
         "Corrección registrada. La versión original permanece legible.",
         "No pudimos registrar la corrección.",
+        attribution,
       ),
     );
   };
@@ -598,9 +609,11 @@ export default function ConsultationScreen() {
           {/* Mensajes de las operaciones; el estado de la consulta va en el encabezado (D20). */}
           <View className="flex-row flex-wrap items-baseline gap-x-2">
             <Text accessibilityLiveRegion="polite" testID="consultation-status">
-              {status ?? ""}
+              {status?.text ?? ""}
             </Text>
-            {savedAttribution ? <AttributionBadge attribution={savedAttribution} inline /> : null}
+            {status?.attribution ? (
+              <AttributionBadge attribution={status.attribution} inline />
+            ) : null}
           </View>
           {/*
            * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
