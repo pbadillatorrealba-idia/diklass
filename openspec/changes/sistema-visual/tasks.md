@@ -232,11 +232,11 @@ commit con sus pruebas en verde.
   - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
     `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
     `:root.light`/`:root.dark`;
-  - añadir la aserción ΔE*ab ≥ 10 entre `correction-surface` y `destructive-surface` en ambos
-    esquemas (D20);
-  - cambiar los valores de `src/global.css` y `src/theme/colors.ts` a la tabla de D20, ajustando
-    solo la luminosidad hasta AA, incluido el reajuste de `warning`, `info` y
-    `destructive-surface`;
+  - añadir la aserción ΔE*ab (CIE76) ≥ 10 entre `correction-surface` y `destructive-surface`
+    sobre los valores finales de los cuatro bloques (D20);
+  - cambiar los valores de `src/global.css` y `src/theme/colors.ts` al tono de la tabla de D20,
+    incluido el cambio de tono de `warning`, `info` y `destructive-surface`; después, ajustar solo
+    la luminosidad hasta AA;
   - exponer los tokens nuevos en `tailwind.config.js`.
   FR-071 · FR-072. Verificación: rojo por tokens ausentes y por la ΔE actual (4.8), después verde,
   con `sin-literales` en verde.
@@ -277,20 +277,26 @@ commit con sus pruebas en verde.
   - `SeverityBadge` suma la barra de 4 segmentos decorativos, con prueba en rojo primero de los
     segmentos llenos por nivel y de que el nombre del nivel sigue siendo la etiqueta accesible;
   - adoptarlos en `avisos-cobertura` y `missing-fields-panel`, sin toasts;
-  - US18-AC5: un caso en rojo en `conocimiento.spec.ts` que pida el aviso
-    `sin_respaldo_documental` como renglón dentro de la respuesta.
-  FR-077 · FR-100. Verificación: pruebas de componente, `conocimiento` y `seguimiento` en verde, de
+  - US18-AC5: una prueba de componente en rojo de `AvisosCobertura` con el aviso
+    `sin_respaldo_documental`: renglón con icono y texto dentro de la respuesta, sin región
+    temporal. Ningún e2e produce hoy ese aviso de forma determinista.
+  FR-077 · FR-100. Verificación: pruebas de componente, y `conocimiento`, `retroalimentacion`
+  (severidad en el seguimiento) y `accessibility` (ficha con `missing-fields-panel`) en verde, de
   a uno.
 - [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
   - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2 (a 1280×800 y
     375×667) y AC4, con códigos y clave visibles, y firma con timbre y reducción de movimiento
     emulada;
   - prueba unitaria en rojo de `SIGNATURE_MS ≤ 300`;
-  - después, el encabezado con los orígenes de D20: paciente y tutor desde `getPatient`, «Consulta
-    n.º N» como ordinal en `listConsultationsByPatient` y fecha en `data`;
+  - `getTutor(tutorId)` en `tutor-service.ts`, con prueba de integración en rojo primero (tutor de
+    la clínica, id inexistente → `null`, fila malformada omitida);
+  - después, el encabezado con los orígenes de D20: paciente desde `getPatient`, tutor desde
+    `getTutor`, «Consulta n.º N» como ordinal en `listConsultationsByPatient` y fecha en `data`;
   - `FormSection` y `Field` con las secciones 1 Anamnesis, 2 Diagnóstico y 3 Epicrisis y firma;
-  - por último, «Firmar y cerrar consulta» con la transición de D20 (`Animated` +
-    `AccessibilityInfo`), manteniendo el orden del DOM y las dos columnas de D9.
+  - por último, «Firmar y cerrar consulta» como etiqueta visible y `accessibilityLabel`
+    (`consultations/[id].tsx:680`), con la transición de D20 (`Animated` + `AccessibilityInfo`),
+    manteniendo el orden del DOM y las dos columnas de D9. Se actualiza el selector de
+    `tests/e2e/web/registro-epicrisis.spec.ts:140`.
   FR-097 · FR-099. Verificación: el e2e nuevo, la prueba de duración, `registro-epicrisis` y
   `accessibility` en verde, de a uno.
 - [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,

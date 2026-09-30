@@ -630,8 +630,9 @@ laterales). Los mecanismos de D1 (CSS + espejo TS verificado), D3, D8 y D11 a D1
 firma del veterinario la vuelve original. Rechaza el tablero de tarjetas con un panel de
 «Hallazgos IA», los destellos y el violeta con que la categoría marca la IA (IDEXX, Vetspire).
 
-**Color (valores orientativos; los finales los fija `tema.test.ts` en rojo primero, ajustando solo
-la luminosidad hasta AA).**
+**Color (valores orientativos).** El tono de cada token lo fija esta tabla, incluidos los cambios de
+tono de `destructive-surface` y `correction-surface`. Después, `tema.test.ts` (en rojo primero) solo
+ajusta la luminosidad hasta AA.
 
 | Token | Claro | Oscuro | Papel en el mundo |
 |---|---|---|---|
@@ -658,8 +659,8 @@ texto del `SignatureStamp`, y siempre junto al nombre de un profesional.
     1.06:1 de contraste y una diferencia de color ΔE*ab de 4.8. Pasa a un rojo cálido
     (≈ `#FBE3D6`; oscuro ≈ `#3D1E12`), y `correction-surface` a un rosa frío (≈ `#F6DDE8`; oscuro
     ≈ `#361C30`), con ΔE*ab de 12.4 en claro y 22.7 en oscuro. Entre dos pasteles el contraste de
-    luminancia no sirve: `tema.test.ts` exige ΔE*ab ≥ 10 entre ambas superficies en los dos
-    esquemas, además del icono y del texto que ya distinguen un error de una corrección.
+    luminancia no sirve: `tema.test.ts` exige ΔE*ab (CIE76) ≥ 10 entre ambas superficies sobre los
+    valores finales de cada bloque (`:root`, oscuro por media query, `:root.light` y `:root.dark`), además del icono y del texto que ya distinguen un error de una corrección.
 - `secondary`, `accent`, `primary-surface` y `secondary-surface` se reajustan dentro de la misma
   familia de tintas.
 - **Estrategia de color: restringida.** Todo el color de superficie se concentra en los pliegos
@@ -701,7 +702,9 @@ regla, el pliego y la tinta, no la elevación.
 **Consulta (amplía D9).**
 
 - **Encabezado del formulario**, con estos orígenes:
-  - paciente y tutor: `getPatient(patientId)` y su tutor, con una consulta más en `loadWorkspace`;
+  - paciente: `getPatient(patientId)`; tutor: `getTutor(tutorId)` nuevo en `tutor-service.ts`,
+    una lectura por id con la misma frontera tolerante que `listTutors`. Así se evita cargar todos
+    los tutores de la clínica en cada consulta. Ambas lecturas van en `loadWorkspace`;
   - «Consulta n.º N»: el ordinal de la consulta en `listConsultationsByPatient`, ordenado por
     `created_at`, que ya lee `listPatientTimeline`;
   - fecha: `created_at` de la consulta, en `data`;
@@ -715,8 +718,8 @@ regla, el pliego y la tinta, no la elevación.
   última editada se marca con la banda preimpresa en `primary` sólido y su número en
   `primary-foreground`, nunca con un borde lateral de color.
 - **Columna lateral** (`lg`): se mantiene según D9.
-- **«Firmar y cerrar consulta»:** reemplaza a «Aprobar y cerrar consulta», con la misma etiqueta
-  accesible (FR-010: la aprobación cierra la consulta). Queda al pie de su sección y, en
+- **«Firmar y cerrar consulta»:** reemplaza a «Aprobar y cerrar consulta» como etiqueta visible
+  **y** accesible, que son idénticas (WCAG 2.5.3; FR-010: la aprobación cierra la consulta). Queda al pie de su sección y, en
   compacto, visible sobre el teclado (FR-088).
 
 **Firma (FR-099).**

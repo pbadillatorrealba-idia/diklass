@@ -161,7 +161,8 @@ formulario clínico numerado:
 
 Ve de dónde viene cada dato sin abrir nada, distingue lo que propone el sistema de lo que ya firmó
 y ve cada corrección junto al renglón que corrige. Ante evaluadores, esa lectura se entiende en
-segundos.
+segundos. Los avisos del sistema como renglones (FR-100) valen en toda la app: hoy se ven en
+`/knowledge` (AC5), y la consulta los recibirá con 006.
 
 **Why this priority**: la separación entre dato e inferencia (FR-021), la validación (FR-010) y la
 inmutabilidad (FR-024) ya existen como datos, pero hoy no se leen de un vistazo. Es la
