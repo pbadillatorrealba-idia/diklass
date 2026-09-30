@@ -228,7 +228,7 @@ como pendiente explícito en `quickstart.md`.
 Orden: tokens → fuente → primitivas → consulta → resto de pantallas → compuertas. Cada tarea es un
 commit con sus pruebas en verde.
 
-- [ ] 12.1 Tokens de D20 en rojo primero:
+- [x] 12.1 Tokens de D20 en rojo primero:
   - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
     `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
     `:root.light`/`:root.dark`;

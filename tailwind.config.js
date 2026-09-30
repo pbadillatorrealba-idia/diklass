@@ -77,8 +77,11 @@ module.exports = {
           foreground: token("info-foreground"),
           surface: token("info-surface"),
         },
-        // Borde de lo generado por el sistema y aún no validado (FR-076).
-        suggested: token("suggested"),
+        // Pliegos del formulario en copias (D20): lo sugerido sin validar (FR-076), lo corregido
+        // (FR-098) y la tinta del timbre de firma (FR-099).
+        suggested: { DEFAULT: token("suggested"), surface: token("suggested-surface") },
+        correction: { DEFAULT: token("correction"), surface: token("correction-surface") },
+        stamp: token("stamp"),
         // Capa bajo los diálogos; siempre con opacidad (`bg-scrim/55`).
         scrim: token("scrim"),
         border: token("border"),

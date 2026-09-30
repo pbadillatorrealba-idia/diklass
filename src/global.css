@@ -42,94 +42,102 @@
  * los pocos estilos inline y `tests/unit/theme/tema.test.ts` verifica que ambos coincidan y que
  * cada par cumpla WCAG 2.2 AA. Una misma paleta para iOS, Android y web.
  *
- * Valores ajustados respecto al tema de origen, solo en luminosidad y para llegar a AA:
- * claro  → destructive, secondary-foreground, accent-foreground, input, ring;
- * oscuro → muted y muted-foreground (el origen repetía los valores claros; muted-foreground subió
- *          otra vez para llegar a AA sobre las superficies tintadas), secondary-foreground,
- *          accent-foreground, destructive-foreground (texto oscuro, como primary-foreground),
- *          input, ring.
- * En claro, `background` y `border` se oscurecieron para separar las tarjetas del fondo; por eso
- * destructive, input y ring bajaron de nuevo su luminosidad (sistema-visual, design.md D4).
+ * Identidad «Formulario en copias» (sistema-visual, design.md D20): el tono de cada token lo fija
+ * la tabla de D20 y solo la luminosidad se ajustó hasta AA. La hoja (`card`) es papel; la tinta
+ * del veterinario, `foreground`; la tinta preimpresa del formulario (reglas, rótulos, acción
+ * principal), `primary`; `border` es esa tinta al ~25 % sobre la hoja, opaca.
  *
  * Estados (FR-075): `{estado}` es texto, icono y borde sobre card/fondo; `{estado}-foreground`,
  * el texto sobre su relleno sólido; `{estado}-surface`, el fondo tintado con `foreground`
- * encima. `primary-surface`/`secondary-surface` son los tintes opacos de evidencia/fragmento
- * citado y de ficha (mezcla del 12 % sobre `card`; un tinte translúcido no se puede verificar).
- * `suggested` marca lo generado por el sistema (FR-076) y `scrim` es la capa modal
- * (se usa con opacidad: `bg-scrim/55`).
+ * encima. `warning` es ocre anaranjado e `info` pizarra, para no confundirse con los pliegos.
+ * `primary-surface`/`secondary-surface` son tintes opacos al 12 % sobre `card` (banda preimpresa,
+ * evidencia citada, ficha); un tinte translúcido no se puede verificar.
+ *
+ * Pliegos (el único color de superficie): `suggested-surface` + contorno `suggested` para lo que
+ * propone el sistema sin validar (FR-076); `correction-surface` + marca `correction` para lo
+ * corregido (FR-098), separado en tono de `destructive-surface` (ΔE*ab ≥ 10); `stamp` es la tinta
+ * del timbre de firma, solo junto al nombre de un profesional (FR-099). `scrim` es la capa modal.
  */
 @layer base {
   :root {
-    --background: 238 242 241;
-    --foreground: 4 5 5;
+    --background: 236 238 233;
+    --foreground: 27 29 31;
     --card: 255 255 255;
-    --card-foreground: 3 14 12;
-    --popover: 239 249 247;
-    --popover-foreground: 3 14 12;
-    --primary: 24 122 106;
-    --primary-foreground: 242 252 251;
-    --primary-surface: 227 239 237;
-    --secondary: 75 120 168;
-    --secondary-foreground: 253 254 254;
-    --secondary-surface: 233 239 245;
-    --muted: 233 238 236;
-    --muted-foreground: 67 86 78;
-    --accent: 215 154 61;
-    --accent-foreground: 79 54 16;
-    --destructive: 217 14 0;
+    --card-foreground: 27 29 31;
+    --popover: 255 255 255;
+    --popover-foreground: 27 29 31;
+    --primary: 51 96 58;
+    --primary-foreground: 255 255 255;
+    --primary-surface: 231 238 232;
+    --secondary: 70 92 104;
+    --secondary-foreground: 255 255 255;
+    --secondary-surface: 232 236 238;
+    --muted: 232 235 229;
+    --muted-foreground: 80 87 82;
+    --accent: 158 107 34;
+    --accent-foreground: 255 255 255;
+    --destructive: 176 40 24;
     --destructive-foreground: 255 255 255;
-    --destructive-surface: 250 230 229;
-    --warning: 147 95 16;
+    --destructive-surface: 251 227 214;
+    --warning: 150 84 0;
     --warning-foreground: 255 255 255;
-    --warning-surface: 250 242 229;
-    --success: 36 123 67;
+    --warning-surface: 245 238 220;
+    --success: 38 108 58;
     --success-foreground: 255 255 255;
-    --success-surface: 231 248 237;
-    --info: 57 111 172;
+    --success-surface: 229 241 231;
+    --info: 70 94 124;
     --info-foreground: 255 255 255;
-    --info-surface: 232 239 247;
-    --suggested: 131 83 198;
+    --info-surface: 230 235 241;
+    --suggested: 122 97 0;
+    --suggested-surface: 251 239 168;
+    --correction: 158 43 69;
+    --correction-surface: 246 221 232;
+    --stamp: 58 63 154;
     --scrim: 0 0 0;
-    --border: 206 219 215;
-    --input: 97 145 138;
-    --ring: 93 147 133;
+    --border: 204 215 206;
+    --input: 104 126 108;
+    --ring: 51 96 58;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: 1 4 4;
-      --foreground: 247 253 252;
-      --card: 22 38 35;
-      --card-foreground: 247 253 252;
-      --popover: 39 46 45;
-      --popover-foreground: 247 253 252;
-      --primary: 67 218 193;
-      --primary-foreground: 0 0 0;
-      --primary-surface: 27 60 54;
-      --secondary: 109 148 188;
-      --secondary-foreground: 26 41 58;
-      --secondary-surface: 32 51 53;
-      --muted: 31 40 37;
-      --muted-foreground: 135 170 155;
-      --accent: 213 153 61;
-      --accent-foreground: 76 52 16;
-      --destructive: 254 67 54;
-      --destructive-foreground: 0 0 0;
-      --destructive-surface: 59 25 22;
-      --warning: 230 148 25;
-      --warning-foreground: 37 24 4;
-      --warning-surface: 59 44 22;
-      --success: 57 198 109;
-      --success-foreground: 9 32 17;
-      --success-surface: 22 59 36;
-      --info: 91 142 200;
-      --info-foreground: 10 20 31;
-      --info-surface: 22 40 59;
-      --suggested: 161 125 212;
+      --background: 17 20 20;
+      --foreground: 236 238 232;
+      --card: 27 31 31;
+      --card-foreground: 236 238 232;
+      --popover: 36 41 41;
+      --popover-foreground: 236 238 232;
+      --primary: 143 196 154;
+      --primary-foreground: 17 20 20;
+      --primary-surface: 41 51 46;
+      --secondary: 150 172 184;
+      --secondary-foreground: 17 20 20;
+      --secondary-surface: 40 46 48;
+      --muted: 36 41 40;
+      --muted-foreground: 164 172 165;
+      --accent: 222 176 104;
+      --accent-foreground: 17 20 20;
+      --destructive: 255 140 120;
+      --destructive-foreground: 17 20 20;
+      --destructive-surface: 61 30 18;
+      --warning: 236 164 84;
+      --warning-foreground: 17 20 20;
+      --warning-surface: 50 40 28;
+      --success: 124 200 140;
+      --success-foreground: 17 20 20;
+      --success-surface: 28 50 36;
+      --info: 152 174 204;
+      --info-foreground: 17 20 20;
+      --info-surface: 32 40 52;
+      --suggested: 232 207 92;
+      --suggested-surface: 58 51 18;
+      --correction: 242 154 174;
+      --correction-surface: 54 28 48;
+      --stamp: 163 168 242;
       --scrim: 0 0 0;
-      --border: 58 68 66;
-      --input: 96 114 111;
-      --ring: 97 113 110;
+      --border: 56 72 62;
+      --input: 112 132 117;
+      --ring: 143 196 154;
     }
   }
 
@@ -137,75 +145,83 @@
    * `+html.tsx` pone la clase antes del primer pintado. `tema.test.ts` exige que repitan los
    * valores de arriba. En nativo, el modo se fija con `Appearance.setColorScheme`. */
   :root.light {
-    --background: 238 242 241;
-    --foreground: 4 5 5;
+    --background: 236 238 233;
+    --foreground: 27 29 31;
     --card: 255 255 255;
-    --card-foreground: 3 14 12;
-    --popover: 239 249 247;
-    --popover-foreground: 3 14 12;
-    --primary: 24 122 106;
-    --primary-foreground: 242 252 251;
-    --primary-surface: 227 239 237;
-    --secondary: 75 120 168;
-    --secondary-foreground: 253 254 254;
-    --secondary-surface: 233 239 245;
-    --muted: 233 238 236;
-    --muted-foreground: 67 86 78;
-    --accent: 215 154 61;
-    --accent-foreground: 79 54 16;
-    --destructive: 217 14 0;
+    --card-foreground: 27 29 31;
+    --popover: 255 255 255;
+    --popover-foreground: 27 29 31;
+    --primary: 51 96 58;
+    --primary-foreground: 255 255 255;
+    --primary-surface: 231 238 232;
+    --secondary: 70 92 104;
+    --secondary-foreground: 255 255 255;
+    --secondary-surface: 232 236 238;
+    --muted: 232 235 229;
+    --muted-foreground: 80 87 82;
+    --accent: 158 107 34;
+    --accent-foreground: 255 255 255;
+    --destructive: 176 40 24;
     --destructive-foreground: 255 255 255;
-    --destructive-surface: 250 230 229;
-    --warning: 147 95 16;
+    --destructive-surface: 251 227 214;
+    --warning: 150 84 0;
     --warning-foreground: 255 255 255;
-    --warning-surface: 250 242 229;
-    --success: 36 123 67;
+    --warning-surface: 245 238 220;
+    --success: 38 108 58;
     --success-foreground: 255 255 255;
-    --success-surface: 231 248 237;
-    --info: 57 111 172;
+    --success-surface: 229 241 231;
+    --info: 70 94 124;
     --info-foreground: 255 255 255;
-    --info-surface: 232 239 247;
-    --suggested: 131 83 198;
+    --info-surface: 230 235 241;
+    --suggested: 122 97 0;
+    --suggested-surface: 251 239 168;
+    --correction: 158 43 69;
+    --correction-surface: 246 221 232;
+    --stamp: 58 63 154;
     --scrim: 0 0 0;
-    --border: 206 219 215;
-    --input: 97 145 138;
-    --ring: 93 147 133;
+    --border: 204 215 206;
+    --input: 104 126 108;
+    --ring: 51 96 58;
   }
 
   :root.dark {
-    --background: 1 4 4;
-    --foreground: 247 253 252;
-    --card: 22 38 35;
-    --card-foreground: 247 253 252;
-    --popover: 39 46 45;
-    --popover-foreground: 247 253 252;
-    --primary: 67 218 193;
-    --primary-foreground: 0 0 0;
-    --primary-surface: 27 60 54;
-    --secondary: 109 148 188;
-    --secondary-foreground: 26 41 58;
-    --secondary-surface: 32 51 53;
-    --muted: 31 40 37;
-    --muted-foreground: 135 170 155;
-    --accent: 213 153 61;
-    --accent-foreground: 76 52 16;
-    --destructive: 254 67 54;
-    --destructive-foreground: 0 0 0;
-    --destructive-surface: 59 25 22;
-    --warning: 230 148 25;
-    --warning-foreground: 37 24 4;
-    --warning-surface: 59 44 22;
-    --success: 57 198 109;
-    --success-foreground: 9 32 17;
-    --success-surface: 22 59 36;
-    --info: 91 142 200;
-    --info-foreground: 10 20 31;
-    --info-surface: 22 40 59;
-    --suggested: 161 125 212;
+    --background: 17 20 20;
+    --foreground: 236 238 232;
+    --card: 27 31 31;
+    --card-foreground: 236 238 232;
+    --popover: 36 41 41;
+    --popover-foreground: 236 238 232;
+    --primary: 143 196 154;
+    --primary-foreground: 17 20 20;
+    --primary-surface: 41 51 46;
+    --secondary: 150 172 184;
+    --secondary-foreground: 17 20 20;
+    --secondary-surface: 40 46 48;
+    --muted: 36 41 40;
+    --muted-foreground: 164 172 165;
+    --accent: 222 176 104;
+    --accent-foreground: 17 20 20;
+    --destructive: 255 140 120;
+    --destructive-foreground: 17 20 20;
+    --destructive-surface: 61 30 18;
+    --warning: 236 164 84;
+    --warning-foreground: 17 20 20;
+    --warning-surface: 50 40 28;
+    --success: 124 200 140;
+    --success-foreground: 17 20 20;
+    --success-surface: 28 50 36;
+    --info: 152 174 204;
+    --info-foreground: 17 20 20;
+    --info-surface: 32 40 52;
+    --suggested: 232 207 92;
+    --suggested-surface: 58 51 18;
+    --correction: 242 154 174;
+    --correction-surface: 54 28 48;
+    --stamp: 163 168 242;
     --scrim: 0 0 0;
-    --border: 58 68 66;
-    --input: 96 114 111;
-    --ring: 97 113 110;
+    --border: 56 72 62;
+    --input: 112 132 117;
+    --ring: 143 196 154;
   }
 }
 

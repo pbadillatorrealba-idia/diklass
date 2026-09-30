@@ -69,6 +69,10 @@ const TOKENS: ThemeToken[] = [
   "info-foreground",
   "info-surface",
   "suggested",
+  "suggested-surface",
+  "correction",
+  "correction-surface",
+  "stamp",
   "scrim",
   "border",
   "input",
@@ -127,9 +131,25 @@ const PAIRS: [ThemeToken, ThemeToken, number][] = [
   ),
   ["foreground", "destructive-surface", 4.5],
   ["destructive", "destructive-surface", 3],
-  // Borde lateral de lo sugerido por el sistema (FR-076): componente no textual, 3:1.
+  // Formulario en copias (D20). Lo sugerido es un pliego canario (`suggested-surface`) con
+  // contorno de 1 px `suggested` (3:1, no textual); la corrección, un pliego rosa con la marca
+  // `correction`, que también es texto; el timbre de firma (`stamp`) es texto sobre la hoja.
   ["suggested", "background", 3],
   ["suggested", "card", 3],
+  ["suggested", "suggested-surface", 3],
+  ["correction", "card", 4.5],
+  ["correction", "background", 4.5],
+  ["correction", "correction-surface", 3],
+  ["stamp", "card", 4.5],
+  ["stamp", "background", 4.5],
+  ...(["suggested-surface", "correction-surface"] as const).flatMap(
+    (surface): [ThemeToken, ThemeToken, number][] => [
+      ["foreground", surface, 4.5],
+      ["muted-foreground", surface, 4.5],
+    ],
+  ),
+  // Banda preimpresa de `FormSection`: número y título en `primary` sobre `primary-surface`.
+  ["primary", "primary-surface", 4.5],
   // Separación card/fondo (D4): borde decorativo, sin umbral WCAG; mínimo acordado 1.4:1.
   ["border", "card", 1.4],
   ["input", "background", 3],
@@ -154,6 +174,42 @@ describe.each(Object.entries(schemes))("tema %s", (scheme, tokens) => {
     const [a, b] = [tokens[fg], tokens[bg]];
     if (!a || !b) throw new Error(`falta ${fg} o ${bg}`);
     expect(contrast(a, b)).toBeGreaterThanOrEqual(min);
+  });
+});
+
+// ΔE*ab (CIE76) entre dos colores sRGB, vía CIELAB con iluminante D65.
+function deltaE(a: Rgb, b: Rgb) {
+  const lab = (rgb: Rgb) => {
+    const linear = rgb.map((value) => {
+      const v = value / 255;
+      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    const [r = 0, g = 0, bl = 0] = linear;
+    const xyz = [
+      (0.4124 * r + 0.3576 * g + 0.1805 * bl) / 0.95047,
+      0.2126 * r + 0.7152 * g + 0.0722 * bl,
+      (0.0193 * r + 0.1192 * g + 0.9505 * bl) / 1.08883,
+    ].map((t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 / 116) * t + 16 / 116));
+    const [x = 0, y = 0, z = 0] = xyz;
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+  };
+  const [p, q] = [lab(a), lab(b)];
+  return Math.hypot(...p.map((value, index) => value - (q[index] ?? 0)));
+}
+
+// Entre dos pasteles el contraste de luminancia no sirve (D20): la corrección y el error se
+// separan en tono, sobre los valores finales de cada bloque.
+describe("corrección frente a error (D20)", () => {
+  test.each([
+    [":root {", lightBlock],
+    ["@media (prefers-color-scheme: dark)", darkSection],
+    [":root.light {", blockAfter(":root.light {")],
+    [":root.dark {", blockAfter(":root.dark {")],
+  ])("%s separa correction-surface de destructive-surface (ΔE*ab ≥ 10)", (_, block) => {
+    const tokens = tokensOf(block);
+    const [a, b] = [tokens["correction-surface"], tokens["destructive-surface"]];
+    if (!a || !b) throw new Error("falta correction-surface o destructive-surface");
+    expect(deltaE(a, b)).toBeGreaterThanOrEqual(10);
   });
 });
 
