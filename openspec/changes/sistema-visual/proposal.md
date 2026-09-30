@@ -93,6 +93,27 @@ Añadido tras revisar la app con las guías `expo-native-ui` y `expo-router` (20
     superficie verificados.
   - En Firefox, el contenedor de desplazamiento de `Screen` recibe foco sin indicador visible.
 
+Identidad «Formulario en copias» (decisión del usuario, 2026-09-30; se planifica en el grupo 12):
+
+- **Por qué.** La paleta anterior (verde azulado, azul y el violeta de lo sugerido) se parece
+  demasiado a los CDSS veterinarios de referencia (IDEXX Decision IQ, Vetspire). El usuario pidió
+  una identidad propia y profesional, ni fría ni lúdica, que además aguante una demo ante
+  evaluadores de fondos (`PRODUCT.md`).
+- **Qué es.** La consulta se lee como un formulario clínico normalizado:
+  - la estructura preimpresa va en una sola tinta verde de formulario;
+  - lo que sugiere el sistema es la **copia canaria** y lo que valida el veterinario lleva un
+    **timbre de firma**;
+  - las correcciones van en **pliego rosa** y el renglón anterior queda tachado y legible;
+  - la procedencia de cada dato se marca **al margen** con un código.
+- **Qué reemplaza:** los valores de la paleta, los radios, la forma de las primitivas y el
+  tratamiento de lo sugerido (el borde lateral pasa a pliego).
+- **Qué conserva:**
+  - los nombres de tokens semánticos y la verificación AA;
+  - los estados, la navegación adaptable, los patrones de datos y el acceso;
+  - Atkinson Hyperlegible Next.
+- **Qué agrega:** Atkinson Hyperlegible Mono (OFL 1.1), solo para datos.
+- **Requisitos:** modifica FR-076 y FR-077 y agrega FR-097 a FR-100, US18 y SC-061.
+
 No hay cambios incompatibles de datos ni de API: el vocabulario `AdverseEventSeverity`
 (`leve`/`moderado`/`grave`) no cambia.
 
@@ -134,6 +155,12 @@ primitivas de esta capacidad.
   grafo: cada pantalla se migra cuando está presente.
 - Aceptación conjunta: la distinción sistema/profesional (FR-076) y la severidad de 4 niveles
   (FR-077) se aceptan junto con las features que las presentan (003, 004, 005 y, a futuro, 006 y 007).
+
+- Identidad «Formulario en copias» (grupo 12): vuelve a tocar `src/global.css`, `src/theme/`,
+  `tailwind.config.js`, todas las primitivas de `src/components/ui/`, `AttributionBadge`,
+  `CorrectionHistory` y la pantalla de consulta. Se agregan fuentes en `assets/fonts/` y
+  `public/fonts/`. Las capturas de `evidencia/` anteriores al grupo 12 pasan a ser registro
+  histórico de la paleta anterior.
 
 Estado: lo marcado como implementado existe en el árbol de trabajo de `feat/tema-visual`, pero aún
 no está integrado ni aceptado.

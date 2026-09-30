@@ -222,3 +222,62 @@ como pendiente explícito en `quickstart.md`.
   1280 y 1440 px de `/home`, `/patients` y `/patients/[id]` en `quickstart.md`. Verificación:
   compuertas en verde y capturas registradas.
 
+
+## 12. Identidad «Formulario en copias» (D20 · FR-076 · FR-077 · FR-097 – FR-100 · US18)
+
+Orden: tokens → fuente → primitivas → consulta → resto de pantallas → compuertas. Cada tarea es un
+commit con sus pruebas en verde.
+
+- [ ] 12.1 Tokens de D20 en rojo primero:
+  - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
+    `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
+    `:root.light`/`:root.dark`;
+  - cambiar los valores de `src/global.css` y `src/theme/colors.ts` a la tabla de D20, ajustando
+    solo la luminosidad hasta AA;
+  - exponer los tokens nuevos en `tailwind.config.js`.
+  FR-071 · FR-072. Verificación: rojo por tokens ausentes y después verde, con `sin-literales`
+  en verde.
+- [ ] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
+  (woff2): plugin de `expo-font` en `app.json`, `@font-face` en `global.css`,
+  `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS de `/login` ≤ 0.1 y
+  presupuesto de fuentes ≤ 140 KB.
+- [ ] 12.3 `Text`: variantes `data` (mono tabular) y `label` (rótulo preimpreso), con prueba de
+  componente en rojo primero (D20 · FR-074). Radios: `rounded-xl`/`rounded-lg` → `rounded-sm` en
+  `Button`, `Input`, `Card` y el diálogo. La guarda de D10 prohíbe `rounded-xl`/`rounded-2xl` y
+  `border-l-[2-8]`. Verificación: pruebas de `ui/` y `sin-literales` en verde.
+- [ ] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
+  - códigos R/I/F/? a partir de `Provenance`;
+  - `role="img"` y nombre «Procedencia: <nombre>»;
+  - recuadro con forma propia.
+  FR-097. Verificación: prueba de componente verde.
+- [ ] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
+  sistema · copia sin firmar». `SignatureStamp` (nombre y momento, `stamp`) para el contenido
+  aprobado; `AttributionBadge` lo usa en `approved`. Pruebas en rojo primero. FR-076.
+  Verificación: prueba de componente y la guarda sin `border-l-4` en verde.
+- [ ] 12.6 `CorrectionLine`: contenido anterior tachado y legible, anunciado como reemplazado, y la
+  corrección en `correction-surface` con atribución. Adoptarla en `CorrectionHistory`. Prueba en
+  rojo primero. FR-098 · US18-AC3.
+- [ ] 12.7 `Callout` como renglón dentro de su sección y `SeverityBadge` con la barra de 4
+  segmentos, con prueba en rojo primero de los segmentos llenos por nivel. FR-077 · FR-100.
+  Adoptarlos en `missing-fields-panel` y `avisos-cobertura` sin toasts.
+- [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
+  - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2, AC4 y AC5:
+    códigos y clave visibles, firma con timbre y reducción de movimiento emulada;
+  - después, `FormSection` y `Field` con las secciones 1 a 4 y el encabezado con número de consulta
+    en `data`;
+  - por último, «Firmar» con la transición de ≤ 300 ms (FR-099), manteniendo el orden del DOM y las
+    dos columnas de D9.
+  Verificación: el e2e nuevo, `registro-epicrisis` y `accessibility` en verde, de a uno.
+- [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
+  seguimiento, conocimiento y Configuración. Datos en `data` y procedencia al margen donde exista.
+  Después:
+  - axe en `chromium` y `chromium-dark` (de a uno, `--workers=1`), `firefox` y `webkit`;
+  - reflujo a 320 px;
+  - revisión en escala de grises de `/consultations/[id]` y `/follow-up/[patientId]` (SC-061).
+- [ ] 12.10 Capturas en `evidencia/12.*`:
+  - web: consulta a 1440 y 375 px, en claro y oscuro;
+  - iOS y Android si hay simulador o emulador; si no, queda como pendiente explícito en
+    `quickstart.md`.
+  Después, revisión final de `impeccable` contra el contrato de dirección y `DESIGN.md` +
+  `.impeccable/design.json` generados desde lo construido. Actualizar la sección «Sistema visual»
+  de `AGENTS.md`.

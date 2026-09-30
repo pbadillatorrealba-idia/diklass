@@ -108,6 +108,9 @@ Cuatro pesos (400/500/600/700), OFL 1.1.
 
 ### D4 — Tokens nuevos y reglas de color
 
+> **Revisado por D20 (2026-09-30):** la estructura de tokens y las reglas de verificación se
+> mantienen; los valores, `suggested` como borde lateral y los tokens nuevos los fija D20.
+
 Cada estado de FR-075 recibe tres tokens: `{estado}` (borde/icono, ≥ 3:1 contra card),
 `{estado}-surface` (fondo tintado) y `{estado}-foreground` (texto sobre la superficie, ≥ 4.5:1).
 El estado `error` reutiliza `destructive` y añade solo `destructive-surface`.
@@ -183,6 +186,9 @@ se conservan `size` y `bold` como alias deprecados; se eliminan en la tarea 6.3.
 
 ### D6 — Dimensiones, espaciado y radios
 
+> **Revisado por D20:** los radios pasan a 2 px (`rounded-sm`) en superficies y controles; el
+> resto de D6 se mantiene.
+
 `tailwind.config.js` extiende:
 
 - `maxWidth`: `content` (720 px, una columna de lectura), `wide` (1200 px, consulta a dos
@@ -203,6 +209,10 @@ para `gap`/`p`. Se elimina `gap-1.5`. El margen de pantalla es `p-4` en compacto
 **Sombras:** no se añaden. La jerarquía se expresa con superficie + borde.
 
 ### D7 — Primitivas nuevas en `src/components/ui/`
+
+> **Revisado por D20:** `SuggestedBlock` deja el `border-l-4` por el pliego canario, `Callout` pasa
+> a renglón dentro de su sección y se agregan `FormSection`, `Field`, `ProvenanceMark`,
+> `ProvenanceKey`, `SignatureStamp` y `CorrectionLine`.
 
 Todas usan composición por `children`, reciben `className` que se aplica al final (solo layout) y
 mantienen los `testID` que les pasen.
@@ -607,6 +617,115 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 - **Alternativa descartada:** un combobox con lista desplegable. Exige más ARIA y más código de
   foco, sin ventaja para una lista ya acotada a 8.
 
+### D20 — Identidad «Formulario en copias» (FR-076 · FR-077 · FR-097 – FR-100 · US18)
+
+Decisión del usuario del 2026-09-30, tras una ronda de direcciones de `impeccable`. El contrato de
+dirección vive en `.impeccable/surfaces/src-app-protected-patients-consultations-id-tsx.md`, que
+solo lee el desarrollo. Esta decisión **reemplaza** los valores de D4, el tratamiento de
+`SuggestedBlock` de D7 y los radios de D6. Amplía D2, D5 y D9. Los mecanismos de D1 (CSS + espejo
+TS verificado), D3, D8 y D10 a D19 no cambian.
+
+**Tesis.** Lo que sugiere el sistema es la copia canaria de un formulario autocopiativo, y solo la
+firma del veterinario la vuelve original. Rechaza el tablero de tarjetas con un panel de
+«Hallazgos IA», los destellos y el violeta con que la categoría marca la IA (IDEXX, Vetspire).
+
+**Color (valores orientativos; los finales los fija `tema.test.ts` en rojo primero, ajustando solo
+la luminosidad hasta AA).**
+
+| Token | Claro | Oscuro | Papel en el mundo |
+|---|---|---|---|
+| `background` | `#ECEEE9` | `#111414` | la mesa bajo el formulario |
+| `card` | `#FFFFFF` | `#1B1F1F` | la hoja |
+| `foreground` / `card-foreground` | `#1B1D1F` | `#ECEEE8` | tinta del veterinario |
+| `primary` | `#33603A` | `#8FC49A` | tinta preimpresa del formulario: reglas, rótulos, acción principal |
+| `border` | verde de `primary` al ~25 % sobre `card`, opaco | ídem | reglas del formulario (decorativas) |
+| `suggested-surface` (nuevo) | `#FBEFA8` | `#3A3312` | pliego canario |
+| `suggested` | ≈ `#7A6100` (≥ 3:1 sobre card) | ≈ `#E8CF5C` | contorno y marca de lo sugerido |
+| `correction-surface` (nuevo) | `#F9DDE2` | `#3B1F26` | pliego rosa |
+| `correction` (nuevo) | ≈ `#9E2B45` | ≈ `#F29AAE` | tachado y marca de corrección |
+| `stamp` (nuevo) | ≈ `#3A3F9A` | ≈ `#A3A8F2` | tampón de firma (atribución aprobada) |
+
+- `warning`, `info`, `success` y `destructive` conservan su función y su triple de tokens (D4).
+  Se reajustan para no confundirse con el canario, el rosa ni el tampón:
+  - `warning` pasa a ocre anaranjado (el canario es de lo sugerido);
+  - `info`, a pizarra azulada, más gris que `stamp`.
+- `secondary`, `accent`, `primary-surface` y `secondary-surface` se reajustan dentro de la misma
+  familia de tintas.
+- **Estrategia de color: restringida.** Todo el color de superficie se concentra en los pliegos
+  (canario y rosa); el resto es tinta sobre papel.
+
+**Tipografía (amplía D2 y D5).**
+
+- **Atkinson Hyperlegible Next** sigue siendo la cara de la UI y del texto.
+- **Atkinson Hyperlegible Mono** (Braille Institute, OFL 1.1; pesos 400 y 600) se usa solo para
+  datos: número de consulta, fechas y horas, peso, edad, dosis y códigos de procedencia.
+  - Se embebe igual que en D2: `expo-font` en nativo y `@font-face` + `preload` en web.
+- **Variantes de `Text`:**
+  - `data`: mono con cifras tabulares;
+  - `label`: rótulo preimpreso en `text-sm`, mayúsculas con `tracking-wide`, `font-semibold` y
+    color `primary`.
+- El mínimo de 14 px de D5 sigue vigente.
+
+**Forma (reemplaza los radios de D6).** Superficies y controles con radio de 2 px (`rounded-sm`);
+`rounded-full` solo en el avatar. Reglas de 1 px; sin sombras (se mantiene). La jerarquía la dan la
+regla, el pliego y la tinta, no la elevación.
+
+**Primitivas.**
+
+| Primitiva | Qué es | Reemplaza o cambia |
+|---|---|---|
+| `FormSection` (nueva) | sección numerada del formulario: número y título en la banda preimpresa (fondo `primary-surface`), cuerpo con reglas de 1 px | `Card` en la consulta |
+| `Field` (nueva) | rótulo preimpreso + valor + `ProvenanceMark` al margen | filas sueltas de anamnesis y epicrisis |
+| `ProvenanceMark` (nueva) | recuadro con R / I / F / ?, `role="img"` y nombre accesible (FR-097) | la etiqueta de procedencia en texto |
+| `ProvenanceKey` (nueva) | clave de los cuatro códigos en el encabezado de la consulta | — |
+| `SignatureStamp` (nueva) | marco de tampón con nombre y momento del aprobador (FR-099) | `AttributionBadge` para `approved` |
+| `CorrectionLine` (nueva) | renglón anterior tachado y legible + corrección en pliego rosa (FR-098) | el listado de `CorrectionHistory` |
+| `SuggestedBlock` | pliego `suggested-surface` + contorno de 1 px `suggested` + etiqueta «Sugerencia del sistema · copia sin firmar» | el `border-l-4` (el borde lateral grueso queda prohibido) |
+| `Callout` | renglón impreso dentro de su sección: icono + texto sobre la superficie del tono (FR-100) | la caja flotante |
+| `SeverityBadge` | añade la barra de 4 segmentos (FR-077) | — |
+
+`Card` sigue existiendo para las listas y los paneles fuera de la consulta, con la nueva forma.
+
+**Consulta (amplía D9).**
+
+- **Encabezado del formulario:** paciente, tutor, número de consulta y fecha en mono, y la
+  `ProvenanceKey`.
+- **Secciones numeradas** en el orden del flujo clínico: 1 Anamnesis, 2 Información faltante,
+  3 Diagnóstico, 4 Epicrisis y firma.
+  - La numeración se justifica porque la secuencia es el protocolo.
+  - 006 y 007 insertarán sus secciones cuando existan.
+- **Eje único:** todas las secciones bajan por un mismo eje vertical. La sección con foco o la
+  última editada se marca con la banda preimpresa en `primary` sólido y su número en
+  `primary-foreground`, nunca con un borde lateral de color.
+- **Columna lateral** (`lg`): se mantiene según D9.
+- **«Firmar»:** la acción de aprobar la epicrisis queda al pie de su sección. En compacto se
+  mantiene visible sobre el teclado (FR-088).
+
+**Firma (FR-099).**
+
+- Al aprobar, en un solo movimiento de ≤ 300 ms con salida exponencial:
+  - el pliego canario se funde a papel;
+  - el `SignatureStamp` entra con una ligera escala (0.96 → 1) y opacidad.
+- Con `prefers-reduced-motion` / Reduce Motion, el cambio es inmediato.
+- Es la única animación de autor de la pantalla.
+
+**Nativo.**
+
+- `NativeTabs`, cabeceras, retroceso y controles del sistema no cambian.
+- `primary` es el tinte en iOS y Android.
+- Atkinson se mantiene también en nativo como cara de marca por su legibilidad clínica (D2). Es
+  una desviación consciente de la guía, que pone SF/Roboto en el cuerpo: se respeta el escalado
+  del sistema.
+
+**Anti-referencias** (`PRODUCT.md`): nada frío-hospitalario (sin gris clínico sin tinta), nada
+lúdico (sin patitas ni ilustraciones de perros), y ningún degradado, destello ni violeta de «IA».
+
+**Alternativas descartadas** en la ronda de direcciones:
+
+- «Etograma» (grilla de registro etológico): la más obvia para la categoría y densa para el
+  generalista.
+- El estándar SaaS clínico: indistinguible de las referencias.
+
 ## Risks / Trade-offs
 
 - **[Riesgo] El media query oscuro de `global.css` podría no resolverse en nativo con NativeWind
@@ -632,6 +751,17 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 - **[Riesgo] La barra lateral reduce el ancho útil de la consulta en `lg`.** → Con 240 px, a
   1280 px quedan 1040 px de contenido, suficientes para las dos columnas de D9 (`max-w-wide`
   1200 limita, no fuerza). La prueba de dos columnas de 4.6 se repite con la navegación montada.
+- **[Riesgo] D20 reestiliza toda la app de una vez y deja obsoletas las capturas de
+  `evidencia/`.** → Se migra por primitiva y luego por pantalla (grupo 12), con `tema.test.ts` y
+  axe en claro y oscuro en cada paso. Las capturas anteriores quedan como histórico y se toman
+  nuevas en `evidencia/12.*`.
+- **[Riesgo] El canario de lo sugerido podría confundirse con `warning`.** → `warning` pasa a
+  ocre anaranjado; lo sugerido siempre lleva su etiqueta y su contorno, y la revisión en escala de
+  grises (12.9) lo comprueba.
+- **[Riesgo] El modo oscuro de un mundo de papel se lee frío o apagado.** → Pizarra con un leve
+  tinte verde y pliegos como tintes cálidos opacos, verificados por AA; revisión visual en 12.9.
+- **[Riesgo] Una segunda familia (mono) suma peso.** → Dos pesos woff2 (≈ 40 KB) sin superar el
+  presupuesto ampliado; la precarga solo cubre los pesos del primer pintado.
 - **[Trade-off] En web el título está dentro de la página y no en una cabecera.** → Es
   intencionado: la barra lateral da el contexto, el `h1` estructura el documento para los lectores
   de pantalla, y una cabecera extra solo repetiría el título.
@@ -639,7 +769,8 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 ## Performance budgets
 
 - Fuentes de texto en web: ≤ 100 KB en total en woff2 (hoy 80 KB en 4 archivos). Precarga solo
-  de esos 4 archivos.
+  de esos 4 archivos. Con D20: ≤ 140 KB con los 2 pesos de Atkinson Hyperlegible Mono, que se
+  precargan solo si aparecen en el primer pintado de `/login`.
 - Fuente de iconos: ≤ 1.2 MB, sin precarga; no bloquea el primer pintado.
 - Sin salto de maquetación atribuible a la fuente de texto en el primer pintado (FR-073). Se
   verifica con la traza de rendimiento de Playwright en `/login`: CLS ≤ 0.1.
@@ -656,6 +787,7 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 | Navegación de secciones con variante por plataforma (`app-navigation.tsx` + `.web.tsx`) | FR-082: la convención de cada plataforma difiere (pestañas nativas frente a barra lateral en escritorio). Usa solo APIs de `expo-router` ya instalado | Un único `Tabs` JS en todas las plataformas: no es la barra nativa de iOS/Android y en escritorio desaprovecha el ancho. Un drawer: requiere `@react-navigation/drawer` y oculta las secciones en móvil |
 | 4 layouts de grupo (`(home)`, `(patients)`, `(follow-up)`, `(knowledge)`) | Un `Stack` por sección, para que cada pestaña conserve su historial y su retroceso (FR-083) | Un único `Stack`: al cambiar de sección se pierde la posición en la anterior |
 | Primitivas `QueryState` y `LinkText` | FR-084/085, con ≥ 4 y ≥ 3 usos | Repetir en cada pantalla los ternarios de carga/error/vacío: es la deriva que se midió |
+| Atkinson Hyperlegible Mono (2 archivos de fuente, OFL 1.1; sin dependencia de paquete) | D20: cifras tabulares y códigos de procedencia distinguibles (0/O, 1/l) en dosis, fechas e identificadores | Cifras tabulares de Atkinson Hyperlegible Next: alinea cifras, pero no separa el dato del rótulo en un formulario denso |
 | `react-native-calendars` (dependencia nueva, MIT, JS puro; arrastra `xdate`, `lodash`, `recyclerlistview`, `memoize-one`, `prop-types`, `hoist-non-react-statics`, `react-native-swipe-gestures`) | FR-094: calendario mensual accesible y localizable hoy, con semana y agenda disponibles cuando existan citas (decisión del usuario, D17) | Vista de mes propia con `Intl`: sin dependencias, pero habría que reescribirla al llegar semana y agenda |
 | Bloques `:root.light`/`:root.dark` duplicados en `global.css` | FR-091: forzar el modo en web sin perder la media query de la que depende NativeWind en nativo | `darkMode: "class"`: rompería el modo `system` en nativo y no hay variantes `dark:` que lo necesiten. La duplicación la vigila `tema.test.ts` |
 | `automaticallyAdjustKeyboardInsets` del `ScrollView` en lugar de `react-native-keyboard-controller` | FR-088 sin dependencia nueva | `keyboard-controller`: mejor seguimiento del teclado, pero añade una dependencia nativa sin animaciones que lo justifiquen. `KeyboardAvoidingView` se retiró en la revisión de la PR #38: necesita el alto de la cabecera |
@@ -678,6 +810,13 @@ Decisión del usuario (2026-09-25), a raíz de 5.2/5.6:
 Reversión: cada pantalla migra en su propio commit, así que se puede revertir por separado.
 
 ## Open Questions
+
+Resueltas con el usuario el 2026-09-30:
+
+- Dirección visual: **«Formulario en copias»** (D20), elegida en la ronda de direcciones frente a
+  «Etograma» y el estándar de la categoría.
+- Dónde especificarla: **en este cambio** (reabierto), no en uno nuevo.
+- Fuente de datos: **se agrega Atkinson Hyperlegible Mono**.
 
 Resueltas con el usuario el 2026-09-25:
 
