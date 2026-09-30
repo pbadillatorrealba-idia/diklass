@@ -3,8 +3,10 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
+import { CorrectionLine } from "@/components/clinical/correction-line";
 import { type AnamnesisEntryView, AnamnesisSection } from "@/components/registro/anamnesis-section";
 import { type DiagnosisEntryView, DiagnosisSection } from "@/components/registro/diagnosis-section";
+import { epicrisisChanges } from "@/components/registro/epicrisis-changes";
 import { EpicrisisFields } from "@/components/registro/epicrisis-fields";
 import { FollowUpSummaryPanel } from "@/components/registro/follow-up-summary";
 import {
@@ -231,14 +233,26 @@ export default function ConsultationScreen() {
     data === null || effectiveRow === null
       ? null
       : (data.epicrisisRows.find((entry) => entry.record.id === effectiveRow.id) ?? null);
-  const correctionChain: Attribution[] =
+  // Versiones firmadas en orden de creación (`listEpicrisisByConsultation` ordena por
+  // `created_at`): la efectiva corrige a la que la precede en la cadena.
+  const signedChain =
     data === null
       ? []
-      : data.epicrisisRows
-          .filter(
-            (entry) => entry.record.status === "approved" || entry.record.status === "corrective",
-          )
-          .map((entry) => attributionFromRow(entry.record));
+      : data.epicrisisRows.filter(
+          (entry) => entry.record.status === "approved" || entry.record.status === "corrective",
+        );
+  const correctionChain: Attribution[] = signedChain.map((entry) =>
+    attributionFromRow(entry.record),
+  );
+  const correctedFrom =
+    effectiveEntry?.record.status === "corrective"
+      ? (signedChain[signedChain.indexOf(effectiveEntry) - 1] ?? null)
+      : null;
+  // FR-098 · US18-AC3: renglón por campo cambiado entre la versión corregida y la vigente.
+  const epicrisisCorrections =
+    effectiveEntry === null || correctedFrom === null
+      ? []
+      : epicrisisChanges(correctedFrom.content, effectiveEntry.content);
   // La edición en curso vive junto al id del borrador que edita: un refetch del mismo
   // borrador no pisa lo que el veterinario está escribiendo.
   const draftContent =
@@ -597,6 +611,21 @@ export default function ConsultationScreen() {
                           attribution={attributionFromRow(effectiveEntry.record)}
                         />
                       </Card>
+                      {epicrisisCorrections.length > 0 ? (
+                        <VStack className="gap-2" testID="epicrisis-corrections">
+                          <Heading level={3}>Correcciones</Heading>
+                          {epicrisisCorrections.map((change) => (
+                            <CorrectionLine
+                              attribution={attributionFromRow(effectiveEntry.record)}
+                              current={change.current}
+                              key={change.field}
+                              label={change.label}
+                              previous={change.previous}
+                              testID={`epicrisis-correction-${change.field}`}
+                            />
+                          ))}
+                        </VStack>
+                      ) : null}
                       <EpicrisisFields content={effectiveEntry.content} isEditable={false} />
                       {correctionContent === null ? (
                         <Button

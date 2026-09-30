@@ -1,9 +1,9 @@
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
   ANAMNESIS_FIELD_LABELS,
   ANAMNESIS_FIELD_OPTIONS,
   ANAMNESIS_STRUCTURED_ORDER,
-  PROVENANCE_LABELS,
   PROVENANCE_OPTIONS,
 } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
+import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { AnamnesisContent, AnamnesisField, Provenance } from "@/features/registro/schema";
@@ -145,13 +146,14 @@ export function AnamnesisSection({
           <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
             <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
             <Text selectable>{entry.content.text}</Text>
-            <Text>Procedencia: {PROVENANCE_LABELS[entry.content.provenance]}</Text>
-            {(entry.content.provenanceHistory ?? []).map((previous, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; la misma procedencia puede repetirse y no aporta identidad.
-              <Text key={`${previous.provenance}-${index}`} testID="anamnesis-provenance-history">
-                Corrección registrada; antes: {PROVENANCE_LABELS[previous.provenance]}
-              </Text>
-            ))}
+            {entry.content.provenanceHistory?.length ? (
+              <ProvenanceCorrection
+                current={entry.content.provenance}
+                previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
+              />
+            ) : (
+              <ProvenanceMark provenance={entry.content.provenance} />
+            )}
             <AttributionBadge attribution={entry.attribution} />
             {isSealed ? null : (
               <OptionPicker
