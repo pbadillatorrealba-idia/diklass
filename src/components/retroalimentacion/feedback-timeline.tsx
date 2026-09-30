@@ -1,6 +1,6 @@
 // biome-ignore-all lint/suspicious/noArrayIndexKey: filas de solo render de eventos adversos; la lista de una entrada registrada no muta.
 
-import type { ReactElement, ReactNode } from "react";
+import { type ReactElement, type ReactNode, useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { CorrectionHistory } from "@/components/clinical/correction-history";
 import { Box } from "@/components/ui/box";
@@ -12,10 +12,12 @@ import { ScreenList, type ScreenProps } from "@/components/ui/screen";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { Text } from "@/components/ui/text";
 import type {
+  AdverseEventReportEntry,
   FeedbackAntecedent,
   FeedbackTimelineEntry,
 } from "@/features/retroalimentacion/feedback-summary";
 import type { Attribution } from "@/lib/attribution/types";
+import { AdverseEventItem, AdverseEventToggle } from "./adverse-event-report";
 import { ADHERENCE_LABELS, EVOLUTION_LABELS } from "./labels";
 
 function attributionDe(entry: FeedbackTimelineEntry): Attribution {
@@ -31,6 +33,7 @@ function attributionDe(entry: FeedbackTimelineEntry): Attribution {
 type FeedbackTimelineProps = {
   entries: FeedbackTimelineEntry[];
   antecedents?: FeedbackAntecedent[];
+  events?: AdverseEventReportEntry[];
   onCorrect: (entry: FeedbackTimelineEntry) => void;
   /** Estado de la lectura (FR-085): el vacío no se muestra mientras carga. */
   isPending: boolean;
@@ -41,6 +44,14 @@ type FeedbackTimelineProps = {
   header?: ReactNode;
   footer?: ReactElement;
 };
+
+type TimelineRow =
+  | { kind: "feedback"; entry: FeedbackTimelineEntry }
+  | { kind: "timeline-empty" }
+  | { kind: "event-heading" }
+  | { kind: "event-empty" }
+  | { kind: "event"; entry: AdverseEventReportEntry; superseded: boolean }
+  | { kind: "event-toggle"; count: number };
 
 /**
  * Cronología de las entradas de retroalimentación de un paciente (FR-056 · US10-AC11): todas
@@ -53,6 +64,7 @@ export function FeedbackTimeline({
   back,
   entries,
   error,
+  events = [],
   footer,
   header,
   isPending,
@@ -60,6 +72,7 @@ export function FeedbackTimeline({
   onRetry,
   title,
 }: FeedbackTimelineProps) {
+  const [showSuperseded, setShowSuperseded] = useState(false);
   const correccionesPorOriginal = new Map<string, Attribution[]>();
   const antecedentesPorRegistro = new Map(
     antecedents.map((antecedente) => [antecedente.feedbackRecordId, antecedente]),
@@ -70,11 +83,29 @@ export function FeedbackTimeline({
     correcciones.push(attributionDe(entry));
     correccionesPorOriginal.set(entry.correctsRecordId, correcciones);
   }
+  const vigentes = events.filter((entry) => entry.effective);
+  const sustituidos = events.filter((entry) => !entry.effective);
+  const rows: TimelineRow[] =
+    isPending || error
+      ? []
+      : [
+          ...entries.map((entry): TimelineRow => ({ kind: "feedback", entry })),
+          ...(entries.length === 0 ? [{ kind: "timeline-empty" } as const] : []),
+          { kind: "event-heading" },
+          ...(vigentes.length === 0 ? [{ kind: "event-empty" } as const] : []),
+          ...vigentes.map((entry): TimelineRow => ({ kind: "event", entry, superseded: false })),
+          ...(sustituidos.length > 0
+            ? [{ kind: "event-toggle", count: sustituidos.length } as const]
+            : []),
+          ...(showSuperseded
+            ? sustituidos.map((entry): TimelineRow => ({ kind: "event", entry, superseded: true }))
+            : []),
+        ];
 
   return (
     <ScreenList
       back={back}
-      data={isPending || error ? [] : entries}
+      data={rows}
       empty={
         <QueryState
           empty={
@@ -92,15 +123,54 @@ export function FeedbackTimeline({
           {null}
         </QueryState>
       }
-      footer={footer}
+      footer={!isPending && !error ? footer : undefined}
       header={
         <>
-          {header}
+          {!isPending && !error ? header : null}
           <Heading level={2}>Evolución registrada</Heading>
         </>
       }
-      keyExtractor={(entry) => entry.record.id}
-      renderItem={({ item: entry }) => {
+      keyExtractor={(row) => {
+        if (row.kind === "feedback") return `feedback-${row.entry.record.id}`;
+        if (row.kind === "event")
+          return `event-${row.entry.feedbackRecordId}-${row.entry.eventIndex}-${row.superseded}`;
+        return row.kind;
+      }}
+      renderItem={({ item: row }) => {
+        if (row.kind === "timeline-empty") {
+          return (
+            <Text testID="feedback-timeline-empty">
+              Sin retroalimentación registrada para este paciente.
+            </Text>
+          );
+        }
+        if (row.kind === "event-heading") {
+          return (
+            <Heading level={2} testID="adverse-event-report">
+              Eventos adversos
+            </Heading>
+          );
+        }
+        if (row.kind === "event-empty") {
+          return (
+            <Text testID="adverse-event-empty">
+              Sin eventos adversos en las versiones vigentes.
+            </Text>
+          );
+        }
+        if (row.kind === "event-toggle") {
+          return (
+            <AdverseEventToggle
+              count={row.count}
+              onPress={() => setShowSuperseded((value) => !value)}
+              shown={showSuperseded}
+            />
+          );
+        }
+        if (row.kind === "event") {
+          return <AdverseEventItem entry={row.entry} superseded={row.superseded} />;
+        }
+        const entry = row.entry;
         const registradoEl = new Date(entry.record.created_at).toLocaleString("es-CL");
         const correcciones = correccionesPorOriginal.get(entry.record.id) ?? [];
         const antecedente = antecedentesPorRegistro.get(entry.record.id);

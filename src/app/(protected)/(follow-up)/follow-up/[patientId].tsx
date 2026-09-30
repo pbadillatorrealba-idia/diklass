@@ -3,7 +3,6 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
-import { AdverseEventReport } from "@/components/retroalimentacion/adverse-event-report";
 import { FeedbackForm } from "@/components/retroalimentacion/feedback-form";
 import { FeedbackTimeline } from "@/components/retroalimentacion/feedback-timeline";
 import { Box } from "@/components/ui/box";
@@ -261,6 +260,7 @@ export default function FollowUpPanelScreen() {
       title={`Seguimiento de ${patientQuery.data?.content.name ?? "este paciente"}`}
       back={{ href: "/follow-up", label: "Seguimiento" }}
       entries={timeline}
+      events={eventosAdversos}
       error={consultationsQuery.error ?? feedbackQuery.error}
       isPending={
         consultationsQuery.isPending || (consultationsQuery.isSuccess && feedbackQuery.isPending)
@@ -295,8 +295,6 @@ export default function FollowUpPanelScreen() {
       }
       footer={
         <>
-          <AdverseEventReport events={eventosAdversos} />
-
           <Card testID="feedback-aggregates">
             <VStack className="gap-1">
               <Heading level={2}>Agregado por categoría</Heading>

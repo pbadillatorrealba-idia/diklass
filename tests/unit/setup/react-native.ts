@@ -24,12 +24,24 @@ mock.module("react-native", () => {
   return {
     ...web,
     // `contentContainerClassName` (NativeWind) se reexpone como `data-content-class` (D18).
-    FlatList: forwardRef((props: { contentContainerClassName?: string; dataSet?: object }, ref) =>
-      createElement(web.FlatList, {
-        ...props,
+    FlatList: forwardRef(
+      (
+        props: {
+          automaticallyAdjustKeyboardInsets?: boolean;
+          contentContainerClassName?: string;
+          dataSet?: object;
+        },
         ref,
-        dataSet: { ...props.dataSet, contentClass: props.contentContainerClassName },
-      }),
+      ) =>
+        createElement(web.FlatList, {
+          ...props,
+          ref,
+          dataSet: {
+            ...props.dataSet,
+            contentClass: props.contentContainerClassName,
+            keyboardInsets: props.automaticallyAdjustKeyboardInsets ? "true" : undefined,
+          },
+        }),
     ),
     // `behavior` se reexpone como `data-behavior` para comprobarlo en el HTML (D14).
     KeyboardAvoidingView: forwardRef(

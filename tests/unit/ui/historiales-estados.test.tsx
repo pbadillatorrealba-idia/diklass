@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Text } from "@/components/ui/text";
 import type { FeedbackTimelineEntry } from "@/features/retroalimentacion/feedback-summary";
 
 // La insignia de atribución resuelve el nombre con Supabase: aquí no se llega a pintar.
@@ -8,7 +9,7 @@ mock.module("@/features/clinical/use-veterinarian-display-name", () => ({
 }));
 const { PatientHistory } = await import("@/components/registro/patient-history");
 const { FeedbackTimeline } = await import("@/components/retroalimentacion/feedback-timeline");
-const { AdverseEventReport } = await import("@/components/retroalimentacion/adverse-event-report");
+const { AdverseEventItem } = await import("@/components/retroalimentacion/adverse-event-report");
 const { SegmentoRespuestaView } = await import("@/components/conocimiento/segmento-respuesta");
 
 // sistema-visual FR-085 · SC-056 (design.md D13): los historiales distinguen carga, error y vacío;
@@ -54,17 +55,15 @@ test("el dato clínico de una ficha usado en una respuesta se puede seleccionar"
 
 test("la descripción de un evento adverso en el reporte se puede seleccionar", () => {
   const html = renderToStaticMarkup(
-    <AdverseEventReport
-      events={[
-        {
-          feedbackRecordId: "f1",
-          consultationId: "c1",
-          registeredAt: "2026-09-25T12:00:00Z",
-          effective: true,
-          eventIndex: 0,
-          event: { severity: "grave", description: "Reacción adversa copiable" },
-        },
-      ]}
+    <AdverseEventItem
+      entry={{
+        feedbackRecordId: "f1",
+        consultationId: "c1",
+        registeredAt: "2026-09-25T12:00:00Z",
+        effective: true,
+        eventIndex: 0,
+        event: { severity: "grave", description: "Reacción adversa copiable" },
+      }}
     />,
   );
   expect(html).toMatch(/r-userSelect-[^" ]+"[^>]*>Reacción adversa copiable/);
@@ -108,6 +107,19 @@ describe("FeedbackTimeline", () => {
     expect(html).toContain('data-testid="feedback-timeline-empty"');
   });
 
+  test("mientras carga o falla no muestra vacíos derivados ni el formulario", () => {
+    const derivados = {
+      ...props,
+      header: <Text>Sin evolución registrada para este paciente.</Text>,
+      footer: <Text>Sin eventos adversos ni consultas cerradas.</Text>,
+    };
+    for (const state of [{ isPending: true }, { error: new Error("red") }]) {
+      const html = renderToStaticMarkup(<FeedbackTimeline {...derivados} {...state} />);
+      expect(html).not.toContain("Sin evolución registrada para este paciente.");
+      expect(html).not.toContain("Sin eventos adversos ni consultas cerradas.");
+    }
+  });
+
   test("virtualiza una cronología larga sin otro contenedor de desplazamiento", () => {
     const html = renderToStaticMarkup(
       <FeedbackTimeline {...props} entries={Array.from({ length: 200 }, (_, i) => entry(i))} />,
@@ -117,6 +129,45 @@ describe("FeedbackTimeline", () => {
     expect(filas.length).toBeLessThan(200);
     expect(html).toContain('data-testid="feedback-timeline"');
     expect(html).not.toContain('data-testid="feedback-timeline-scroll"');
+  });
+
+  test("virtualiza 200 eventos adversos dentro de la misma lista", () => {
+    const events = Array.from({ length: 200 }, (_, index) => ({
+      feedbackRecordId: `f${index}`,
+      consultationId: "c1",
+      registeredAt: "2026-09-25T12:00:00Z",
+      effective: true,
+      eventIndex: 0,
+      event: { severity: "leve" as const, description: `Evento ${index}` },
+    }));
+    const html = renderToStaticMarkup(<FeedbackTimeline {...props} events={events} />);
+    const filas = html.match(/data-testid="adverse-event-item"/g) ?? [];
+    expect(filas.length).toBeGreaterThan(0);
+    expect(filas.length).toBeLessThan(200);
+    expect(html).not.toContain('data-testid="adverse-event-scroll"');
+  });
+
+  test("sin eventos vigentes lo dice solo tras cargar", () => {
+    expect(renderToStaticMarkup(<FeedbackTimeline {...props} />)).toContain(
+      'data-testid="adverse-event-empty"',
+    );
+    expect(renderToStaticMarkup(<FeedbackTimeline {...props} isPending />)).not.toContain(
+      "adverse-event-empty",
+    );
+  });
+
+  test("los eventos de versiones corregidas quedan tras el conmutador, no en el render", () => {
+    const events = Array.from({ length: 200 }, (_, index) => ({
+      feedbackRecordId: `f${index}`,
+      consultationId: "c1",
+      registeredAt: "2026-09-25T12:00:00Z",
+      effective: false,
+      eventIndex: 0,
+      event: { severity: "leve" as const, description: `Evento ${index}` },
+    }));
+    const html = renderToStaticMarkup(<FeedbackTimeline {...props} events={events} />);
+    expect(html).toContain("Ver 200 de versiones ya corregidas");
+    expect(html).not.toContain('data-testid="adverse-event-superseded-item"');
   });
 
   test("la observación clínica de la cronología se puede seleccionar", () => {

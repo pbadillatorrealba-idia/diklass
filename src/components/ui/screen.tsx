@@ -141,6 +141,7 @@ export function ScreenList<T>({
   return (
     <ScreenFrame title={title}>
       <FlatList
+        automaticallyAdjustKeyboardInsets
         className="flex-1"
         // `columnWrapperClassName` solo existe con más de una columna.
         columnWrapperClassName={columns > 1 ? "gap-3" : undefined}

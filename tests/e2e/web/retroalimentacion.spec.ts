@@ -150,16 +150,24 @@ test.describe("retroalimentación clínica web", () => {
       await registrarConCorrecciones(preparado, 2);
 
       await page.goto(`/follow-up/${preparado.patientId}`);
-      const reporte = page.getByTestId("adverse-event-report").filter({ visible: true });
-      await expect(reporte.getByTestId("adverse-event-item")).toHaveCount(1);
-      await expect(reporte.getByTestId("adverse-event-item")).toContainText("Convulsión aislada");
+      // Los eventos son filas de la cronología virtualizada (FR-086), no un contenedor propio.
+      await expect(page.getByTestId("adverse-event-report").filter({ visible: true })).toHaveCount(
+        1,
+      );
+      const vigentes = page.getByTestId("adverse-event-item").filter({ visible: true });
+      await expect(vigentes).toHaveCount(1);
+      await expect(vigentes).toContainText("Convulsión aislada");
 
       // Las versiones sustituidas siguen recuperables, a demanda y sin el resalte de grave.
-      await expect(reporte.getByTestId("adverse-event-superseded-item")).toHaveCount(0);
-      await reporte
+      const sustituidos = page
+        .getByTestId("adverse-event-superseded-item")
+        .filter({ visible: true });
+      await expect(sustituidos).toHaveCount(0);
+      await page
         .getByRole("button", { name: "Mostrar los eventos de versiones ya corregidas" })
+        .filter({ visible: true })
         .click();
-      await expect(reporte.getByTestId("adverse-event-superseded-item")).toHaveCount(2);
+      await expect(sustituidos).toHaveCount(2);
     } finally {
       await preparado.api.dispose();
     }

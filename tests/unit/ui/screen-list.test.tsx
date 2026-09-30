@@ -50,6 +50,10 @@ describe("ScreenList", () => {
     expect(render(pacientes)).not.toContain("pacientes-scroll");
   });
 
+  test("ajusta el contenido al teclado de iOS", () => {
+    expect(render(pacientes)).toContain('data-keyboard-insets="true"');
+  });
+
   test("sin datos pinta el vacío dentro de la lista", () => {
     const html = render([]);
     expect(html).toContain('data-testid="pacientes-list"');
