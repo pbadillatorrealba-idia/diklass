@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listPatients } from "@/features/registro/ficha-service";
+import { PAGE_SIZE, readAllPages } from "@/features/registro/read-rows";
 import { listTutors } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -17,7 +18,11 @@ function pagedClient(rows: unknown[]): SupabaseClient<Database> {
     eq: () => query,
     order: () => query,
     range: (from: number, to: number) =>
-      Promise.resolve({ data: rows.slice(from, Math.min(to + 1, from + MAX_ROWS)), error: null }),
+      Promise.resolve({
+        data: rows.slice(from, Math.min(to + 1, from + MAX_ROWS)),
+        error: null,
+        count: rows.length,
+      }),
     // Sin `range`, el servidor corta en el tope.
     // biome-ignore lint/suspicious/noThenProperty: imita la consulta awaitable de supabase-js.
     then: (resolve: (value: unknown) => void) =>
@@ -82,5 +87,37 @@ describe("listas de la clínica con más de 1000 filas", () => {
     const listado = await listTutors(pagedClient(filas));
     expect(listado).toHaveLength(1005);
     expect(listado.at(-1)?.record.id).toBe("tutor-1004");
+  });
+});
+
+// Revisión de la PR #41: el corte no puede suponer que el tope del servidor vale 1000.
+describe("readAllPages", () => {
+  const filas = (n: number) =>
+    Array.from({ length: n }, (_, index) => ({ ...base, id: `fila-${index}` }));
+  // Servidor con su propio `max_rows`: cada página devuelve como máximo `tope` filas.
+  const servidor = (todas: unknown[], tope: number) => (from: number, to: number) =>
+    Promise.resolve({
+      data: todas.slice(from, Math.min(to + 1, from + tope)) as never,
+      error: null,
+      count: todas.length,
+    });
+
+  test("con un tope del servidor menor que la página, no trunca la lista", async () => {
+    const todas = filas(1200);
+    expect(await readAllPages(servidor(todas, 500))).toHaveLength(1200);
+  });
+
+  test("con exactamente una página llena, devuelve todas", async () => {
+    expect(await readAllPages(servidor(filas(PAGE_SIZE), PAGE_SIZE))).toHaveLength(PAGE_SIZE);
+  });
+
+  test("un error en la segunda página se propaga y no devuelve una lista parcial", async () => {
+    const todas = filas(1500);
+    const falla = new Error("conexión perdida");
+    const pagina = (from: number, to: number) =>
+      from === 0
+        ? servidor(todas, PAGE_SIZE)(from, to)
+        : Promise.resolve({ data: null, error: falla, count: null });
+    await expect(readAllPages(pagina)).rejects.toBe(falla);
   });
 });

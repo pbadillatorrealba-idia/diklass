@@ -250,7 +250,7 @@ export async function listPatients(client: SupabaseClient<Database>): Promise<Pa
     const data = await readAllPages((from, to) =>
       client
         .from("clinical_records")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("record_type", "patient")
         .order("created_at", { ascending: true })
         .order("id", { ascending: true })

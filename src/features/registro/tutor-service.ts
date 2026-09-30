@@ -77,7 +77,7 @@ export async function listTutors(client: SupabaseClient<Database>): Promise<Tuto
     const data = await readAllPages((from, to) =>
       client
         .from("clinical_records")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("record_type", "tutor")
         .order("created_at", { ascending: true })
         .order("id", { ascending: true })
