@@ -65,9 +65,9 @@ test.describe("base de conocimiento web", () => {
       await page.goto("/knowledge/sources");
       await expect(page.getByText("Base de conocimiento · Colección")).toBeVisible();
       // La lista ya está en caché antes de incorporar.
-      await expect(page.getByRole("button", { name: "Incorporar fuente clínica" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Incorporar fuente clínica" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Incorporar fuente clínica" }).click();
+      await page.getByRole("link", { name: "Incorporar fuente clínica" }).click();
       await escribir(page, "Título de la fuente", titulo);
       // La licencia viene precargada con «CC BY 4.0 (ficticia)».
       await escribir(page, "Texto del documento", "Fragmento sintético para la prueba de caché.");
@@ -112,11 +112,11 @@ test.describe("base de conocimiento web", () => {
     try {
       await page.goto("/knowledge/sources/00000000-0000-4000-8000-00000000dead");
       await expect(page.getByTestId("fuente-no-encontrada")).toBeVisible();
-      await expect(page.getByText("Cargando la fuente…")).toBeHidden();
+      await expect(page.getByTestId("fuente-loading")).toHaveCount(0);
 
       await page.goto("/knowledge/sources/no-es-un-uuid");
       await expect(page.getByTestId("fuente-error")).toBeVisible();
-      await expect(page.getByText("Cargando la fuente…")).toBeHidden();
+      await expect(page.getByTestId("fuente-loading")).toHaveCount(0);
     } finally {
       await api.dispose();
     }
@@ -265,6 +265,81 @@ test.describe("base de conocimiento web", () => {
     } finally {
       await ana.dispose();
       await admin.dispose();
+    }
+  });
+
+  // sistema-visual FR-095 · US14-AC6 (design.md D19): con cientos de fichas, el contexto de
+  // paciente se elige buscando, no recorriendo una opción por ficha.
+  test("el contexto de paciente se busca sin tildes y anuncia las coincidencias", async ({
+    page,
+  }) => {
+    const api = await iniciarSesion(page);
+    const marca = Date.now();
+    const nombre = `Búho E2E ${marca}`;
+    try {
+      const session = await readSupabaseSession(page);
+      const perfil = await api.get(
+        `/rest/v1/veterinarians?select=clinic_id&id=eq.${session.userId}`,
+      );
+      const [ana] = (await perfil.json()) as Array<{ clinic_id: string }>;
+      if (!ana) throw new Error("Sin clinic_id para Ana.");
+      const crear = async (recordType: string, content: object) => {
+        const respuesta = await api.post("/rest/v1/clinical_records", {
+          data: { clinic_id: ana.clinic_id, record_type: recordType, content, status: "draft" },
+          headers: { Prefer: "return=representation" },
+        });
+        expect(respuesta.status()).toBe(201);
+        const [fila] = (await respuesta.json()) as Array<{ id: string }>;
+        if (!fila) throw new Error(`Sin fila de ${recordType}.`);
+        return fila.id;
+      };
+      const tutorId = await crear("tutor", {
+        name: `Tutor de ${nombre}`,
+        phone: null,
+        email: null,
+      });
+      const patientId = await crear("patient", {
+        name: nombre,
+        species: "canino",
+        breed: "Mestizo",
+        birthDate: null,
+        ageMonths: 24,
+        weightKg: null,
+        sex: "hembra",
+        reproductiveStatus: "entera",
+        antecedentes: {
+          medicalHistory: [],
+          preexistingDiseases: [],
+          currentMedications: [],
+          knownAllergies: [],
+          behavioralHistory: [],
+        },
+        tutorId,
+      });
+
+      await page.goto("/knowledge");
+      const grupo = page.getByRole("radiogroup", { name: "Contexto de paciente" });
+      await expect(grupo).toBeVisible({ timeout: 15_000 });
+      // Sin búsqueda: «Conocimiento general» y como máximo 8 fichas, con la lista ya cargada.
+      await page.waitForLoadState("networkidle");
+      expect(await grupo.getByRole("radio").count()).toBeLessThanOrEqual(9);
+
+      // La región viva existe antes de buscar: así el lector anuncia el cambio de texto (PR #38).
+      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText("");
+      await escribir(page, "Buscar paciente", `buho e2e ${marca}`);
+      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText(
+        "1 paciente coincide",
+      );
+      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveAttribute(
+        "aria-live",
+        "polite",
+      );
+      await expect(grupo.getByRole("radio")).toHaveCount(2);
+      const opcion = page.getByTestId(`selector-paciente-contexto-${patientId}`);
+      await opcion.click();
+      await expect(opcion).toHaveAttribute("aria-checked", "true");
+    } finally {
+      await api.dispose();
     }
   });
 });

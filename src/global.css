@@ -3,11 +3,227 @@
 @tailwind utilities;
 
 /*
- * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO control interactivo.
- * React Native Web renderiza Pressable/Button como <div tabindex>, que sin esta regla
- * enfoca sin indicador visible. `:focus-visible` lo aplica solo a foco por teclado.
+ * Atkinson Hyperlegible Next (Braille Institute, OFL 1.1): distingue caracteres confundibles
+ * (1 l I, 0 O, rn m) en dosis, pesos e identificadores. En web se sirve desde `public/fonts` y
+ * `+html.tsx` precarga los pesos del primer pintado; en iOS/Android la embebe el config plugin
+ * de `expo-font` (app.json) con el mismo nombre de familia.
  */
-[tabindex]:focus-visible,
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_400Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_500Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_600SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_700Bold.woff2") format("woff2");
+}
+
+/*
+ * Tema de la app: canales RGB separados por espacio para que Tailwind admita opacidad
+ * (solo `scrim` la usa: `bg-scrim/55`). Es la fuente de verdad del color; `src/theme/colors.ts` lo replica para
+ * los pocos estilos inline y `tests/unit/theme/tema.test.ts` verifica que ambos coincidan y que
+ * cada par cumpla WCAG 2.2 AA. Una misma paleta para iOS, Android y web.
+ *
+ * Valores ajustados respecto al tema de origen, solo en luminosidad y para llegar a AA:
+ * claro  → destructive, secondary-foreground, accent-foreground, input, ring;
+ * oscuro → muted y muted-foreground (el origen repetía los valores claros; muted-foreground subió
+ *          otra vez para llegar a AA sobre las superficies tintadas), secondary-foreground,
+ *          accent-foreground, destructive-foreground (texto oscuro, como primary-foreground),
+ *          input, ring.
+ * En claro, `background` y `border` se oscurecieron para separar las tarjetas del fondo; por eso
+ * destructive, input y ring bajaron de nuevo su luminosidad (sistema-visual, design.md D4).
+ *
+ * Estados (FR-075): `{estado}` es texto, icono y borde sobre card/fondo; `{estado}-foreground`,
+ * el texto sobre su relleno sólido; `{estado}-surface`, el fondo tintado con `foreground`
+ * encima. `primary-surface`/`secondary-surface` son los tintes opacos de evidencia/fragmento
+ * citado y de ficha (mezcla del 12 % sobre `card`; un tinte translúcido no se puede verificar).
+ * `suggested` marca lo generado por el sistema (FR-076) y `scrim` es la capa modal
+ * (se usa con opacidad: `bg-scrim/55`).
+ */
+@layer base {
+  :root {
+    --background: 238 242 241;
+    --foreground: 4 5 5;
+    --card: 255 255 255;
+    --card-foreground: 3 14 12;
+    --popover: 239 249 247;
+    --popover-foreground: 3 14 12;
+    --primary: 24 122 106;
+    --primary-foreground: 242 252 251;
+    --primary-surface: 227 239 237;
+    --secondary: 75 120 168;
+    --secondary-foreground: 253 254 254;
+    --secondary-surface: 233 239 245;
+    --muted: 233 238 236;
+    --muted-foreground: 67 86 78;
+    --accent: 215 154 61;
+    --accent-foreground: 79 54 16;
+    --destructive: 217 14 0;
+    --destructive-foreground: 255 255 255;
+    --destructive-surface: 250 230 229;
+    --warning: 147 95 16;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 250 242 229;
+    --success: 36 123 67;
+    --success-foreground: 255 255 255;
+    --success-surface: 231 248 237;
+    --info: 57 111 172;
+    --info-foreground: 255 255 255;
+    --info-surface: 232 239 247;
+    --suggested: 131 83 198;
+    --scrim: 0 0 0;
+    --border: 206 219 215;
+    --input: 97 145 138;
+    --ring: 93 147 133;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 1 4 4;
+      --foreground: 247 253 252;
+      --card: 22 38 35;
+      --card-foreground: 247 253 252;
+      --popover: 39 46 45;
+      --popover-foreground: 247 253 252;
+      --primary: 67 218 193;
+      --primary-foreground: 0 0 0;
+      --primary-surface: 27 60 54;
+      --secondary: 109 148 188;
+      --secondary-foreground: 26 41 58;
+      --secondary-surface: 32 51 53;
+      --muted: 31 40 37;
+      --muted-foreground: 135 170 155;
+      --accent: 213 153 61;
+      --accent-foreground: 76 52 16;
+      --destructive: 254 67 54;
+      --destructive-foreground: 0 0 0;
+      --destructive-surface: 59 25 22;
+      --warning: 230 148 25;
+      --warning-foreground: 37 24 4;
+      --warning-surface: 59 44 22;
+      --success: 57 198 109;
+      --success-foreground: 9 32 17;
+      --success-surface: 22 59 36;
+      --info: 91 142 200;
+      --info-foreground: 10 20 31;
+      --info-surface: 22 40 59;
+      --suggested: 161 125 212;
+      --scrim: 0 0 0;
+      --border: 58 68 66;
+      --input: 96 114 111;
+      --ring: 97 113 110;
+    }
+  }
+
+  /* Modo forzado en web (FR-091 · D17): gana a la media query por especificidad. El script de
+   * `+html.tsx` pone la clase antes del primer pintado. `tema.test.ts` exige que repitan los
+   * valores de arriba. En nativo, el modo se fija con `Appearance.setColorScheme`. */
+  :root.light {
+    --background: 238 242 241;
+    --foreground: 4 5 5;
+    --card: 255 255 255;
+    --card-foreground: 3 14 12;
+    --popover: 239 249 247;
+    --popover-foreground: 3 14 12;
+    --primary: 24 122 106;
+    --primary-foreground: 242 252 251;
+    --primary-surface: 227 239 237;
+    --secondary: 75 120 168;
+    --secondary-foreground: 253 254 254;
+    --secondary-surface: 233 239 245;
+    --muted: 233 238 236;
+    --muted-foreground: 67 86 78;
+    --accent: 215 154 61;
+    --accent-foreground: 79 54 16;
+    --destructive: 217 14 0;
+    --destructive-foreground: 255 255 255;
+    --destructive-surface: 250 230 229;
+    --warning: 147 95 16;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 250 242 229;
+    --success: 36 123 67;
+    --success-foreground: 255 255 255;
+    --success-surface: 231 248 237;
+    --info: 57 111 172;
+    --info-foreground: 255 255 255;
+    --info-surface: 232 239 247;
+    --suggested: 131 83 198;
+    --scrim: 0 0 0;
+    --border: 206 219 215;
+    --input: 97 145 138;
+    --ring: 93 147 133;
+  }
+
+  :root.dark {
+    --background: 1 4 4;
+    --foreground: 247 253 252;
+    --card: 22 38 35;
+    --card-foreground: 247 253 252;
+    --popover: 39 46 45;
+    --popover-foreground: 247 253 252;
+    --primary: 67 218 193;
+    --primary-foreground: 0 0 0;
+    --primary-surface: 27 60 54;
+    --secondary: 109 148 188;
+    --secondary-foreground: 26 41 58;
+    --secondary-surface: 32 51 53;
+    --muted: 31 40 37;
+    --muted-foreground: 135 170 155;
+    --accent: 213 153 61;
+    --accent-foreground: 76 52 16;
+    --destructive: 254 67 54;
+    --destructive-foreground: 0 0 0;
+    --destructive-surface: 59 25 22;
+    --warning: 230 148 25;
+    --warning-foreground: 37 24 4;
+    --warning-surface: 59 44 22;
+    --success: 57 198 109;
+    --success-foreground: 9 32 17;
+    --success-surface: 22 59 36;
+    --info: 91 142 200;
+    --info-foreground: 10 20 31;
+    --info-surface: 22 40 59;
+    --suggested: 161 125 212;
+    --scrim: 0 0 0;
+    --border: 58 68 66;
+    --input: 96 114 111;
+    --ring: 97 113 110;
+  }
+}
+
+/*
+ * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO elemento enfocable.
+ * React Native Web renderiza Pressable/Button como <div tabindex>, y Firefox además hace
+ * enfocables los contenedores con desplazamiento (el `ScrollView` de `Screen`), sin tabindex ni
+ * rol. Por eso la regla no enumera selectores: cualquier elemento que reciba foco por teclado
+ * lo muestra, y el contenedor conserva su foco (quitarlo impediría desplazarse con el teclado).
+ * Por defecto el anillo va hacia dentro: un contenedor que ocupa toda la ventana recortaría un
+ * anillo exterior. Los controles lo llevan fuera, separado de su borde.
+ */
+:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: -2px;
+}
+
+[tabindex]:not([tabindex="-1"]):focus-visible,
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -16,6 +232,5 @@ select:focus-visible,
 [role="button"]:focus-visible,
 [role="radio"]:focus-visible,
 [role="checkbox"]:focus-visible {
-  outline: 2px solid #0f766e;
   outline-offset: 2px;
 }

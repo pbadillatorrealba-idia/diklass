@@ -6,7 +6,7 @@ import type { Attribution } from "@/lib/attribution/types";
 export function CorrectionHistory({ entries }: { entries: Attribution[] }) {
   return (
     <VStack accessibilityLabel="Historial de correcciones" className="gap-2">
-      <Text bold>Historial de atribución</Text>
+      <Text variant="strong">Historial de atribución</Text>
       {entries.map((entry) => (
         <AttributionBadge
           attribution={entry}

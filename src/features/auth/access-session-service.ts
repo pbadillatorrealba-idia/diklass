@@ -3,7 +3,7 @@ export const ACCESS_SESSION_INACTIVITY_MS = 8 * 60 * 60 * 1000;
 // Client-side session-store state (src/stores/session-store.ts), not a column on
 // access_sessions -- the deleted getAccessSessionState/AccessSessionSnapshot pair modeled a
 // status column the table does not have, but this type itself is live: it gates clinical UI
-// in src/app/(protected)/consultations/[id].tsx via useSessionStore.
+// in src/app/(protected)/(patients)/consultations/[id].tsx via useSessionStore.
 export type AccessSessionState = "active" | "expired" | "revoked";
 
 export type AccessSessionRpcClient = {

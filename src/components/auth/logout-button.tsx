@@ -4,7 +4,12 @@ type LogoutButtonProps = { onLogout: () => Promise<void> };
 
 export function LogoutButton({ onLogout }: LogoutButtonProps) {
   return (
-    <Button className="self-start" onPress={() => void onLogout()} testID="logout-button">
+    <Button
+      className="self-start"
+      onPress={() => void onLogout()}
+      testID="logout-button"
+      variant="outline"
+    >
       <ButtonText>Cerrar sesión</ButtonText>
     </Button>
   );

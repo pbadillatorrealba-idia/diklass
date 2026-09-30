@@ -1,19 +1,89 @@
 /** @type {import('tailwindcss').Config} */
+
+// Los valores viven en `src/global.css` como canales RGB, con variante clara y oscura.
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      // En nativo NativeWind usa solo la primera familia (no hay fuentes de respaldo); el resto
+      // cubre la web mientras carga la fuente.
+      fontFamily: {
+        sans: ["Atkinson Hyperlegible Next", "system-ui", "sans-serif"],
+      },
+      // Dimensiones del sistema visual (design.md D6).
+      maxWidth: {
+        content: "720px", // una columna de lectura
+        wide: "1200px", // consulta a dos columnas en escritorio
+        dialog: "440px",
+        form: "480px", // formularios centrados (login)
+      },
+      // Etiquetas de la barra de pestañas web (D17): 12 px como las de iOS/Material. El mínimo de
+      // 14 px (D5) es para metadatos clínicos.
+      fontSize: {
+        nav: ["12px", "16px"],
+      },
+      width: {
+        sidebar: "240px", // barra lateral de navegación en web desde `lg` (D12)
+      },
+      minWidth: {
+        touch: "44px", // avatar y controles cuadrados (D17)
+      },
+      minHeight: {
+        touch: "44px", // área táctil mínima (WCAG 2.5.8 / HIG)
+        textarea: "120px",
+      },
+      // `foreground` va antes que el resto de colores de texto: los componentes base ponen
+      // `text-foreground` por defecto y en web gana la utilidad que se genera después.
       colors: {
-        // Clinical palette. Kept as CSS-variable-free literals so the same tokens
-        // resolve identically on iOS, Android and web without a runtime theme pass.
-        background: "#f8fafc",
-        foreground: "#0f172a",
-        primary: "#0369a1",
-        "primary-foreground": "#f8fafc",
-        destructive: "#b91c1c",
-        muted: "#e2e8f0",
-        border: "#cbd5e1",
+        background: token("background"),
+        foreground: token("foreground"),
+        card: { DEFAULT: token("card"), foreground: token("card-foreground") },
+        popover: { DEFAULT: token("popover"), foreground: token("popover-foreground") },
+        // `-surface`: tinte opaco de evidencia/fragmento citado (primary) y de ficha (secondary).
+        primary: {
+          DEFAULT: token("primary"),
+          foreground: token("primary-foreground"),
+          surface: token("primary-surface"),
+        },
+        secondary: {
+          DEFAULT: token("secondary"),
+          foreground: token("secondary-foreground"),
+          surface: token("secondary-surface"),
+        },
+        muted: { DEFAULT: token("muted"), foreground: token("muted-foreground") },
+        accent: { DEFAULT: token("accent"), foreground: token("accent-foreground") },
+        destructive: {
+          DEFAULT: token("destructive"),
+          foreground: token("destructive-foreground"),
+          surface: token("destructive-surface"),
+        },
+        // Estados (FR-075): `{estado}` texto/icono/borde, `-foreground` sobre el relleno sólido,
+        // `-surface` fondo tintado con `foreground` encima.
+        warning: {
+          DEFAULT: token("warning"),
+          foreground: token("warning-foreground"),
+          surface: token("warning-surface"),
+        },
+        success: {
+          DEFAULT: token("success"),
+          foreground: token("success-foreground"),
+          surface: token("success-surface"),
+        },
+        info: {
+          DEFAULT: token("info"),
+          foreground: token("info-foreground"),
+          surface: token("info-surface"),
+        },
+        // Borde de lo generado por el sistema y aún no validado (FR-076).
+        suggested: token("suggested"),
+        // Capa bajo los diálogos; siempre con opacidad (`bg-scrim/55`).
+        scrim: token("scrim"),
+        border: token("border"),
+        input: token("input"),
+        ring: token("ring"),
       },
     },
   },

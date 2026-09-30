@@ -20,5 +20,11 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    // The theme follows `prefers-color-scheme`: the WCAG gate also runs against the dark palette.
+    {
+      name: "chromium-dark",
+      testMatch: "accessibility.spec.ts",
+      use: { ...devices["Desktop Chrome"], colorScheme: "dark" },
+    },
   ],
 });

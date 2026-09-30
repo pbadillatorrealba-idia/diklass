@@ -1,4 +1,5 @@
 import { Box } from "@/components/ui/box";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import type { ListenModeState } from "@/features/voz/listen-mode-controller";
 
@@ -20,11 +21,15 @@ export function ListenStatusIndicator({ state }: { state: ListenModeState }) {
     <Box
       accessibilityLabel={mensaje}
       aria-live="polite"
-      className="rounded-lg bg-muted px-3 py-2"
+      className="flex-row items-center gap-2 rounded-lg bg-muted px-3 py-2"
       role="status"
       testID="listen-status-indicator"
     >
-      <Text bold={state === "capturando"}>{mensaje}</Text>
+      {state === "capturando" ? (
+        // Decorativo: el mensaje ya dice que se está capturando.
+        <Icon decorative name="record-circle" size="sm" tone="destructive" />
+      ) : null}
+      <Text variant={state === "capturando" ? "strong" : "body"}>{mensaje}</Text>
     </Box>
   );
 }

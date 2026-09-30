@@ -140,7 +140,7 @@ test.describe("registro clínico web", () => {
       await page.getByRole("button", { name: "Aprobar y cerrar consulta" }).click();
       await expect(page.getByTestId("consultation-status")).toHaveText(/Epicrisis aprobada/);
 
-      await page.getByRole("button", { name: "Ver ficha del paciente" }).click();
+      await page.getByRole("link", { name: "Ver ficha del paciente" }).click();
       await expect(page).toHaveURL(new RegExp(`/patients/${patientId}$`));
       // La ficha anterior sigue montada bajo la pila de navegación: solo cuenta la visible.
       const historial = page.getByTestId("history-item").filter({ visible: true });

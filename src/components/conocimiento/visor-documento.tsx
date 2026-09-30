@@ -29,25 +29,25 @@ export function VisorDocumento({
 
   return (
     <VStack className="gap-3" testID="visor-documento">
-      <Box className="rounded-lg bg-muted p-3">
-        <Text bold className="text-foreground">
+      <Box className="rounded-xl bg-muted p-4">
+        <Text selectable variant="strong">
           {fuente.content.bibliografia.titulo}
         </Text>
-        <Text className="text-foreground/70 text-sm">
+        <Text selectable tone="muted" variant="caption">
           Autores: {fuente.content.bibliografia.autores.join(", ") || "sin autores registrados"}
         </Text>
-        <Text className="text-foreground/70 text-sm">
+        <Text tone="muted" variant="caption">
           Licencia: {fuente.content.licencia.tipo}
           {fuente.content.licencia.nota ? ` · ${fuente.content.licencia.nota}` : ""}
         </Text>
-        <Text className="text-foreground/70 text-sm">
+        <Text tone="muted" variant="caption">
           Incorporada el {new Date(fuente.record.created_at).toLocaleString("es-CL")}
         </Text>
         {fuente.record.status === "withdrawn" &&
         fuente.record.withdrawn_by !== null &&
         fuente.record.withdrawn_at !== null ? (
           <Box className="gap-1">
-            <Text className="text-destructive text-sm" testID="visor-fuente-retirada">
+            <Text tone="destructive" variant="caption" testID="visor-fuente-retirada">
               Fuente retirada de la colección el{" "}
               {new Date(fuente.record.withdrawn_at).toLocaleString("es-CL", {
                 dateStyle: "medium",
@@ -69,22 +69,22 @@ export function VisorDocumento({
       {contexto.fragmentos.map((fragmento) => (
         <Box
           className={`rounded-lg border p-3 ${
-            fragmento.citado ? "border-primary bg-amber-100" : "border-border bg-white"
+            fragmento.citado ? "border-primary bg-primary-surface" : "border-border bg-card"
           }`}
           key={fragmento.ordinal}
           testID={`visor-fragmento-${fragmento.ordinal}`}
         >
-          <Text bold className="text-foreground/70 text-xs">
+          <Text tone="muted" variant="label">
             Fragmento {fragmento.ordinal}
             {fragmento.seccion ? ` · ${fragmento.seccion}` : ""}
             {fragmento.citado ? " · fragmento citado" : ""}
           </Text>
-          <Text className="text-foreground text-sm">{fragmento.texto}</Text>
+          <Text selectable>{fragmento.texto}</Text>
         </Box>
       ))}
 
       {fragmentoCitado !== null ? (
-        <Text className="text-foreground/70 text-xs">
+        <Text tone="muted" variant="caption">
           El fragmento citado se muestra resaltado entre sus vecinos dentro del documento fuente.
         </Text>
       ) : null}

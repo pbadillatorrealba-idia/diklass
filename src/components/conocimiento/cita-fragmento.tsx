@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -17,39 +17,44 @@ function lineaBibliografica(cita: Cita): string {
  * siendo identificable y así se declara (FR-053 · US5-AC12).
  */
 export function CitaFragmento({ cita }: { cita: Cita }) {
-  const router = useRouter();
   const retirada = cita.estado === "withdrawn";
 
   return (
     <Box
       accessibilityLabel={`Cita de ${cita.bibliografia.titulo}, fragmento ${cita.fragmentoOrdinal}`}
-      className="mt-2 rounded-lg border border-border bg-white p-2"
+      className="mt-2 gap-1 rounded-lg border border-border bg-card p-3"
       testID={`cita-${cita.documentoId}-${cita.fragmentoOrdinal}`}
     >
-      <Text bold className="text-foreground text-sm">
+      <Text selectable variant="label">
         {cita.bibliografia.titulo}
       </Text>
-      <Text className="text-foreground/70 text-xs">{lineaBibliografica(cita)}</Text>
-      <Text className="text-foreground/70 text-xs">
+      <Text selectable tone="muted" variant="caption">
+        {lineaBibliografica(cita)}
+      </Text>
+      <Text tone="muted" variant="caption">
         Fragmento {cita.fragmentoOrdinal} · Licencia: {cita.licencia.tipo}
       </Text>
       {retirada ? (
-        <Text className="text-destructive text-xs" testID="cita-fuente-retirada">
+        <Text tone="destructive" variant="caption" testID="cita-fuente-retirada">
           Fuente retirada de la colección; la referencia sigue identificable.
         </Text>
       ) : null}
-      <Button
-        className="mt-2 self-start"
-        onPress={() =>
-          router.push({
-            pathname: "/knowledge/sources/[id]",
-            params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
-          })
-        }
-        testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+      <Link
+        asChild
+        href={{
+          pathname: "/knowledge/sources/[id]",
+          params: { id: cita.documentoId, fragmento: String(cita.fragmentoOrdinal) },
+        }}
       >
-        <ButtonText>Ver fragmento en su contexto</ButtonText>
-      </Button>
+        <Button
+          className="self-start"
+          size="sm"
+          testID={`ver-contexto-${cita.documentoId}-${cita.fragmentoOrdinal}`}
+          variant="ghost"
+        >
+          <ButtonText>Ver fragmento en su contexto</ButtonText>
+        </Button>
+      </Link>
     </Box>
   );
 }

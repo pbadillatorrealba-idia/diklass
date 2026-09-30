@@ -1,6 +1,6 @@
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
-import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlError,
@@ -44,7 +44,7 @@ export function DiagnosisSection({
 }: DiagnosisSectionProps) {
   return (
     <VStack className="w-full gap-4" testID="diagnosis-section">
-      <Heading size="lg">Diagnóstico</Heading>
+      <Heading level={2}>Diagnóstico</Heading>
       {isSealed ? null : (
         <FormControl isInvalid={Boolean(textError)}>
           <FormControlLabel>
@@ -54,7 +54,7 @@ export function DiagnosisSection({
             <InputField
               accessibilityLabel="Diagnóstico registrado por el veterinario"
               aria-label="Diagnóstico registrado por el veterinario"
-              className="min-h-[120px]"
+              className="min-h-textarea"
               editable={!isBusy}
               multiline
               onChangeText={onTextChange}
@@ -84,14 +84,10 @@ export function DiagnosisSection({
         <Text testID="diagnosis-empty">Sin diagnósticos registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <Box
-            className="rounded-xl border border-border bg-white p-4 gap-2"
-            key={entry.id}
-            testID="diagnosis-entry"
-          >
+          <Card className="gap-2" key={entry.id} testID="diagnosis-entry">
             <Text>{entry.content.text}</Text>
             <AttributionBadge attribution={entry.attribution} />
-          </Box>
+          </Card>
         ))
       )}
     </VStack>
