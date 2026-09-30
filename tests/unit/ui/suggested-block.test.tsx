@@ -37,7 +37,9 @@ describe("SuggestedBlock", () => {
     expect(label).toBeLessThan(html.indexOf("Motivo de consulta"));
   });
 
-  test("el icono de la etiqueta es decorativo (el texto ya la nombra)", () => {
-    expect(html).toContain('aria-hidden="true"');
+  // D20: sin el emblema de «IA» (robot, destellos); el pliego y la etiqueta ya lo dicen.
+  test("no lleva icono: la etiqueta y el pliego bastan", () => {
+    expect(html).not.toContain('aria-hidden="true"');
+    expect(html).not.toContain("material-community");
   });
 });

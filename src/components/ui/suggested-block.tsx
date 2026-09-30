@@ -1,6 +1,5 @@
 import type { PropsWithChildren } from "react";
 import { View } from "react-native";
-import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { CONTINUOUS_CURVE } from "./border-curve";
 
@@ -26,7 +25,6 @@ export function SuggestedBlock({ children, className, testID }: SuggestedBlockPr
       testID={testID}
     >
       <View className="flex-row items-center gap-1">
-        <Icon decorative name="robot-outline" size="sm" tone="muted-foreground" />
         <Text tone="muted" variant="label">
           {LABEL}
         </Text>

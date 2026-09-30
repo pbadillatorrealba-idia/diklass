@@ -1138,3 +1138,30 @@ y `accessibility` (12/12).
   - `12.9-seguimiento-grises.png`: «Grave» con icono, negrita y barra de 3/4 segmentos llenos.
 - **Revisión visual**: quité una regla sobrante bajo la banda de la sección 2 con la consulta
   cerrada. Es un cambio solo de clases, posterior a las ejecuciones de arriba.
+
+### 12.10 — Capturas y revisión final
+
+- **Web**, en `evidencia/` y en `chromium`:
+  - consulta abierta a 1440 y 375 px, claro y oscuro: `12.10-consulta-*`;
+  - sección 3 en borrador, con el pliego canario, «copia sin firmar» y «Firmar y cerrar
+    consulta»: `12.10-epicrisis-borrador-*`;
+  - consulta firmada y corregida a 1440 px: `12.10-consulta-firmada-*`;
+  - sección 3 en borrador en escala de grises: `12.9-epicrisis-borrador-grises.png`.
+- **Nativo — pendiente explícito:** no hay `adb`, emulador ni `xcrun` en esta máquina. Faltan las
+  capturas de iOS y Android y comprobar Atkinson Mono en nativo.
+- **Revisión `impeccable`** contra el contrato de dirección. Veredicto: «no se envía tal cual»,
+  con 8 correcciones.
+  - Aplicadas (D20), con prueba en rojo donde aplica:
+    - (1) captura de la sección 3 en borrador;
+    - (4) la atribución deja la losa `bg-muted` y pasa a línea de firma;
+    - (5) la epicrisis efectiva deja de ser una `Card` dentro de `FormSection`;
+    - (7) sin el icono de robot en la copia sugerida.
+  - No aplicada:
+    - (6) marcar con `?` los campos sin información. D20 limita la marca a los datos con
+      procedencia en el modelo, y US2-AC4 distingue «sin dato» de la procedencia `desconocida`.
+  - Pendientes de decisión del usuario, porque cambian comportamiento fuera de D20:
+    - (2) `OptionPicker` en fila y selector de procedencia R/I/F/?;
+    - (3) banda activa al cargar;
+    - (8) estado en el encabezado y retirar «Ver ficha del paciente».
+- **Tras las correcciones**, en `chromium`: `accessibility`, `consulta-formulario`,
+  `registro-epicrisis` y `auth`, 26/26.

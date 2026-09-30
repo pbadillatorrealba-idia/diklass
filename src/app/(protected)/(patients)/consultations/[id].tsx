@@ -676,8 +676,12 @@ export default function ConsultationScreen() {
                       </Text>
                     ) : (
                       <>
-                        <Card className="gap-2" testID="epicrisis-effective">
-                          <Text variant="strong">Epicrisis efectiva — registro definitivo</Text>
+                        {/* Renglón de la sección 3, no una caja dentro de otra (D20). */}
+                        <VStack
+                          className="gap-2 border-b border-border pb-3"
+                          testID="epicrisis-effective"
+                        >
+                          <Text variant="rubric">Epicrisis efectiva — registro definitivo</Text>
                           {effectiveEntry.record.status === "corrective" ? (
                             <Text>
                               Corrige una versión anterior, que permanece registrada y recuperable.
@@ -692,7 +696,7 @@ export default function ConsultationScreen() {
                               attribution={attributionFromRow(effectiveEntry.record)}
                             />
                           </Animated.View>
-                        </Card>
+                        </VStack>
                         {epicrisisCorrections.length > 0 ? (
                           <VStack className="gap-2" testID="epicrisis-corrections">
                             <Heading level={3}>Correcciones</Heading>

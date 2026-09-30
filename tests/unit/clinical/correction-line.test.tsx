@@ -96,6 +96,14 @@ describe("CorrectionLine", () => {
     expect(current).toContain("Dr. Bruno Soto");
   });
 
+  // D20: el único color de superficie son los pliegos; la atribución es una línea de firma.
+  test("la atribución no pinta una losa gris sobre el pliego", () => {
+    const badge = html.match(/<div[^>]*data-testid="attribution-badge"[^>]*>/)?.[0] ?? "";
+    expect(badge).not.toBe("");
+    expect(badge).not.toContain("bg-muted");
+    expect(badge).toContain("border-t");
+  });
+
   test("lleva el rótulo del campo", () => {
     expect(html).toContain(">Diagnóstico registrado<");
   });
