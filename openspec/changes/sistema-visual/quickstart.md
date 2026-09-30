@@ -1178,6 +1178,6 @@ y `accessibility` (12/12).
   en cada opción.
 - **e2e actualizados:** «‹ Volver a la ficha» (`screen-back`) sustituye a «Ver ficha del
   paciente» en `registro-epicrisis`, `accessibility` y `caso-sintetico`.
-- **Verificación:** unitarias 894/894; `chromium` 64/64 en la suite completa; `chromium-dark`
+- **Verificación:** unitarias 893/893; `chromium` 64/64 en la suite completa; `chromium-dark`
   12/12. `evidencia/12.10-*` se volvió a capturar: las tres secciones entran a 1440×2600 y la
   banda 3 está activa con borrador.
