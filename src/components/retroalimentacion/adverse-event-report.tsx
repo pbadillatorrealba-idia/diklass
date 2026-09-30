@@ -17,7 +17,7 @@ export function AdverseEventItem({
   if (superseded) {
     return (
       <Box
-        className="gap-1 rounded-lg border border-border bg-card p-3"
+        className="gap-1 rounded-sm border border-border bg-card p-3"
         testID="adverse-event-superseded-item"
       >
         <Text selectable>
@@ -35,7 +35,7 @@ export function AdverseEventItem({
   return (
     <Box
       accessibilityLabel={esGrave ? `Evento adverso grave: ${entry.event.description}` : undefined}
-      className={`gap-2 rounded-lg border p-3 ${
+      className={`gap-2 rounded-sm border p-3 ${
         esGrave ? "border-destructive bg-destructive-surface" : "border-border bg-card"
       }`}
       testID="adverse-event-item"

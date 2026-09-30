@@ -66,7 +66,7 @@ export function Callout({ children, className, testID, title, tone }: CalloutPro
       accessibilityLiveRegion={isAlert ? "assertive" : isPolite ? "polite" : undefined}
       aria-live={isPolite ? "polite" : undefined}
       role={isAlert ? "alert" : undefined}
-      className={`flex-row gap-2 rounded-lg border p-3 ${style.box} ${className ?? ""}`.trim()}
+      className={`flex-row gap-2 rounded-sm border p-3 ${style.box} ${className ?? ""}`.trim()}
       style={CONTINUOUS_CURVE}
       testID={testID}
     >

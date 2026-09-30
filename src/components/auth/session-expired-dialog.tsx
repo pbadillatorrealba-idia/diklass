@@ -15,7 +15,7 @@ export function SessionExpiredDialog({ visible, onReauthenticate }: SessionExpir
       <View accessibilityViewIsModal className="flex-1 items-center justify-center bg-scrim/55 p-6">
         <VStack
           accessibilityLabel="Sesión expirada"
-          className="w-full max-w-dialog gap-4 rounded-xl bg-popover p-6"
+          className="w-full max-w-dialog gap-4 rounded-sm bg-popover p-6"
         >
           <Heading>Sesión expirada</Heading>
           <Text>Tu sesión dejó de estar activa. El borrador local se conservará.</Text>

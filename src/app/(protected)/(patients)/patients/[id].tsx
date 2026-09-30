@@ -195,7 +195,7 @@ export default function PatientDetailScreen() {
           <View className="gap-6 lg:flex-row lg:items-start">
             <View className="gap-6 lg:flex-1" testID="patient-main">
               <VStack
-                className="rounded-xl border border-border bg-card p-4 gap-2"
+                className="rounded-sm border border-border bg-card p-4 gap-2"
                 testID="patient-ficha"
               >
                 <Text variant="strong">Ficha de {content.name}</Text>

@@ -18,6 +18,37 @@ describe("Text", () => {
     expect(cls).toContain("font-sans");
   });
 
+  // D20: los datos (número de consulta, fechas, pesos, dosis, códigos) van en mono con cifras
+  // tabulares, sin la familia de la UI.
+  test("la variante data es mono con cifras tabulares", () => {
+    const cls = classOf(renderToStaticMarkup(<Text variant="data">12,4 kg</Text>));
+    expect(cls).toEqual(expect.arrayContaining(["font-mono", "tabular-nums", "text-base"]));
+    expect(cls).not.toContain("font-sans");
+  });
+
+  // D20: rótulo preimpreso del formulario, en la tinta `primary` salvo que se pida otro tono.
+  test("la variante rubric es el rótulo preimpreso en primary", () => {
+    const cls = classOf(renderToStaticMarkup(<Text variant="rubric">Peso</Text>));
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "font-sans",
+        "text-sm",
+        "uppercase",
+        "tracking-wide",
+        "font-semibold",
+        "text-primary",
+      ]),
+    );
+    expect(cls).not.toContain("text-foreground");
+  });
+
+  test("label no cambia con D20", () => {
+    const cls = classOf(renderToStaticMarkup(<Text variant="label">x</Text>));
+    expect(cls).toEqual(expect.arrayContaining(["text-sm", "font-medium"]));
+    expect(cls).not.toContain("uppercase");
+    expect(cls).not.toContain("font-mono");
+  });
+
   test("por defecto es body con tono default", () => {
     const cls = classOf(renderToStaticMarkup(<Text>x</Text>));
     expect(cls).toContain("text-base");

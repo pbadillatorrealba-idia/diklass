@@ -244,7 +244,7 @@ commit con sus pruebas en verde.
   (woff2): plugin de `expo-font` en `app.json`, `@font-face` con `font-display: swap` en
   `global.css`, `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS ≤ 0.1 en
   `/login` y en `/consultations/[id]`, y presupuesto de fuentes ≤ 140 KB medido con `ls -l`.
-- [ ] 12.3 `Text` y forma:
+- [x] 12.3 `Text` y forma:
   - prueba de componente en rojo primero para las variantes nuevas `data` (mono tabular) y
     `rubric` (rótulo preimpreso), comprobando además que `label` conserva `text-sm font-medium`
     (D20 · FR-074);

@@ -90,7 +90,7 @@ export function AnamnesisSection({
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-xl border border-border bg-card p-4 gap-4">
+        <VStack className="rounded-sm border border-border bg-card p-4 gap-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}

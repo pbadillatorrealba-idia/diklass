@@ -48,7 +48,7 @@ export function SegmentoRespuestaView({ segmento }: { segmento: SegmentoRespuest
   }
   return (
     <Box
-      className={`gap-1 rounded-lg p-3 ${COLOR_ORIGEN[segmento.kind]}`}
+      className={`gap-1 rounded-sm p-3 ${COLOR_ORIGEN[segmento.kind]}`}
       testID={`segmento-${segmento.id}`}
     >
       {contenido}

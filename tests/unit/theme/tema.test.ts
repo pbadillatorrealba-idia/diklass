@@ -244,6 +244,10 @@ describe("colores fuera del tema", () => {
     /\btext-xs\b/g,
     /\b(?:max-w|min-h|max-h|min-w|w|h)-\[[^\]]+\]/g,
     /\brounded-2xl\b/g,
+    // Forma de D20: `rounded-sm` (2 px) en controles y superficies, `rounded-full` solo en el
+    // avatar, y ningún borde lateral grueso (lo sugerido se marca con pliego y contorno de 1 px).
+    /\brounded-(?:lg|xl)\b/g,
+    /\bborder-l-[2-8]\b/g,
     /\bgap(?:-[xy])?-\d+\.\d+\b/g,
     // Tintes translúcidos (D4): se componen al pintar y el contraste de este archivo no los mide.
     // Solo `scrim` se usa con opacidad; el resto de superficies son tokens opacos (`*-surface`).
@@ -351,10 +355,19 @@ describe("tipografía Atkinson Hyperlegible Next y Mono", () => {
     expect(primitives.length).toBeGreaterThan(0);
   });
 
-  test.each(primitives)("%s aplica font-sans a cada texto", (path) => {
+  // `Text` toma la familia de su variante (`font-sans` o, para datos, `font-mono`; D20): entonces
+  // cada entrada de su mapa `VARIANTS` debe declararla.
+  test.each(primitives)("%s aplica font-sans o font-mono a cada texto", (path) => {
     const text = readFileSync(path, "utf8");
     const elements = text.match(/<(?:RNText|TextInput)\b[\s\S]*?className=\{?[`"][^`"]*/g) ?? [];
     expect(elements.length).toBe((text.match(/<(?:RNText|TextInput)\b/g) ?? []).length);
-    for (const element of elements) expect(element).toContain("font-sans");
+    const variants = text.match(/const VARIANTS = \{([\s\S]*?)\} as const/)?.[1];
+    for (const element of elements) {
+      if (element.includes("font-sans")) continue;
+      expect(element).toContain("VARIANTS[variant]");
+      const values = variants?.match(/"[^"]*"/g) ?? [];
+      expect(values.length).toBeGreaterThan(0);
+      for (const value of values) expect(value).toMatch(/\bfont-(?:sans|mono)\b/);
+    }
   });
 });

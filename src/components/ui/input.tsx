@@ -10,7 +10,7 @@ export function Input({ className, style, ...props }: InputProps) {
   const { isInvalid } = useFormControl();
   return (
     <View
-      className={`w-full flex-row items-center rounded-xl border bg-card ${
+      className={`w-full flex-row items-center rounded-sm border bg-card ${
         isInvalid ? "border-destructive" : "border-input"
       } ${className ?? ""}`.trim()}
       style={[CONTINUOUS_CURVE, style]}

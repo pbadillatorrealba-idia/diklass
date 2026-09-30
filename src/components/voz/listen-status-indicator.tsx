@@ -21,7 +21,7 @@ export function ListenStatusIndicator({ state }: { state: ListenModeState }) {
     <Box
       accessibilityLabel={mensaje}
       aria-live="polite"
-      className="flex-row items-center gap-2 rounded-lg bg-muted px-3 py-2"
+      className="flex-row items-center gap-2 rounded-sm bg-muted px-3 py-2"
       role="status"
       testID="listen-status-indicator"
     >

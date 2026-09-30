@@ -6,7 +6,8 @@ import { SuggestedBlock } from "@/components/ui/suggested-block";
 const tagWith = (html: string, needle: string) =>
   html.match(new RegExp(`<[^>]*${needle}[^>]*>`))?.[0] ?? "";
 
-// FR-076 · US13-AC2 · design.md D7: lo sugerido se distingue por etiqueta y borde, no solo por color.
+// FR-076 · US13-AC2 · design.md D7/D20: lo sugerido se distingue por etiqueta, pliego y contorno,
+// no solo por color.
 describe("SuggestedBlock", () => {
   const html = renderToStaticMarkup(
     <SuggestedBlock testID="s">
@@ -15,9 +16,13 @@ describe("SuggestedBlock", () => {
   );
   const box = tagWith(html, 'data-testid="s"');
 
-  test("lleva el borde lateral del token suggested", () => {
-    expect(box).toContain("border-l-4");
-    expect(box).toContain("border-suggested");
+  // D20: pliego canario con contorno de 1 px; el borde lateral grueso queda prohibido.
+  test("es un pliego suggested-surface con contorno de 1 px suggested", () => {
+    const cls = box.match(/data-class="([^"]*)"/)?.[1]?.split(/\s+/) ?? [];
+    expect(cls).toEqual(
+      expect.arrayContaining(["bg-suggested-surface", "border", "border-suggested", "rounded-sm"]),
+    );
+    expect(cls.some((c) => /^border-l-/.test(c))).toBe(false);
   });
 
   test("es un grupo con nombre «Sugerencia del sistema»", () => {

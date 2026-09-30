@@ -31,7 +31,7 @@ describe("SeverityBadge", () => {
   test("acepta todo el vocabulario de eventos adversos sin cambiarlo", () => {
     expect([...AdverseEventSeverity]).toEqual(["leve", "moderado", "grave"]);
     for (const level of AdverseEventSeverity) {
-      expect(renderToStaticMarkup(<SeverityBadge level={level} />)).toContain("rounded-full");
+      expect(renderToStaticMarkup(<SeverityBadge level={level} />)).toContain("rounded-sm");
     }
   });
 });

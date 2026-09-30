@@ -175,7 +175,7 @@ export default function KnowledgeConversationScreen() {
             </Button>
           ) : null}
           {respaldoAbierto === turno.queryId && respaldoQuery.data != null ? (
-            <VStack className="gap-2 rounded-lg border border-border bg-card p-3">
+            <VStack className="gap-2 rounded-sm border border-border bg-card p-3">
               <Text tone="muted" variant="caption">
                 Reconstrucción de lo que produjo esta recomendación (FR-020): consulta{" "}
                 {respaldoQuery.data.row.id}, paciente{" "}

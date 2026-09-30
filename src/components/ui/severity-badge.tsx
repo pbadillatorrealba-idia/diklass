@@ -59,7 +59,7 @@ export function SeverityBadge({ level, testID }: { level: SeverityLevel; testID?
   const style = LEVELS[level];
   return (
     <View
-      className={`flex-row items-center gap-1 self-start rounded-full border px-2 py-1 ${style.box}`}
+      className={`flex-row items-center gap-1 self-start rounded-sm border px-2 py-1 ${style.box}`}
       testID={testID}
     >
       {/* Decorativo: el nombre del nivel ya es texto visible. */}

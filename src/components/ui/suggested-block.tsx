@@ -10,7 +10,7 @@ export type SuggestedBlockProps = PropsWithChildren<{ className?: string; testID
 
 /**
  * Contenido generado por el sistema y aún no validado por un profesional (FR-076 · design.md D7):
- * borde lateral `suggested` y la etiqueta visible como primer hijo, para que se lea antes que el
+ * pliego `suggested-surface` con contorno de 1 px `suggested` (D20) y la etiqueta visible como primer hijo, para que se lea antes que el
  * contenido en todas las plataformas. Al aprobarse, el contenido deja este bloque y muestra su
  * atribución.
  */
@@ -19,7 +19,7 @@ export function SuggestedBlock({ children, className, testID }: SuggestedBlockPr
     <View
       accessibilityLabel={LABEL}
       aria-label={LABEL}
-      className={`gap-1 border-l-4 border-suggested pl-3 ${className ?? ""}`.trim()}
+      className={`gap-1 rounded-sm border border-suggested bg-suggested-surface p-3 ${className ?? ""}`.trim()}
       role="group"
       style={CONTINUOUS_CURVE}
       testID={testID}
