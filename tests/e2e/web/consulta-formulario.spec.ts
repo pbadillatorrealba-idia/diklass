@@ -94,6 +94,64 @@ test.describe("consulta como formulario", () => {
     });
   }
 
+  // Revisión de la PR #41: la corrección de procedencia se elige y se confirma aparte; se cancela
+  // sin registrar nada y el foco nunca cae al documento (WCAG 2.4.3).
+  test("corregir procedencia se confirma aparte, se cancela sin registrar y conserva el foco", async ({
+    page,
+  }) => {
+    const { api, patientId, crear } = await prepararPaciente(page, "Lluvia E2E procedencia");
+    try {
+      const consultationId = await crear("consultation", { patientId, status: "open" });
+      await crear("anamnesis", {
+        consultationId,
+        field: "motivo_consulta",
+        text: "Come poco desde el lunes",
+        provenance: "reportada",
+      });
+      await page.goto(`/consultations/${consultationId}`);
+
+      const entrada = page
+        .getByTestId("anamnesis-entry")
+        .filter({ visible: true })
+        .filter({ hasText: "Come poco desde el lunes" });
+      const abrir = entrada.getByRole("button", {
+        name: "Corregir procedencia de Motivo de consulta",
+      });
+      const grupo = entrada.getByRole("radiogroup", { name: "Corregir procedencia" });
+      const guardar = entrada.getByRole("button", { name: "Guardar corrección de procedencia" });
+      const reemplazos = entrada.getByTestId("anamnesis-provenance-history");
+
+      // Al desplegar, el foco va a la opción vigente y guardarla no es una corrección.
+      await abrir.click();
+      await expect(abrir).toHaveAttribute("aria-expanded", "true");
+      await expect(grupo.getByRole("radio", { name: "Reportada" })).toBeFocused();
+      await expect(guardar).toBeDisabled();
+
+      // Las flechas solo mueven la selección: nada queda registrado.
+      await page.keyboard.press("ArrowRight");
+      await expect(grupo.getByRole("radio", { name: "Inferida" })).toBeChecked();
+      await expect(guardar).toBeEnabled();
+      await expect(entrada.getByRole("img", { name: "Procedencia: Reportada" })).toBeVisible();
+
+      // Cancelar pliega sin escribir y devuelve el foco al botón.
+      await entrada.getByRole("button", { name: "Cancelar la corrección de procedencia" }).click();
+      await expect(grupo).toHaveCount(0);
+      await expect(abrir).toBeFocused();
+      await expect(reemplazos).toHaveCount(0);
+
+      // Confirmar registra la corrección y devuelve el foco al botón.
+      await abrir.click();
+      await page.keyboard.press("ArrowRight");
+      await guardar.click();
+      await expect(entrada.getByRole("img", { name: "Procedencia: Inferida" })).toBeVisible();
+      await expect(reemplazos).toContainText("R · Reportada");
+      await expect(grupo).toHaveCount(0);
+      await expect(abrir).toBeFocused();
+    } finally {
+      await api.dispose();
+    }
+  });
+
   // Revisión final de D20: el borrador se lee entero antes de firmarlo.
   test("un campo largo del borrador crece y no esconde texto", async ({ page }) => {
     const { api, patientId, crear } = await prepararPaciente(page, "Nieve E2E campo largo");

@@ -43,4 +43,12 @@ describe("AnamnesisSection", () => {
     expect(html).not.toContain('aria-label="Corregir procedencia"');
     expect(html).not.toContain('data-testid="anamnesis-provenance-correct"');
   });
+
+  // Revisión de la PR #41: el botón que despliega sigue montado y expone si está abierto.
+  test("el botón de corrección expone que está plegado", () => {
+    const boton = html.match(
+      /<[^>]*aria-label="Corregir procedencia de Motivo de consulta"[^>]*>/,
+    )?.[0];
+    expect(boton).toContain('aria-expanded="false"');
+  });
 });

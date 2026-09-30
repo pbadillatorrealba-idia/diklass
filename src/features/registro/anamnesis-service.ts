@@ -118,6 +118,10 @@ export async function correctProvenance(
 
     // D7: la corrección es recuperable — la procedencia anterior se apéndice en la historia.
     const actual = anamnesisContentSchema.parse(data.content);
+    // Sin cambio no hay corrección: no se apéndice historia ni se deja traza.
+    if (nuevaProvenance === actual.provenance) {
+      throw new Error("La procedencia nueva coincide con la vigente.");
+    }
     const content = anamnesisContentSchema.parse({
       ...actual,
       provenance: nuevaProvenance,

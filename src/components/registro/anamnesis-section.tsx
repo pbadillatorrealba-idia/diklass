@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
@@ -65,8 +66,6 @@ export function AnamnesisSection({
   onSubmit,
   onCorrectProvenance,
 }: AnamnesisSectionProps) {
-  // Entrada cuya procedencia se está corrigiendo; el resto muestra solo el botón.
-  const [correcting, setCorrecting] = useState<string | null>(null);
   const unknownFields = ANAMNESIS_STRUCTURED_ORDER.filter(
     (candidate) => !entries.some((entry) => entry.content.field === candidate),
   );
@@ -161,34 +160,110 @@ export function AnamnesisSection({
               {entry.content.text}
             </Field>
             <AttributionBadge attribution={entry.attribution} />
-            {isSealed ? null : correcting === entry.id ? (
-              <OptionPicker
-                label="Corregir procedencia"
-                onChange={(next) => {
-                  setCorrecting(null);
-                  onCorrectProvenance(entry.id, next);
-                }}
-                options={PROVENANCE_OPTIONS}
-                testID="anamnesis-provenance-correct"
-                value={entry.content.provenance}
+            {isSealed ? null : (
+              <ProvenanceCorrector
+                current={entry.content.provenance}
+                fieldLabel={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+                isBusy={isBusy}
+                onConfirm={(next) => onCorrectProvenance(entry.id, next)}
               />
-            ) : (
-              // Plegado tras un botón para no repetir cuatro opciones bajo cada registro (D20).
-              <Button
-                accessibilityLabel={`Corregir procedencia de ${ANAMNESIS_FIELD_LABELS[entry.content.field]}`}
-                className="self-start"
-                isDisabled={isBusy}
-                onPress={() => setCorrecting(entry.id)}
-                size="sm"
-                testID="anamnesis-provenance-correct-toggle"
-                variant="ghost"
-              >
-                <ButtonText>Corregir procedencia</ButtonText>
-              </Button>
             )}
           </VStack>
         ))
       )}
+    </VStack>
+  );
+}
+
+type ProvenanceCorrectorProps = {
+  current: Provenance;
+  fieldLabel: string;
+  isBusy: boolean;
+  onConfirm: (provenance: Provenance) => void;
+};
+
+/**
+ * «Corregir procedencia» plegado tras un botón (D20). Las opciones solo marcan una selección:
+ * la corrección se registra con «Guardar corrección», que no admite la procedencia vigente, y
+ * «Cancelar» pliega sin escribir nada (revisión de la PR #41). Al desplegar, el foco va a la
+ * opción elegida; al plegar, vuelve al botón en cuanto deja de estar ocupado (WCAG 2.4.3).
+ */
+function ProvenanceCorrector({ current, fieldLabel, isBusy, onConfirm }: ProvenanceCorrectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState<Provenance>(current);
+  const toggleRef = useRef<View>(null);
+  const returnFocus = useRef(false);
+
+  // Un botón deshabilitado no admite foco: se devuelve cuando la operación termina.
+  useEffect(() => {
+    if (!returnFocus.current || isBusy || isOpen) return;
+    returnFocus.current = false;
+    toggleRef.current?.focus();
+  });
+
+  const close = () => {
+    returnFocus.current = true;
+    setIsOpen(false);
+  };
+
+  return (
+    <VStack className="gap-2">
+      <Button
+        accessibilityLabel={`Corregir procedencia de ${fieldLabel}`}
+        aria-expanded={isOpen}
+        className="self-start"
+        isDisabled={isBusy}
+        onPress={() => {
+          if (isOpen) {
+            close();
+            return;
+          }
+          setSelected(current);
+          setIsOpen(true);
+        }}
+        ref={toggleRef}
+        size="sm"
+        testID="anamnesis-provenance-correct-toggle"
+        variant="ghost"
+      >
+        <ButtonText>Corregir procedencia</ButtonText>
+      </Button>
+      {isOpen ? (
+        <VStack className="gap-2" testID="anamnesis-provenance-correct-panel">
+          <OptionPicker
+            autoFocus
+            label="Corregir procedencia"
+            onChange={setSelected}
+            options={PROVENANCE_OPTIONS}
+            testID="anamnesis-provenance-correct"
+            value={selected}
+          />
+          <View className="flex-row flex-wrap gap-2">
+            <Button
+              accessibilityLabel="Guardar corrección de procedencia"
+              isDisabled={isBusy || selected === current}
+              onPress={() => {
+                close();
+                onConfirm(selected);
+              }}
+              size="sm"
+              testID="anamnesis-provenance-correct-save"
+            >
+              <ButtonText>Guardar corrección</ButtonText>
+            </Button>
+            <Button
+              accessibilityLabel="Cancelar la corrección de procedencia"
+              isDisabled={isBusy}
+              onPress={close}
+              size="sm"
+              testID="anamnesis-provenance-correct-cancel"
+              variant="outline"
+            >
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+          </View>
+        </VStack>
+      ) : null}
     </VStack>
   );
 }

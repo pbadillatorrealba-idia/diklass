@@ -493,6 +493,30 @@ describe("correctProvenance (FR-021 · US2-AC5)", () => {
     });
   });
 
+  // Revisión de la PR #41: «corregir» a la procedencia vigente dejaba una entrada falsa en la
+  // historia y un `anamnesis_corrected` en la traza.
+  test("la misma procedencia vigente no es una corrección y no escribe nada", async () => {
+    const previo = {
+      consultationId: "c-1",
+      field: "alimentacion",
+      text: "Dieta seca.",
+      provenance: "reportada",
+    };
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ id: "a-1", record_type: "anamnesis", content: previo }), error: null },
+      ],
+    });
+
+    try {
+      await correctProvenance(client, "a-1", "reportada");
+      throw new Error("se esperaba el rechazo de la corrección sin cambio");
+    } catch (error) {
+      expect((error as Error).message).toMatch(/coincide con la vigente/i);
+    }
+    expect(calls.filter((call) => call.method === "update")).toEqual([]);
+  });
+
   test("sin registro de anamnesis no hay nada que corregir", async () => {
     const { client, calls } = fakeClient({});
 
