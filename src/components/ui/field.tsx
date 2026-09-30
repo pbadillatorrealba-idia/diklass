@@ -21,13 +21,23 @@ export type FieldProps = {
  * código de procedencia al margen cuando existe (FR-097).
  */
 export function Field({ label, children, provenance, mark, testID }: FieldProps) {
+  const margin = mark ?? (provenance ? <ProvenanceMark provenance={provenance} /> : null);
   return (
     <View className="flex-row items-start gap-3 border-b border-border py-2" testID={testID}>
       <View className="flex-1 gap-1">
         <Text variant="rubric">{label}</Text>
         {typeof children === "string" ? <Text selectable>{children}</Text> : children}
       </View>
-      {mark ?? (provenance ? <ProvenanceMark provenance={provenance} /> : null)}
+      {margin ? (
+        // Tope del margen: una historia de correcciones larga salta de línea en vez de apretar el
+        // valor a 320 px (revisión de la PR #41).
+        <View
+          className="max-w-[40%] shrink items-end"
+          testID={testID ? `${testID}-margin` : undefined}
+        >
+          {margin}
+        </View>
+      ) : null}
     </View>
   );
 }

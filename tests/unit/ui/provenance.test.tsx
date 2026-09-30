@@ -87,6 +87,17 @@ describe("Field", () => {
     expect(tagWith(html, 'data-testid="campo"')).toContain("border-b");
   });
 
+  // Revisión de la PR #41: con varias correcciones, el margen crecía sin tope y apretaba el valor.
+  test("el margen tiene un ancho máximo y el valor conserva su columna", () => {
+    const html = renderToStaticMarkup(
+      <Field label="Motivo" mark={<Text>R · I · F · ? · R</Text>} testID="campo">
+        Vocaliza
+      </Field>,
+    );
+    const margen = tagWith(html, 'data-testid="campo-margin"');
+    expect(margen).toContain("max-w-[40%]");
+  });
+
   test("sin procedencia no pinta ninguna marca", () => {
     const html = renderToStaticMarkup(<Field label="Peso">12,4 kg</Field>);
     expect(html).toContain(">12,4 kg<");
