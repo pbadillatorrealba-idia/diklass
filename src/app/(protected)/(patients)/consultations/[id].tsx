@@ -596,7 +596,17 @@ export default function ConsultationScreen() {
       title="Consulta"
       back={
         patientId
-          ? { href: `/patients/${patientId}`, label: "la ficha" }
+          ? {
+              href: `/patients/${patientId}`,
+              label: "la ficha",
+              crumbs: [
+                { href: "/patients", label: "Pacientes" },
+                {
+                  href: `/patients/${patientId}`,
+                  label: data?.header.patientName ?? "Ficha del paciente",
+                },
+              ],
+            }
           : { href: "/patients", label: "Pacientes" }
       }
     >
