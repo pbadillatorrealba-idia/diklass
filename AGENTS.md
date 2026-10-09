@@ -131,7 +131,7 @@ el cambio, y la batería completa se reserva para el cierre de la PR.
   - E2E: como mucho `bun run test:e2e:smoke`, y solo si el cambio toca login o navegación.
 - **Lo pesado** (`bun run gate`, `bun run test`, Playwright completo) se ejecuta únicamente
   cuando: (1) se cierra la PR; (2) el cambio toca `supabase/migrations/` o `database.types.ts`
-  (basta `supabase test db` + `db:types`, sin gate); (3) toca `src/lib/supabase/`, autenticación
+  (basta `supabase test db`, `db:types` y `bun run typecheck`, sin gate completo); (3) toca `src/lib/supabase/`, autenticación
   o atribución (añade `SUPABASE_LIVE_TESTS=1 bun run test:integration`); (4) un fallo de CI no se
   reproduce con un test focalizado; (5) el usuario lo pide.
 - Los e2e y las exportaciones se ejecutan de uno en uno, con un solo worker.
@@ -146,7 +146,7 @@ el cambio, y la batería completa se reserva para el cierre de la PR.
 Al terminar el trabajo, haz **una sola pregunta**: «¿Cierro la PR?». No ejecutes nada pesado
 antes de la respuesta. Si el usuario confirma:
 
-1. **Verificación, una vez.** Solo docs/openspec: ninguna (CI no corre). Código: `bun run gate`;
+1. **Verificación, una vez.** Solo docs/openspec: ninguna (CI no corre), pero los pasos 3 a 6 aplican igual. Código: `bun run gate`;
    con migraciones, además `supabase test db` y `db:types`; con autenticación o atribución,
    `SUPABASE_LIVE_TESTS=1 bun run test:integration`; con UI o navegación,
    `bun run test:e2e:web -- --project=chromium`.
@@ -168,7 +168,8 @@ antes de la respuesta. Si el usuario confirma:
 
 - `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
   Codex y Oh My Pi. Cualquier alta, baja o edición se aplica en ambos directorios en el mismo
-  commit. Las skills `openspec-*` las genera OpenSpec por herramienta y pueden diferir entre ambos.
+  commit. Las skills `openspec-*` e `impeccable` se generan por herramienta y pueden diferir entre ambos
+  (invocación `/` frente a `$`, y `agents/` solo en `.agents`): esas diferencias son intencionadas.
 - Uso esperado:
   - `test-driven-development`: al implementar cualquier funcionalidad o corrección.
   - `systematic-debugging`: ante un bug, un test roto o un comportamiento inesperado, antes de
@@ -192,7 +193,11 @@ antes de la respuesta. Si el usuario confirma:
     - Sus subagentes (`.claude/agents/`: `impeccable-finish-reviewer`, `-documenter`,
       `-asset-producer`, `-manual-edit-applier`) solo se invocan desde esta skill.
     - El hook de `.codex/hooks.json` revisa los cambios de UI tras cada edición; es informativo
-      y no sustituye a `bun run gate`. No hay hook de cierre de turno versionado; los hooks de
+      y no sustituye a `bun run gate`. Es **opt-in**: solo corre si el binario ya está en
+      `.agents/skills/impeccable/scripts/bin/` (ignorado por git) y nunca lo descarga. Instalarlo
+      es una decisión explícita: `scripts/impeccable context` lo baja de
+      `github.com/pbakaus/impeccable` (releases) y verifica su sha256 contra un archivo del mismo
+      origen; es código de terceros que se ejecuta localmente. No hay hook de cierre de turno versionado; los hooks de
       Claude son configuración local (`.claude/settings.local.json`, ignorado por git).
     - Ningún resultado puede violar las reglas de «Sistema visual» ni `tema.test.ts`.
   - `using-git-worktrees`: cuando un cambio necesita aislarse del espacio de trabajo actual.

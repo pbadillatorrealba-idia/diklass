@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f \".agents/skills/impeccable/scripts/impeccable\" ] || \".agents/skills/impeccable/scripts/impeccable\" hook",
-            "commandWindows": "if exist \".agents/skills/impeccable/scripts/impeccable.cmd\" (\".agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
+            "command": "if ls .agents/skills/impeccable/scripts/bin/*/impeccable >/dev/null 2>&1; then .agents/skills/impeccable/scripts/impeccable hook; fi",
+            "commandWindows": "if exist \".agents/skills/impeccable/scripts/bin\" (\".agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
           }
