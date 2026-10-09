@@ -11,6 +11,7 @@
     "start:web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
+    "gate": "sh scripts/gate.sh",
     "format": "biome format --write .",
     "test": "bun test tests/unit tests/integration",
     "test:integration": "bun test tests/integration",
