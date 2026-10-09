@@ -28,8 +28,8 @@ export type PatientsTableProps = {
   rows: PatientRow[];
   sort: PatientSortColumn;
   dir: SortDirection;
-  /** Destino de la cabecera de una columna: alterna el sentido si ya es la activa. */
-  sortHref: (column: PatientSortColumn) => Href;
+  /** Destino de la cabecera de una columna: alterna el sentido si ya es la activa. Sin él, las cabeceras no ordenan. */
+  sortHref?: (column: PatientSortColumn) => Href;
 };
 
 export function formatVisit(iso: string | null): string {
@@ -75,7 +75,7 @@ function HeaderCell({
 }: {
   column: Column;
   dir: SortDirection;
-  href: Href;
+  href?: Href;
   sort: PatientSortColumn;
 }) {
   const active = column.key === sort;
@@ -86,17 +86,21 @@ function HeaderCell({
       className={column.width}
       role="columnheader"
     >
-      <Link asChild href={href}>
-        <Button
-          accessibilityLabel={`Ordenar por ${column.label}`}
-          className="items-start self-start"
-          size="sm"
-          testID={`patients-sort-${column.key}`}
-          variant="ghost"
-        >
-          <ButtonText>{`${column.label}${arrow}`}</ButtonText>
-        </Button>
-      </Link>
+      {href ? (
+        <Link asChild href={href}>
+          <Button
+            accessibilityLabel={`Ordenar por ${column.label}`}
+            className="items-start self-start"
+            size="sm"
+            testID={`patients-sort-${column.key}`}
+            variant="ghost"
+          >
+            <ButtonText>{`${column.label}${arrow}`}</ButtonText>
+          </Button>
+        </Link>
+      ) : (
+        <Text variant="label">{column.label}</Text>
+      )}
     </View>
   );
 }
@@ -150,7 +154,7 @@ export function PatientsTable({ dir, rows, sort, sortHref }: PatientsTableProps)
           <HeaderCell
             column={column}
             dir={dir}
-            href={sortHref(column.key)}
+            href={sortHref?.(column.key)}
             key={column.key}
             sort={sort}
           />

@@ -154,8 +154,11 @@ export function Screen({
         {content}
       </ScrollView>
       {action && actionBar ? (
-        <View className="border-t border-border bg-card p-4" testID="screen-action-bar">
-          <View className={`w-full ${WIDTHS[width]} self-center`}>{action}</View>
+        // `SafeAreaView` mide su solape real con el indicador de inicio o la barra de gestos.
+        <View className="border-t border-border bg-card" testID="screen-action-bar">
+          <SafeAreaView edges={["bottom"]}>
+            <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
+          </SafeAreaView>
         </View>
       ) : null}
     </ScreenFrame>

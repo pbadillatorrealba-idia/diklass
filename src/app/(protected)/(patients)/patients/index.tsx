@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { type Href, Link, useLocalSearchParams, useRouter } from "expo-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { PatientsTable } from "@/components/registro/patients-table";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -56,13 +56,25 @@ function patientsHref(params: Record<string, string | undefined>): Href {
 /** Campo de texto cuyo valor sube a la URL tras una pausa al escribir. */
 function useDebouncedParam(value: string, onCommit: (value: string) => void) {
   const [draft, setDraft] = useState(value);
-  // Un cambio externo de la URL (p. ej. «Limpiar filtros») reinicia el borrador.
-  useEffect(() => setDraft(value), [value]);
+  const committed = useRef(value);
+  const commit = useRef(onCommit);
+  commit.current = onCommit;
+  // Solo un cambio externo de la URL (p. ej. «Limpiar filtros») reinicia el borrador: el eco
+  // de lo que este campo ya subió no debe pisar lo que se siguió escribiendo.
   useEffect(() => {
-    if (draft === value) return;
-    const timer = setTimeout(() => onCommit(draft), FILTER_DEBOUNCE_MS);
+    if (value !== committed.current) {
+      committed.current = value;
+      setDraft(value);
+    }
+  }, [value]);
+  useEffect(() => {
+    if (draft === committed.current) return;
+    const timer = setTimeout(() => {
+      committed.current = draft;
+      commit.current(draft);
+    }, FILTER_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [draft, value, onCommit]);
+  }, [draft]);
   return [draft, setDraft] as const;
 }
 
@@ -189,7 +201,6 @@ export default function PatientsScreen() {
           <Input>
             <InputField
               accessibilityLabel="Última visita desde (AAAA-MM-DD)"
-              inputMode="numeric"
               onChangeText={setFromDraft}
               placeholder="AAAA-MM-DD"
               value={fromDraft}
@@ -200,7 +211,6 @@ export default function PatientsScreen() {
           <Input>
             <InputField
               accessibilityLabel="Última visita hasta (AAAA-MM-DD)"
-              inputMode="numeric"
               onChangeText={setToDraft}
               placeholder="AAAA-MM-DD"
               value={toDraft}

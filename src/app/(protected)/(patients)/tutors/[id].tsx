@@ -51,9 +51,10 @@ export default function TutorScreen() {
 
   const tutor = tutorQuery.data;
   const patients = patientsQuery.data?.rows ?? [];
+  const total = patientsQuery.data?.total ?? 0;
 
   return (
-    <Screen back={{ href: "/patients", label: "pacientes" }} title="Tutor" width="wide">
+    <Screen back={{ href: "/patients", label: "Pacientes" }} title="Tutor" width="wide">
       <QueryState
         empty={
           <Card testID="tutor-missing">
@@ -88,15 +89,15 @@ export default function TutorScreen() {
             <View className="gap-3">
               <Heading level={2}>Pacientes</Heading>
               {patients.length > 0 ? (
-                <PatientsTable
-                  dir="asc"
-                  rows={patients}
-                  sort="name"
-                  sortHref={() => `/tutors/${tutorId}`}
-                />
+                <PatientsTable dir="asc" rows={patients} sort="name" />
               ) : (
                 <Text tone="muted">Este tutor aún no tiene pacientes.</Text>
               )}
+              {total > patients.length ? (
+                <Text tone="muted" testID="tutor-patients-more">
+                  Mostrando {patients.length} de {total} pacientes.
+                </Text>
+              ) : null}
             </View>
           </>
         ) : null}
