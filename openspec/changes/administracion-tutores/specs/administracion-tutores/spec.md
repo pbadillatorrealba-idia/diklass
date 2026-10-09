@@ -32,8 +32,8 @@ y `/patients` MUST ofrecer un enlace «Tutores» a esta lista.
 
 El sistema MUST filtrar los tutores en el servidor por nombre (sobre «nombre apellido») y por
 contacto (teléfono o correo), sin distinguir mayúsculas y tratando `%`, `_` y `\` como texto
-literal, y MUST devolver solo los de la clínica de quien consulta. MUST ordenar por nombre,
-nº de pacientes o fecha de alta, ascendente o descendente, con un desempate estable, y paginar de
+literal, y MUST devolver solo los de la clínica de quien consulta. MUST ordenar por nombre
+o nº de pacientes, ascendente o descendente, con un desempate estable, y paginar de
 25 en 25 con el total filtrado. Filtros, orden y página MUST vivir en la URL, y cambiar un filtro
 MUST volver a la página 1.
 

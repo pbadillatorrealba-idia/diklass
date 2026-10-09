@@ -31,9 +31,9 @@ Lo que se comprobó en las migraciones 002–016 y en los fixtures:
 
 - `p_name` filtra por «nombre apellido» y `p_contact` por teléfono o correo; ambos con `ilike` y
   `\`, `%`, `_` escapados (literales), como en D1 de `rediseno-pacientes`.
-- Devuelve `id, name, surname, full_name, phone, email, patient_count, created_at, total_count`.
+- Devuelve `id, name, surname, full_name, phone, email, patient_count, total_count`.
   `patient_count` cuenta los pacientes con `content->>'tutorId' = tutor.id::text`.
-- Orden por `name | patients | created`, asc/desc, con `lower(full_name), id` como desempate.
+- Orden por `name | patients`, asc/desc, con `lower(full_name), id` como desempate.
   Límite acotado a 1..100.
 
 ### D2 — Un `TutorForm` para el alta, la edición y «Nuevo tutor» del paciente

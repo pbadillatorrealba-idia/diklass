@@ -4,7 +4,7 @@ es aceptación. Lo pendiente queda sin marcar.
 ## 1. Base de datos (FR-120, FR-123)
 
 - [ ] 1.1 `supabase/tests/017_administracion_tutores.sql` (pgTap): alcance por clínica, filtro por
-  nombre+apellido y por contacto, comodín literal, orden por nombre/pacientes/alta, `patient_count`,
+  nombre+apellido y por contacto, comodín literal, orden por nombre/pacientes, `patient_count`,
   `total_count`, rechazo de un tutor sin nombre. Verificación: en verde (primero en rojo).
 - [ ] 1.2 Migración `017_administracion_tutores.sql`: `search_tutors`, índice
   `clinical_records_tutor_idx` y `check` de nombre `not valid`. Verificación: 1.1 en verde y
