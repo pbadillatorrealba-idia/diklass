@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import type { SortDirection } from "@/features/registro/patient-search";
 import type { TutorRow, TutorSortColumn } from "@/features/registro/tutor-search";
+import { formatRut } from "@/lib/rut";
 
 /** Ventana desde la que los tutores se pintan como tabla; debajo, como tarjetas (`lg`). */
 const TABLE_FROM = 1024;
@@ -13,10 +14,11 @@ type Column = { key: TutorSortColumn | null; label: string; width: string };
 
 // Solo nombre y pacientes ordenan en el servidor; contacto va como texto.
 const COLUMNS: Column[] = [
-  { key: "name", label: "Nombre", width: "w-1/4" },
-  { key: null, label: "Teléfono", width: "w-1/5" },
+  { key: "name", label: "Nombre", width: "w-1/5" },
+  { key: null, label: "RUT", width: "w-1/6" },
+  { key: null, label: "Teléfono", width: "w-1/6" },
   { key: null, label: "Correo", width: "flex-1" },
-  { key: "patients", label: "Pacientes", width: "w-1/6" },
+  { key: "patients", label: "Pacientes", width: "w-24" },
 ];
 
 export type TutorsTableProps = {
@@ -43,6 +45,8 @@ function OpenButton({ row }: { row: TutorRow }) {
 
 const orMissing = (value: string | null) =>
   value ? <Text selectable>{value}</Text> : <Text tone="muted">Sin dato</Text>;
+
+const rutOrMissing = (rut: string | null) => orMissing(rut ? formatRut(rut) : null);
 
 function HeaderCell({
   column,
@@ -99,6 +103,12 @@ export function TutorsTable({ dir, rows, sort, sortHref }: TutorsTableProps) {
             </Text>
             <View className="gap-1">
               <Text tone="muted" variant="rubric">
+                RUT
+              </Text>
+              {rutOrMissing(row.rut)}
+            </View>
+            <View className="gap-1">
+              <Text tone="muted" variant="rubric">
                 Teléfono
               </Text>
               {orMissing(row.phone)}
@@ -148,18 +158,21 @@ export function TutorsTable({ dir, rows, sort, sortHref }: TutorsTableProps) {
           role="row"
           testID="tutor-item"
         >
-          <View className="w-1/4" role="cell">
+          <View className="w-1/5" role="cell">
             <Text selectable variant="strong">
               {row.fullName}
             </Text>
           </View>
-          <View className="w-1/5" role="cell">
+          <View className="w-1/6" role="cell">
+            {rutOrMissing(row.rut)}
+          </View>
+          <View className="w-1/6" role="cell">
             {orMissing(row.phone)}
           </View>
           <View className="flex-1" role="cell">
             {orMissing(row.email)}
           </View>
-          <View className="w-1/6" role="cell">
+          <View className="w-24" role="cell">
             <Text variant="data">{row.patientCount}</Text>
           </View>
           <View className="w-28 items-end" role="cell">

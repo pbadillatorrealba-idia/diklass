@@ -19,7 +19,7 @@ export type TutorSortColumn = (typeof TUTOR_SORT_COLUMNS)[number];
 
 export type TutorSearchParams = {
   name?: string;
-  /** Teléfono o correo. */
+  /** Teléfono, correo o RUT. */
   contact?: string;
   sort: TutorSortColumn;
   dir: SortDirection;
@@ -30,6 +30,8 @@ export type TutorSearchParams = {
 export type TutorRow = {
   id: string;
   fullName: string;
+  /** Forma canónica `12345678-5`; `null` en un tutor anterior al RUT obligatorio. */
+  rut: string | null;
   phone: string | null;
   email: string | null;
   patientCount: number;
@@ -42,6 +44,7 @@ type SearchTutorsRow = Database["public"]["Functions"]["search_tutors"]["Returns
 const toRow = (row: SearchTutorsRow): TutorRow => ({
   id: row.id,
   fullName: row.full_name,
+  rut: row.rut,
   phone: row.phone,
   email: row.email,
   patientCount: Number(row.patient_count),
@@ -107,5 +110,23 @@ export async function findDuplicateTutors(
     return [...found.values()];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Tutor de la clínica con ese RUT canónico, o `null`. El RUT es único por clínica (índice de la
+ * migración 018): a diferencia del teléfono, un RUT repetido SÍ bloquea el alta. Si la búsqueda
+ * falla devuelve `null` y manda el índice único de la base.
+ */
+export async function findTutorByRut(
+  client: SupabaseClient<Database>,
+  rut: string,
+  excludeId?: string,
+): Promise<TutorRow | null> {
+  try {
+    const page = await searchTutors(client, { contact: rut, sort: "name", dir: "asc", page: 1 });
+    return page.rows.find((row) => row.rut === rut && row.id !== excludeId) ?? null;
+  } catch {
+    return null;
   }
 }

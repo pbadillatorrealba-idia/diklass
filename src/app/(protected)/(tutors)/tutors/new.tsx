@@ -15,7 +15,11 @@ import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { invalidateRegistro } from "@/features/registro/query-cache";
-import { findDuplicateTutors, type TutorRow } from "@/features/registro/tutor-search";
+import {
+  findDuplicateTutors,
+  findTutorByRut,
+  type TutorRow,
+} from "@/features/registro/tutor-search";
 import { createTutor } from "@/features/registro/tutor-service";
 import { supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
@@ -53,6 +57,15 @@ export default function NewTutorScreen() {
     const tutor = parsed.value;
     submitting.current = true;
     setIsSaving(true);
+    // El RUT es único por clínica: un repetido bloquea (el teléfono o correo, no).
+    const sameRut = await findTutorByRut(supabase, tutor.rut);
+    if (sameRut) {
+      setErrors({ rut: `Ya hay un tutor con este RUT: ${sameRut.fullName}.` });
+      setStatus("Revisa los campos marcados antes de continuar.");
+      setIsSaving(false);
+      submitting.current = false;
+      return;
+    }
     // Con un aviso ya mostrado, este envío es la confirmación: no se vuelve a buscar.
     if (duplicates.length === 0) {
       const found = await findDuplicateTutors(supabase, tutor);

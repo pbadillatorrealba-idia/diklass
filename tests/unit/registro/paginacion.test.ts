@@ -55,7 +55,7 @@ const paciente = (index: number) => ({
     ageMonths: 24,
     weightKg: null,
     sex: "hembra",
-    reproductiveStatus: "entera",
+    reproductiveStatus: "entero",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -71,7 +71,7 @@ const tutor = (index: number) => ({
   ...base,
   id: `tutor-${index}`,
   record_type: "tutor",
-  content: { name: `Tutor ${index}`, phone: "+56 9 5550 0001", email: null },
+  content: { name: `Tutor ${index}`, rut: "12345678-5", phone: "+56 9 5550 0001", email: null },
 });
 
 describe("listas de la clínica con más de 1000 filas", () => {

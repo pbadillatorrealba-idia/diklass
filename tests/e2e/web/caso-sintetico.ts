@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Browser } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -101,6 +102,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       recordType: "tutor",
       content: {
         name: "Marcela Rojas (caso sintético)",
+        rut: randomRut(),
         phone: "+56912345678",
         email: "tutora.caso@example.test",
       },
@@ -111,13 +113,13 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       recordType: "patient",
       content: {
         name: "Luna Caso Sintético",
-        species: "perro",
+        species: "canino",
         breed: "Mestizo",
         birthDate: null,
         ageMonths: 36,
         weightKg: null,
-        sex: "Hembra",
-        reproductiveStatus: "Entera",
+        sex: "hembra",
+        reproductiveStatus: "entero",
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [{ text: "Sin enfermedades preexistentes", negative: true }],
@@ -283,13 +285,13 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       readyTestID: "patient-form",
       keyboardTestIDs: [
         "patient-name",
-        "patient-species",
+        "patient-species-canino",
         "patient-breed",
         "patient-birth-date",
         "patient-age-months",
         "patient-weight-kg",
-        "patient-sex",
-        "patient-reproductive-status",
+        "patient-sex-macho",
+        "patient-reproductive-status-entero",
         "tutor-mode-existing",
         "patient-submit",
       ],

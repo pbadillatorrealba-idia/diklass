@@ -23,6 +23,7 @@ import { invalidateRegistro } from "@/features/registro/query-cache";
 import { getTutor, tutorFullName, updateTutor } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { formatRut } from "@/lib/rut";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
@@ -179,6 +180,7 @@ export default function TutorScreen() {
                 </>
               ) : (
                 <View className="w-full flex-row flex-wrap gap-y-4">
+                  <DataItem label="RUT" value={formatRut(tutor.content.rut)} />
                   <DataItem label="Teléfono" value={tutor.content.phone ?? null} />
                   <DataItem label="Correo" value={tutor.content.email ?? null} />
                   <DataItem

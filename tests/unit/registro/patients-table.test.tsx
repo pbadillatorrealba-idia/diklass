@@ -12,7 +12,7 @@ const rows: PatientRow[] = [
   {
     id: "p1",
     name: "Luna",
-    species: "Canino",
+    species: "canino",
     breed: "Labrador",
     tutorId: "t1",
     tutorName: "Ana Soto",
@@ -21,7 +21,7 @@ const rows: PatientRow[] = [
   {
     id: "p2",
     name: "Nube",
-    species: "Felino",
+    species: "felino",
     breed: "Siames",
     tutorId: "",
     tutorName: null,

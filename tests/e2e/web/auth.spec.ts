@@ -197,7 +197,7 @@ test.describe("auth against the local backend", () => {
             ageMonths: 48,
             weightKg: 12.5,
             sex: "hembra",
-            reproductiveStatus: "entera",
+            reproductiveStatus: "entero",
             antecedentes: {
               medicalHistory: [],
               preexistingDiseases: [],

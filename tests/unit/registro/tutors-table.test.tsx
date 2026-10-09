@@ -9,8 +9,22 @@ afterEach(() => {
 });
 
 const rows: TutorRow[] = [
-  { id: "t1", fullName: "Marta Soto", phone: "+56 9 5550 0101", email: null, patientCount: 2 },
-  { id: "t2", fullName: "Zoe", phone: null, email: "zoe@example.test", patientCount: 0 },
+  {
+    id: "t1",
+    fullName: "Marta Soto",
+    rut: "12345678-5",
+    phone: "+56 9 5550 0101",
+    email: null,
+    patientCount: 2,
+  },
+  {
+    id: "t2",
+    fullName: "Zoe",
+    rut: null,
+    phone: null,
+    email: "zoe@example.test",
+    patientCount: 0,
+  },
 ];
 
 const render = async (width: number, sortHref?: TutorsTableProps["sortHref"]) => {

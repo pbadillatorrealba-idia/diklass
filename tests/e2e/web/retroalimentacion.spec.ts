@@ -63,7 +63,7 @@ async function prepararConsultaCerrada(page: Page, nombre: string): Promise<Prep
     ageMonths: null,
     weightKg: 12.5,
     sex: "hembra",
-    reproductiveStatus: "entera",
+    reproductiveStatus: "entero",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
