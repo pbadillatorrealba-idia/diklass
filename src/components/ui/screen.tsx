@@ -84,7 +84,7 @@ function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "ba
             <View className="flex-row gap-2" key={String(crumb.href)}>
               <Link
                 href={crumb.href}
-                testID={index === crumbs.length - 1 ? "screen-back" : undefined}
+                testID={index === crumbs.length - 1 ? "screen-back" : `screen-crumb-${index}`}
               >
                 <Text tone="muted" variant="label">
                   {crumb.label}
