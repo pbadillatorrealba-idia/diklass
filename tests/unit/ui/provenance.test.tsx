@@ -95,7 +95,8 @@ describe("Field", () => {
       </Field>,
     );
     const margen = tagWith(html, 'data-testid="campo-margin"');
-    expect(margen).toContain("max-w-[40%]");
+    // El tope sale del token `margin` del tema (40 %), no de un valor arbitrario (a3e7a1e).
+    expect(margen).toContain("max-w-margin");
   });
 
   test("sin procedencia no pinta ninguna marca", () => {
