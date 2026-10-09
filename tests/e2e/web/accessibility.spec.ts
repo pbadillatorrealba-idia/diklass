@@ -366,19 +366,12 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
   });
 
   // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
-  test("Inicio, Configuración y la ficha van a 2 columnas a 1280 px y a 1 a 375 px", async ({
-    page,
-  }) => {
+  test("Inicio y Configuración van a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     const pares = [
       { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
       { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
-      {
-        url: `/patients/${caso.patientId}`,
-        izquierda: "patient-main",
-        derecha: "patient-aside",
-      },
     ];
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 900 });

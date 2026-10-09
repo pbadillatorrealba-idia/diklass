@@ -1,10 +1,10 @@
 import { Link } from "expo-router";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { QueryState } from "@/components/ui/query-state";
 import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import type { ConsultationHistoryEntry } from "@/features/registro/summaries";
 
 type PatientHistoryProps = {
@@ -23,7 +23,7 @@ type PatientHistoryProps = {
  */
 export function PatientHistory({ entries, error, isPending, onRetry }: PatientHistoryProps) {
   return (
-    <VStack className="w-full gap-3" testID="patient-history">
+    <Card className="gap-4" testID="patient-history">
       <Heading level={2}>Historial de consultas</Heading>
       <QueryState
         empty={<Text testID="history-empty">Sin consultas registradas para este paciente.</Text>}
@@ -34,39 +34,50 @@ export function PatientHistory({ entries, error, isPending, onRetry }: PatientHi
         onRetry={onRetry}
         testID="history"
       >
-        {entries.map((entry) => {
+        {entries.map((entry, index) => {
           const openedAt = new Date(entry.openedAt).toLocaleString("es-CL");
           return (
-            <Card key={entry.consultationId} testID="history-item">
-              <Text variant="strong">
-                Consulta del <Text variant="data">{openedAt}</Text>
-              </Text>
-              <Text>{entry.status === "closed" ? "Cerrada" : "Abierta"}</Text>
-              {entry.epicrisis ? (
-                <Text testID="history-epicrisis">
-                  Diagnóstico registrado:{" "}
-                  {entry.epicrisis.diagnostico.trim() === ""
-                    ? "sin diagnóstico en la epicrisis"
-                    : entry.epicrisis.diagnostico}
+            <View className="flex-row gap-3" key={entry.consultationId} testID="history-item">
+              {/* Riel de la línea de tiempo: punto por estado y hilo hasta la entrada siguiente. */}
+              <View className="items-center">
+                <View
+                  className={`mt-2 size-3 rounded-full ${entry.status === "closed" ? "bg-primary" : "bg-warning"}`}
+                />
+                {index < entries.length - 1 ? <View className="w-px flex-1 bg-border" /> : null}
+              </View>
+              <View className="flex-1 items-start gap-1 pb-6">
+                <Text variant="strong">
+                  Consulta del <Text variant="data">{openedAt}</Text>
                 </Text>
-              ) : (
-                <Text>Sin epicrisis aprobada</Text>
-              )}
-              {entry.epicrisisSuperseded ? (
-                <Text>Corregida: la versión original permanece registrada.</Text>
-              ) : null}
-              <Link asChild href={`/consultations/${entry.consultationId}`}>
-                <Button
-                  accessibilityLabel={`Ver la consulta del ${openedAt}`}
-                  testID="history-open"
-                >
-                  <ButtonText>Ver consulta</ButtonText>
-                </Button>
-              </Link>
-            </Card>
+                <Text tone="muted">{entry.status === "closed" ? "Cerrada" : "Abierta"}</Text>
+                {entry.epicrisis ? (
+                  <Text testID="history-epicrisis">
+                    Diagnóstico registrado:{" "}
+                    {entry.epicrisis.diagnostico.trim() === ""
+                      ? "sin diagnóstico en la epicrisis"
+                      : entry.epicrisis.diagnostico}
+                  </Text>
+                ) : (
+                  <Text>Sin epicrisis aprobada</Text>
+                )}
+                {entry.epicrisisSuperseded ? (
+                  <Text>Corregida: la versión original permanece registrada.</Text>
+                ) : null}
+                <Link asChild href={`/consultations/${entry.consultationId}`}>
+                  <Button
+                    accessibilityLabel={`Ver la consulta del ${openedAt}`}
+                    size="sm"
+                    testID="history-open"
+                    variant="outline"
+                  >
+                    <ButtonText>Ver consulta</ButtonText>
+                  </Button>
+                </Link>
+              </View>
+            </View>
           );
         })}
       </QueryState>
-    </VStack>
+    </Card>
   );
 }
