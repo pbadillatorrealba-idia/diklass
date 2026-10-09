@@ -596,7 +596,7 @@ describe("listAnamnesisEntries y recordDiagnosis (US2-AC6 · US3-AC1)", () => {
     expect(calls.filter((call) => call.method === "insert")[0]?.args[0]).toEqual({
       clinic_id: "clinica-1",
       record_type: "diagnosis",
-      content: { consultationId: "c-1", text: "Ansiedad por separación" },
+      content: { consultationId: "c-1", text: "Ansiedad por separación", plan: null },
       status: "draft",
     });
     expect(diagnostico.record.id).toBe("d-1");

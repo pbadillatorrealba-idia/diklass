@@ -82,7 +82,15 @@ const filaTutorValida = {
   ...filaValida,
   id: "tutor-valido",
   record_type: "tutor",
-  content: { name: "Sra. Tania", phone: "+56 9 5550 0001", email: null },
+  content: {
+    name: "Sra. Tania",
+    phone: "+56 9 5550 0001",
+    email: null,
+    surname: null,
+    address: null,
+    city: null,
+    postalCode: null,
+  },
 } satisfies ClinicalRecordRow;
 
 describe("lecturas tolerantes a filas ajenas o malformadas", () => {

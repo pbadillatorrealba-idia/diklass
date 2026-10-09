@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ANAMNESIS_SECTIONS,
   AnamnesisField,
   anamnesisContentSchema,
   consultationContentSchema,
   diagnosisContentSchema,
   epicrisisContentSchema,
+  LEGACY_ANAMNESIS_FIELDS,
   patientContentSchema,
   tutorContentSchema,
 } from "@/features/registro/schema";
@@ -133,24 +135,42 @@ describe("tutorContentSchema (FR-027)", () => {
 });
 
 describe("anamnesisContentSchema (FR-021, US2)", () => {
-  test("el vocabulario AnamnesisField es el de US2 más texto_libre", () => {
-    expect(AnamnesisField).toEqual([
-      "motivo_consulta",
-      "comportamiento_problematico",
-      "frecuencia",
-      "duracion",
-      "contexto",
-      "desencadenantes",
-      "cambios_recientes",
-      "ambiente",
-      "convivencia",
-      "alimentacion",
-      "actividad",
-      "rutinas",
-      "tratamientos_anteriores",
-      "respuesta_tratamientos",
-      "texto_libre",
-    ]);
+  test("el vocabulario AnamnesisField es el catálogo de la hoja, los campos previos y texto_libre", () => {
+    const catalogo = ANAMNESIS_SECTIONS.flatMap((section) => section.fields.map((f) => f.id));
+
+    expect([...AnamnesisField]).toEqual([...catalogo, ...LEGACY_ANAMNESIS_FIELDS, "texto_libre"]);
+    expect(new Set(AnamnesisField).size).toBe(AnamnesisField.length);
+    expect(catalogo).toContain("motivo_consulta");
+    expect(LEGACY_ANAMNESIS_FIELDS).toContain("desencadenantes");
+    expect(catalogo).not.toContain("desencadenantes");
+  });
+
+  test("las preguntas cerradas solo admiten sus valores (FR-111)", () => {
+    const tri = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "soledad_vocaliza",
+      text: "a_veces",
+    });
+    const triInvalida = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "soledad_vocaliza",
+      text: "quizás",
+    });
+    const sinoConAVeces = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "familia_agresion",
+      text: "a_veces",
+    });
+    const sino = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "familia_agresion",
+      text: "no",
+    });
+
+    expect(tri.success).toBe(true);
+    expect(triInvalida.success).toBe(false);
+    expect(sinoConAVeces.success).toBe(false);
+    expect(sino.success).toBe(true);
   });
 
   test("rechaza un campo fuera del vocabulario estructurado", () => {
@@ -283,5 +303,103 @@ describe("epicrisisContentSchema (FR-011)", () => {
     expect(epicrisisContentSchema.safeParse(sinPlan).success).toBe(false);
     const { diagnostico: _sinDiagnostico, ...sinDiagnostico } = epicrisisBase;
     expect(epicrisisContentSchema.safeParse(sinDiagnostico).success).toBe(false);
+  });
+});
+
+describe("ampliación etológica de la ficha (FR-001, FR-027, FR-110)", () => {
+  test("los datos de procedencia y adopción son opcionales y quedan sin dato", () => {
+    const ficha = patientContentSchema.parse(fichaBase);
+
+    expect(ficha.fileNumber).toBeNull();
+    expect(ficha.firstVisitDate).toBeNull();
+    expect(ficha.origin).toBeNull();
+    expect(ficha.adoptionAge).toBeNull();
+    expect(ficha.adoptionState).toBeNull();
+    expect(ficha.neuterAge).toBeNull();
+    expect(ficha.litterInfo).toBeNull();
+    expect(ficha.referrer).toBeNull();
+  });
+
+  test("conserva procedencia, adopción y derivante", () => {
+    const ficha = patientContentSchema.parse({
+      ...fichaBase,
+      origin: " Protectora ",
+      adoptionAge: "3 meses",
+      firstVisitDate: "2026-09-01",
+      referrer: { refers: "si", center: "Clínica Norte", opinion: "Ansiedad" },
+    });
+
+    expect(ficha.origin).toBe("Protectora");
+    expect(ficha.adoptionAge).toBe("3 meses");
+    expect(ficha.referrer).toEqual({
+      refers: "si",
+      name: null,
+      center: "Clínica Norte",
+      phone: null,
+      insurance: null,
+      opinion: "Ansiedad",
+    });
+    expect(
+      patientContentSchema.safeParse({ ...fichaBase, firstVisitDate: "2026-02-30" }).success,
+    ).toBe(false);
+    expect(
+      patientContentSchema.safeParse({ ...fichaBase, referrer: { refers: "tal vez" } }).success,
+    ).toBe(false);
+  });
+
+  test("el tutor admite apellidos y dirección sin exigirlos, y sigue exigiendo contacto", () => {
+    const tutor = tutorContentSchema.parse({
+      name: "María",
+      phone: "555-0101",
+      surname: "Pérez",
+      address: "Calle 1",
+      city: "Barcelona",
+      postalCode: "08001",
+    });
+
+    expect(tutor.surname).toBe("Pérez");
+    expect(tutor.postalCode).toBe("08001");
+    expect(tutorContentSchema.parse({ name: "María", phone: "1" }).address).toBeNull();
+    expect(tutorContentSchema.safeParse({ name: "María", surname: "Pérez" }).success).toBe(false);
+  });
+});
+
+describe("plan de la consulta (FR-112)", () => {
+  const diagnosis = { consultationId: "consulta-1", text: "Ansiedad por separación" };
+
+  test("el plan es opcional y el diagnóstico presuntivo sigue siendo el texto", () => {
+    expect(diagnosisContentSchema.parse(diagnosis).plan).toBeNull();
+  });
+
+  test("acepta protocolo, hasta tres diferenciales y hasta dos principios activos", () => {
+    const ok = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: {
+        tests: ["analisis_sangre", "radiografia"],
+        differentials: ["Fobia", "Hiperapego"],
+        medication: [{ activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" }],
+        neuterSurgical: "no",
+      },
+    });
+    const cuatro = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: { differentials: ["a", "b", "c", "d"] },
+    });
+    const tres = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: {
+        medication: [
+          { activeIngredient: "a", guideline: "x" },
+          { activeIngredient: "b", guideline: "x" },
+          { activeIngredient: "c", guideline: "x" },
+        ],
+      },
+    });
+    const prueba = diagnosisContentSchema.safeParse({ ...diagnosis, plan: { tests: ["magia"] } });
+
+    expect(ok.success).toBe(true);
+    expect(cuatro.success).toBe(false);
+    expect(tres.success).toBe(false);
+    expect(prueba.success).toBe(false);
   });
 });

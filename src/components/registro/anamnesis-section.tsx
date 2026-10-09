@@ -3,7 +3,6 @@ import { View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
-  ANAMNESIS_FIELD_LABELS,
   ANAMNESIS_FIELD_OPTIONS,
   ANAMNESIS_STRUCTURED_ORDER,
   PROVENANCE_OPTIONS,
@@ -21,6 +20,7 @@ import {
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { fieldLabel } from "@/features/registro/anamnesis-catalog";
 import type { AnamnesisContent, AnamnesisField, Provenance } from "@/features/registro/schema";
 import type { Attribution } from "@/lib/attribution/types";
 
@@ -80,7 +80,7 @@ export function AnamnesisSection({
           </Text>
           {unknownFields.map((candidate) => (
             <Text key={candidate} testID="anamnesis-unknown-field">
-              {ANAMNESIS_FIELD_LABELS[candidate]}: Desconocido
+              {fieldLabel(candidate)}: Desconocido
             </Text>
           ))}
         </VStack>
@@ -146,7 +146,7 @@ export function AnamnesisSection({
             {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
                 deja la procedencia anterior tachada junto al vigente (FR-098). */}
             <Field
-              label={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+              label={fieldLabel(entry.content.field)}
               mark={
                 entry.content.provenanceHistory?.length ? (
                   <ProvenanceCorrection
@@ -163,7 +163,7 @@ export function AnamnesisSection({
             {isSealed ? null : (
               <ProvenanceCorrector
                 current={entry.content.provenance}
-                fieldLabel={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+                fieldLabel={fieldLabel(entry.content.field)}
                 isBusy={isBusy}
                 onConfirm={(next) => onCorrectProvenance(entry.id, next)}
               />
