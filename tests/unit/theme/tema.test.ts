@@ -371,3 +371,38 @@ describe("tipografía Atkinson Hyperlegible Next y Mono", () => {
     }
   });
 });
+
+// Paleta de marca (identidad-visual D1–D3, FR-103): índigo y tinta del degradado del logo.
+const BRAND: Record<"light" | "dark", Partial<Record<ThemeToken, Rgb>>> = {
+  light: {
+    primary: [62, 56, 136],
+    foreground: [37, 17, 52],
+    background: [241, 240, 246],
+    "primary-surface": [232, 230, 244],
+  },
+  dark: {
+    primary: [185, 179, 242],
+    background: [20, 18, 28],
+  },
+};
+
+describe.each(Object.entries(BRAND))("paleta de marca %s (FR-103)", (scheme, expected) => {
+  test.each(Object.entries(expected))("%s sale del logo", (token, rgb) => {
+    expect(schemes[scheme as "light" | "dark"][token]).toEqual(rgb);
+  });
+});
+
+// La firma del veterinario no puede leerse como color de marca (FR-104).
+describe("firma frente a marca (FR-104)", () => {
+  test.each([
+    [":root {", lightBlock],
+    ["@media (prefers-color-scheme: dark)", darkSection],
+    [":root.light {", blockAfter(":root.light {")],
+    [":root.dark {", blockAfter(":root.dark {")],
+  ])("%s separa stamp de primary (ΔE*ab ≥ 10)", (_, block) => {
+    const tokens = tokensOf(block);
+    const [a, b] = [tokens.stamp, tokens.primary];
+    if (!a || !b) throw new Error("falta stamp o primary");
+    expect(deltaE(a, b)).toBeGreaterThanOrEqual(10);
+  });
+});

@@ -3,6 +3,7 @@
     "name": "Diklass",
     "slug": "diklass",
     "version": "0.1.0",
+    "icon": "./assets/brand/icon.png",
     "orientation": "portrait",
     "scheme": "diklass",
     "userInterfaceStyle": "automatic",
@@ -10,10 +11,15 @@
       "bundleIdentifier": "com.diklass.app"
     },
     "android": {
-      "package": "com.diklass.app"
+      "package": "com.diklass.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive-icon.png",
+        "backgroundColor": "#3E3888"
+      }
     },
     "web": {
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/brand/favicon.png"
     },
     "plugins": [
       "expo-router",

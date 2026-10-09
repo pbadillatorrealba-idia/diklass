@@ -3,6 +3,7 @@ import Head from "expo-router/head";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoginForm } from "@/components/auth/login-form";
+import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/features/auth/auth-provider";
 
 export default function LoginScreen() {
@@ -21,9 +22,10 @@ export default function LoginScreen() {
         // FR-088 (revisión de la PR #38): en iOS el teclado no tapa «Iniciar sesión».
         automaticallyAdjustKeyboardInsets
         // Formulario centrado en vertical: solo esta pantalla lo necesita, así que no va en `Screen`.
-        contentContainerClassName="grow items-center justify-center p-4 md:p-6"
+        contentContainerClassName="grow items-center justify-center gap-6 p-4 md:p-6"
         keyboardShouldPersistTaps="handled"
       >
+        <Logo size="lg" />
         <LoginForm onSubmit={signIn} />
       </ScrollView>
     </SafeAreaView>
