@@ -77,8 +77,8 @@ select ok(
 
 -- ---------------------------------------------------------------------------
 -- Enumerate rather than name one at a time: authenticated can execute exactly
--- the eleven functions granted across this migration, 006_access_session_binding,
--- 010_base_conocimiento and 014_perfil_profesional,
+-- the twelve functions granted across this migration, 006_access_session_binding,
+-- 010_base_conocimiento, 014_perfil_profesional and 015_busqueda_pacientes,
 -- no others -- this catches a function nobody thought to list above.
 -- ---------------------------------------------------------------------------
 
@@ -98,9 +98,10 @@ select set_eq(
       'public.current_access_session()',
       'public.revoke_current_access_session()',
       'public.search_knowledge_fragments(text, integer)',
-      'public.update_own_profile(text)'
+      'public.update_own_profile(text)',
+      'public.search_patients(text, text, uuid, timestamp with time zone, timestamp with time zone, text, text, integer, integer)'
     ]::regprocedure[])::oid$$,
-  'authenticated can execute exactly the eleven granted functions, no more'
+  'authenticated can execute exactly the twelve granted functions, no more'
 );
 
 -- ---------------------------------------------------------------------------
