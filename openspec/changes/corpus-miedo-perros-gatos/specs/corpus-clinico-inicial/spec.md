@@ -7,7 +7,7 @@ Define el corpus documental real con el que arranca la base de conocimiento traz
 
 ## ADDED Requirements
 
-### Requirement: FR-097 Corpus inicial real
+### Requirement: FR-101 Corpus inicial real
 
 El corpus inicial de la base de conocimiento MUST ser el documento «Problemas de miedo en perros y
 gatos» (S. Le Brech, AWEC-UAB) y MUST NOT incluir documentos sintéticos o ficticios.
@@ -18,7 +18,7 @@ gatos» (S. Le Brech, AWEC-UAB) y MUST NOT incluir documentos sintéticos o fict
 - **WHEN** se lista la colección de fuentes activas
 - **THEN** contiene exactamente una fuente, la del documento indicado, y ninguna fuente ficticia.
 
-### Requirement: FR-098 Fragmentos fieles y citables
+### Requirement: FR-102 Fragmentos fieles y citables
 
 Cada fragmento MUST reproducir solo lo que dice el documento, indicar la sección y las
 diapositivas de origen, y no añadir dosis, indicaciones ni conclusiones ausentes del original.
@@ -35,7 +35,7 @@ diapositivas de origen, y no añadir dosis, indicaciones ni conclusiones ausente
 - **WHEN** se prepara el corpus
 - **THEN** solo se transcribe su texto legible y no se infieren cifras ni conclusiones del gráfico.
 
-### Requirement: FR-099 Bibliografía y licencia sin invenciones
+### Requirement: FR-103 Bibliografía y licencia sin invenciones
 
 La fuente MUST registrar la bibliografía que consta en el documento (título, autora, institución) y
 MUST dejar vacío todo dato que el documento no aporta, incluido el año; la licencia MUST declararse
@@ -43,11 +43,11 @@ pendiente de confirmación mientras no exista una confirmada.
 
 #### Scenario: US5-AC17
 
-- **GIVEN** que el documento no indica año, editorial ni licencia
+- **GIVEN** que el documento no indica año, DOI, URL ni licencia
 - **WHEN** se revisa la fuente en la colección
 - **THEN** el año, el DOI y la URL constan vacíos y la licencia consta como «por confirmar».
 
-### Requirement: FR-100 Conjunto anotado alineado al corpus
+### Requirement: FR-104 Conjunto anotado alineado al corpus
 
 El conjunto anotado MUST contener solo preguntas cuya evidencia esperada es un fragmento del corpus
 inicial, y las preguntas fuera de dominio que ese corpus no cubre MUST producir la declaración de

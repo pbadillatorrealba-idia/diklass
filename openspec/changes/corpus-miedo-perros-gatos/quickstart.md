@@ -22,7 +22,7 @@ máquina sobre 13 preguntas y 5 fuera de dominio:
 |---|---|---|
 | SC-002 (hit@5) | 92 % (12/13) | ≥ 80 % |
 | SC-025 (ausencia declarada) | 100 % (5/5) | 100 % |
-| SC-010 / SC-003 (verbatim) | 0 incumplimientos en 35 citas | 0 |
+| SC-010 / SC-003 (verbatim) | 0 incumplimientos en 34 citas | 0 |
 
 Falla la pregunta «¿Cuándo es el período de socialización del cachorro y del gatito?» (fragmento
 11): la búsqueda léxica no lo coloca entre los 5 primeros. Se deja como está; con 13 preguntas el
@@ -40,6 +40,15 @@ que el equipo clínico revise el corpus y el conjunto anotado contra el PDF.
 - Las diapositivas 1, 2, 10, 14, 34, 58 y 60 (portada, índices, vídeo y cierre) no aportan
   contenido y no se transcriben.
 - El PDF no se versiona (`data/`); procedencia: `data/docs/MIEDO .pdf` de quien abre este cambio.
+
+## Revisión independiente (PR #51)
+
+Un revisor sin contexto comparó los 34 fragmentos con el PDF. Se corrigieron: atribución de Levine
+(solo feromona canina), «Dogs Trust» (no consta en el PDF), «factores de riesgo» (la tabla es de
+prevalencia), sección de la acepromacina (diap. 53 sin interpretar), lectura de barras del gráfico
+de Blackwell, contenido solo de imágenes, el esquema de roedores y IDs de requisitos (FR-097–100
+ya eran de `sistema-visual`: ahora FR-101–104). La segunda lectura de la tarea 1.2 no los detectó.
+Las pruebas unitarias son estructurales: la fidelidad clínica (US5-AC15/AC16) se revisa a mano.
 
 ## Pendiente
 

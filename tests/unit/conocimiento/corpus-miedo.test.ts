@@ -5,8 +5,8 @@ import { corpusSinteticoSchema } from "@/features/conocimiento/corpus-loader";
 
 /**
  * Corpus inicial real de la base de conocimiento (cambio `corpus-miedo-perros-gatos`):
- * FR-097 (una sola fuente real), FR-098 (fragmentos fieles y citables), FR-099 (metadatos sin
- * invenciones) y FR-100 (conjunto anotado alineado al corpus).
+ * FR-101 (una sola fuente real), FR-102 (fragmentos fieles y citables), FR-103 (metadatos sin
+ * invenciones) y FR-104 (conjunto anotado alineado al corpus).
  */
 
 const fixtures = join(import.meta.dir, "../../fixtures/conocimiento");
@@ -31,7 +31,7 @@ function palabras(texto: string): string[] {
   );
 }
 
-describe("corpus inicial: «Problemas de miedo en perros y gatos» (FR-097)", () => {
+describe("corpus inicial: «Problemas de miedo en perros y gatos» (FR-101)", () => {
   test("hay una sola fuente y ninguna ficticia", () => {
     expect(corpus.fuentes).toHaveLength(1);
     expect(corpus.fuentes[0]?.clave).toBe("miedo-perros-gatos");
@@ -39,7 +39,7 @@ describe("corpus inicial: «Problemas de miedo en perros y gatos» (FR-097)", ()
   });
 });
 
-describe("metadatos sin invenciones (FR-099)", () => {
+describe("metadatos sin invenciones (FR-103)", () => {
   test("registra lo que consta y deja vacío lo que no", () => {
     const { bibliografia, licencia } = fuente ?? {};
     expect(bibliografia?.titulo).toBe("Problemas de miedo en perros y gatos");
@@ -51,7 +51,7 @@ describe("metadatos sin invenciones (FR-099)", () => {
   });
 });
 
-describe("fragmentos fieles y citables (FR-098)", () => {
+describe("fragmentos fieles y citables (FR-102)", () => {
   test("cada fragmento abre con sus diapositivas de origen y trae sección", () => {
     for (const fragmento of fuente?.fragmentos ?? []) {
       expect(fragmento.texto, `fragmento ${fragmento.ordinal}`).toMatch(
@@ -80,7 +80,7 @@ describe("fragmentos fieles y citables (FR-098)", () => {
   });
 });
 
-describe("conjunto anotado alineado al corpus (FR-100)", () => {
+describe("conjunto anotado alineado al corpus (FR-104)", () => {
   test("cada pregunta apunta a un fragmento que existe", () => {
     expect(conjunto.preguntas.length).toBeGreaterThanOrEqual(10);
     for (const { pregunta, evidenciaEsperada } of conjunto.preguntas) {
@@ -90,7 +90,7 @@ describe("conjunto anotado alineado al corpus (FR-100)", () => {
     }
   });
 
-  test("las preguntas fuera de dominio traen un término que el corpus no contiene", () => {
+  test("las preguntas fuera de dominio traen al menos un término ausente (la cobertura real la mide SC-025 en vivo)", () => {
     expect(conjunto.preguntasFueraDeDominio.length).toBeGreaterThanOrEqual(5);
     const vocabulario = new Set(palabras(textoCorpus));
     for (const pregunta of conjunto.preguntasFueraDeDominio) {

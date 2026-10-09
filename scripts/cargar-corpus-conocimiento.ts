@@ -1,6 +1,6 @@
 /**
- * Carga el corpus documental inicial («Problemas de miedo en perros y gatos») en un entorno vivo, sin tocar `supabase/seed.sql`
- * (D9 del diseño del cambio). Uso:
+ * Carga el corpus documental inicial («Problemas de miedo en perros y gatos») en un entorno
+ * vivo, sin tocar `supabase/seed.sql` (D9 del diseño del cambio). Uso:
  *
  *   bun --env-file=.env scripts/cargar-corpus-conocimiento.ts [--allow-remote]
  *

@@ -51,7 +51,7 @@
           {
             "ordinal": 7,
             "seccion": "Prevalencia en perros",
-            "texto": "[diap. 11–12] Prevalencia en perros. Diwoodie et al., 2019 (Journal of Veterinary Behavior), prevalencia por categoría de problema de conducta: miedo y ansiedad 44 % (IC 95 % 43–46; 1814 casos), la más frecuente; agresión 30 %; saltos 28 %; ladrido excesivo 18 %. González Martínez et al., 2011 (Journal of Veterinary Behavior), factores de riesgo de problemas de conducta en perros: fobia a ruidos 51,7 % (IC 95 % 45,3–58,1); miedo a la soledad o cuando el dueño se aleja 20,3 %; miedo a personas 17,7 %; fobia a ruidos y miedo a la soledad a la vez 12,1 %; agresividad hacia otros perros 41,4 %."
+            "texto": "[diap. 11–12] Prevalencia en perros. Diwoodie [sic] et al., 2019 (Journal of Veterinary Behavior), prevalencia por categoría de problema de conducta: miedo y ansiedad 44 % (IC 95 % 43–46; 1814 casos), la más frecuente; agresión 30 %; saltos 28 %; ladrido excesivo 18 %. González Martínez et al., 2011 (Journal of Veterinary Behavior, «Risk factors associated with behavioral problems in dogs»), tabla de estimaciones de prevalencia de problemas de conducta en perros: fobia a ruidos 51,7 % (IC 95 % 45,3–58,1); miedo a la soledad o cuando el dueño se aleja 20,3 %; miedo a personas 17,7 %; fobia a ruidos y miedo a la soledad a la vez 12,1 %; agresividad hacia otros perros 41,4 %."
           },
           {
             "ordinal": 8,
@@ -96,7 +96,7 @@
           {
             "ordinal": 16,
             "seccion": "Habituación a estímulos y situaciones",
-            "texto": "[diap. 23–24] Período de socialización, habituación a estímulos y situaciones. Los cachorros y gatitos necesitan habituarse a distintos estímulos y situaciones que encontrarán en su vida adulta, como el coche, el transportín, la visita al veterinario, la aspiradora, el secador de pelo y la calle. La falta de habituación a una variedad de estímulos o situaciones predispone a un mayor grado de neofobia. (Domjan, 2010)."
+            "texto": "[diap. 23–24] Período de socialización, habituación a estímulos y situaciones. Los cachorros y gatitos necesitan habituarse a distintos estímulos y situaciones que encontrarán en su vida adulta, (las imágenes de la diapositiva muestran el coche, el transportín, la visita al veterinario, la aspiradora, el secador de pelo y la calle). La falta de habituación a una variedad de estímulos o situaciones predispone a un mayor grado de neofobia. (Domjan, 2010)."
           },
           {
             "ordinal": 17,
@@ -106,7 +106,7 @@
           {
             "ordinal": 18,
             "seccion": "Aprendizaje: miedo condicionado",
-            "texto": "[diap. 26–28] Aprendizaje, miedo condicionado (Carlson, 2005; Carlson y Birkett, 2017). Esquema de condicionamiento del miedo: un animal condicionado muestra mucha más paralización (freezing) que uno no condicionado al ser expuesto de nuevo. Miedo contextual: con la experiencia aversiva sin señal, el animal muestra miedo en el mismo contexto y no en otro distinto; con señal, muestra miedo en ambos. Condicionamiento clásico: miedo a los petardos (estímulo incondicionado) y miedo a la calle (estímulo condicionado)."
+            "texto": "[diap. 26–28] Aprendizaje, miedo condicionado (Carlson, 2005; Carlson y Birkett, 2017). Esquema de condicionamiento del miedo: en el esquema con roedores, el animal condicionado muestra mucha más paralización (freezing) que el no condicionado al ser expuesto de nuevo. Miedo contextual: con la experiencia aversiva sin señal, el animal muestra miedo en el mismo contexto y no en otro distinto; con señal, muestra miedo en ambos. Condicionamiento clásico: miedo a los petardos (estímulo incondicionado) y miedo a la calle (estímulo condicionado)."
           },
           {
             "ordinal": 19,
@@ -126,22 +126,22 @@
           {
             "ordinal": 22,
             "seccion": "Protocolo diagnóstico",
-            "texto": "[diap. 35] Protocolo diagnóstico. Descartar problemas médicos: pruebas médicas mínimas (coste razonable), que incluyen examen físico, neurológico, urianálisis, hemograma y bioquímica. Historial etológico: comienzo, estímulos o situaciones desencadenantes, postura del animal, tiempo que tarda en recuperarse, si hay generalización, respuesta del tutor y ambiente. Se señala también el uso de vídeo."
+            "texto": "[diap. 35] Protocolo diagnóstico. Descartar problemas médicos: pruebas médicas mínimas (coste razonable), que incluyen examen físico, neurológico, urianálisis, hemograma y bioquímica. Historial etológico: comienzo, estímulos o situaciones desencadenantes, postura del animal, tiempo que tarda en recuperarse, si hay generalización, respuesta del tutor y ambiente."
           },
           {
             "ordinal": 23,
             "seccion": "Fobia a ruidos: frecuencia",
-            "texto": "[diap. 36–37] Fobia a ruidos. Blackwell et al., 2013 (Applied Animal Behaviour Science), respuestas de miedo a ruidos en perros domésticos: se compara el porcentaje de perros que alguna vez responden y el que responde en cada exposición ante fuegos artificiales, tormentas, disparos, petardeos de coches, ruidos fuertes en la televisión y otros ruidos. Los fuegos artificiales y las tormentas son los ruidos ante los que más perros muestran respuesta de miedo."
+            "texto": "[diap. 36–37] Fobia a ruidos. Blackwell et al., 2013 (Applied Animal Behaviour Science), respuestas de miedo a ruidos en perros domésticos: se compara el porcentaje de perros que alguna vez responden y el que responde en cada exposición ante fuegos artificiales, tormentas, disparos, petardeos de coches, ruidos fuertes en la televisión y otros ruidos. Según el gráfico, los fuegos artificiales y las tormentas son las categorías con barras más largas."
           },
           {
             "ordinal": 24,
             "seccion": "Fobia a ruidos: factores de riesgo",
-            "texto": "[diap. 38] Miedo a ruidos, factores de riesgo: la edad (a mayor edad, mayor riesgo), el origen, la raza y la exposición a ruidos antes de los 6 meses (Limura, 2006). (Blackwell et al., 2013)."
+            "texto": "[diap. 38] Miedo a ruidos, factores de riesgo: la edad (a mayor edad, mayor riesgo), el origen, la raza y la exposición a ruidos antes de los 6 meses (Limura [sic], 2006). (Blackwell et al., 2013)."
           },
           {
             "ordinal": 25,
             "seccion": "Fobia a ruidos: tratamiento paliativo y curativo",
-            "texto": "[diap. 39, 46, 56] Miedo a ruidos, tratamiento. Paliativo: el objetivo es atenuar los síntomas en momentos concretos; se debería aplicar siempre; se usa en situaciones muy puntuales, cuando no hay tiempo para realizar el programa de desensibilización y porque el perro diferencia entre la grabación y la realidad. Curativo: el objetivo es erradicar la respuesta de miedo; está especialmente indicado cuando hay mucha anticipación."
+            "texto": "[diap. 39, 46, 56] Miedo a ruidos, tratamiento. Paliativo: el objetivo es atenuar los síntomas en momentos concretos; se debería aplicar siempre; se usa en situaciones muy puntuales, cuando no hay tiempo para realizar el programa de desensibilización. La diapositiva 46 añade: el perro diferencia entre la grabación y la realidad. Curativo: el objetivo es erradicar la respuesta de miedo; está especialmente indicado cuando hay mucha anticipación."
           },
           {
             "ordinal": 26,
@@ -175,18 +175,18 @@
           },
           {
             "ordinal": 32,
-            "seccion": "Tratamiento paliativo: gabapentina, pregabalina y acepromacina",
-            "texto": "[diap. 52–53] Tratamiento paliativo, fármacos. Gabapentina: dosis oral única en perros con fobia a las tormentas (Bleuer-Elsner et al., Veterinary Record) y dosis única previa a la cita en gatos durante el transporte y el examen veterinario. Pregabalina: dosis única en gatos durante el transporte. La diapositiva muestra con un símbolo de prohibición un producto de acepromacina, con el texto parcialmente tapado."
+            "seccion": "Tratamiento paliativo: gabapentina y pregabalina",
+            "texto": "[diap. 52–53] Tratamiento paliativo, fármacos. Gabapentina: dosis oral única en perros con fobia a las tormentas (Bleuer-Elsner et al., Veterinary Record) y dosis única previa a la cita en gatos durante el transporte y el examen veterinario. Pregabalina: dosis única en gatos durante el transporte. Diapositiva 53, sin texto explicativo: muestra un envase de medicamento con un símbolo de prohibición encima y un nombre parcialmente tapado."
           },
           {
             "ordinal": 33,
             "seccion": "Tratamiento paliativo: feromonas, dietas y suplementos",
-            "texto": "[diap. 54–55] Tratamiento paliativo, medidas complementarias. Feromonas faciales felinas y feromonas apaciguadoras caninas (Levine et al., 2007). Dietas y suplementos: dieta con alfa-casozepina y L-triptófano en gatos (Landsberg et al., 2017), que ayuda a reducir la respuesta de ansiedad en ambientes desconocidos; alfa-casozepina en perros durante visitas veterinarias (Puglisi et al.); L-teanina (Anxitane) en perros sensibles a las tormentas (Pike et al., 2015)."
+            "texto": "[diap. 54–55] Tratamiento paliativo, medidas complementarias. Feromonas faciales felinas y feromonas apaciguadoras caninas. Referencia al pie de la diapositiva: Levine et al., 2007, programas de desensibilización y contracondicionamiento con feromona apaciguadora canina para el miedo a los fuegos artificiales en perros. Dietas y suplementos: dieta con alfa-casozepina y L-triptófano en gatos (Landsberg et al., 2017), que ayuda a reducir la respuesta de ansiedad en ambientes desconocidos; alfa-casozepina en perros durante visitas veterinarias (Puglisi et al.); L-teanina (Anxitane) en perros sensibles a las tormentas (Pike et al., 2015)."
           },
           {
             "ordinal": 34,
             "seccion": "Tratamiento curativo",
-            "texto": "[diap. 57–59] Miedo a ruidos, tratamiento curativo. Contracondicionamiento clásico más desensibilización, con apoyo de recursos de terapia de sonido para los fuegos artificiales (Dogs Trust: Sound therapy and firework training, Sounds Scary, Sounds Sociable) y vídeos. Incluye la habituación al ruido. Fármacos: los mismos que en el tratamiento paliativo más fármacos que actúen a largo plazo: ATC e IRSS."
+            "texto": "[diap. 57–59] Miedo a ruidos, tratamiento curativo. Contracondicionamiento clásico más desensibilización, con apoyo de recursos de terapia de sonido para los fuegos artificiales (capturas de «Sound therapy and firework training», «Sounds Scary!» y «Sounds Sociable») y vídeos. Incluye la habituación al ruido. Fármacos: los mismos que en el tratamiento paliativo más fármacos que actúen a largo plazo: ATC e IRSS."
           }
         ]
       }

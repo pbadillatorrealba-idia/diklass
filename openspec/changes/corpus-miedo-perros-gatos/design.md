@@ -54,7 +54,7 @@ dentro del texto del fragmento correspondiente, no como fuentes aparte.
 
 ### D4. Conjunto anotado derivado del documento
 
-`conjunto-anotado.json` conserva el formato `{ preguntas, preguntasFueraDeDominio }` con 10–12
+`conjunto-anotado.json` conserva el formato `{ preguntas, preguntasFueraDeDominio }` con 10–13
 preguntas, cada una con `documentoClave` y `ordinal` de su evidencia, y 5 fuera de dominio
 (anestesia en caballos, vacunación en aves rapaces, etc.; ninguna sobre miedo en perros y gatos).
 La clave del documento es `miedo-perros-gatos`.
@@ -68,7 +68,7 @@ contrato; solo lee el fixture nuevo.
 ## Risks / Trade-offs
 
 - [Licencia desconocida de material con derechos de autor] → la licencia consta «por confirmar»; el
-  PDF no se versiona; confirmar con la autora antes de cualquier uso fuera de la PoC.
+  PDF no se versiona (`data/` va en `.gitignore`) pero **la transcripción sí queda en el repositorio**: confirmar con la autora antes de cualquier uso fuera de la PoC.
 - [Transcripción incompleta o con error clínico] → cada fragmento lleva sus diapositivas; revisión
   de un segundo lector contra el PDF antes de aceptar; los números se copian solo si son legibles.
 - [Búsqueda léxica pobre con texto telegráfico] → fragmentos por tema con frases completas pero sin

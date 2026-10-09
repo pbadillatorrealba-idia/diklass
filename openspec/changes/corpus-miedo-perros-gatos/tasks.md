@@ -1,6 +1,6 @@
 # Tasks
 
-## 1. Fixture del corpus (D1–D3 · FR-097 · FR-098 · FR-099)
+## 1. Fixture del corpus (D1–D3 · FR-101 · FR-102 · FR-103)
 
 - [x] 1.1 Escribir en rojo `tests/unit/conocimiento/corpus-miedo.test.ts`: el fixture valida con
   `fuenteContentSchema` y `corpusSinteticoSchema`; hay una sola fuente; el año, el DOI y la URL son
@@ -10,11 +10,11 @@
   siguiendo las secciones de D1 y las reglas de D2/D3. Verificación: la prueba 1.1 en verde y una
   segunda lectura de cada fragmento contra sus diapositivas.
 
-## 2. Conjunto anotado y sustitución (D4 · FR-100)
+## 2. Conjunto anotado y sustitución (D4 · FR-104)
 
-- [x] 2.1 Reescribir `tests/fixtures/conocimiento/conjunto-anotado.json` con 10–12 preguntas con su
+- [x] 2.1 Reescribir `tests/fixtures/conocimiento/conjunto-anotado.json` con 10–13 preguntas con su
   `documentoClave`/`ordinal` y 5 fuera de dominio. Ampliar la prueba 1.1 para que cada
-  `ordinal` exista en el corpus y las preguntas fuera de dominio no compartan términos clave con él.
+  `ordinal` exista en el corpus y las preguntas fuera de dominio traigan al menos un término ausente del corpus (la cobertura real se mide en vivo con SC-025).
   Verificación: `bun test tests/unit/conocimiento` en verde.
 - [x] 2.2 Repuntar `tests/integration/conocimiento/evaluacion.test.ts` y
   `scripts/cargar-corpus-conocimiento.ts` a `corpus-miedo.json`, eliminar `corpus-sintetico.json` y
