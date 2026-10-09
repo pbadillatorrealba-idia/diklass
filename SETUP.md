@@ -66,6 +66,20 @@ bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
 El script falla cerrado: rechaza cualquier `SUPABASE_URL` que no sea local, salvo que se pase
 `--allow-remote` de forma explícita. No lo uses contra un entorno con datos reales.
 
+### Clínica de demostración (datos de prueba)
+
+```bash
+bun run provision:demo   # 15 tutores, 25 pacientes (perros y gatos) y 8 consultas
+bun run demo:reset       # base local desde cero + veterinarios + demo (borra TODO lo local)
+```
+
+Los datos están en `scripts/demo/datos-demo.ts`: nombres y apellidos comunes en Chile combinados
+al azar (no apuntan a personas reales), correos `@example.test`, teléfonos `+56 9 5550 xxxx` y RUT
+con dígito verificador válido sobre cuerpos `5.000.0NN`. Se escriben con la sesión de cada
+veterinario del fixture, por los mismos servicios que la interfaz, así que pasan las mismas
+validaciones. Si la clínica ya está cargada, el script lo dice y no duplica nada. Mismas
+salvaguardas que el provisioning: rechaza cualquier Supabase no local salvo `--allow-remote`.
+
 ### Corpus inicial de la base de conocimiento
 
 ```bash
