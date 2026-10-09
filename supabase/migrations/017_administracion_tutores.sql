@@ -7,6 +7,8 @@
 --    tutor de `search_patients` dejan de recorrer la clínica entera.
 -- 2. `check` de nombre no vacío, `not valid`: rige para lo que se inserte o actualice, no revisa
 --    las filas previas. El contacto NO se exige aquí: existen tutores sin él (el formulario sí).
+--    Ojo: nunca se ejecuta `validate constraint`; mientras tanto, un `UPDATE` de cualquier tutor
+--    antiguo sin nombre (aunque sea solo del estado) fallaría. Revisar los datos antes de validarlo.
 -- 3. `search_tutors`: filtro por nombre y contacto, orden y paginación. `security invoker`: la RLS
 --    de `clinical_records` sigue acotando a la clínica del veterinario activo.
 

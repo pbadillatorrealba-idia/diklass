@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   emptyTutorValues,
   parseTutorValues,
@@ -31,6 +31,8 @@ export default function NewTutorScreen() {
   const [duplicates, setDuplicates] = useState<TutorRow[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  // `isSaving` llega en el siguiente render: esta guarda frena un doble toque inmediato.
+  const submitting = useRef(false);
 
   const handleChange = (field: keyof TutorFormValues, text: string) => {
     setValues((prev) => ({ ...prev, [field]: text }));
@@ -39,7 +41,7 @@ export default function NewTutorScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!clinicId) {
+    if (!clinicId || submitting.current) {
       return;
     }
     const parsed = parseTutorValues(values);
@@ -49,6 +51,7 @@ export default function NewTutorScreen() {
       return;
     }
     const tutor = parsed.value;
+    submitting.current = true;
     setIsSaving(true);
     // Con un aviso ya mostrado, este envío es la confirmación: no se vuelve a buscar.
     if (duplicates.length === 0) {
@@ -57,15 +60,18 @@ export default function NewTutorScreen() {
         setDuplicates(found);
         setStatus(null);
         setIsSaving(false);
+        submitting.current = false;
         return;
       }
     }
     const outcome = await guard("create_tutor", async () => {
       const result = await createTutor(supabase, { clinicId, tutor });
       await invalidateRegistro(queryClient);
-      router.push(`/tutors/${result.record.id}`);
+      // `replace`: volver atrás no debe reabrir el formulario con lo ya enviado.
+      router.replace(`/tutors/${result.record.id}`);
     });
     setIsSaving(false);
+    submitting.current = false;
     if (outcome === "expired") {
       setStatus("La sesión ya no es válida. Regístrate de nuevo para continuar.");
     } else if (outcome === "error") {
@@ -75,9 +81,6 @@ export default function NewTutorScreen() {
 
   return (
     <Screen back={{ href: "/tutors", label: "Tutores" }} title="Registrar tutor">
-      <Text tone="muted">
-        El nombre y al menos un medio de contacto (teléfono o correo) son obligatorios.
-      </Text>
       <TutorForm errors={errors} isDisabled={isSaving} onChange={handleChange} values={values} />
       {duplicates.length > 0 ? (
         <Callout

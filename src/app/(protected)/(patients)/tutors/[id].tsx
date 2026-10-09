@@ -67,6 +67,13 @@ export default function TutorScreen() {
     });
   }, [queryError, openExpiredDialog, setAccessState]);
 
+  // Otro tutor en la misma pantalla no hereda el formulario abierto ni el aviso del anterior.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se reinicia solo al cambiar de tutor
+  useEffect(() => {
+    setValues(null);
+    setStatus(null);
+  }, [tutorId]);
+
   const tutor = tutorQuery.data;
 
   const save = async () => {

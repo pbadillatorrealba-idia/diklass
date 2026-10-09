@@ -6,6 +6,7 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { type TutorContent, tutorContentSchema } from "@/features/registro/schema";
 import { getFieldErrors } from "@/lib/forms/errors";
@@ -71,6 +72,9 @@ export type TutorFormProps = {
 export function TutorForm({ values, errors, isDisabled, onChange }: TutorFormProps) {
   return (
     <VStack className="w-full gap-4">
+      <Text tone="muted">
+        Obligatorios: el nombre y al menos un medio de contacto (teléfono o correo).
+      </Text>
       {FIELDS.map(({ field, label, testID }) => {
         const error = errors[field];
         return (
@@ -82,7 +86,7 @@ export function TutorForm({ values, errors, isDisabled, onChange }: TutorFormPro
               <InputField
                 accessibilityLabel={label}
                 aria-label={label}
-                autoCapitalize="none"
+                autoCapitalize={field === "email" ? "none" : "words"}
                 editable={!isDisabled}
                 keyboardType={field === "email" ? "email-address" : "default"}
                 onChangeText={(text) => onChange(field, text)}

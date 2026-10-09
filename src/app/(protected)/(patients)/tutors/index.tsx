@@ -86,6 +86,12 @@ export default function TutorsScreen() {
   const pageCount = Math.max(Math.ceil(total / TUTOR_PAGE_SIZE), 1);
   const isEmpty = tutorsQuery.isSuccess && rows.length === 0;
 
+  // Una página que ya no existe (enlace viejo, tutores que dejaron de coincidir) vuelve a la 1 en
+  // vez de decir «no hay tutores».
+  useEffect(() => {
+    if (page > 1 && isEmpty) router.setParams({ page: undefined });
+  }, [page, isEmpty, router]);
+
   const sortHref = (column: TutorSortColumn) =>
     tutorsHref({
       ...current,

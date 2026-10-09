@@ -77,6 +77,10 @@ export async function searchTutors(
 const norm = (value: string | null | undefined) => value?.trim().toLowerCase() ?? "";
 
 /**
+ * ponytail: mira solo la primera página (25) de la búsqueda por subcadena; con más de 25 tutores
+ * cuyo contacto contenga la sonda, un duplicado exacto podría quedar fuera. Mejora: un argumento
+ * de igualdad exacta en `search_tutors`.
+ *
  * Tutores de la clínica con el mismo teléfono o correo (FR-122). `search_tutors` filtra por
  * subcadena, así que aquí se descarta lo que no coincide exacto. Es una ayuda, no una compuerta:
  * si la búsqueda falla devuelve `[]` y el alta sigue.
