@@ -6,8 +6,9 @@ En web, desde 1024 px, el retroceso de las pantallas de detalle MUST pintarse co
 (`nav` con nombre accesible «Ruta») con los ancestros como enlaces y la página actual marcada con
 `aria-current="page"`. En pantallas pequeñas MUST conservarse el enlace «‹ Volver a …», y en
 iOS/Android, la cabecera nativa. El enlace al padre inmediato MUST seguir siendo operable por
-`screen-back`. Una pantalla MAY ofrecer una acción principal, que en web MUST ir en la línea del
-título.
+`screen-back`. Una pantalla MAY ofrecer una acción principal: en web desde 768 px MUST ir en la línea del
+título; en iOS/Android y por debajo de 768 px, en una barra fija al pie, a todo el ancho, fuera del
+desplazamiento para no tapar el contenido.
 
 #### Scenario: breadcrumb de la consulta
 
@@ -15,6 +16,13 @@ título.
 - **WHEN** se abre
 - **THEN** se ve «Pacientes › <nombre del paciente> › Consulta» y no «Volver a …»
 - **AND** «<nombre del paciente>» lleva a la ficha.
+
+#### Scenario: acción principal en pantalla pequeña
+
+- **GIVEN** la ficha de un paciente en 375 px
+- **WHEN** se abre
+- **THEN** «Abrir consulta» está en una barra fija al pie y no en la línea del título
+- **AND** a 1280 px está en la línea del título y no hay barra.
 
 #### Scenario: pantalla pequeña
 

@@ -539,7 +539,7 @@ mientras el diálogo de sesión expirada está abierto.
 Toda pantalla que no sea la raíz de su sección MUST ofrecer una acción de retroceso en la propia
 interfaz: en iOS/Android, la cabecera nativa del `Stack` con el título de la pantalla; en web, un
 enlace «Volver a <sección o pantalla anterior>» antes del título; desde 1024 px, un breadcrumb
-con los ancestros enlazados (revisado por `rediseno-pacientes`, FR-083). Al abrir una pantalla por URL
+con los ancestros enlazados (revisado por `rediseno-pacientes`, FR-083, que también fija dónde va la acción principal). Al abrir una pantalla por URL
 directa, el retroceso MUST llevar a la raíz de su sección. El título de la pantalla MUST coincidir
 con el título del documento en web.
 

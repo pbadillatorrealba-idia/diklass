@@ -18,7 +18,9 @@ el rediseño (en particular, que un paciente sin antecedentes registrados está 
 - **Ficha del paciente (`/patients/[id]`)**: una sola columna de cards: cabecera con el nombre
   como título y una grilla de datos (incluye edad calculada, última visita y nº de consultas),
   tutor, procedencia y adopción, derivante y seguro, antecedentes e historial. Cada card se edita
-  por separado. «Abrir consulta» sube a la línea del título de la pantalla.
+  por separado. El resumen se agrupa con subtítulos (Identidad, Edad y medidas, Seguimiento, Alertas).
+  «Abrir consulta» va en la línea del título y, en pantallas pequeñas y nativo, en una barra fija
+  al pie.
 - **Antecedentes**: una card con un bloque por grupo; chips «Dato»/«Negativo»; alta en línea que se
   abre por grupo y se envía con Enter; fecha de alta por ítem (`recordedAt`, opcional).
 - **Historial** como línea de tiempo.

@@ -48,6 +48,16 @@ siguen escribiéndose por apéndice (`addAntecedentItem`), nunca con la ficha.
 La cabecera lleva el nombre como título y una grilla de 11 datos. La edad se calcula desde la
 fecha de nacimiento (años y meses) y, sin ella, desde los meses registrados.
 
+### D4b — Presentación de datos de la ficha
+
+La cabecera lleva el subtítulo «Resumen» y tres grupos (Identidad, Edad y medidas, Seguimiento) más
+«Alertas» si falta algún dato. Cada dato es un `DataItem` (rótulo `label` apagado arriba, valor
+debajo) y cada grupo un `DataGroup` (subtítulo `rubric` y separador), ambos en `src/components/ui/`.
+Las cards de procedencia, derivante y tutor reutilizan `DataItem`; `Field` queda para el formulario
+clínico con marca de procedencia. Los tipos y estados cortos (Dato/Negativo, Cerrada/Abierta) son un
+`Chip` (`rounded-sm`, texto visible). Carga, error y ficha inexistente usan `QueryState`, y los avisos
+de guardado, `Callout`.
+
 ### D5 — FR-044 redefinido: sin aviso por antecedentes vacíos
 
 Decisión del usuario (2026-10-09): un paciente puede no tener antecedentes y estar bien, así que
@@ -70,8 +80,9 @@ anteriores no lo tienen y se muestran sin fecha. Sin migración ni reescritura d
 `Screen` recibe `back.crumbs`. En web y desde 1024 px, el retroceso se pinta como breadcrumb
 (`nav` con `aria-label="Ruta"`, la página actual con `aria-current="page"`); en pantallas
 pequeñas y en nativo sigue «‹ Volver a …» / cabecera nativa. La consulta enlaza
-`Pacientes › <nombre> › Consulta`. `Screen` recibe además `action`: en web va en la línea del
-`h1`; en nativo, sobre el contenido.
+`Pacientes › <nombre> › Consulta`. `Screen` recibe además `action`: en web desde 768 px va en
+la línea del `h1`; en nativo y por debajo de 768 px, en una barra fija al pie (`screen-action-bar`)
+a todo el ancho, fuera del `ScrollView`, para que no tape el contenido.
 
 ### D8 — Ficha del tutor mínima
 

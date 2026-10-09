@@ -34,10 +34,16 @@ es aceptación. Lo pendiente queda sin marcar.
 - [ ] 3.4 Verificar en navegador la edición por card, el alta de antecedentes con Enter y los
   estados de carga y error de la ficha.
 
+- [x] 3.5 Resumen en grupos con «Alertas», `DataItem`/`DataGroup`/`Chip` en `ui/`, estados de
+  la ficha con `QueryState` y `Callout`; `AGENTS.md` actualizado. Verificación: Biome, `tsc` y
+  `bun test tests/unit` en verde (977).
+
 ## 4. Navegación (FR-083, FR-079)
 
 - [x] 4.1 `Screen`: `back.crumbs`, breadcrumb desde 1024 px en web y prop `action`; breadcrumb en
   fuentes de conocimiento y en la consulta. Verificación: `tests/unit/ui/screen-title.test.tsx`.
+- [x] 4.3 Acción principal en barra al pie bajo 768 px y en nativo (`Screen`).
+  Verificación: `tests/unit/ui/screen-title.test.tsx`.
 - [ ] 4.2 e2e: quitar la ficha del caso de «2 columnas» (hecho en `accessibility.spec.ts`),
   reemplazar los `testID` de alta de antecedentes por `antecedent-open` en `caso-sintetico.ts`
   (hecho) y **ejecutarlos** (workers=1). Añadir un caso del breadcrumb a 1280 px.

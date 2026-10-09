@@ -4,12 +4,18 @@
 
 La ficha del paciente MUST presentarse en una sola columna de cards, en este orden visual, del DOM
 y del foco: cabecera con el nombre del paciente como título; tutor; procedencia y adopción;
-derivante y seguro; antecedentes; historial de consultas. La cabecera MUST mostrar especie, raza,
-sexo, estado reproductivo, edad, peso, fecha de nacimiento, nº de expediente, 1ª visita, última
-visita y nº de consultas; la edad MUST calcularse desde la fecha de nacimiento y, sin ella, desde
-los meses registrados. Cada card de datos MUST poder editarse por separado, y guardar una card MUST
-fusionar solo sus campos sobre la ficha vigente, sin pisar los de otra. «Abrir consulta» MUST estar
-en la línea del título de la pantalla.
+derivante y seguro; antecedentes; historial de consultas. La cabecera MUST llevar el subtítulo
+«Resumen» y agrupar sus datos con subtítulos y separadores: «Identidad» (especie, raza, sexo,
+estado reproductivo), «Edad y medidas» (edad, fecha de nacimiento, peso) y «Seguimiento» (nº de
+expediente, 1ª visita, última visita, nº de consultas), y «Alertas» cuando falte algún dato. Cada
+dato MUST llevar su rótulo arriba y el valor debajo, en una columna en pantallas pequeñas, dos desde
+640 px y cuatro desde 1024 px; las cards de procedencia, derivante y tutor MUST usar la misma
+presentación. La edad MUST calcularse desde la fecha de nacimiento y, sin ella, desde los meses
+registrados. Cada card de datos MUST poder editarse por separado, y guardar una card MUST fusionar
+solo sus campos sobre la ficha vigente, sin pisar los de otra. «Abrir consulta» MUST seguir FR-083:
+en la línea del título desde 768 px y, por debajo, en una barra fija al pie. La carga, el error con
+«Reintentar» y la ficha inexistente MUST resolverse con los estados de FR-085, y los avisos de
+guardado MUST mostrarse como aviso con tono (éxito, advertencia o error).
 
 #### Scenario: edición de una card
 
@@ -54,7 +60,7 @@ grupo sin ítems MUST decir «Sin registrar».
 ### Requirement: FR-002 (historial como línea de tiempo)
 
 El historial de consultas de FR-002 MUST presentarse como una línea de tiempo vertical que marca
-si cada consulta está cerrada o abierta, muestra el diagnóstico de su epicrisis efectiva y enlaza
+si cada consulta está cerrada o abierta con una etiqueta (chip) de texto, muestra el diagnóstico de su epicrisis efectiva y enlaza
 la consulta. El orden cronológico y el resto de FR-002 no cambian.
 
 #### Scenario: consulta abierta y cerrada
@@ -65,8 +71,8 @@ la consulta. El orden cronológico y el resto de FR-002 no cambian.
 
 ### Requirement: FR-044 (rediseño: sin aviso por antecedentes vacíos)
 
-El sistema MUST seguir aceptando una ficha con campos sin completar y MUST señalar, en la cabecera
-de la ficha, cuáles de sus campos de datos (fecha de nacimiento, edad, peso, procedencia, edad de
+El sistema MUST seguir aceptando una ficha con campos sin completar y MUST señalar, en la subsección
+«Alertas» de la cabecera, cuáles de sus campos de datos (fecha de nacimiento, edad, peso, procedencia, edad de
 adopción) no tienen información. El sistema MUST NOT señalar como faltante un grupo de
 antecedentes sin ítems: un paciente sin antecedentes registrados es válido. Un hallazgo negativo
 registrado MUST distinguirse visiblemente de un campo sin dato y MUST NOT contarse como faltante.
@@ -75,13 +81,13 @@ registrado MUST distinguirse visiblemente de un campo sin dato y MUST NOT contar
 
 - **GIVEN** una ficha con todos los datos y sin ningún antecedente
 - **WHEN** se abre
-- **THEN** la cabecera no muestra aviso de datos sin completar y los grupos dicen «Sin registrar».
+- **THEN** no hay subsección «Alertas» y los grupos dicen «Sin registrar».
 
 #### Scenario: campos sin dato
 
 - **GIVEN** una ficha sin peso ni procedencia
 - **WHEN** se abre
-- **THEN** la cabecera dice «2 datos sin completar» y nombra «Peso (kg)» y «Procedencia».
+- **THEN** «Alertas» dice «2 datos sin completar» y nombra «Peso (kg)» y «Procedencia».
 
 #### Scenario: negativo no es falta
 
