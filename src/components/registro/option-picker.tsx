@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import type { View } from "react-native";
+import { useEffect, useRef } from "react";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { VStack } from "@/components/ui/vstack";
@@ -11,6 +11,8 @@ export type OptionPickerProps<T extends string> = {
   onChange: (value: T) => void;
   testID: string;
   isDisabled?: boolean;
+  /** Al montarse, lleva el foco a la opción elegida (p. ej. al desplegar un grupo plegado). */
+  autoFocus?: boolean;
 };
 
 /** Desplazamiento de cada tecla dentro del grupo; `Home`/`End` van a los extremos. */
@@ -33,10 +35,19 @@ export function OptionPicker<T extends string>({
   onChange,
   testID,
   isDisabled = false,
+  autoFocus = false,
 }: OptionPickerProps<T>) {
   const refs = useRef(new Map<T, View | null>());
   const selectedIndex = options.findIndex((option) => option.value === value);
   const focusStop = selectedIndex === -1 ? 0 : selectedIndex;
+
+  // Solo al montarse: después, el foco lo mueven las flechas o el usuario.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el foco inicial no sigue a `value`.
+  useEffect(() => {
+    if (!autoFocus) return;
+    const option = options[focusStop];
+    if (option) refs.current.get(option.value)?.focus();
+  }, [autoFocus]);
 
   const onKeyDown = (event: { key: string; preventDefault: () => void }) => {
     if (isDisabled || options.length === 0) return;
@@ -59,7 +70,8 @@ export function OptionPicker<T extends string>({
       <FormControlLabel>
         <FormControlLabelText>{label}</FormControlLabelText>
       </FormControlLabel>
-      <VStack
+      {/* `View` y no `VStack`: su `flex-col` ganaba a `flex-row` y apilaba las opciones. */}
+      <View
         accessibilityLabel={label}
         accessibilityRole="radiogroup"
         className="flex-row flex-wrap gap-2"
@@ -75,6 +87,8 @@ export function OptionPicker<T extends string>({
               accessibilityRole="radio"
               aria-checked={isSelected}
               accessibilityState={{ checked: isSelected, disabled: isDisabled }}
+              // En una fila, RN no encoge a los hijos: sin tope, una etiqueta larga desborda.
+              className="max-w-full"
               isDisabled={isDisabled}
               key={option.value}
               onPress={() => onChange(option.value)}
@@ -92,7 +106,7 @@ export function OptionPicker<T extends string>({
             </Button>
           );
         })}
-      </VStack>
+      </View>
     </VStack>
   );
 }

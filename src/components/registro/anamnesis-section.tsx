@@ -1,14 +1,16 @@
+import { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { ProvenanceCorrection } from "@/components/clinical/correction-line";
 import {
   ANAMNESIS_FIELD_LABELS,
   ANAMNESIS_FIELD_OPTIONS,
   ANAMNESIS_STRUCTURED_ORDER,
-  PROVENANCE_LABELS,
   PROVENANCE_OPTIONS,
 } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import {
   FormControl,
   FormControlError,
@@ -16,7 +18,6 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -71,9 +72,8 @@ export function AnamnesisSection({
 
   return (
     <VStack className="w-full gap-4" testID="anamnesis-section">
-      <Heading level={2}>Anamnesis</Heading>
       {unknownFields.length > 0 ? (
-        <Card testID="anamnesis-unknown-panel">
+        <VStack className="gap-1 border-b border-border pb-3" testID="anamnesis-unknown-panel">
           <Text variant="strong">Campos estructurados sin información</Text>
           <Text tone="muted">
             Aparecen como desconocidos: sin información no es un hallazgo negativo.
@@ -83,14 +83,14 @@ export function AnamnesisSection({
               {ANAMNESIS_FIELD_LABELS[candidate]}: Desconocido
             </Text>
           ))}
-        </Card>
+        </VStack>
       ) : null}
       {isSealed ? (
         <Text tone="muted">
           Consulta cerrada: sus registros quedan sellados y no admiten cambios.
         </Text>
       ) : (
-        <VStack className="rounded-xl border border-border bg-card p-4 gap-4">
+        <VStack className="gap-4 border-b border-border pb-4">
           <OptionPicker
             label="Campo de anamnesis"
             onChange={onFieldChange}
@@ -142,29 +142,128 @@ export function AnamnesisSection({
         <Text testID="anamnesis-empty">Sin antecedentes registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <Card className="gap-2" key={entry.id} testID="anamnesis-entry">
-            <Text variant="strong">{ANAMNESIS_FIELD_LABELS[entry.content.field]}</Text>
-            <Text selectable>{entry.content.text}</Text>
-            <Text>Procedencia: {PROVENANCE_LABELS[entry.content.provenance]}</Text>
-            {(entry.content.provenanceHistory ?? []).map((previous, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; la misma procedencia puede repetirse y no aporta identidad.
-              <Text key={`${previous.provenance}-${index}`} testID="anamnesis-provenance-history">
-                Corrección registrada; antes: {PROVENANCE_LABELS[previous.provenance]}
-              </Text>
-            ))}
+          <VStack className="gap-2" key={entry.id} testID="anamnesis-entry">
+            {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
+                deja la procedencia anterior tachada junto al vigente (FR-098). */}
+            <Field
+              label={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+              mark={
+                entry.content.provenanceHistory?.length ? (
+                  <ProvenanceCorrection
+                    current={entry.content.provenance}
+                    previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
+                  />
+                ) : undefined
+              }
+              provenance={entry.content.provenance}
+            >
+              {entry.content.text}
+            </Field>
             <AttributionBadge attribution={entry.attribution} />
             {isSealed ? null : (
-              <OptionPicker
-                label="Corregir procedencia"
-                onChange={(next) => onCorrectProvenance(entry.id, next)}
-                options={PROVENANCE_OPTIONS}
-                testID="anamnesis-provenance-correct"
-                value={entry.content.provenance}
+              <ProvenanceCorrector
+                current={entry.content.provenance}
+                fieldLabel={ANAMNESIS_FIELD_LABELS[entry.content.field]}
+                isBusy={isBusy}
+                onConfirm={(next) => onCorrectProvenance(entry.id, next)}
               />
             )}
-          </Card>
+          </VStack>
         ))
       )}
+    </VStack>
+  );
+}
+
+type ProvenanceCorrectorProps = {
+  current: Provenance;
+  fieldLabel: string;
+  isBusy: boolean;
+  onConfirm: (provenance: Provenance) => void;
+};
+
+/**
+ * «Corregir procedencia» plegado tras un botón (D20). Las opciones solo marcan una selección:
+ * la corrección se registra con «Guardar corrección», que no admite la procedencia vigente, y
+ * «Cancelar» pliega sin escribir nada (revisión de la PR #41). Al desplegar, el foco va a la
+ * opción elegida; al plegar, vuelve al botón en cuanto deja de estar ocupado (WCAG 2.4.3).
+ */
+function ProvenanceCorrector({ current, fieldLabel, isBusy, onConfirm }: ProvenanceCorrectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState<Provenance>(current);
+  const toggleRef = useRef<View>(null);
+  const returnFocus = useRef(false);
+
+  // Un botón deshabilitado no admite foco: se devuelve cuando la operación termina.
+  useEffect(() => {
+    if (!returnFocus.current || isBusy || isOpen) return;
+    returnFocus.current = false;
+    toggleRef.current?.focus();
+  });
+
+  const close = () => {
+    returnFocus.current = true;
+    setIsOpen(false);
+  };
+
+  return (
+    <VStack className="gap-2">
+      <Button
+        accessibilityLabel={`Corregir procedencia de ${fieldLabel}`}
+        aria-expanded={isOpen}
+        className="self-start"
+        isDisabled={isBusy}
+        onPress={() => {
+          if (isOpen) {
+            close();
+            return;
+          }
+          setSelected(current);
+          setIsOpen(true);
+        }}
+        ref={toggleRef}
+        size="sm"
+        testID="anamnesis-provenance-correct-toggle"
+        variant="ghost"
+      >
+        <ButtonText>Corregir procedencia</ButtonText>
+      </Button>
+      {isOpen ? (
+        <VStack className="gap-2" testID="anamnesis-provenance-correct-panel">
+          <OptionPicker
+            autoFocus
+            label="Corregir procedencia"
+            onChange={setSelected}
+            options={PROVENANCE_OPTIONS}
+            testID="anamnesis-provenance-correct"
+            value={selected}
+          />
+          <View className="flex-row flex-wrap gap-2">
+            <Button
+              accessibilityLabel="Guardar corrección de procedencia"
+              isDisabled={isBusy || selected === current}
+              onPress={() => {
+                close();
+                onConfirm(selected);
+              }}
+              size="sm"
+              testID="anamnesis-provenance-correct-save"
+            >
+              <ButtonText>Guardar corrección</ButtonText>
+            </Button>
+            <Button
+              accessibilityLabel="Cancelar la corrección de procedencia"
+              isDisabled={isBusy}
+              onPress={close}
+              size="sm"
+              testID="anamnesis-provenance-correct-cancel"
+              variant="outline"
+            >
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+          </View>
+        </VStack>
+      ) : null}
     </VStack>
   );
 }

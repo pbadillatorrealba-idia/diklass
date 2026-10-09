@@ -27,6 +27,19 @@ describe("Callout", () => {
     expect(html).toContain("Texto del aviso");
   });
 
+  // FR-100 · design.md D20: un renglón impreso dentro de su sección, no una caja flotante.
+  test("es un renglón con reglas de 1 px arriba y abajo, sin caja ni radio", () => {
+    const box = tagWith(
+      renderToStaticMarkup(<Callout testID="c" tone="warning" />),
+      'data-testid="c"',
+    );
+    const cls = box.match(/data-class="([^"]*)"/)?.[1]?.split(/\s+/) ?? [];
+    expect(cls).toContain("border-y");
+    expect(cls).not.toContain("border");
+    expect(cls.some((c) => c.startsWith("rounded"))).toBe(false);
+    expect(cls.some((c) => /^(absolute|fixed)$/.test(c))).toBe(false);
+  });
+
   // Revisión de la PR #38: una región `polite` que aparece ya con su texto no se anuncia en
   // muchos lectores; `role="alert"` sí se anuncia al insertarse.
   test.each([

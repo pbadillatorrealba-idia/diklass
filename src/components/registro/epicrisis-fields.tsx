@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { type EpicrisisField, epicrisisDisplay } from "@/components/registro/epicrisis-changes";
+import { EPICRISIS_FIELD_LABELS } from "@/components/registro/labels";
 import { linesToItems, visibleListText } from "@/components/registro/list-lines";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -140,6 +143,18 @@ function ListField({
  * asociación a la consulta y no se edita aquí.
  */
 export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFieldsProps) {
+  // Lectura (epicrisis firmada): un campo del formulario por fila, sin controles (D20).
+  if (!isEditable) {
+    return (
+      <VStack className="w-full" testID="epicrisis-fields">
+        {(Object.keys(EPICRISIS_FIELD_LABELS) as EpicrisisField[]).map((field) => (
+          <Field key={field} label={EPICRISIS_FIELD_LABELS[field]}>
+            {epicrisisDisplay(content, field) || "Sin registro"}
+          </Field>
+        ))}
+      </VStack>
+    );
+  }
   return (
     <VStack className="w-full gap-4" testID="epicrisis-fields">
       {TEXT_FIELDS.map(({ name, label, testID }) => (

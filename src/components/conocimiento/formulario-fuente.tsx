@@ -135,7 +135,7 @@ export function FormularioFuente({
         ) : null}
       </FormControl>
 
-      <Box className="rounded-lg bg-muted p-3" testID="fuente-vista-previa-fragmentos">
+      <Box className="rounded-sm bg-muted p-3" testID="fuente-vista-previa-fragmentos">
         <Text variant="label">
           Vista previa del corte en fragmentos citables: {fragmentos.length}
         </Text>

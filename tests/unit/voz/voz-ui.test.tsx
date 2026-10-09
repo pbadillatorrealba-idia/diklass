@@ -50,9 +50,16 @@ const panel = (entry: AudioFactEntry) =>
 describe("DraftFactsPanel", () => {
   test("un hecho pendiente se muestra como sugerencia del sistema", () => {
     const html = panel(fact("pending"));
-    expect(html).toContain('aria-label="Sugerencia del sistema"');
+    expect(html).toContain('aria-label="Sugerencia del sistema');
     expect(html).toContain("border-suggested");
     expect(html).not.toContain('data-testid="attribution-badge"');
+  });
+
+  // sistema-visual D20 (12.9): la procedencia del hecho va al margen como código con nombre.
+  test("la procedencia del hecho es un código al margen con nombre", () => {
+    const html = panel(fact("pending"));
+    expect(html).toContain('aria-label="Procedencia: Inferida"');
+    expect(html).not.toContain(">Procedencia: Inferida<");
   });
 
   test("un hecho confirmado deja de ser sugerencia y muestra su atribución", () => {
@@ -60,6 +67,8 @@ describe("DraftFactsPanel", () => {
     expect(html).not.toContain("Sugerencia del sistema");
     expect(html).toContain('data-testid="attribution-badge"');
     expect(html).toContain(">Confirmado<");
+    // D20 · FR-076: lo aprobado lleva el timbre de firma, no la atribución neutra.
+    expect(html).toContain("border-stamp");
   });
 
   test("la contradicción es un aviso con estado, no solo texto de color", () => {

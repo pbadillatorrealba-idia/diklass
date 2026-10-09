@@ -1,4 +1,9 @@
-import type { AnamnesisField, AntecedentGroup, Provenance } from "@/features/registro/schema";
+import type {
+  AnamnesisField,
+  AntecedentGroup,
+  EpicrisisContent,
+  Provenance,
+} from "@/features/registro/schema";
 
 /**
  * Etiquetas de interfaz del registro clínico. Vocabulario visible en español; los valores
@@ -81,3 +86,21 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   weightKg: "Peso (kg)",
   ...ANTECEDENT_GROUP_LABELS,
 };
+
+/**
+ * Rótulos de lectura de los campos de la epicrisis (FR-011), en el orden del formulario. Los de
+ * edición (`epicrisis-fields.tsx`) añaden la indicación «uno por línea».
+ */
+export const EPICRISIS_FIELD_LABELS = {
+  motivoConsulta: "Motivo de consulta",
+  antecedentesRelevantes: "Antecedentes relevantes",
+  hallazgosAnamnesis: "Hallazgos de la anamnesis",
+  hipotesis: "Hipótesis consideradas",
+  diagnostico: "Diagnóstico registrado",
+  examenesSolicitados: "Exámenes solicitados",
+  intervencionesPropuestas: "Intervenciones propuestas",
+  medicamentosAprobados: "Medicamentos aprobados",
+  recomendacionesTutor: "Recomendaciones al tutor",
+  planSeguimiento: "Pendientes del plan de seguimiento",
+  observaciones: "Observaciones",
+} as const satisfies Record<Exclude<keyof EpicrisisContent, "consultationId">, string>;

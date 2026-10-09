@@ -28,6 +28,22 @@ function render(isDisabled: boolean) {
 
 // Regresión de la sustitución de colores inline por variantes (sistema-visual, tarea 1.5 · FR-081).
 describe("OptionPicker", () => {
+  // Revisión final de D20: las opciones fluyen en fila; `VStack` imponía `flex-col`.
+  test("las opciones van en fila con salto de línea", () => {
+    const { html } = render(false);
+    const grupo = html.match(/<div[^>]*role="radiogroup"[^>]*>/)?.[0] ?? "";
+    const cls = grupo.match(/data-class="([^"]*)"/)?.[1]?.split(/\s+/) ?? [];
+    expect(cls).toEqual(expect.arrayContaining(["flex-row", "flex-wrap"]));
+    expect(cls).not.toContain("flex-col");
+  });
+
+  // Regresión del reflujo a 320 px: en una fila de RN los hijos no encogen; una opción con
+  // etiqueta larga desbordaba el panel de seguimiento.
+  test("cada opción puede encoger hasta el ancho de la fila", () => {
+    const { option } = render(false);
+    expect(option("sex-hembra")).toContain("max-w-full");
+  });
+
   test.each([false, true])(
     "con isDisabled=%p expone el estado checked de cada opción",
     (disabled) => {

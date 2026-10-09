@@ -14,7 +14,7 @@ export function AccountLink({ showName = false }: { showName?: boolean }) {
     <Link asChild href="/settings">
       <Pressable
         accessibilityLabel={showName ? undefined : `Configuración de ${displayName}`}
-        className="min-h-touch flex-row items-center gap-3 rounded-lg"
+        className="min-h-touch flex-row items-center gap-3 rounded-sm"
         role="link"
         testID="account-link"
       >

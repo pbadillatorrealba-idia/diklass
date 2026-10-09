@@ -228,7 +228,7 @@ como pendiente explícito en `quickstart.md`.
 Orden: tokens → fuente → primitivas → consulta → resto de pantallas → compuertas. Cada tarea es un
 commit con sus pruebas en verde.
 
-- [ ] 12.1 Tokens de D20 en rojo primero:
+- [x] 12.1 Tokens de D20 en rojo primero:
   - ampliar `tema.test.ts` con los tokens nuevos (`suggested-surface`, `correction`,
     `correction-surface`, `stamp`) y sus pares en claro, oscuro y en los bloques
     `:root.light`/`:root.dark`;
@@ -240,11 +240,11 @@ commit con sus pruebas en verde.
   - exponer los tokens nuevos en `tailwind.config.js`.
   FR-071 · FR-072. Verificación: rojo por tokens ausentes y por la ΔE actual (4.8), después verde,
   con `sin-literales` en verde.
-- [ ] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
+- [x] 12.2 Atkinson Hyperlegible Mono (400/600) en `assets/fonts/` (ttf + OFL) y `public/fonts/`
   (woff2): plugin de `expo-font` en `app.json`, `@font-face` con `font-display: swap` en
   `global.css`, `fontFamily.mono` en Tailwind y precarga según D20. Verificación: CLS ≤ 0.1 en
   `/login` y en `/consultations/[id]`, y presupuesto de fuentes ≤ 140 KB medido con `ls -l`.
-- [ ] 12.3 `Text` y forma:
+- [x] 12.3 `Text` y forma:
   - prueba de componente en rojo primero para las variantes nuevas `data` (mono tabular) y
     `rubric` (rótulo preimpreso), comprobando además que `label` conserva `text-sm font-medium`
     (D20 · FR-074);
@@ -254,25 +254,25 @@ commit con sus pruebas en verde.
   - pasar `Button`, `Input`, `Card`, `Callout`, los badges y el diálogo a `rounded-sm` hasta dejarla
     en verde.
   Verificación: pruebas de `ui/` y la guarda en verde.
-- [ ] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
+- [x] 12.4 `ProvenanceMark` y `ProvenanceKey`, en rojo primero:
   - códigos R/I/F/? a partir de `Provenance`;
   - `role="img"` y nombre «Procedencia: » + `PROVENANCE_LABELS`;
   - recuadro con forma propia;
   - `Field` con `ProvenanceMark` opcional.
   FR-097. Verificación: prueba de componente verde para los cuatro códigos y para `Field` sin
   procedencia.
-- [ ] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
+- [x] 12.5 `SuggestedBlock` al pliego canario con contorno de 1 px y la etiqueta «Sugerencia del
   sistema · copia sin firmar». `SignatureStamp` (nombre y momento, `stamp`) para el contenido
   aprobado; `AttributionBadge` lo usa en `approved`. Pruebas en rojo primero. FR-076.
   Verificación: prueba de componente y la guarda sin `border-l-4` en verde.
-- [ ] 12.6 `CorrectionLine`, con prueba de componente en rojo primero:
+- [x] 12.6 `CorrectionLine`, con prueba de componente en rojo primero:
   - por cada campo de la epicrisis que cambió entre la versión aprobada y la correctiva
     (`epicrisisRows`), el valor anterior tachado, legible y anunciado como reemplazado, y el
     vigente en `correction-surface` con su atribución;
   - en la anamnesis, la procedencia anterior (`provenanceHistory`) tachada junto al código vigente.
   `CorrectionHistory` no cambia, porque también la usa 005. FR-098 · US18-AC3. Verificación: la
   prueba de componente y `registro-epicrisis` en verde; `feedback-timeline` sin cambios.
-- [ ] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
+- [x] 12.7 `Callout` como renglón y `SeverityBadge` con barra:
   - `Callout` pasa a renglón dentro de su sección;
   - `SeverityBadge` suma la barra de 4 segmentos decorativos, con prueba en rojo primero de los
     segmentos llenos por nivel y de que el nombre del nivel sigue siendo la etiqueta accesible;
@@ -283,7 +283,7 @@ commit con sus pruebas en verde.
   FR-077 · FR-100. Verificación: pruebas de componente, y `conocimiento`, `retroalimentacion`
   (severidad en el seguimiento) y `accessibility` (ficha con `missing-fields-panel`) en verde, de
   a uno.
-- [ ] 12.8 Consulta como formulario (`consultations/[id].tsx`):
+- [x] 12.8 Consulta como formulario (`consultations/[id].tsx`):
   - primero, en rojo, un e2e `consulta-formulario.spec.ts` para US18-AC1, AC2 (a 1280×800 y
     375×667) y AC4, con códigos y clave visibles, y firma con timbre y reducción de movimiento
     emulada;
@@ -299,16 +299,42 @@ commit con sus pruebas en verde.
     `tests/e2e/web/registro-epicrisis.spec.ts:140`.
   FR-097 · FR-099. Verificación: el e2e nuevo, la prueba de duración, `registro-epicrisis` y
   `accessibility` en verde, de a uno.
-- [ ] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
+- [x] 12.9 Barrido del resto de pantallas con la nueva forma: login, inicio, pacientes, ficha,
   seguimiento, conocimiento y Configuración. Datos en `data` y procedencia al margen donde exista.
   Después:
   - axe en `chromium` y `chromium-dark` (de a uno, `--workers=1`), `firefox` y `webkit`;
   - reflujo a 320 px;
   - revisión en escala de grises de `/consultations/[id]` y `/follow-up/[patientId]` (SC-061).
-- [ ] 12.10 Capturas en `evidencia/12.*`:
+- [x] 12.10 Capturas en `evidencia/12.*`:
   - web: consulta a 1440 y 375 px, en claro y oscuro;
   - iOS y Android si hay simulador o emulador; si no, queda como pendiente explícito en
     `quickstart.md`.
   Después, revisión final de `impeccable` contra el contrato de dirección y `DESIGN.md` +
   `.impeccable/design.json` generados desde lo construido. Actualizar la sección «Sistema visual»
   de `AGENTS.md`.
+- [x] 12.11 Corrección (fuera de D20, decisión del usuario del 2026-09-30): `listPatients` y
+  `listTutors` leen todas las filas de la clínica en páginas de 1000, porque PostgREST corta en
+  1000 y, ordenadas de la más antigua a la más reciente, las fichas nuevas desaparecían del
+  selector de `/knowledge`, de `/patients` y del tutor de la ficha. Primero una prueba de regresión
+  en rojo con 1005 filas. `listSources` y `listQueries` quedan como hallazgo abierto: ordenan de la
+  más reciente a la más antigua y, pasado el tope, perderían las más antiguas. Verificación: la
+  prueba en verde y `conocimiento.spec.ts:273` en verde sobre la base local con más de 1000
+  pacientes.
+- [x] 12.12 Correcciones de la revisión final (aclaraciones de D20 del 2026-09-30), con prueba en
+  rojo primero:
+  - `OptionPicker` en fila con salto de línea (hoy `VStack` impone `flex-col`);
+  - «Corregir procedencia» tras un botón por entrada;
+  - banda activa inicial según el paso siguiente del protocolo;
+  - estado de la consulta como campo del encabezado;
+  - retirada de «Ver ficha del paciente», con los e2e (`registro-epicrisis`, `accessibility`,
+    `caso-sintetico`) actualizados a «Volver a la ficha».
+  Verificación: pruebas de componente, `consulta-formulario`, `registro-epicrisis`, `auth` y
+  `accessibility` en verde (`chromium` y `chromium-dark`), y capturas nuevas en
+  `evidencia/12.10-*`.
+- [x] 12.13 Segunda revisión final (decisión del usuario del 2026-09-30), con prueba en rojo
+  primero:
+  - los campos multilínea crecen con el contenido (el borrador de la epicrisis se cortaba);
+  - la atribución de lo recién guardado va junto al mensaje de la operación y no suelta.
+  Verificación: e2e del campo largo sin desplazamiento interno, prueba de componente de la
+  atribución en línea, `auth`, `registro-epicrisis`, `consulta-formulario` y `accessibility` en
+  verde, y capturas nuevas.

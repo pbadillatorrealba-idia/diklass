@@ -69,6 +69,10 @@ const TOKENS: ThemeToken[] = [
   "info-foreground",
   "info-surface",
   "suggested",
+  "suggested-surface",
+  "correction",
+  "correction-surface",
+  "stamp",
   "scrim",
   "border",
   "input",
@@ -127,9 +131,25 @@ const PAIRS: [ThemeToken, ThemeToken, number][] = [
   ),
   ["foreground", "destructive-surface", 4.5],
   ["destructive", "destructive-surface", 3],
-  // Borde lateral de lo sugerido por el sistema (FR-076): componente no textual, 3:1.
+  // Formulario en copias (D20). Lo sugerido es un pliego canario (`suggested-surface`) con
+  // contorno de 1 px `suggested` (3:1, no textual); la corrección, un pliego rosa con la marca
+  // `correction`, que también es texto; el timbre de firma (`stamp`) es texto sobre la hoja.
   ["suggested", "background", 3],
   ["suggested", "card", 3],
+  ["suggested", "suggested-surface", 3],
+  ["correction", "card", 4.5],
+  ["correction", "background", 4.5],
+  ["correction", "correction-surface", 3],
+  ["stamp", "card", 4.5],
+  ["stamp", "background", 4.5],
+  ...(["suggested-surface", "correction-surface"] as const).flatMap(
+    (surface): [ThemeToken, ThemeToken, number][] => [
+      ["foreground", surface, 4.5],
+      ["muted-foreground", surface, 4.5],
+    ],
+  ),
+  // Banda preimpresa de `FormSection`: número y título en `primary` sobre `primary-surface`.
+  ["primary", "primary-surface", 4.5],
   // Separación card/fondo (D4): borde decorativo, sin umbral WCAG; mínimo acordado 1.4:1.
   ["border", "card", 1.4],
   ["input", "background", 3],
@@ -154,6 +174,42 @@ describe.each(Object.entries(schemes))("tema %s", (scheme, tokens) => {
     const [a, b] = [tokens[fg], tokens[bg]];
     if (!a || !b) throw new Error(`falta ${fg} o ${bg}`);
     expect(contrast(a, b)).toBeGreaterThanOrEqual(min);
+  });
+});
+
+// ΔE*ab (CIE76) entre dos colores sRGB, vía CIELAB con iluminante D65.
+function deltaE(a: Rgb, b: Rgb) {
+  const lab = (rgb: Rgb) => {
+    const linear = rgb.map((value) => {
+      const v = value / 255;
+      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    const [r = 0, g = 0, bl = 0] = linear;
+    const xyz = [
+      (0.4124 * r + 0.3576 * g + 0.1805 * bl) / 0.95047,
+      0.2126 * r + 0.7152 * g + 0.0722 * bl,
+      (0.0193 * r + 0.1192 * g + 0.9505 * bl) / 1.08883,
+    ].map((t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 / 116) * t + 16 / 116));
+    const [x = 0, y = 0, z = 0] = xyz;
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+  };
+  const [p, q] = [lab(a), lab(b)];
+  return Math.hypot(...p.map((value, index) => value - (q[index] ?? 0)));
+}
+
+// Entre dos pasteles el contraste de luminancia no sirve (D20): la corrección y el error se
+// separan en tono, sobre los valores finales de cada bloque.
+describe("corrección frente a error (D20)", () => {
+  test.each([
+    [":root {", lightBlock],
+    ["@media (prefers-color-scheme: dark)", darkSection],
+    [":root.light {", blockAfter(":root.light {")],
+    [":root.dark {", blockAfter(":root.dark {")],
+  ])("%s separa correction-surface de destructive-surface (ΔE*ab ≥ 10)", (_, block) => {
+    const tokens = tokensOf(block);
+    const [a, b] = [tokens["correction-surface"], tokens["destructive-surface"]];
+    if (!a || !b) throw new Error("falta correction-surface o destructive-surface");
+    expect(deltaE(a, b)).toBeGreaterThanOrEqual(10);
   });
 });
 
@@ -188,6 +244,10 @@ describe("colores fuera del tema", () => {
     /\btext-xs\b/g,
     /\b(?:max-w|min-h|max-h|min-w|w|h)-\[[^\]]+\]/g,
     /\brounded-2xl\b/g,
+    // Forma de D20: `rounded-sm` (2 px) en controles y superficies, `rounded-full` solo en el
+    // avatar, y ningún borde lateral grueso (lo sugerido se marca con pliego y contorno de 1 px).
+    /\brounded-(?:lg|xl)\b/g,
+    /\bborder-l-[2-8]\b/g,
     /\bgap(?:-[xy])?-\d+\.\d+\b/g,
     // Tintes translúcidos (D4): se componen al pintar y el contraste de este archivo no los mide.
     // Solo `scrim` se usa con opacidad; el resto de superficies son tokens opacos (`*-surface`).
@@ -211,7 +271,7 @@ describe("colores fuera del tema", () => {
   });
 });
 
-describe("tipografía Atkinson Hyperlegible Next", () => {
+describe("tipografía Atkinson Hyperlegible Next y Mono", () => {
   const FAMILY = "Atkinson Hyperlegible Next";
   const WEIGHTS = { 400: "400Regular", 500: "500Medium", 600: "600SemiBold", 700: "700Bold" };
   const app = JSON.parse(readFileSync("app.json", "utf8"));
@@ -242,6 +302,50 @@ describe("tipografía Atkinson Hyperlegible Next", () => {
     },
   );
 
+  // Atkinson Hyperlegible Mono (D20): solo para datos, en 400 y 600. En web se sirve el
+  // subconjunto latino y no se precarga (no aparece en el primer pintado de `/login`); el
+  // `@font-face` de respaldo con métricas de reemplazo evita el salto al cambiar de fuente.
+  const MONO = "Atkinson Hyperlegible Mono";
+  test.each([
+    [400, "400Regular"],
+    [600, "600SemiBold"],
+  ])("mono %d: TTF nativo, WOFF2 web y @font-face con swap", (weight, file) => {
+    const ttf = `./assets/fonts/AtkinsonHyperlegibleMono_${file}.ttf`;
+    expect(statSync(ttf).size).toBeGreaterThan(0);
+    expect(statSync(`public/fonts/AtkinsonHyperlegibleMono_${file}.woff2`).size).toBeGreaterThan(0);
+    const android = fontPlugin[1].android.fonts.find(
+      (font: { fontFamily: string }) => font.fontFamily === MONO,
+    );
+    expect(android?.fontDefinitions).toContainEqual({ path: ttf, weight });
+    expect(fontPlugin[1].ios.fonts).toContain(ttf);
+
+    const face = CSS.split("@font-face").find((block) =>
+      block.includes(`AtkinsonHyperlegibleMono_${file}.woff2`),
+    );
+    expect(face).toContain(`font-family: "${MONO}"`);
+    expect(face).toContain(`font-weight: ${weight}`);
+    expect(face).toContain("font-display: swap");
+  });
+
+  test("la mono tiene respaldo con métricas de reemplazo y no se precarga", () => {
+    const fallback = CSS.split("@font-face").find((block) =>
+      block.includes(`font-family: "${MONO} Fallback"`),
+    );
+    expect(fallback).toContain("size-adjust:");
+    expect(fallback).toContain("ascent-override:");
+    expect(readFileSync("src/app/+html.tsx", "utf8")).not.toContain("AtkinsonHyperlegibleMono");
+    const tailwind = readFileSync("tailwind.config.js", "utf8");
+    expect(tailwind).toContain(`mono: ["${MONO}", "${MONO} Fallback"`);
+  });
+
+  // Presupuesto de fuentes de texto en web (design.md, Performance budgets): ≤ 140 KB.
+  test("las fuentes de texto web caben en 140 KB", () => {
+    const total = readdirSync("public/fonts")
+      .filter((name) => name.endsWith(".woff2"))
+      .reduce((sum, name) => sum + statSync(join("public/fonts", name)).size, 0);
+    expect(total).toBeLessThanOrEqual(140 * 1024);
+  });
+
   // React Native no hereda la fuente: cada primitivo de texto debe declararla.
   const primitives = sourceFiles(join("src", "components", "ui")).filter((path) =>
     /<(RNText|TextInput)\b/.test(readFileSync(path, "utf8")),
@@ -251,10 +355,19 @@ describe("tipografía Atkinson Hyperlegible Next", () => {
     expect(primitives.length).toBeGreaterThan(0);
   });
 
-  test.each(primitives)("%s aplica font-sans a cada texto", (path) => {
+  // `Text` toma la familia de su variante (`font-sans` o, para datos, `font-mono`; D20): entonces
+  // cada entrada de su mapa `VARIANTS` debe declararla.
+  test.each(primitives)("%s aplica font-sans o font-mono a cada texto", (path) => {
     const text = readFileSync(path, "utf8");
     const elements = text.match(/<(?:RNText|TextInput)\b[\s\S]*?className=\{?[`"][^`"]*/g) ?? [];
     expect(elements.length).toBe((text.match(/<(?:RNText|TextInput)\b/g) ?? []).length);
-    for (const element of elements) expect(element).toContain("font-sans");
+    const variants = text.match(/const VARIANTS = \{([\s\S]*?)\} as const/)?.[1];
+    for (const element of elements) {
+      if (element.includes("font-sans")) continue;
+      expect(element).toContain("VARIANTS[variant]");
+      const values = variants?.match(/"[^"]*"/g) ?? [];
+      expect(values.length).toBeGreaterThan(0);
+      for (const value of values) expect(value).toMatch(/\bfont-(?:sans|mono)\b/);
+    }
   });
 });

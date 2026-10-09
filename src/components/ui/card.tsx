@@ -11,7 +11,7 @@ export type CardProps = ViewProps & { className?: string };
 export function Card({ className, style, ...props }: CardProps) {
   return (
     <View
-      className={`rounded-xl border border-border bg-card p-4 ${className ?? ""}`.trim()}
+      className={`rounded-sm border border-border bg-card p-4 ${className ?? ""}`.trim()}
       style={[CONTINUOUS_CURVE, style]}
       {...props}
     />

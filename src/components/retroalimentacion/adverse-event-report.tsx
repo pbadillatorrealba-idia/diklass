@@ -17,15 +17,18 @@ export function AdverseEventItem({
   if (superseded) {
     return (
       <Box
-        className="gap-1 rounded-lg border border-border bg-card p-3"
+        className="gap-1 rounded-sm border border-border bg-card p-3"
         testID="adverse-event-superseded-item"
       >
         <Text selectable>
           {ADVERSE_EVENT_SEVERITY_LABELS[entry.event.severity]}: {entry.event.description}
         </Text>
         <Text selectable tone="muted">
-          Registrado el {registradoEl} · Consulta {entry.consultationId} · en una versión ya
-          corregida; permanece registrado.
+          Registrado el{" "}
+          <Text tone="muted" variant="data">
+            {registradoEl}
+          </Text>{" "}
+          · Consulta {entry.consultationId} · en una versión ya corregida; permanece registrado.
         </Text>
       </Box>
     );
@@ -35,7 +38,7 @@ export function AdverseEventItem({
   return (
     <Box
       accessibilityLabel={esGrave ? `Evento adverso grave: ${entry.event.description}` : undefined}
-      className={`gap-2 rounded-lg border p-3 ${
+      className={`gap-2 rounded-sm border p-3 ${
         esGrave ? "border-destructive bg-destructive-surface" : "border-border bg-card"
       }`}
       testID="adverse-event-item"
@@ -45,7 +48,11 @@ export function AdverseEventItem({
         {entry.event.description}
       </Text>
       <Text selectable tone="muted">
-        Registrado el {registradoEl} · Consulta {entry.consultationId}
+        Registrado el{" "}
+        <Text tone="muted" variant="data">
+          {registradoEl}
+        </Text>{" "}
+        · Consulta {entry.consultationId}
       </Text>
     </Box>
   );

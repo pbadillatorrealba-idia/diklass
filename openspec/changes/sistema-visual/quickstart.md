@@ -1044,3 +1044,172 @@ El informe sobre `85b265f..9f8acb6` está en el último comentario de la PR #38.
 - `bun run test`: 795 aprobadas, 75 omitidas por entorno y 0 fallidas.
 - e2e en `chromium` con Supabase local (`retroalimentacion`, `estados` y `accessibility`): 23/23.
 - No se ejecutaron Firefox/WebKit ni Maestro.
+
+## Grupo 12 — Identidad «Formulario en copias» (D20 · US18)
+
+Rama `feat/formulario-en-copias-impl`, 2026-09-30. Supabase local (Podman), un worker, un
+proyecto de Playwright a la vez. Estado: **implementado, no aceptado**.
+
+### 12.1 — Tokens
+
+`tema.test.ts` falló primero por los cuatro tokens ausentes (`suggested-surface`, `correction`,
+`correction-surface`, `stamp`) y por `primary` sobre `primary-surface`; con los valores de la
+tabla de D20 (solo se ajustó luminosidad) pasa 284/284. ΔE*ab entre `correction-surface` y
+`destructive-surface`: 12.4 en claro y 22.7 en oscuro (mínimo 10), en los cuatro bloques.
+
+### 12.2 — Atkinson Hyperlegible Mono
+
+- Archivos: TTF 400/600 de Google Fonts para `expo-font` y WOFF2 del subconjunto latino (fontsource)
+  en `public/fonts/`, ambos OFL 1.1 (`OFL-AtkinsonHyperlegibleMono.txt`).
+- Presupuesto (`ls -l public/fonts/*.woff2`): 93 212 bytes (91 KB) para las seis fuentes de texto;
+  límite 140 KB.
+- Sin precarga: la mono no se pide en `/login`. El respaldo `Atkinson Hyperlegible Mono Fallback`
+  ajusta Courier al avance de la mono (`size-adjust: 105.33%`, 632/600).
+- CLS medido con `PerformanceObserver` (`layout-shift`) en Chromium contra el servidor de
+  desarrollo (no el export estático de 1.3):
+
+| Esquema | `/login` | `/consultations/[id]` | Mono cargada en la consulta |
+|---|---|---|---|
+| claro | 0.0051 | 0.0005 | sí (400 y 600) |
+| oscuro | 0.0051 | 0.0005 | sí (400 y 600) |
+
+**Pendiente explícito:** en nativo, comprobar en dispositivo que `font-mono` resuelve a la familia
+embebida.
+
+### 12.3 – 12.7 — Primitivas
+
+Cada tarea con su prueba en rojo primero:
+
+- `Text` `data`/`rubric`;
+- la guarda de radios y bordes laterales, que falló en 21 archivos;
+- `ProvenanceMark`, `ProvenanceKey` y `Field`;
+- `SignatureStamp` y la copia canaria;
+- `CorrectionLine` y `ProvenanceCorrection`;
+- `Callout` como renglón, la barra de `SeverityBadge` y `AvisosCobertura` con
+  `sin_respaldo_documental`.
+
+En Chromium pasaron `registro-epicrisis` (2/2), `conocimiento` (6/6), `retroalimentacion` (5/5)
+y `accessibility` (12/12).
+
+### 12.8 — Consulta como formulario
+
+- `consulta-formulario.spec.ts` falló primero por las secciones, el encabezado y la etiqueta
+  «Firmar y cerrar consulta». Después pasó 4/4 en Chromium: AC1, AC2 a 1280×800 y a 375×667, y
+  AC4 con movimiento reducido.
+- Control negativo del caso AC4: sin reducción de movimiento, la opacidad del timbre al aparecer
+  fue 0.92, es decir, la transición existe; con reducción, 1.
+- `SIGNATURE_MS = 240` (prueba ≤ 300).
+- `getTutor`: la prueba unitaria de filas malformadas y la integración viva pasaron 10/10 con
+  `SUPABASE_LIVE_TESTS=1`.
+- `registro-epicrisis` 2/2 y `accessibility` 12/12 en Chromium, incluidas las dos columnas de D9.
+
+### 12.9 — Barrido y compuertas
+
+- **Barrido**, con prueba de componente en rojo primero:
+  - la ficha pasa a `FichaSummary` (rótulo preimpreso y dato; fecha, edad y peso en `data`);
+  - los hechos de voz y los segmentos de `/knowledge` llevan la procedencia al margen
+    (`ProvenanceMark`) en lugar del texto «Procedencia: …»;
+  - las fechas del historial, la cronología, los eventos adversos y la atribución van en
+    `data`;
+  - las fechas de `visor-documento` (líneas en `caption`) quedan en la cara de UI para no mezclar
+    tamaños en una línea.
+  Login, inicio, seguimiento, conocimiento y Configuración heredan la forma de las primitivas
+  (12.3–12.7) sin cambios propios.
+- **Suite completa en `chromium`**:
+  - La primera ejecución se cortó por OOM de Metro (heap de 2 GB). Se repitió con
+    `NODE_OPTIONS=--max-old-space-size=4096`: 62/64.
+  - `tema.spec.ts` fijaba los canales de `--background` anteriores a D20. Corregido en `e5186d4`;
+    después, 6/6.
+  - `conocimiento.spec.ts:273` destapó un defecto previo a D20: `listPatients` perdía los
+    pacientes más allá de la fila 1000 (tope de PostgREST), porque la base local tiene más de 1100.
+    Se corrigió en 12.11 (`37d17d7`), con prueba de regresión en rojo; después, `conocimiento`
+    6/6.
+- **Axe**, uno a la vez y con `--workers=1`:
+  - `chromium`: 12/12 en la suite completa;
+  - `chromium-dark`: 12/12;
+  - `firefox`: 16/16, con `consulta-formulario`;
+  - `webkit`: 16/16, con `consulta-formulario`.
+  El reflujo a 320 px va dentro de `accessibility.spec.ts`.
+- **Escala de grises (SC-061)**, en `evidencia/`:
+  - `12.9-consulta-borrador-grises.png`: lo sugerido conserva la etiqueta «Sugerencia del
+    sistema · copia sin firmar», su contorno y el icono;
+  - `12.9-consulta-corregida-grises.png`: se ven el tachado con «Reemplazado» y el timbre
+    «Firmado»;
+  - `12.9-seguimiento-grises.png`: «Grave» con icono, negrita y barra de 3/4 segmentos llenos.
+- **Revisión visual**: quité una regla sobrante bajo la banda de la sección 2 con la consulta
+  cerrada. Es un cambio solo de clases, posterior a las ejecuciones de arriba.
+
+### 12.10 — Capturas y revisión final
+
+- **Web**, en `evidencia/` y en `chromium`:
+  - consulta abierta a 1440 y 375 px, claro y oscuro: `12.10-consulta-*`;
+  - sección 3 en borrador, con el pliego canario, «copia sin firmar» y «Firmar y cerrar
+    consulta»: `12.10-epicrisis-borrador-*`;
+  - consulta firmada y corregida a 1440 px: `12.10-consulta-firmada-*`;
+  - sección 3 en borrador en escala de grises: `12.9-epicrisis-borrador-grises.png`.
+- **Nativo — pendiente explícito:** no hay `adb`, emulador ni `xcrun` en esta máquina. Faltan las
+  capturas de iOS y Android y comprobar Atkinson Mono en nativo.
+- **Revisión `impeccable`** contra el contrato de dirección. Veredicto: «no se envía tal cual»,
+  con 8 correcciones.
+  - Aplicadas (D20), con prueba en rojo donde aplica:
+    - (1) captura de la sección 3 en borrador;
+    - (4) la atribución deja la losa `bg-muted` y pasa a línea de firma;
+    - (5) la epicrisis efectiva deja de ser una `Card` dentro de `FormSection`;
+    - (7) sin el icono de robot en la copia sugerida.
+  - No aplicada:
+    - (6) marcar con `?` los campos sin información. D20 limita la marca a los datos con
+      procedencia en el modelo, y US2-AC4 distingue «sin dato» de la procedencia `desconocida`.
+  - Pendientes de decisión del usuario, porque cambian comportamiento fuera de D20:
+    - (2) `OptionPicker` en fila y selector de procedencia R/I/F/?;
+    - (3) banda activa al cargar;
+    - (8) estado en el encabezado y retirar «Ver ficha del paciente».
+- **Tras las correcciones**, en `chromium`: `accessibility`, `consulta-formulario`,
+  `registro-epicrisis` y `auth`, 26/26.
+
+### 12.12 — Correcciones de la revisión final (aclaraciones de D20)
+
+- Pruebas en rojo primero:
+  - `OptionPicker` en fila (`VStack` imponía `flex-col`);
+  - `initialActiveSection`;
+  - el estado como campo del encabezado;
+  - «Corregir procedencia» plegado.
+- **Regresión encontrada:** en fila, una opción con etiqueta larga desbordaba
+  `feedback-timeline` a 320 px (368 > 320). Se reprodujo en rojo y se corrigió con `max-w-full`
+  en cada opción.
+- **e2e actualizados:** «‹ Volver a la ficha» (`screen-back`) sustituye a «Ver ficha del
+  paciente» en `registro-epicrisis`, `accessibility` y `caso-sintetico`.
+- **Verificación:** unitarias 893/893; `chromium` 64/64 en la suite completa; `chromium-dark`
+  12/12. `evidencia/12.10-*` se volvió a capturar: las tres secciones entran a 1440×2600 y la
+  banda 3 está activa con borrador.
+
+### 12.13 — Segunda revisión final
+
+- **Campos multilínea:** crecen con su contenido desde `min-h-textarea`. El e2e
+  `consulta-formulario` («un campo largo del borrador…») falló primero con 240 px ocultos;
+  ahora 0.
+  - En web crecen pero no encogen al borrar, porque `scrollHeight` no baja de la altura fijada.
+  - En nativo, el relleno se suma a mano (`contentSize` no lo incluye). Queda **pendiente de
+    dispositivo**.
+- **Atribución de lo recién guardado:** va en la línea del mensaje de la operación
+  («Por Dra. X · fecha», `AttributionBadge inline`), con prueba de componente en rojo primero.
+- **Verificación:** unitarias 895/895; `chromium` 65/65 en la suite completa; `chromium-dark`
+  12/12; `evidencia/12.10-*` capturada de nuevo.
+
+### 12.10 — Cierre de la revisión `impeccable`
+
+- **Veredicto final del revisor: «ship» en web**, tras 12.12 y 12.13.
+  - El nativo (iOS y Android) sigue **sin verificar**: no hay simulador ni emulador.
+- **`DESIGN.md` y `.impeccable/design.json`**, derivados de lo construido:
+  - tokens de los cuatro bloques de `global.css`, rampa tipográfica y primitivas;
+  - reglas: una tinta y dos pliegos, el timbre nombra a una persona, la corrección no es un
+    error, forma de 2 px y sin bordes laterales.
+- **Hallazgos abiertos del documentador, fuera de D20:**
+  - el borrador generado de la epicrisis escribe la procedencia como texto
+    («[procedencia: reportada]») dentro de «Hallazgos de la anamnesis», en lugar de la marca al
+    margen. Es un asunto de generación de contenido (`epicrisis-draft.ts`);
+  - el «‹» de «Volver a …» (D12) es un glifo de texto y no un `Icon`;
+  - `accent` y `secondary` sólido están definidos, pero ningún componente los usa.
+- **Pendientes explícitos que impiden la aceptación:**
+  - capturas iOS y Android en claro y oscuro;
+  - Atkinson Mono y crecimiento de campos multilínea en nativo;
+  - flujos de Maestro.

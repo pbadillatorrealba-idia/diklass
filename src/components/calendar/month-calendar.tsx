@@ -97,7 +97,7 @@ function CalendarDay({ date, state, todayKey, eventDays }: DayProps) {
   const hasEvents = eventDays.has(date.dateString);
   return (
     <View
-      className={`min-h-touch min-w-touch items-center justify-center rounded-full ${
+      className={`min-h-touch min-w-touch items-center justify-center rounded-sm ${
         isToday ? "border-2 border-primary" : ""
       } ${hasEvents ? "bg-primary-surface" : ""}`.trim()}
       testID={isToday ? "calendar-today" : undefined}

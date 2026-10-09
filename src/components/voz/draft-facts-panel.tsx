@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
-import { ANAMNESIS_FIELD_LABELS, PROVENANCE_LABELS } from "@/components/registro/labels";
+import { ANAMNESIS_FIELD_LABELS } from "@/components/registro/labels";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -9,6 +9,7 @@ import { FormControl, FormControlLabel, FormControlLabelText } from "@/component
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
+import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -50,16 +51,19 @@ export function DraftFactsPanel({
         const pendiente = fact.content.confirmationState === "pending";
         const etiquetaCampo = ANAMNESIS_FIELD_LABELS[fact.content.field];
         const editando = editId === fact.record.id;
+        // La procedencia va al margen como código con nombre (FR-097 · D20).
         const detalle = (
-          <VStack className="gap-1">
-            <Text variant="strong">{etiquetaCampo}</Text>
-            <Text selectable>{fact.content.text}</Text>
-            <Text
-              selectable
-              tone="muted"
-            >{`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}</Text>
-            <Text tone="muted">{`Procedencia: ${PROVENANCE_LABELS[fact.content.provenance]}`}</Text>
-          </VStack>
+          <Box className="flex-row items-start gap-3">
+            <VStack className="flex-1 gap-1">
+              <Text variant="strong">{etiquetaCampo}</Text>
+              <Text selectable>{fact.content.text}</Text>
+              <Text
+                selectable
+                tone="muted"
+              >{`Fragmento de origen: «${fact.content.transcriptExcerpt}»`}</Text>
+            </VStack>
+            <ProvenanceMark provenance={fact.content.provenance} />
+          </Box>
         );
         return (
           <Card className="gap-2" key={fact.record.id} testID="draft-fact-card">
@@ -80,6 +84,7 @@ export function DraftFactsPanel({
                 </Box>
                 {fact.record.updated_by && fact.record.updated_at ? (
                   <AttributionBadge
+                    approved
                     attribution={{
                       action: null,
                       actorId: fact.record.updated_by,

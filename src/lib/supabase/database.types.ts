@@ -566,6 +566,23 @@ export type Database = {
       }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
+      update_own_profile: {
+        Args: { p_display_name: string }
+        Returns: {
+          clinic_id: string
+          created_at: string
+          display_name: string
+          id: string
+          identifier: string
+          provisioned_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veterinarians"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       access_session_status: "active" | "expired" | "revoked"

@@ -12,6 +12,8 @@ module.exports = {
       // cubre la web mientras carga la fuente.
       fontFamily: {
         sans: ["Atkinson Hyperlegible Next", "system-ui", "sans-serif"],
+        // Datos (D20): número de consulta, fechas, pesos, dosis y códigos de procedencia.
+        mono: ["Atkinson Hyperlegible Mono", "Atkinson Hyperlegible Mono Fallback", "monospace"],
       },
       // Dimensiones del sistema visual (design.md D6).
       maxWidth: {
@@ -19,6 +21,7 @@ module.exports = {
         wide: "1200px", // consulta a dos columnas en escritorio
         dialog: "440px",
         form: "480px", // formularios centrados (login)
+        margin: "40%", // margen de procedencia de un campo (D20)
       },
       // Etiquetas de la barra de pestañas web (D17): 12 px como las de iOS/Material. El mínimo de
       // 14 px (D5) es para metadatos clínicos.
@@ -77,8 +80,11 @@ module.exports = {
           foreground: token("info-foreground"),
           surface: token("info-surface"),
         },
-        // Borde de lo generado por el sistema y aún no validado (FR-076).
-        suggested: token("suggested"),
+        // Pliegos del formulario en copias (D20): lo sugerido sin validar (FR-076), lo corregido
+        // (FR-098) y la tinta del timbre de firma (FR-099).
+        suggested: { DEFAULT: token("suggested"), surface: token("suggested-surface") },
+        correction: { DEFAULT: token("correction"), surface: token("correction-surface") },
+        stamp: token("stamp"),
         // Capa bajo los diálogos; siempre con opacidad (`bg-scrim/55`).
         scrim: token("scrim"),
         border: token("border"),

@@ -3,7 +3,6 @@ import { View } from "react-native";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import type { ThemeToken } from "@/theme/colors";
-import { CONTINUOUS_CURVE } from "./border-curve";
 
 const TONES = {
   error: {
@@ -52,7 +51,8 @@ export type CalloutProps = PropsWithChildren<{
 
 /**
  * Aviso con estado (FR-075 · design.md D7): superficie tintada, borde e icono con nombre, para que
- * el color nunca sea la única señal. `error` (`role="alert"`) y `warning` se anuncian al aparecer. Un texto plano
+ * el color nunca sea la única señal. Es un renglón impreso dentro de su sección, con reglas de
+ * 1 px arriba y abajo, y nunca una caja flotante ni temporal (FR-100 · D20). `error` (`role="alert"`) y `warning` se anuncian al aparecer. Un texto plano
  * como contenido (también con interpolación) se envuelve en `Text`.
  */
 export function Callout({ children, className, testID, title, tone }: CalloutProps) {
@@ -66,8 +66,7 @@ export function Callout({ children, className, testID, title, tone }: CalloutPro
       accessibilityLiveRegion={isAlert ? "assertive" : isPolite ? "polite" : undefined}
       aria-live={isPolite ? "polite" : undefined}
       role={isAlert ? "alert" : undefined}
-      className={`flex-row gap-2 rounded-lg border p-3 ${style.box} ${className ?? ""}`.trim()}
-      style={CONTINUOUS_CURVE}
+      className={`flex-row gap-2 border-y px-3 py-2 ${style.box} ${className ?? ""}`.trim()}
       testID={testID}
     >
       <Icon label={style.name} name={style.icon} tone={style.color} />
