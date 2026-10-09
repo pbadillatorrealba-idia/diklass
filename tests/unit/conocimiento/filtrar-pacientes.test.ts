@@ -6,7 +6,7 @@ import {
 } from "@/features/conocimiento/filtrar-pacientes";
 import type { PatientEntry } from "@/features/registro/ficha-service";
 
-const paciente = (id: string, name: string, breed = "Mestizo", species = "perro") =>
+const paciente = (id: string, name: string, breed = "Mestizo", species = "canino") =>
   ({ record: { id }, content: { name, breed, species } }) as unknown as PatientEntry;
 
 const ids = (lista: PatientEntry[]) => lista.map((entry) => entry.record.id);
@@ -27,9 +27,9 @@ describe("filtrarPacientes", () => {
   });
 
   test("busca también por raza y especie", () => {
-    const lista = [paciente("a", "Toby", "Labrador"), paciente("b", "Mora", "Común", "gato")];
+    const lista = [paciente("a", "Toby", "Labrador"), paciente("b", "Mora", "Común", "felino")];
     expect(ids(filtrarPacientes(lista, "labra", null))).toEqual(["a"]);
-    expect(ids(filtrarPacientes(lista, "gato", null))).toEqual(["b"]);
+    expect(ids(filtrarPacientes(lista, "felino", null))).toEqual(["b"]);
   });
 
   test("limita a 8 coincidencias", () => {

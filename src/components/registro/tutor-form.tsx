@@ -13,6 +13,7 @@ import { getFieldErrors } from "@/lib/forms/errors";
 
 export type TutorFormValues = {
   name: string;
+  rut: string;
   surname: string;
   phone: string;
   email: string;
@@ -23,6 +24,7 @@ export type TutorFormValues = {
 
 export const emptyTutorValues: TutorFormValues = {
   name: "",
+  rut: "",
   surname: "",
   phone: "",
   email: "",
@@ -33,6 +35,7 @@ export const emptyTutorValues: TutorFormValues = {
 
 export const tutorValuesFromContent = (content: TutorContent): TutorFormValues => ({
   name: content.name,
+  rut: content.rut,
   surname: content.surname ?? "",
   phone: content.phone ?? "",
   email: content.email ?? "",
@@ -44,6 +47,7 @@ export const tutorValuesFromContent = (content: TutorContent): TutorFormValues =
 /** Los obligatorios se rotulan en el texto (FR-121): el color no es la única señal. */
 const FIELDS: { field: keyof TutorFormValues; label: string; testID: string }[] = [
   { field: "name", label: "Nombre del tutor (obligatorio)", testID: "tutor-name" },
+  { field: "rut", label: "RUT del tutor (obligatorio)", testID: "tutor-rut" },
   { field: "surname", label: "Apellidos del tutor", testID: "tutor-surname" },
   { field: "phone", label: "Teléfono del tutor", testID: "tutor-phone" },
   { field: "email", label: "Correo del tutor", testID: "tutor-email" },
@@ -73,7 +77,7 @@ export function TutorForm({ values, errors, isDisabled, onChange }: TutorFormPro
   return (
     <VStack className="w-full gap-4">
       <Text tone="muted">
-        Obligatorios: el nombre y al menos un medio de contacto (teléfono o correo).
+        Obligatorios: el nombre, el RUT y al menos un medio de contacto (teléfono o correo).
       </Text>
       {FIELDS.map(({ field, label, testID }) => {
         const error = errors[field];
@@ -86,7 +90,7 @@ export function TutorForm({ values, errors, isDisabled, onChange }: TutorFormPro
               <InputField
                 accessibilityLabel={label}
                 aria-label={label}
-                autoCapitalize={field === "email" ? "none" : "words"}
+                autoCapitalize={field === "email" || field === "rut" ? "none" : "words"}
                 editable={!isDisabled}
                 keyboardType={field === "email" ? "email-address" : "default"}
                 onChangeText={(text) => onChange(field, text)}

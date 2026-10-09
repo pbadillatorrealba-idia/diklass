@@ -23,7 +23,7 @@ function rpcClient(result: { data: unknown; error: unknown }) {
 const row = {
   id: "p1",
   name: "Luna",
-  species: "Canino",
+  species: "canino",
   breed: "Labrador",
   tutor_id: "t1",
   tutor_name: "Ana",
@@ -81,7 +81,7 @@ describe("searchPatients", () => {
     expect(page.rows[0]).toEqual({
       id: "p1",
       name: "Luna",
-      species: "Canino",
+      species: "canino",
       breed: "Labrador",
       tutorId: "t1",
       tutorName: "Ana",

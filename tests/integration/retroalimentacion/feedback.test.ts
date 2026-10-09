@@ -15,6 +15,7 @@ import {
 } from "@/features/retroalimentacion/feedback-summary";
 import type { FeedbackContent } from "@/features/retroalimentacion/schema";
 import { approveClinicalRecord } from "@/lib/attribution/clinical-mutations";
+import { patientContent } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -72,7 +73,7 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
       .insert({
         clinic_id: ana.clinicId,
         record_type: "patient",
-        content: { name: "Luna Retro Live" },
+        content: patientContent("Luna Retro Live"),
         status: "draft",
       })
       .select("id")

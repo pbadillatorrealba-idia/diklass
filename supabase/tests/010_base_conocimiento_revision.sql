@@ -49,11 +49,11 @@ set local role authenticated;
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values (
   'dcdcdcdc-0000-4000-8000-000000000001', '22222222-2222-4000-8000-000000000002',
-  'tutor', '{"name":"Sr. Tutor Ajeno","phone":null,"email":null}', 'draft'
+  'tutor', '{"name":"Sr. Tutor Ajeno","rut":"11111111-1","phone":null,"email":null}', 'draft'
 ), (
   'dcdcdcdc-0000-4000-8000-000000000002', '22222222-2222-4000-8000-000000000002',
   'patient',
-  '{"name":"Paciente Ajeno","species":"canino","breed":null,"birthDate":null,"ageMonths":null,"weightKg":null,"sex":null,"reproductiveStatus":null,"antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"dcdcdcdc-0000-4000-8000-000000000001"}',
+  '{"name":"Paciente Ajeno","species":"canino","breed":"Mestizo","birthDate":null,"ageMonths":null,"weightKg":null,"sex":"macho","reproductiveStatus":"entero","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"dcdcdcdc-0000-4000-8000-000000000001"}',
   'draft'
 );
 
@@ -66,11 +66,11 @@ set local role authenticated;
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values (
   'dadadada-0000-4000-8000-000000000001', '11111111-1111-4000-8000-000000000001',
-  'tutor', '{"name":"Sra. Tutora Propia","phone":null,"email":null}', 'draft'
+  'tutor', '{"name":"Sra. Tutora Propia","rut":"12345678-5","phone":null,"email":null}', 'draft'
 ), (
   'dadadada-0000-4000-8000-000000000002', '11111111-1111-4000-8000-000000000001',
   'patient',
-  '{"name":"Paciente Propio","species":"canino","breed":null,"birthDate":null,"ageMonths":null,"weightKg":null,"sex":null,"reproductiveStatus":null,"antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"dadadada-0000-4000-8000-000000000001"}',
+  '{"name":"Paciente Propio","species":"canino","breed":"Mestizo","birthDate":null,"ageMonths":null,"weightKg":null,"sex":"macho","reproductiveStatus":"entero","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"dadadada-0000-4000-8000-000000000001"}',
   'draft'
 );
 

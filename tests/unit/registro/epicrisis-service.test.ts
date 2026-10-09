@@ -120,13 +120,13 @@ function fila(overrides: Partial<ClinicalRecordRow> = {}): ClinicalRecordRow {
 
 const fichaPaciente: PatientContent = {
   name: "Luna",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   birthDate: "2021-05-01",
   ageMonths: 24,
   weightKg: 12.4,
   sex: "hembra",
-  reproductiveStatus: "esterilizada",
+  reproductiveStatus: "esterilizado",
   antecedentes: {
     medicalHistory: [{ text: "Displasia de cadera", negative: false }],
     preexistingDiseases: [],

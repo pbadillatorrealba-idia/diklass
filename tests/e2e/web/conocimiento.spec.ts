@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   expect,
@@ -297,6 +298,7 @@ test.describe("base de conocimiento web", () => {
       };
       const tutorId = await crear("tutor", {
         name: `Tutor de ${nombre}`,
+        rut: randomRut(),
         phone: null,
         email: null,
       });
@@ -308,7 +310,7 @@ test.describe("base de conocimiento web", () => {
         ageMonths: 24,
         weightKg: null,
         sex: "hembra",
-        reproductiveStatus: "entera",
+        reproductiveStatus: "entero",
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [],

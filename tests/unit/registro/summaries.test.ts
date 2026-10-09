@@ -74,13 +74,13 @@ function entrada(overrides: Partial<ConsultationHistoryEntry> & { consultationId
 function ficha(cambios: Partial<PatientContent> = {}): PatientContent {
   return {
     name: "Luna",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 24,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [{ text: "Displasia de cadera", negative: false }],

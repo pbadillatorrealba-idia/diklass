@@ -1,3 +1,9 @@
+import {
+  catalogLabel,
+  REPRODUCTIVE_LABELS,
+  SEX_LABELS,
+  SPECIES_LABELS,
+} from "@/features/registro/catalogs";
 import type { AntecedentGroup, PatientContent } from "@/features/registro/schema";
 import { computeMissingFichaFields } from "@/features/registro/summaries";
 import {
@@ -63,13 +69,17 @@ const ETIQUETA_GRUPO: Record<AntecedentGroup, string> = {
 
 const CAMPOS_FICHA: [string, string, (content: PatientContent) => string | number | null][] = [
   ["name", "Nombre", (content) => content.name],
-  ["species", "Especie", (content) => content.species],
+  ["species", "Especie", (content) => catalogLabel(SPECIES_LABELS, content.species)],
   ["breed", "Raza", (content) => content.breed],
   ["birthDate", "Fecha de nacimiento", (content) => content.birthDate],
   ["ageMonths", "Edad (meses)", (content) => content.ageMonths],
   ["weightKg", "Peso (kg)", (content) => content.weightKg],
-  ["sex", "Sexo", (content) => content.sex],
-  ["reproductiveStatus", "Estado reproductivo", (content) => content.reproductiveStatus],
+  ["sex", "Sexo", (content) => catalogLabel(SEX_LABELS, content.sex)],
+  [
+    "reproductiveStatus",
+    "Estado reproductivo",
+    (content) => catalogLabel(REPRODUCTIVE_LABELS, content.reproductiveStatus),
+  ],
 ];
 
 function segmentosDeFicha(content: PatientContent): SegmentoRespuesta[] {

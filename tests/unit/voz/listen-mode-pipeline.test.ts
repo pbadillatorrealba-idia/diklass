@@ -119,7 +119,7 @@ const paciente = fila("paciente-1", "patient", {
   ageMonths: null,
   weightKg: null,
   sex: "macho",
-  reproductiveStatus: "castrado",
+  reproductiveStatus: "esterilizado",
   antecedentes: {
     medicalHistory: [],
     preexistingDiseases: [],

@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   expect,
@@ -51,6 +52,7 @@ export async function prepararPaciente(
 
   const tutorId = await crear("tutor", {
     name: `Tutor de ${nombre}`,
+    rut: randomRut(),
     phone: "+56 9 5550 0101",
     email: null,
   });
@@ -62,7 +64,7 @@ export async function prepararPaciente(
     ageMonths: null,
     weightKg: 12.5,
     sex: "hembra",
-    reproductiveStatus: "entera",
+    reproductiveStatus: "entero",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],

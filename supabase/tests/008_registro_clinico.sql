@@ -63,7 +63,7 @@ insert into public.clinical_records (id, clinic_id, record_type, content, status
 values (
   'd9d9d9d9-0000-0000-0000-000000000001', 'c9c9c9c9-0000-0000-0000-00000000000c',
   'tutor',
-  '{"name":"Sra. Tania Tutora","phone":"+56 9 5550 0001","email":null}',
+  '{"name":"Sra. Tania Tutora","rut":"11111111-1","phone":"+56 9 5550 0001","email":null}',
   'draft'
 );
 
@@ -76,7 +76,7 @@ select results_eq(
 );
 
 update public.clinical_records
-set content = '{"name":"Sra. Tania Tutora","phone":"+56 9 5550 0002","email":null}'
+set content = '{"name":"Sra. Tania Tutora","rut":"11111111-1","phone":"+56 9 5550 0002","email":null}'
 where id = 'd9d9d9d9-0000-0000-0000-000000000001';
 
 -- FR-063 · FR-027 (tutor que cambia de contacto): UPDATE de tutor emite tutor_updated.
@@ -92,7 +92,7 @@ insert into public.clinical_records (id, clinic_id, record_type, content, status
 values (
   'd9d9d9d9-0000-0000-0000-000000000002', 'c9c9c9c9-0000-0000-0000-00000000000c',
   'patient',
-  '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":null,"sex":"hembra","reproductiveStatus":"entera","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}',
+  '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":null,"sex":"hembra","reproductiveStatus":"entero","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}',
   'draft'
 );
 
@@ -105,7 +105,7 @@ select results_eq(
 );
 
 update public.clinical_records
-set content = '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"entera","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}'
+set content = '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"entero","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}'
 where id = 'd9d9d9d9-0000-0000-0000-000000000002';
 
 -- FR-063 · FR-001 · US1-AC2: UPDATE de patient emite patient_updated.
@@ -422,7 +422,7 @@ select lives_ok(
 -- hallazgo registrado (negative:false) y campo sin dato (lista vacía): FR-044 · SC-024.
 select lives_ok(
   $$update public.clinical_records
-    set content = '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"entera","antecedentes":{"medicalHistory":[],"preexistingDiseases":[{"text":"Dermatitis atópica","negative":false}],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[{"text":"Sin agresividad previa","negative":true}]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}'
+    set content = '{"name":"Luna Registro","species":"canino","breed":"Mestizo","birthDate":"2021-03-10","ageMonths":null,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"entero","antecedentes":{"medicalHistory":[],"preexistingDiseases":[{"text":"Dermatitis atópica","negative":false}],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[{"text":"Sin agresividad previa","negative":true}]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}'
     where id = 'd9d9d9d9-0000-0000-0000-000000000002'$$,
   'FR-024 · US4-AC2 · SC-009 · D5: una ficha sin consultationId se amplía aunque la consulta esté cerrada (FR-044 · SC-024: negativo ≠ sin dato)'
 );
@@ -436,7 +436,7 @@ insert into public.clinical_records (id, clinic_id, record_type, content, status
 values (
   'd9d9d9d9-0000-0000-0000-000000000003', 'c9c9c9c9-0000-0000-0000-00000000000c',
   'patient',
-  '{"name":"Nube Registro","species":"canino","breed":"Labrador","birthDate":"2019-07-02","ageMonths":null,"weightKg":28.4,"sex":"macho","reproductiveStatus":"castrado","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}',
+  '{"name":"Nube Registro","species":"canino","breed":"Labrador","birthDate":"2019-07-02","ageMonths":null,"weightKg":28.4,"sex":"macho","reproductiveStatus":"esterilizado","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d9d9d9d9-0000-0000-0000-000000000001"}',
   'draft'
 );
 

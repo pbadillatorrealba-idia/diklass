@@ -13,10 +13,10 @@ import {
 
 const fichaBase = {
   name: "Luna",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   sex: "hembra",
-  reproductiveStatus: "esterilizada",
+  reproductiveStatus: "esterilizado",
   tutorId: "tutor-1",
 };
 
@@ -110,27 +110,63 @@ describe("patientContentSchema (FR-001, FR-044)", () => {
 });
 
 describe("tutorContentSchema (FR-027)", () => {
+  const rut = "12345678-5";
+
   test("exige al menos un medio de contacto no vacío", () => {
-    expect(tutorContentSchema.safeParse({ name: "María" }).success).toBe(false);
-    expect(tutorContentSchema.safeParse({ name: "María", phone: null, email: null }).success).toBe(
-      false,
-    );
-    expect(tutorContentSchema.safeParse({ name: "María", phone: "   " }).success).toBe(false);
-    expect(tutorContentSchema.safeParse({ name: "María", phone: "555-0101" }).success).toBe(true);
+    expect(tutorContentSchema.safeParse({ name: "María", rut }).success).toBe(false);
     expect(
-      tutorContentSchema.safeParse({ name: "María", email: "maria@example.test" }).success,
+      tutorContentSchema.safeParse({ name: "María", rut, phone: null, email: null }).success,
+    ).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "María", rut, phone: "   " }).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "María", rut, phone: "555-0101" }).success).toBe(
+      true,
+    );
+    expect(
+      tutorContentSchema.safeParse({ name: "María", rut, email: "maria@example.test" }).success,
     ).toBe(true);
   });
 
   test("acepta ambos medios y normaliza los vacíos a sin dato", () => {
-    const tutor = tutorContentSchema.parse({ name: "María", phone: " 555-0101 ", email: "" });
+    const tutor = tutorContentSchema.parse({
+      name: "María",
+      rut,
+      phone: " 555-0101 ",
+      email: "",
+    });
 
     expect(tutor.phone).toBe("555-0101");
     expect(tutor.email).toBeNull();
   });
 
   test("rechaza un tutor sin nombre", () => {
-    expect(tutorContentSchema.safeParse({ name: "", phone: "555-0101" }).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "", rut, phone: "555-0101" }).success).toBe(false);
+  });
+
+  test("el RUT es obligatorio, válido y se guarda en forma canónica", () => {
+    const base = { name: "María", phone: "555-0101" };
+    expect(tutorContentSchema.safeParse(base).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ ...base, rut: "12345678-4" }).success).toBe(false);
+    expect(tutorContentSchema.parse({ ...base, rut: "12.345.678-5" }).rut).toBe("12345678-5");
+    expect(tutorContentSchema.parse({ ...base, rut: " 10.000.013-k " }).rut).toBe("10000013-K");
+  });
+
+  test("el paciente solo admite las especies, sexos y estados del catálogo", () => {
+    for (const malo of [
+      { species: "perro" },
+      { species: "Canino" },
+      { sex: "M" },
+      { reproductiveStatus: "castrado" },
+    ]) {
+      expect(patientContentSchema.safeParse({ ...fichaBase, ...malo }).success).toBe(false);
+    }
+    expect(
+      patientContentSchema.safeParse({
+        ...fichaBase,
+        species: "felino",
+        sex: "hembra",
+        reproductiveStatus: "esterilizado",
+      }).success,
+    ).toBe(true);
   });
 });
 
@@ -350,6 +386,7 @@ describe("ampliación etológica de la ficha (FR-001, FR-027, FR-110)", () => {
   test("el tutor admite apellidos y dirección sin exigirlos, y sigue exigiendo contacto", () => {
     const tutor = tutorContentSchema.parse({
       name: "María",
+      rut: "12345678-5",
       phone: "555-0101",
       surname: "Pérez",
       address: "Calle 1",
@@ -359,8 +396,12 @@ describe("ampliación etológica de la ficha (FR-001, FR-027, FR-110)", () => {
 
     expect(tutor.surname).toBe("Pérez");
     expect(tutor.postalCode).toBe("08001");
-    expect(tutorContentSchema.parse({ name: "María", phone: "1" }).address).toBeNull();
-    expect(tutorContentSchema.safeParse({ name: "María", surname: "Pérez" }).success).toBe(false);
+    expect(
+      tutorContentSchema.parse({ name: "María", rut: "12345678-5", phone: "1" }).address,
+    ).toBeNull();
+    expect(
+      tutorContentSchema.safeParse({ name: "María", rut: "12345678-5", surname: "Pérez" }).success,
+    ).toBe(false);
   });
 });
 

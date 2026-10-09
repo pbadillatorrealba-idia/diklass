@@ -46,7 +46,7 @@ const filaValida = {
     ageMonths: 24,
     weightKg: 12.5,
     sex: "macho",
-    reproductiveStatus: "castrado",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -84,6 +84,7 @@ const filaTutorValida = {
   record_type: "tutor",
   content: {
     name: "Sra. Tania",
+    rut: "12345678-5",
     phone: "+56 9 5550 0001",
     email: null,
     surname: null,

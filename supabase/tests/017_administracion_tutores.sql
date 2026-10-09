@@ -30,25 +30,25 @@ insert into public.access_sessions (veterinarian_id, auth_session_id) values
 set local session_replication_role = replica;
 insert into public.clinical_records (id, clinic_id, record_type, content, status, created_by, created_at) values
   ('e1700000-0000-4000-8000-000000000001', 'c17c17c1-0000-4000-8000-00000000000c', 'tutor',
-   '{"name":"Marta","surname":"Soto","email":"marta@example.test"}', 'draft',
+   '{"name":"Marta","surname":"Soto","rut":"11111111-1","email":"marta@example.test"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-01-10T10:00:00Z'),
   ('e1700000-0000-4000-8000-000000000002', 'c17c17c1-0000-4000-8000-00000000000c', 'tutor',
-   '{"name":"Pablo","surname":"Rojas","phone":"+56 9 5550 0101"}', 'draft',
+   '{"name":"Pablo","surname":"Rojas","rut":"12345678-5","phone":"+56 9 5550 0101"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-02-10T10:00:00Z'),
   ('e1700000-0000-4000-8000-000000000003', 'c17c17c1-0000-4000-8000-00000000000c', 'tutor',
-   '{"name":"Zoe","phone":"+56 9 5550 0303"}', 'draft',
+   '{"name":"Zoe","rut":"10000013-K","phone":"+56 9 5550 0303"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-03-10T10:00:00Z'),
   ('e1700000-0000-4000-8000-000000000004', 'd17d17d1-0000-4000-8000-00000000000d', 'tutor',
-   '{"name":"Marta Ajena","phone":"999"}', 'draft', 'a17a17a1-0000-4000-8000-00000000000a',
+   '{"name":"Marta Ajena","rut":"10000004-0","phone":"999"}', 'draft', 'a17a17a1-0000-4000-8000-00000000000a',
    '2026-01-01T10:00:00Z'),
   ('f1700000-0000-4000-8000-000000000001', 'c17c17c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Luna","tutorId":"e1700000-0000-4000-8000-000000000001"}', 'draft',
+   '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"entero","tutorId":"e1700000-0000-4000-8000-000000000001"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-01-11T10:00:00Z'),
   ('f1700000-0000-4000-8000-000000000002', 'c17c17c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Rocky","tutorId":"e1700000-0000-4000-8000-000000000001"}', 'draft',
+   '{"name":"Rocky","species":"canino","breed":"Mestizo","sex":"macho","reproductiveStatus":"entero","tutorId":"e1700000-0000-4000-8000-000000000001"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-01-12T10:00:00Z'),
   ('f1700000-0000-4000-8000-000000000003', 'c17c17c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Nube","tutorId":"e1700000-0000-4000-8000-000000000002"}', 'draft',
+   '{"name":"Nube","species":"felino","breed":"Siames","sex":"hembra","reproductiveStatus":"entero","tutorId":"e1700000-0000-4000-8000-000000000002"}', 'draft',
    'a17a17a1-0000-4000-8000-00000000000a', '2026-02-11T10:00:00Z');
 set local session_replication_role = origin;
 
@@ -114,7 +114,7 @@ select is(
 select throws_ok(
   $$insert into public.clinical_records (id, clinic_id, record_type, content, status)
     values ('e1700000-0000-4000-8000-0000000000ff', 'c17c17c1-0000-4000-8000-00000000000c',
-            'tutor', '{"name":"  ","phone":"1"}', 'draft')$$,
+            'tutor', '{"name":"  ","rut":"11111111-1","phone":"1"}', 'draft')$$,
   '23514',
   null,
   'la base rechaza un tutor sin nombre'

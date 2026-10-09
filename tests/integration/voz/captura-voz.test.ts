@@ -12,6 +12,7 @@ import { extractClinicalFacts } from "@/features/voz/extraction";
 import { guionDemo } from "@/features/voz/guion-demo";
 import { startListenSession } from "@/features/voz/listen-session-service";
 import { saveTranscriptSegment, settleTranscriptSegment } from "@/features/voz/transcript-service";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -44,7 +45,7 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
       clinicId: ana.clinicId,
       ficha: {
         name: "Rocky Voz",
-        species: "perro",
+        species: "canino",
         breed: "Mestizo",
         birthDate: "2021-05-01",
         ageMonths: 24,
@@ -59,7 +60,14 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
           behavioralHistory: [],
         },
       },
-      tutor: { newTutor: { name: "Sra. Integración Voz", phone: "+56 9 5550 0099", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Integración Voz",
+          rut: randomRut(),
+          phone: "+56 9 5550 0099",
+          email: null,
+        },
+      },
     });
     const consulta = await openConsultation(ana.client, {
       clinicId: ana.clinicId,

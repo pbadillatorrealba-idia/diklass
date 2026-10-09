@@ -119,13 +119,13 @@ function filaRecuperada(cambios: Record<string, unknown> = {}) {
 
 const contenidoPaciente: PatientContent = {
   name: "Luna",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   birthDate: null,
   ageMonths: 24,
   weightKg: 12.4,
   sex: "hembra",
-  reproductiveStatus: "esterilizada",
+  reproductiveStatus: "esterilizado",
   antecedentes: {
     medicalHistory: [],
     preexistingDiseases: [],

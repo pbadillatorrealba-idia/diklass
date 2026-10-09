@@ -23,6 +23,7 @@ import {
 } from "@/features/registro/summaries";
 import { getTutor, listTutors, updateTutor } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -45,13 +46,13 @@ function fichaBase(
 ): Omit<PatientContent, "tutorId"> {
   return {
     name: nombre,
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 24,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -84,7 +85,12 @@ async function provisionarCasoCerrado(
     clinicId,
     ficha: fichaBase(nombre),
     tutor: {
-      newTutor: { name: `Tutor de ${nombre}`, phone: "+56 9 3333 3333", email: null },
+      newTutor: {
+        name: `Tutor de ${nombre}`,
+        rut: randomRut(),
+        phone: "+56 9 3333 3333",
+        email: null,
+      },
     },
   });
   const abierta = await openConsultation(client, { clinicId, patientId: alta.record.id });
@@ -126,7 +132,14 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const compartida = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: fichaBase("Luna compartida"),
-      tutor: { newTutor: { name: "Sra. Pérez compartida", phone: "+56 9 1111 2222", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Pérez compartida",
+          rut: randomRut(),
+          phone: "+56 9 1111 2222",
+          email: null,
+        },
+      },
     });
     tutorId = compartida.tutorId;
     pacienteId = compartida.record.id;
@@ -142,7 +155,9 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const alta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: fichaBase("Luna integración"),
-      tutor: { newTutor: { name: "Sra. Pérez", phone: "+56 9 1111 1111", email: null } },
+      tutor: {
+        newTutor: { name: "Sra. Pérez", rut: randomRut(), phone: "+56 9 1111 1111", email: null },
+      },
     });
     expect(performance.now() - inicio).toBeLessThan(2000);
 
@@ -210,13 +225,13 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
       clinicId: ana.clinicId,
       ficha: {
         name: "Mora integración",
-        species: "gato",
+        species: "felino",
         breed: "Común",
         birthDate: null,
         ageMonths: null,
         weightKg: null,
         sex: "hembra",
-        reproductiveStatus: "entera",
+        reproductiveStatus: "entero",
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [],
@@ -309,6 +324,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
     const actualizado = await updateTutor(ana.client, caso.tutorId, {
       name: "Tutor de Caso límite integración",
+      rut: randomRut(),
       phone: "+56 9 4444 4444",
       email: null,
     });

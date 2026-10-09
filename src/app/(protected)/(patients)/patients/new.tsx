@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   emptyFichaFormValues,
   type FichaField,
@@ -24,9 +24,11 @@ import { VStack } from "@/components/ui/vstack";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { PatientContent, TutorContent } from "@/features/registro/schema";
+import { findTutorByRut } from "@/features/registro/tutor-search";
 import { listTutors } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { formatRut } from "@/lib/rut";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -82,7 +84,22 @@ export default function NewPatientScreen() {
     });
   }, [queryError, openExpiredDialog, setAccessState]);
 
+  // `isSaving` llega en el siguiente render y hay un `await` antes de escribir: esta guarda frena
+  // un doble toque inmediato.
+  const submitting = useRef(false);
   const handleSubmit = async () => {
+    if (submitting.current) {
+      return;
+    }
+    submitting.current = true;
+    try {
+      await submit();
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const submit = async () => {
     if (!clinicId) {
       return;
     }
@@ -96,7 +113,10 @@ export default function NewPatientScreen() {
       }
     } else {
       const parsed = parseTutorValues(tutorValues);
-      if (parsed.value) {
+      const sameRut = parsed.value ? await findTutorByRut(supabase, parsed.value.rut) : null;
+      if (parsed.value && sameRut) {
+        nextTutorErrors = { rut: `Ya hay un tutor con este RUT: ${sameRut.fullName}.` };
+      } else if (parsed.value) {
         tutor = { newTutor: parsed.value };
       } else {
         nextTutorErrors = parsed.errors;
@@ -162,7 +182,7 @@ export default function NewPatientScreen() {
               onChange={setSelectedTutorId}
               options={(tutorsQuery.data ?? []).map((entry) => ({
                 value: entry.record.id,
-                label: `${entry.content.name} — ${entry.content.phone ?? entry.content.email ?? "sin medio de contacto"}`,
+                label: `${entry.content.name} — ${formatRut(entry.content.rut)}`,
               }))}
               testID="tutor-picker"
               value={selectedTutorId}

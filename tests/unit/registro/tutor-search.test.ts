@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   findDuplicateTutors,
+  findTutorByRut,
   searchTutors,
   TUTOR_PAGE_SIZE,
 } from "@/features/registro/tutor-search";
@@ -24,6 +25,7 @@ const row = {
   name: "Marta",
   surname: "Soto",
   full_name: "Marta Soto",
+  rut: "12345678-5",
   phone: "+56 9 5550 0101",
   email: null,
   patient_count: 2,
@@ -54,6 +56,7 @@ describe("searchTutors", () => {
     expect(page.rows[0]).toEqual({
       id: "t1",
       fullName: "Marta Soto",
+      rut: "12345678-5",
       phone: "+56 9 5550 0101",
       email: null,
       patientCount: 2,
@@ -106,5 +109,23 @@ describe("findDuplicateTutors", () => {
   test("si la búsqueda falla, no hay avisos y no lanza", async () => {
     const { client } = rpcClient({ data: null, error: { message: "boom" } });
     expect(await findDuplicateTutors(client, { phone: "5550", email: null })).toEqual([]);
+  });
+});
+
+describe("findTutorByRut", () => {
+  test("devuelve el tutor con ese RUT exacto, no uno que solo lo contenga", async () => {
+    const parecido = { ...row, id: "t2", rut: "112345678-5" };
+    const { client } = rpcClient({ data: [parecido, row], error: null });
+    expect((await findTutorByRut(client, "12345678-5"))?.id).toBe("t1");
+  });
+
+  test("excluye al propio tutor al editar", async () => {
+    const { client } = rpcClient({ data: [row], error: null });
+    expect(await findTutorByRut(client, "12345678-5", "t1")).toBeNull();
+  });
+
+  test("si la búsqueda falla devuelve null: manda el índice único de la base", async () => {
+    const { client } = rpcClient({ data: null, error: { message: "boom" } });
+    expect(await findTutorByRut(client, "12345678-5")).toBeNull();
   });
 });

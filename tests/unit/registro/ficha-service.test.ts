@@ -133,13 +133,13 @@ function ficha(
 ): Omit<PatientContent, "tutorId"> {
   return {
     name: "Luna",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 24,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -161,6 +161,7 @@ function ficha(
 
 const tutorNuevo: TutorContent = {
   name: "Sra. Pérez",
+  rut: "12345678-5",
   phone: "+56 9 1111 1111",
   email: null,
   surname: null,
@@ -265,7 +266,7 @@ describe("createPatientFicha (FR-001 · US1-AC1, FR-027 · US1-AC4)", () => {
       await createPatientFicha(client, {
         clinicId: "clinica-1",
         ficha: ficha(),
-        tutor: { newTutor: { name: "Sra. Pérez", phone: null, email: null } },
+        tutor: { newTutor: { name: "Sra. Pérez", rut: "12345678-5", phone: null, email: null } },
       });
       throw new Error("se esperaba el rechazo del tutor sin contacto");
     } catch (error) {
@@ -572,7 +573,12 @@ describe("tutor-service (FR-027)", () => {
             fila({
               id: "tutor-2",
               record_type: "tutor",
-              content: { name: "Sr. Soto", phone: null, email: "soto@example.test" },
+              content: {
+                name: "Sr. Soto",
+                rut: "10000013-K",
+                phone: null,
+                email: "soto@example.test",
+              },
             }),
           ],
           error: null,

@@ -49,13 +49,13 @@ function paciente(): { id: string; content: PatientContent } {
     id: "patient-1",
     content: {
       name: "Luna",
-      species: "perro",
+      species: "canino",
       breed: "Mestizo",
       birthDate: null,
       ageMonths: 24,
       weightKg: null,
       sex: "hembra",
-      reproductiveStatus: "esterilizada",
+      reproductiveStatus: "esterilizado",
       antecedentes: {
         medicalHistory: [{ text: "Displasia de cadera", negative: false }],
         preexistingDiseases: [],

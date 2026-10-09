@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import { ANA, expect, SUPABASE_ANON_KEY, SUPABASE_URL, submitLogin, test } from "./fixtures";
 import { prepararPaciente } from "./preparar-paciente";
 
@@ -31,10 +32,10 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
     await page.goto("/patients/new");
 
     await page.getByTestId("patient-name").fill("Rocky E2E etología");
-    await page.getByTestId("patient-species").fill("canino");
+    await page.getByTestId("patient-species-canino").click();
     await page.getByTestId("patient-breed").fill("Mestizo");
-    await page.getByTestId("patient-sex").fill("macho");
-    await page.getByTestId("patient-reproductive-status").fill("castrado");
+    await page.getByTestId("patient-sex-macho").click();
+    await page.getByTestId("patient-reproductive-status-esterilizado").click();
     await page.getByTestId("patient-origin").fill("Protectora Sur");
     await page.getByTestId("patient-adoption-age").fill("4 meses");
     await page.getByTestId("patient-first-visit-date").fill("2026-09-01");
@@ -43,6 +44,7 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
 
     await page.getByRole("radio", { name: "Nuevo tutor" }).click();
     await page.getByTestId("tutor-name").fill("Marta");
+    await page.getByTestId("tutor-rut").fill(randomRut());
     await page.getByTestId("tutor-surname").fill("Soto");
     await page.getByTestId("tutor-phone").fill("+56 9 5550 0202");
     await page.getByTestId("tutor-city").fill("Santiago");

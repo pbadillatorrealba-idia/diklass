@@ -131,9 +131,9 @@ export default function TutorsScreen() {
         <FilterField label="Contacto">
           <Input>
             <InputField
-              accessibilityLabel="Filtrar por teléfono o correo"
+              accessibilityLabel="Filtrar por RUT, teléfono o correo"
               onChangeText={setContactDraft}
-              placeholder="Teléfono o correo"
+              placeholder="RUT, teléfono o correo"
               value={contactDraft}
             />
           </Input>

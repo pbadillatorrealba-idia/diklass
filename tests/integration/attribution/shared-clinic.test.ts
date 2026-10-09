@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { assertNoClientAttributionFields } from "@/lib/attribution/guards";
+import { patientContent } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -30,7 +31,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       .insert({
         clinic_id: ana.clinicId,
         record_type: "patient",
-        content: { name: "Luna integración" },
+        content: patientContent("Luna integración"),
         status: "draft",
       })
       .select("id, created_by")
@@ -79,7 +80,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
   test("a colleague attends the shared record without taking over its authorship", async () => {
     const update = await bruno.client
       .from("clinical_records")
-      .update({ content: { name: "Luna integración", weightKg: 12 } })
+      .update({ content: patientContent("Luna integración", { weightKg: 12 }) })
       .eq("id", recordId)
       .select("created_by, updated_by")
       .single();
