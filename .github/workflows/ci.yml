@@ -174,9 +174,15 @@ jobs:
       # Expo/Metro currently pins these vulnerable transitive versions. Bun cannot
       # upgrade them without breaking the parent dependency ranges, so keep the
       # exceptions explicit until the Expo toolchain publishes compatible fixes.
+      # GHSA-vfj7-8cjw-p6xm (braces) and GHSA-86w9-cpqp-85rv (node-forge) have no published fixed
+      # version yet; GHSA-rj75-hqrm-r3gf is postcss-selector-parser@6, pinned by tailwindcss@3.
+      # All three are build/dev-toolchain only and never ship in the app bundle.
       - run: >
           bun audit
           --ignore GHSA-vcc3-ghjq-m6fr
           --ignore GHSA-w3rx-r6r6-pgpr
           --ignore GHSA-5p2g-fcmc-qvqq
           --ignore GHSA-w5hq-g745-h8pq
+          --ignore GHSA-vfj7-8cjw-p6xm
+          --ignore GHSA-86w9-cpqp-85rv
+          --ignore GHSA-rj75-hqrm-r3gf
