@@ -2,24 +2,24 @@
 name: Diklass
 description: Formulario clínico en copias para la consulta de etología canina; lo sugerido es la copia canaria y solo la firma del veterinario la vuelve original.
 colors:
-  background: "#ECEEE9"
+  background: "#F1F0F6"
   card: "#FFFFFF"
   popover: "#FFFFFF"
-  foreground: "#1B1D1F"
-  muted: "#E8EBE5"
-  muted-foreground: "#505752"
-  primary: "#33603A"
+  foreground: "#251134"
+  muted: "#EBE9F2"
+  muted-foreground: "#544F68"
+  primary: "#3E3888"
   primary-foreground: "#FFFFFF"
-  primary-surface: "#E7EEE8"
+  primary-surface: "#E8E6F4"
   secondary-surface: "#E8ECEE"
-  border: "#CCD7CE"
-  input: "#687E6C"
-  ring: "#33603A"
+  border: "#D3D0E3"
+  input: "#706A92"
+  ring: "#3E3888"
   suggested: "#7A6100"
   suggested-surface: "#FBEFA8"
   correction: "#9E2B45"
   correction-surface: "#F6DDE8"
-  stamp: "#3A3F9A"
+  stamp: "#1F4E9E"
   destructive: "#B02818"
   destructive-foreground: "#FFFFFF"
   destructive-surface: "#FBE3D6"
@@ -205,11 +205,11 @@ components:
 
 **Creative North Star: "El formulario en copias"**
 
-Diklass es un formulario clínico normalizado, impreso sobre papel frío casi blanco en una sola tinta verde de formulario: reglas de 1 px, recuadros, rótulos y números de sección. Lo que escribe el veterinario va en tinta negra. Lo que propone el sistema, sin validar, llega en pliego canario, como la copia amarilla de un formulario autocopiativo; lo corregido llega en pliego rosa, con el renglón anterior tachado de una sola línea y todavía legible. Solo la firma del veterinario, un timbre de tampón índigo con nombre y hora, vuelve original la copia.
+Diklass es un formulario clínico normalizado, impreso sobre papel frío casi blanco en una sola tinta índigo de formulario: reglas de 1 px, recuadros, rótulos y números de sección. Lo que escribe el veterinario va en tinta negra. Lo que propone el sistema, sin validar, llega en pliego canario, como la copia amarilla de un formulario autocopiativo; lo corregido llega en pliego rosa, con el renglón anterior tachado de una sola línea y todavía legible. Solo la firma del veterinario, un timbre de tampón azul con nombre y hora, vuelve original la copia.
 
-La densidad es la de un formulario bien compuesto, no la de un tablero: un solo eje vertical de secciones numeradas según el protocolo clínico (1 Anamnesis, 2 Diagnóstico, 3 Epicrisis y firma), campos con rótulo preimpreso sobre su regla y, al margen, el código de procedencia de cada dato (R, I, F, ?). La jerarquía la dan la regla, el pliego y la tinta; nunca la elevación, el degradado ni el color decorativo. El sistema rechaza de forma explícita el tablero de tarjetas con panel de «Hallazgos IA», los destellos y el violeta con que la categoría marca la IA, lo frío-hospitalario (gris clínico sin tinta) y lo lúdico (patitas, ilustraciones de perros).
+La densidad es la de un formulario bien compuesto, no la de un tablero: un solo eje vertical de secciones numeradas según el protocolo clínico (1 Anamnesis, 2 Diagnóstico, 3 Epicrisis y firma), campos con rótulo preimpreso sobre su regla y, al margen, el código de procedencia de cada dato (R, I, F, ?). La jerarquía la dan la regla, el pliego y la tinta; nunca la elevación, el degradado ni el color decorativo. El sistema rechaza de forma explícita el tablero de tarjetas con panel de «Hallazgos IA», los destellos y los degradados luminosos con que la categoría marca la IA, lo frío-hospitalario (gris clínico sin tinta) y lo lúdico (patitas, ilustraciones de perros).
 
-La misma paleta sirve a iOS, Android y web, en claro y en oscuro (pizarra con tinte verde, con los pliegos convertidos en tintes cálidos opacos). La revisión final de `impeccable` sobre la consulta dio veredicto «ship» en web (capturas en `openspec/changes/sistema-visual/evidencia/12.10-*` y la revisión en grises `12.9-*`); las capturas nativas de iOS y Android quedan como pendiente explícito, porque en esta máquina no hay simulador ni emulador.
+La misma paleta sirve a iOS, Android y web, en claro y en oscuro (pizarra con tinte violáceo, con los pliegos convertidos en tintes cálidos opacos). La revisión final de `impeccable` sobre la consulta dio veredicto «ship» en web (capturas en `openspec/changes/sistema-visual/evidencia/12.10-*` y la revisión en grises `12.9-*`); las capturas nativas de iOS y Android quedan como pendiente explícito, porque en esta máquina no hay simulador ni emulador.
 
 **Key Characteristics:**
 - Una sola tinta de estructura (`primary`) para reglas, rótulos, números, banda de sección y acción principal.
@@ -224,7 +224,7 @@ La misma paleta sirve a iOS, Android y web, en claro y en oscuro (pizarra con ti
 Tinta sobre papel con dos pliegos de color: estrategia restringida, en la que el color de superficie se concentra en lo sugerido y lo corregido y el resto es tinta. Todos los tokens se declaran como canales RGB en `src/global.css`, en cuatro bloques (claro, oscuro por media query, `:root.light` y `:root.dark` forzados en web), y `tema.test.ts` exige que el espejo `src/theme/colors.ts` coincida y que cada par de texto cumpla WCAG 2.2 AA (4.5:1; 3:1 para bordes de campo, foco y el contorno de lo sugerido).
 
 ### Primary
-- **Verde de formulario** (primary): la tinta preimpresa. Rótulos de campo, número de sección, banda de la sección activa, recuadro del código de procedencia, enlaces en línea (subrayados), botón `ghost` y relleno del botón principal. También es el anillo de foco (`ring`) y el tinte nativo en iOS y Android. En oscuro, verde salvia claro (#8FC49A).
+- **Índigo de formulario** (primary; el índigo del logo, `#3E3888`): la tinta preimpresa. Rótulos de campo, número de sección, banda de la sección activa, recuadro del código de procedencia, enlaces en línea (subrayados), botón `ghost` y relleno del botón principal. También es el anillo de foco (`ring`) y el tinte nativo en iOS y Android. En oscuro, lavanda clara (#B9B3F2).
 - **Banda preimpresa** (primary-surface): tinte opaco al 12 % sobre la hoja. Banda de título de una sección inactiva, fondo de la evidencia citada en conocimiento, días con eventos del calendario y fondo del avatar.
 
 ### Secondary
@@ -233,21 +233,21 @@ Tinta sobre papel con dos pliegos de color: estrategia restringida, en la que el
 ### Tertiary
 - **Pliego canario** (suggested-surface) con **contorno ocre de lo sugerido** (suggested): lo que propone el sistema sin validar (FR-076). El pliego ocupa la superficie y el contorno de 1 px la delimita; el contorno cumple 3:1 sobre la hoja. En oscuro, oliva oscuro (#3A3312) con contorno amarillo paja (#E8CF5C).
 - **Pliego rosa** (correction-surface) con **granate de corrección** (correction): el valor vigente de un campo corregido va en el pliego rosa (frío, hacia el magenta) y la palabra «Reemplazado» en granate encima del valor anterior tachado. En oscuro, ciruela (#361C30) con rosa claro (#F29AAE).
-- **Índigo de tampón** (stamp): solo el marco y el texto del `SignatureStamp`, siempre junto al nombre de un profesional. En oscuro, lavanda (#A3A8F2).
+- **Azul de tampón** (stamp, `#1F4E9E`; separado del índigo de marca por ΔE*ab ≥ 10, FR-104): solo el marco y el texto del `SignatureStamp`, siempre junto al nombre de un profesional. En oscuro, azul claro (#8CB2F5).
 
 ### Neutral
-- **Mesa** (background): el fondo bajo el formulario, gris verdoso muy claro. En oscuro, pizarra casi negra (#111414).
-- **Hoja** (card, popover): la superficie de cada sección, tarjeta y diálogo. En oscuro, #1B1F1F (hoja) y #242929 (diálogo).
-- **Tinta del veterinario** (foreground): todo el texto escrito y el valor de los campos. En oscuro, #ECEEE8.
+- **Mesa** (background): el fondo bajo el formulario, gris violáceo muy claro. En oscuro, pizarra violácea casi negra (#14121C).
+- **Hoja** (card, popover): la superficie de cada sección, tarjeta y diálogo. En oscuro, #1D1A29 (hoja) y #262334 (diálogo).
+- **Tinta del veterinario** (foreground): todo el texto escrito y el valor de los campos. En oscuro, #ECEAF4.
 - **Tinta secundaria** (muted-foreground) sobre **papel apagado** (muted): metadatos, valor tachado, placeholder, etiqueta del pliego canario y la atribución en línea.
-- **Regla** (border): el verde de formulario al ~25 % sobre la hoja, opaco. Reglas de campo, contorno de secciones y tarjetas. Decorativa: no se exige contraste.
+- **Regla** (border): el índigo de formulario al ~25 % sobre la hoja, opaco. Reglas de campo, contorno de secciones y tarjetas. Decorativa: no se exige contraste.
 - **Borde de campo** (input): contorno de los campos editables y del botón `outline`, a 3:1.
 - **Capa modal** (scrim): negro, solo con opacidad (`bg-scrim/55`) bajo los diálogos. Es el único token que admite transparencia.
 
 ### Estados
 - **Destructivo** (destructive, destructive-surface), **aviso** (warning, warning-surface: ocre anaranjado, para no confundirse con el canario), **correcto** (success, success-surface) e **información** (info, info-surface: pizarra azulada, más gris que el tampón). El tono sólido es texto, icono y borde sobre la hoja; la superficie es el fondo tintado con la tinta del veterinario encima; `destructive-foreground` es el texto sobre el relleno sólido de la severidad crítica.
 
-`accent` y `secondary` sólidos están definidos y verificados en el tema, pero ningún componente los consume; no forman parte del vocabulario hasta que una superficie los necesite.
+`accent` (teal de marca, `#1D7672`; oscuro `#6CC9C2`) y `secondary` sólidos están definidos y verificados en el tema, pero ningún componente los consume; no forman parte del vocabulario hasta que una superficie los necesite.
 
 ### Named Rules
 **The One Ink Rule.** Toda la estructura preimpresa (reglas, rótulos, números, banda activa, acción principal) va en `primary`. Ninguna otra tinta dibuja el formulario.

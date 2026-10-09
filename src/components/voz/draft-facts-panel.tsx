@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
-import { ANAMNESIS_FIELD_LABELS } from "@/components/registro/labels";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -13,6 +12,7 @@ import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { fieldLabel } from "@/features/registro/anamnesis-catalog";
 import type { AudioFactEntry } from "@/features/voz/audio-fact-service";
 
 type DraftFactsPanelProps = {
@@ -49,7 +49,7 @@ export function DraftFactsPanel({
       ) : null}
       {facts.map((fact) => {
         const pendiente = fact.content.confirmationState === "pending";
-        const etiquetaCampo = ANAMNESIS_FIELD_LABELS[fact.content.field];
+        const etiquetaCampo = fieldLabel(fact.content.field);
         const editando = editId === fact.record.id;
         // La procedencia va al margen como código con nombre (FR-097 · D20).
         const detalle = (

@@ -246,7 +246,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       recordType: "anamnesis",
       content: {
         consultationId: openConsultationId,
-        field: "comportamiento_problematico",
+        field: "historia_problema",
         text: "Destruye objetos al quedarse sola (inferido del relato).",
         provenance: "inferida",
         provenanceHistory: [{ provenance: "desconocida" }],

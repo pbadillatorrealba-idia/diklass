@@ -7,11 +7,11 @@
       "transcripcion": "Buenos días doctora. El problema es que Rocky destroza el sofá cuando se queda solo en casa. Empezó hace tres meses. Ah, y ladra todos los días sin parar.",
       "hechosEsperados": [
         { "field": "motivo_consulta", "sujeto": "destroza el sofá" },
-        { "field": "comportamiento_problematico", "sujeto": "destroza el sofá" },
-        { "field": "desencadenantes", "sujeto": "se queda solo" },
-        { "field": "duracion", "sujeto": "hace tres meses" },
-        { "field": "comportamiento_problematico", "sujeto": "ladra" },
-        { "field": "frecuencia", "sujeto": "todos los días" }
+        { "field": "historia_problema", "sujeto": "destroza el sofá" },
+        { "field": "historia_problema", "sujeto": "se queda solo" },
+        { "field": "historia_problema", "sujeto": "hace tres meses" },
+        { "field": "historia_problema", "sujeto": "ladra" },
+        { "field": "historia_problema", "sujeto": "todos los días" }
       ]
     },
     {
@@ -19,9 +19,9 @@
       "calidad": "ok",
       "transcripcion": "Al principio era solo de noche, no, perdón, en realidad es de día cuando salgo a trabajar.",
       "hechosEsperados": [
-        { "field": "contexto", "sujeto": "de noche" },
-        { "field": "contexto", "sujeto": "de día" },
-        { "field": "desencadenantes", "sujeto": "cuando salgo a trabajar" }
+        { "field": "historia_problema", "sujeto": "de noche" },
+        { "field": "historia_problema", "sujeto": "de día" },
+        { "field": "historia_problema", "sujeto": "cuando salgo a trabajar" }
       ],
       "nota": "Autocorrección del tutor dentro de la conversación: el borrador debe reflejar la contradicción entre ambos contextos (FR-032, edge de contradicción intraconversación)."
     },
@@ -37,8 +37,8 @@
       "calidad": "ok",
       "transcripcion": "Mi gata Mishu también maúlla de noche, aunque ella no destroza nada. Vive en un departamento pequeño con patio.",
       "hechosEsperados": [
-        { "field": "convivencia", "sujeto": "gata Mishu" },
-        { "field": "ambiente", "sujeto": "departamento pequeño" }
+        { "field": "familia_otros_animales", "sujeto": "gata Mishu" },
+        { "field": "vivienda_tipo", "sujeto": "departamento pequeño" }
       ],
       "nota": "Mención a un animal distinto del paciente (edge case): lo que se extraiga sobre la gata y no conste aquí cuenta como propuesta incorrecta de SC-016, y solo se atribuye al paciente si el veterinario lo confirma (FR-017)."
     },
@@ -49,7 +49,7 @@
       "hechosEsperados": [
         { "field": "texto_libre", "sujeto": "dermatitis atópica" },
         { "field": "tratamientos_anteriores", "sujeto": "prednisona" },
-        { "field": "respuesta_tratamientos", "sujeto": "mejoró" }
+        { "field": "tratamientos_anteriores", "sujeto": "mejoró" }
       ]
     },
     {
@@ -57,11 +57,11 @@
       "calidad": "ok",
       "transcripcion": "Come croquetas dos veces al día. Lo saco a pasear todas las mañanas. Hace poco nació mi bebé y desde que nació todo cambió.",
       "hechosEsperados": [
-        { "field": "alimentacion", "sujeto": "croquetas" },
-        { "field": "rutinas", "sujeto": "todas las mañanas" },
-        { "field": "actividad", "sujeto": "pasear" },
-        { "field": "cambios_recientes", "sujeto": "hace poco nació mi bebé" },
-        { "field": "convivencia", "sujeto": "mi bebé" }
+        { "field": "alimentacion_dieta", "sujeto": "croquetas" },
+        { "field": "rutina_comida", "sujeto": "todas las mañanas" },
+        { "field": "rutina_paseos", "sujeto": "pasear" },
+        { "field": "historia_problema", "sujeto": "hace poco nació mi bebé" },
+        { "field": "familia_otros_animales", "sujeto": "mi bebé" }
       ]
     },
     {
@@ -70,7 +70,7 @@
       "transcripcion": "Probamos fluoxetina el mes pasado y no hubo mejoría. Ahora ya no toma fluoxetina, la suspendimos.",
       "hechosEsperados": [
         { "field": "tratamientos_anteriores", "sujeto": "fluoxetina" },
-        { "field": "respuesta_tratamientos", "sujeto": "no hubo mejoría" }
+        { "field": "tratamientos_anteriores", "sujeto": "no hubo mejoría" }
       ],
       "nota": "Contradice la ficha si currentMedications contiene fluoxetina (FR-032 · US6-AC8): se señala la contradicción, nunca se sobrescribe el dato previo."
     }

@@ -65,7 +65,7 @@ function registro(overrides: Partial<Record<string, unknown>> = {}) {
 
 const contenidoAnamnesis = {
   consultationId: "c-1",
-  field: "frecuencia",
+  field: "historia_problema",
   text: "A diario",
   provenance: "reportada",
 };

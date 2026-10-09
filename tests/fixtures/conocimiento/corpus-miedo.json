@@ -1,0 +1,195 @@
+{
+  "fuentes": [
+    {
+      "clave": "miedo-perros-gatos",
+      "fuente": {
+        "bibliografia": {
+          "titulo": "Problemas de miedo en perros y gatos",
+          "autores": ["Susana Le Brech"],
+          "anio": null,
+          "revista": null,
+          "editorial": "Animal Welfare Education Centre (AWEC) · Universitat Autònoma de Barcelona",
+          "edicion": "Presentación de 60 diapositivas",
+          "doi": null,
+          "url": null
+        },
+        "licencia": {
+          "tipo": "Por confirmar",
+          "nota": "Presentación docente del AWEC-UAB transcrita de su PDF. No consta licencia verificada: confirmar con la autora o el AWEC antes de cualquier uso fuera de la PoC."
+        },
+        "fragmentos": [
+          {
+            "ordinal": 1,
+            "seccion": "Qué es el miedo",
+            "texto": "[diap. 3] Miedo: emoción primaria de valencia negativa. Surge cuando el animal percibe una amenaza potencial. Es un mecanismo de defensa que facilita la supervivencia. (Landsberg, Hunthausen y Ackerman, 2013)."
+          },
+          {
+            "ordinal": 2,
+            "seccion": "Qué es la ansiedad",
+            "texto": "[diap. 4] Ansiedad: respuesta emocional que se produce como anticipación de un peligro o amenaza. Los signos aparecen en ausencia del estímulo negativo. (Landsberg, Hunthausen y Ackerman, 2013)."
+          },
+          {
+            "ordinal": 3,
+            "seccion": "Estructuras nerviosas y respuesta de estrés",
+            "texto": "[diap. 5–6] Estructuras nerviosas involucradas: el estímulo llega al tálamo. Por la vía rápida pasa a la amígdala; por la vía lenta, a la corteza sensorial y de ahí a la amígdala. La corteza prefrontal y el hipocampo también actúan sobre la amígdala. La amígdala activa el hipotálamo, el puente, el mesencéfalo y la médula, y se produce la respuesta de estrés. La respuesta de estrés tiene cambios fisiológicos y cambios conductuales. El sistema nervioso autónomo da la respuesta rápida (taquicardia, hipertensión, hipertermia) y el eje HPA da la respuesta lenta, con liberación de cortisol. (Carlson, 2005)."
+          },
+          {
+            "ordinal": 4,
+            "seccion": "Cambios conductuales ante un estímulo amenazante",
+            "texto": "[diap. 7] Miedo y estrés, cambios conductuales. Ante un estímulo amenazante el animal puede mostrar: Fight (luchar), Flight (huir), Freeze (paralizarse) o Fidget (conducta de desplazamiento)."
+          },
+          {
+            "ordinal": 5,
+            "seccion": "Cuándo el miedo es un problema de comportamiento y bienestar",
+            "texto": "[diap. 8] ¿Cuándo el miedo comienza a ser un problema de comportamiento y de bienestar? Cuando se presenta de manera repetida o de forma crónica. Cuando la respuesta de miedo es intensa y desproporcionada (fobia). Cuando interfiere con algún aspecto de la vida del animal. (Manteca, 2021)."
+          },
+          {
+            "ordinal": 6,
+            "seccion": "Clasificación de los problemas de miedo",
+            "texto": "[diap. 9] Problemas de miedo en perros y gatos. Miedo social: a perros, a gatos o a personas. Miedo no social: a situaciones, como la visita al veterinario o viajar en coche, y a estímulos inanimados, como ruidos o la calle. Miedo generalizado (síndrome de privación sensorial): a una gran variedad de estímulos sociales y no sociales."
+          },
+          {
+            "ordinal": 7,
+            "seccion": "Prevalencia en perros",
+            "texto": "[diap. 11–12] Prevalencia en perros. Diwoodie [sic] et al., 2019 (Journal of Veterinary Behavior), prevalencia por categoría de problema de conducta: miedo y ansiedad 44 % (IC 95 % 43–46; 1814 casos), la más frecuente; agresión 30 %; saltos 28 %; ladrido excesivo 18 %. González Martínez et al., 2011 (Journal of Veterinary Behavior, «Risk factors associated with behavioral problems in dogs»), tabla de estimaciones de prevalencia de problemas de conducta en perros: fobia a ruidos 51,7 % (IC 95 % 45,3–58,1); miedo a la soledad o cuando el dueño se aleja 20,3 %; miedo a personas 17,7 %; fobia a ruidos y miedo a la soledad a la vez 12,1 %; agresividad hacia otros perros 41,4 %."
+          },
+          {
+            "ordinal": 8,
+            "seccion": "Prevalencia en gatos",
+            "texto": "[diap. 13] Prevalencia en gatos. Yamada et al., Journal of Veterinary Medical Science, 17 problemas de conducta felina en Japón. Destacan entre ellos el miedo en la mesa de exploración (112 casos clasificados como muy molestos y 298 como moderadamente molestos), el miedo a personas desconocidas que se acercan, el miedo a gatos desconocidos que se acercan y el miedo a ruidos fuertes, como truenos o fuegos artificiales."
+          },
+          {
+            "ordinal": 9,
+            "seccion": "Factores predisponentes",
+            "texto": "[diap. 15] Factores predisponentes: los factores que determinan el temperamento del animal son la genética y las experiencias de la vida temprana. (Manteca, 2009)."
+          },
+          {
+            "ordinal": 10,
+            "seccion": "Genética",
+            "texto": "[diap. 16–17] Genética (familia, raza): heredabilidad. Storengen y Lingaas, 2015 (Applied Animal Behaviour Science), sensibilidad a ruidos en 17 razas de perro. Más miedosos a ruidos: Lagotto Romagnolo (perro de aguas), Terrier irlandés y Buhund noruego. Menos miedosos a ruidos: Boxer, Gran Danés y Crestado chino."
+          },
+          {
+            "ordinal": 11,
+            "seccion": "Experiencias de la vida temprana",
+            "texto": "[diap. 18] Experiencias de la vida temprana. Perro: períodos prenatal, neonatal y de transición; período de socialización de las 3 semanas a las 12–16 semanas; período juvenil y adolescencia desde las 16 semanas hasta la pubertad, y de la pubertad hasta la edad adulta. Gato: períodos prenatal, neonatal y de transición; período de socialización de las 2 semanas a las 7–9 semanas; período juvenil y adolescencia desde las 9 semanas hasta la pubertad, y de la pubertad hasta la edad adulta. (Scott y Fuller, 1965)."
+          },
+          {
+            "ordinal": 12,
+            "seccion": "Socialización: reconocimiento de especies",
+            "texto": "[diap. 19] Período de socialización, reconocimiento de especies. Los cachorros (de 3 a 12–16 semanas) y los gatitos (de 2 a 7–9 semanas) necesitan tener contacto con las especies con las que convivirán cuando sean adultos. La escasa socialización con personas u otros animales predispone a presentar miedo a las especies con las cuales no tuvo contacto."
+          },
+          {
+            "ordinal": 13,
+            "seccion": "Socialización de gatitos y paternidad",
+            "texto": "[diap. 20] McCune, 1995 (Applied Animal Behaviour Science), impacto de la paternidad y la socialización temprana en la conducta del gato hacia personas y objetos nuevos. Se compararon cuatro grupos: padre dócil con gatitos socializados (muy dóciles); padre dócil con gatitos no socializados y padre poco dócil con gatitos socializados (medianamente dóciles); padre poco dócil con gatitos no socializados (poco dóciles). Conclusiones: los gatitos manipulados 40 minutos al día desde las 2 a las 12 semanas son más dóciles con personas desconocidas. La genética del padre tiene un efecto importante sobre la docilidad del gatito."
+          },
+          {
+            "ordinal": 14,
+            "seccion": "Adversidad temprana y raza",
+            "texto": "[diap. 21] Espinosa et al., Influence of early life adversity and breed on aggression and fear in dogs. Las experiencias negativas durante los primeros 6 meses de vida están fuertemente asociadas con niveles más altos de miedo. El impacto de estas adversidades varía según la raza."
+          },
+          {
+            "ordinal": 15,
+            "seccion": "Socialización inadecuada y miedo social",
+            "texto": "[diap. 22] Puurunen et al., Scientific Reports: la socialización inadecuada, la inactividad y el entorno urbano se asocian con el miedo social en perros de compañía. Las figuras relacionan la probabilidad de miedo a perros y a desconocidos con la raza, el puntaje de socialización, el puntaje de entorno urbano, el sexo, la esterilización y el tamaño corporal."
+          },
+          {
+            "ordinal": 16,
+            "seccion": "Habituación a estímulos y situaciones",
+            "texto": "[diap. 23–24] Período de socialización, habituación a estímulos y situaciones. Los cachorros y gatitos necesitan habituarse a distintos estímulos y situaciones que encontrarán en su vida adulta, (las imágenes de la diapositiva muestran el coche, el transportín, la visita al veterinario, la aspiradora, el secador de pelo y la calle). La falta de habituación a una variedad de estímulos o situaciones predispone a un mayor grado de neofobia. (Domjan, 2010)."
+          },
+          {
+            "ordinal": 17,
+            "seccion": "Experiencias durante la vida adulta",
+            "texto": "[diap. 25] Factores predisponentes durante la vida adulta: experiencias traumáticas, ambiente inadecuado y estado de salud."
+          },
+          {
+            "ordinal": 18,
+            "seccion": "Aprendizaje: miedo condicionado",
+            "texto": "[diap. 26–28] Aprendizaje, miedo condicionado (Carlson, 2005; Carlson y Birkett, 2017). Esquema de condicionamiento del miedo: en el esquema con roedores, el animal condicionado muestra mucha más paralización (freezing) que el no condicionado al ser expuesto de nuevo. Miedo contextual: con la experiencia aversiva sin señal, el animal muestra miedo en el mismo contexto y no en otro distinto; con señal, muestra miedo en ambos. Condicionamiento clásico: miedo a los petardos (estímulo incondicionado) y miedo a la calle (estímulo condicionado)."
+          },
+          {
+            "ordinal": 19,
+            "seccion": "Aprendizaje: generalización y discriminación",
+            "texto": "[diap. 29–30] Generalización: estímulos con características similares al original desencadenan también una respuesta de miedo (Dunsmoor y Paz, 2015). Generalización y discriminación: la amígdala se encarga de la generalización (respuesta rápida) y aumenta la respuesta de miedo; el hipocampo se encarga de la discriminación (pattern separation) y la corteza prefrontal de la inhibición y el control, y ambos la reducen."
+          },
+          {
+            "ordinal": 20,
+            "seccion": "Aprendizaje: sensibilización",
+            "texto": "[diap. 31] Sensibilización: la respuesta aumenta con la repetición del estímulo. Factores que favorecen la sensibilización: la intensidad y las características del estímulo, la imposibilidad de controlar el estímulo y el estado del animal cuando el estímulo se presenta. (Domjan, 2010; Nishimura et al., 2022)."
+          },
+          {
+            "ordinal": 21,
+            "seccion": "Estado de salud: dolor",
+            "texto": "[diap. 32–33] Estado de salud: el dolor puede afectar al estado emocional y producir un sesgo cognitivo negativo (animales pesimistas): situaciones o estímulos que inicialmente eran neutros pueden ser vistos como negativos. (Lindley, 2012). Mills et al., 2020 (Animals): figura con la intensidad del miedo y la ansiedad en cinco contextos (ruidos, dueño que se acerca, dueño que lleva objetos, entrada por la puerta trasera y sombras) de un paciente puntuado antes y después de recibir analgesia."
+          },
+          {
+            "ordinal": 22,
+            "seccion": "Protocolo diagnóstico",
+            "texto": "[diap. 35] Protocolo diagnóstico. Descartar problemas médicos: pruebas médicas mínimas (coste razonable), que incluyen examen físico, neurológico, urianálisis, hemograma y bioquímica. Historial etológico: comienzo, estímulos o situaciones desencadenantes, postura del animal, tiempo que tarda en recuperarse, si hay generalización, respuesta del tutor y ambiente."
+          },
+          {
+            "ordinal": 23,
+            "seccion": "Fobia a ruidos: frecuencia",
+            "texto": "[diap. 36–37] Fobia a ruidos. Blackwell et al., 2013 (Applied Animal Behaviour Science), respuestas de miedo a ruidos en perros domésticos: se compara el porcentaje de perros que alguna vez responden y el que responde en cada exposición ante fuegos artificiales, tormentas, disparos, petardeos de coches, ruidos fuertes en la televisión y otros ruidos. Según el gráfico, los fuegos artificiales y las tormentas son las categorías con barras más largas."
+          },
+          {
+            "ordinal": 24,
+            "seccion": "Fobia a ruidos: factores de riesgo",
+            "texto": "[diap. 38] Miedo a ruidos, factores de riesgo: la edad (a mayor edad, mayor riesgo), el origen, la raza y la exposición a ruidos antes de los 6 meses (Limura [sic], 2006). (Blackwell et al., 2013)."
+          },
+          {
+            "ordinal": 25,
+            "seccion": "Fobia a ruidos: tratamiento paliativo y curativo",
+            "texto": "[diap. 39, 46, 56] Miedo a ruidos, tratamiento. Paliativo: el objetivo es atenuar los síntomas en momentos concretos; se debería aplicar siempre; se usa en situaciones muy puntuales, cuando no hay tiempo para realizar el programa de desensibilización. La diapositiva 46 añade: el perro diferencia entre la grabación y la realidad. Curativo: el objetivo es erradicar la respuesta de miedo; está especialmente indicado cuando hay mucha anticipación."
+          },
+          {
+            "ordinal": 26,
+            "seccion": "Medidas generales",
+            "texto": "[diap. 40–43] Medidas generales. Paseos: elegir zonas y horas tranquilas, no forzar al animal a salir a pasear y usar arnés (arnés antifugas). (Rogerson, 1997). No castigar. Calmarlo. Evitar la inundación. Permitirle decidir dónde estar o esconderse. No mantener a los perros en una jaula cerrada sin habituación previa y por períodos largos."
+          },
+          {
+            "ordinal": 27,
+            "seccion": "Qué hacer si muestra signos de miedo",
+            "texto": "[diap. 44] ¿Qué hacer si muestra signos de miedo? ¿Pueden reforzarse los signos involuntarios? El miedo no se refuerza. Acariciar o hablar con el animal reduce su estrés siempre que el animal busque el contacto por su propia voluntad: la búsqueda de contacto es conducta afiliativa y tiene un efecto amortiguador frente a situaciones de estrés. (Hennessy et al., 1998)."
+          },
+          {
+            "ordinal": 28,
+            "seccion": "Enriquecimiento ambiental",
+            "texto": "[diap. 45] Medidas generales, enriquecimiento ambiental. Li y Wang, 2021 (Stress and Brain): influencia del ambiente enriquecido en la conducta relacionada con la ansiedad. AAFP e ISFM, guías de necesidades ambientales felinas, cinco pilares de un entorno felino sano: 1 proporcionar un lugar seguro; 2 proporcionar múltiples recursos ambientales clave separados (comida, agua, zonas de aseo, rascado, juego y descanso o sueño); 3 dar oportunidad de juego y conducta depredadora; 4 proporcionar una interacción humano-gato positiva, consistente y predecible; 5 proporcionar un entorno que respete la importancia del olfato del gato."
+          },
+          {
+            "ordinal": 29,
+            "seccion": "Tratamiento paliativo: zona segura",
+            "texto": "[diap. 47] Tratamiento paliativo, creación de una zona segura (fobia a ruidos): siempre disponible, de modo que pueda entrar y salir cuando quiera; diferente a donde se esconde habitualmente (miedo contextual); acondicionada para amortiguar estímulos (persianas bajadas); con recursos disponibles; y se puede enmascarar el ruido con otros estímulos (televisión, radio). Lo ideal es una adaptación progresiva."
+          },
+          {
+            "ordinal": 30,
+            "seccion": "Tratamiento paliativo: benzodiacepinas",
+            "texto": "[diap. 48] Tratamiento paliativo, fármacos. Benzodiacepinas: alprazolam y cloracepato. Ventajas señaladas: efecto rápido, transitorio y amnesia. Inconvenientes señalados: efecto paradójico, tolerancia y dependencia. Revisión de medicación previa a la cita para reducir el miedo y la ansiedad en perros y gatos en las visitas veterinarias (Erickson et al.)."
+          },
+          {
+            "ordinal": 31,
+            "seccion": "Tratamiento paliativo: trazodona, agonistas alfa-2 e imepitoína",
+            "texto": "[diap. 49–51] Tratamiento paliativo, fármacos. Trazodona: ensayo clínico aleatorizado con placebo en perros durante visitas veterinarias (Kim et al., JAVMA) y eficacia de una dosis única en gatos antes de visitas veterinarias (JAVMA, 2016). Agonistas α2: dexmedetomidina (gel oromucoso en perros, Korpivaara et al.), tasipimidina (ansiedad aguda por la partida del dueño, Korpivaara et al., 2022) y clonidina. Imepitoína: eficacia en el control de la ansiedad y el miedo asociados a la fobia a ruidos en perros (Engel et al., 2019)."
+          },
+          {
+            "ordinal": 32,
+            "seccion": "Tratamiento paliativo: gabapentina y pregabalina",
+            "texto": "[diap. 52–53] Tratamiento paliativo, fármacos. Gabapentina: dosis oral única en perros con fobia a las tormentas (Bleuer-Elsner et al., Veterinary Record) y dosis única previa a la cita en gatos durante el transporte y el examen veterinario. Pregabalina: dosis única en gatos durante el transporte. Diapositiva 53, sin texto explicativo: muestra un envase de medicamento con un símbolo de prohibición encima y un nombre parcialmente tapado."
+          },
+          {
+            "ordinal": 33,
+            "seccion": "Tratamiento paliativo: feromonas, dietas y suplementos",
+            "texto": "[diap. 54–55] Tratamiento paliativo, medidas complementarias. Feromonas faciales felinas y feromonas apaciguadoras caninas. Referencia al pie de la diapositiva: Levine et al., 2007, programas de desensibilización y contracondicionamiento con feromona apaciguadora canina para el miedo a los fuegos artificiales en perros. Dietas y suplementos: dieta con alfa-casozepina y L-triptófano en gatos (Landsberg et al., 2017), que ayuda a reducir la respuesta de ansiedad en ambientes desconocidos; alfa-casozepina en perros durante visitas veterinarias (Puglisi et al.); L-teanina (Anxitane) en perros sensibles a las tormentas (Pike et al., 2015)."
+          },
+          {
+            "ordinal": 34,
+            "seccion": "Tratamiento curativo",
+            "texto": "[diap. 57–59] Miedo a ruidos, tratamiento curativo. Contracondicionamiento clásico más desensibilización, con apoyo de recursos de terapia de sonido para los fuegos artificiales (capturas de «Sound therapy and firework training», «Sounds Scary!» y «Sounds Sociable») y vídeos. Incluye la habituación al ruido. Fármacos: los mismos que en el tratamiento paliativo más fármacos que actúen a largo plazo: ATC e IRSS."
+          }
+        ]
+      }
+    }
+  ]
+}

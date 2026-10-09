@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
 import { parseRows } from "@/features/registro/read-rows";
 import {
   type AnamnesisContent,
@@ -44,6 +45,10 @@ export async function recordAnamnesisEntry(
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();
   try {
+    // D4: los campos previos a la hoja etológica solo se leen.
+    if (isLegacyAnamnesisField(input.field)) {
+      throw new Error("Ese campo es previo a la hoja etológica: elige un campo vigente.");
+    }
     const content = anamnesisContentSchema.parse({
       consultationId: input.consultationId,
       field: input.field,

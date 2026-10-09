@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OptionPicker } from "@/components/registro/option-picker";
 import {
   FormControl,
   FormControlError,
@@ -20,6 +21,20 @@ export type FichaFormValues = {
   weightKg: string;
   sex: string;
   reproductiveStatus: string;
+  fileNumber: string;
+  firstVisitDate: string;
+  origin: string;
+  adoptionAge: string;
+  adoptionState: string;
+  neuterAge: string;
+  litterInfo: string;
+  /** `""` = sin dato; no se confunde con «no refiere» (FR-044). */
+  referrerRefers: "" | "si" | "no";
+  referrerName: string;
+  referrerCenter: string;
+  referrerPhone: string;
+  referrerInsurance: string;
+  referrerOpinion: string;
 };
 
 export type FichaField = keyof FichaFormValues;
@@ -33,7 +48,48 @@ export const emptyFichaFormValues: FichaFormValues = {
   weightKg: "",
   sex: "",
   reproductiveStatus: "",
+  fileNumber: "",
+  firstVisitDate: "",
+  origin: "",
+  adoptionAge: "",
+  adoptionState: "",
+  neuterAge: "",
+  litterInfo: "",
+  referrerRefers: "",
+  referrerName: "",
+  referrerCenter: "",
+  referrerPhone: "",
+  referrerInsurance: "",
+  referrerOpinion: "",
 };
+
+/** Contenido guardado → valores del formulario (edición de la ficha). */
+export function fichaValuesFromContent(content: PatientContent): FichaFormValues {
+  const referrer = content.referrer ?? null;
+  return {
+    name: content.name,
+    species: content.species,
+    breed: content.breed,
+    birthDate: content.birthDate ?? "",
+    ageMonths: content.ageMonths === null ? "" : String(content.ageMonths),
+    weightKg: content.weightKg === null ? "" : String(content.weightKg),
+    sex: content.sex,
+    reproductiveStatus: content.reproductiveStatus,
+    fileNumber: content.fileNumber ?? "",
+    firstVisitDate: content.firstVisitDate ?? "",
+    origin: content.origin ?? "",
+    adoptionAge: content.adoptionAge ?? "",
+    adoptionState: content.adoptionState ?? "",
+    neuterAge: content.neuterAge ?? "",
+    litterInfo: content.litterInfo ?? "",
+    referrerRefers: referrer?.refers ?? "",
+    referrerName: referrer?.name ?? "",
+    referrerCenter: referrer?.center ?? "",
+    referrerPhone: referrer?.phone ?? "",
+    referrerInsurance: referrer?.insurance ?? "",
+    referrerOpinion: referrer?.opinion ?? "",
+  };
+}
 
 export const FICHA_FORM_FIELDS: {
   field: FichaField;
@@ -48,7 +104,29 @@ export const FICHA_FORM_FIELDS: {
   { field: "weightKg", label: "Peso (kg)", keyboardType: "numeric" },
   { field: "sex", label: "Sexo" },
   { field: "reproductiveStatus", label: "Estado reproductivo" },
+  { field: "fileNumber", label: "Número de expediente" },
+  { field: "firstVisitDate", label: "Fecha de la 1ª visita (AAAA-MM-DD)" },
+  { field: "origin", label: "Procedencia" },
+  { field: "adoptionAge", label: "Edad con que fue adoptado" },
+  { field: "adoptionState", label: "Estado en el momento de la adopción" },
+  { field: "neuterAge", label: "Edad de gonadectomía" },
+  { field: "litterInfo", label: "Progenitores / camada" },
 ];
+
+/** Bloque «Datos del veterinario» de la hoja; `referrerRefers` va aparte (grupo Sí/No). */
+export const REFERRER_FORM_FIELDS: { field: FichaField; label: string }[] = [
+  { field: "referrerName", label: "Veterinario derivante: nombre completo" },
+  { field: "referrerCenter", label: "Veterinario derivante: centro" },
+  { field: "referrerPhone", label: "Veterinario derivante: teléfono" },
+  { field: "referrerInsurance", label: "Dispone de seguro veterinario" },
+  { field: "referrerOpinion", label: "Opinión del veterinario sobre el problema" },
+];
+
+const REFERS_OPTIONS = [
+  { value: "", label: "Sin dato" },
+  { value: "si", label: "Sí" },
+  { value: "no", label: "No" },
+] as const;
 
 const TEST_ID_BY_FIELD: Record<FichaField, string> = {
   name: "patient-name",
@@ -59,6 +137,19 @@ const TEST_ID_BY_FIELD: Record<FichaField, string> = {
   weightKg: "patient-weight-kg",
   sex: "patient-sex",
   reproductiveStatus: "patient-reproductive-status",
+  fileNumber: "patient-file-number",
+  firstVisitDate: "patient-first-visit-date",
+  origin: "patient-origin",
+  adoptionAge: "patient-adoption-age",
+  adoptionState: "patient-adoption-state",
+  neuterAge: "patient-neuter-age",
+  litterInfo: "patient-litter-info",
+  referrerRefers: "patient-referrer-refers",
+  referrerName: "patient-referrer-name",
+  referrerCenter: "patient-referrer-center",
+  referrerPhone: "patient-referrer-phone",
+  referrerInsurance: "patient-referrer-insurance",
+  referrerOpinion: "patient-referrer-opinion",
 };
 
 // Primer paso de validación: los textos del formulario con mensajes en español. Los
@@ -96,6 +187,19 @@ const fichaFormSchema = z.object({
   weightKg: optionalDecimalSchema,
   sex: z.string().trim().min(1, "Este campo es obligatorio."),
   reproductiveStatus: z.string().trim().min(1, "Este campo es obligatorio."),
+  fileNumber: z.string().trim(),
+  firstVisitDate: optionalIsoDateTextSchema,
+  origin: z.string().trim(),
+  adoptionAge: z.string().trim(),
+  adoptionState: z.string().trim(),
+  neuterAge: z.string().trim(),
+  litterInfo: z.string().trim(),
+  referrerRefers: z.enum(["", "si", "no"]),
+  referrerName: z.string().trim(),
+  referrerCenter: z.string().trim(),
+  referrerPhone: z.string().trim(),
+  referrerInsurance: z.string().trim(),
+  referrerOpinion: z.string().trim(),
 });
 
 const fichaContentSchema = patientContentSchema.omit({ tutorId: true });
@@ -124,6 +228,31 @@ export function parseFichaValues(
     sex: clean.sex,
     reproductiveStatus: clean.reproductiveStatus,
     antecedentes,
+    fileNumber: clean.fileNumber,
+    firstVisitDate: clean.firstVisitDate === "" ? null : clean.firstVisitDate,
+    origin: clean.origin,
+    adoptionAge: clean.adoptionAge,
+    adoptionState: clean.adoptionState,
+    neuterAge: clean.neuterAge,
+    litterInfo: clean.litterInfo,
+    // Sin ningún dato del bloque, el derivante queda «sin dato» (null), no un objeto vacío.
+    referrer: [
+      clean.referrerRefers,
+      clean.referrerName,
+      clean.referrerCenter,
+      clean.referrerPhone,
+      clean.referrerInsurance,
+      clean.referrerOpinion,
+    ].some((value) => value !== "")
+      ? {
+          refers: clean.referrerRefers === "" ? null : clean.referrerRefers,
+          name: clean.referrerName,
+          center: clean.referrerCenter,
+          phone: clean.referrerPhone,
+          insurance: clean.referrerInsurance,
+          opinion: clean.referrerOpinion,
+        }
+      : null,
   });
   if (!contentResult.success) {
     return { value: null, errors: getFieldErrors(contentResult.error) };
@@ -140,34 +269,53 @@ type FichaFormProps = {
 
 /** Campos de FR-001 con etiqueta programática y error por campo (WCAG 2.2 AA 3.3.1). */
 export function FichaForm({ values, errors, isDisabled = false, onChange }: FichaFormProps) {
+  const renderField = ({
+    field,
+    label,
+    keyboardType,
+  }: {
+    field: FichaField;
+    label: string;
+    keyboardType?: "numeric";
+  }) => {
+    const error = errors[field];
+    return (
+      <FormControl isInvalid={Boolean(error)} key={field}>
+        <FormControlLabel>
+          <FormControlLabelText>{label}</FormControlLabelText>
+        </FormControlLabel>
+        <Input>
+          <InputField
+            accessibilityLabel={label}
+            aria-label={label}
+            editable={!isDisabled}
+            keyboardType={keyboardType}
+            onChangeText={(text) => onChange(field, text)}
+            testID={TEST_ID_BY_FIELD[field]}
+            value={values[field]}
+          />
+        </Input>
+        {error ? (
+          <FormControlError>
+            <FormControlErrorText>{error}</FormControlErrorText>
+          </FormControlError>
+        ) : null}
+      </FormControl>
+    );
+  };
+
   return (
     <VStack className="w-full gap-4" testID="patient-form">
-      {FICHA_FORM_FIELDS.map(({ field, label, keyboardType }) => {
-        const error = errors[field];
-        return (
-          <FormControl isInvalid={Boolean(error)} key={field}>
-            <FormControlLabel>
-              <FormControlLabelText>{label}</FormControlLabelText>
-            </FormControlLabel>
-            <Input>
-              <InputField
-                accessibilityLabel={label}
-                aria-label={label}
-                editable={!isDisabled}
-                keyboardType={keyboardType}
-                onChangeText={(text) => onChange(field, text)}
-                testID={TEST_ID_BY_FIELD[field]}
-                value={values[field]}
-              />
-            </Input>
-            {error ? (
-              <FormControlError>
-                <FormControlErrorText>{error}</FormControlErrorText>
-              </FormControlError>
-            ) : null}
-          </FormControl>
-        );
-      })}
+      {FICHA_FORM_FIELDS.map(renderField)}
+      <OptionPicker
+        isDisabled={isDisabled}
+        label="Refiere el caso otro veterinario"
+        onChange={(value) => onChange("referrerRefers", value)}
+        options={[...REFERS_OPTIONS]}
+        testID={TEST_ID_BY_FIELD.referrerRefers}
+        value={values.referrerRefers}
+      />
+      {REFERRER_FORM_FIELDS.map(renderField)}
     </VStack>
   );
 }

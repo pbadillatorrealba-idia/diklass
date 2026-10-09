@@ -1,6 +1,10 @@
+import {
+  answerText,
+  DIAGNOSTIC_TEST_LABELS,
+  fieldLabel,
+} from "@/features/registro/anamnesis-catalog";
 import type {
   AnamnesisContent,
-  AnamnesisField,
   AntecedentGroup,
   DiagnosisContent,
   EpicrisisContent,
@@ -15,24 +19,6 @@ import type {
  * y cada hallazgo conserva la procedencia que el veterinario asignó (FR-021). Los campos
  * `hipotesis` y `medicamentosAprobados` quedan vacíos: los poblán las specs 006 y 007.
  */
-
-const ANAMNESIS_LABELS: Record<AnamnesisField, string> = {
-  motivo_consulta: "Motivo de consulta",
-  comportamiento_problematico: "Comportamiento problemático",
-  frecuencia: "Frecuencia",
-  duracion: "Duración",
-  contexto: "Contexto",
-  desencadenantes: "Desencadenantes",
-  cambios_recientes: "Cambios recientes",
-  ambiente: "Ambiente",
-  convivencia: "Convivencia",
-  alimentacion: "Alimentación",
-  actividad: "Actividad",
-  rutinas: "Rutinas",
-  tratamientos_anteriores: "Tratamientos anteriores",
-  respuesta_tratamientos: "Respuesta a tratamientos",
-  texto_libre: "Texto libre",
-};
 
 const ANTECEDENT_LABELS: Record<AntecedentGroup, string> = {
   medicalHistory: "Antecedentes médicos",
@@ -64,7 +50,7 @@ export function buildEpicrisisDraft(input: {
   const hallazgosAnamnesis = input.anamnesis
     .map(
       (entrada) =>
-        `${ANAMNESIS_LABELS[entrada.field]}: ${entrada.text} [procedencia: ${entrada.provenance}]`,
+        `${fieldLabel(entrada.field)}: ${answerText(entrada.field, entrada.text)} [procedencia: ${entrada.provenance}]`,
     )
     .join("\n");
 
@@ -81,6 +67,24 @@ export function buildEpicrisisDraft(input: {
 
   const diagnostico = input.diagnoses.map((registro) => registro.text).join("\n");
 
+  // FR-112: el plan es propuesta del veterinario; entra tal cual lo escribió. Las hipótesis y los
+  // medicamentos aprobados siguen reservados a 006 y 007 (FR-010).
+  const planes = input.diagnoses.flatMap((registro) => (registro.plan ? [registro.plan] : []));
+  const examenesSolicitados = planes.flatMap((plan) => [
+    ...(plan.tests ?? []).map((prueba) => DIAGNOSTIC_TEST_LABELS[prueba]),
+    ...(plan.otherTests ? [plan.otherTests] : []),
+  ]);
+  const intervencionesPropuestas = planes.flatMap((plan) => [
+    ...[plan.generalGuidelines, plan.specificGuidelines, plan.complementaryGuidelines].filter(
+      (pauta): pauta is string => Boolean(pauta),
+    ),
+    ...(plan.medication ?? []).map(
+      (m) => `Medicación propuesta: ${m.activeIngredient} — ${m.guideline}`,
+    ),
+  ]);
+  const diferenciales = planes.flatMap((plan) => plan.differentials ?? []);
+  const pendientes = planes.flatMap((plan) => (plan.followUp ? [plan.followUp] : []));
+
   return {
     consultationId: input.consultationId,
     motivoConsulta,
@@ -88,11 +92,13 @@ export function buildEpicrisisDraft(input: {
     hallazgosAnamnesis,
     hipotesis: [],
     diagnostico,
-    examenesSolicitados: [],
-    intervencionesPropuestas: [],
+    examenesSolicitados,
+    intervencionesPropuestas,
     medicamentosAprobados: [],
     recomendacionesTutor: "",
-    planSeguimiento: { pendientes: [] },
-    observaciones: "",
+    planSeguimiento: { pendientes },
+    observaciones: diferenciales.length
+      ? `Diagnósticos diferenciales (veterinario): ${diferenciales.join("; ")}`
+      : "",
   };
 }

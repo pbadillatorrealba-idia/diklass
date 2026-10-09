@@ -66,13 +66,14 @@ bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
 El script falla cerrado: rechaza cualquier `SUPABASE_URL` que no sea local, salvo que se pase
 `--allow-remote` de forma explícita. No lo uses contra un entorno con datos reales.
 
-### Corpus sintético de la base de conocimiento
+### Corpus inicial de la base de conocimiento
 
 ```bash
 bun --env-file=.env scripts/cargar-corpus-conocimiento.ts
 ```
 
-Incorpora `tests/fixtures/conocimiento/corpus-sintetico.json` con la identidad de
+Incorpora `tests/fixtures/conocimiento/corpus-miedo.json` (la presentación «Problemas de miedo en
+perros y gatos», de S. Le Brech, AWEC-UAB; licencia por confirmar) con la identidad de
 `CORPUS_VET_EMAIL`/`CORPUS_VET_PASSWORD` (un veterinario ya provisionado; ambas variables son
 obligatorias). Igual que el provisioning, falla cerrado: rechaza cualquier Supabase no local salvo
 `--allow-remote`, y avisa por consola cuando ese flag está activo.

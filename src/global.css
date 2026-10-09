@@ -90,21 +90,21 @@
  */
 @layer base {
   :root {
-    --background: 236 238 233;
-    --foreground: 27 29 31;
+    --background: 241 240 246;
+    --foreground: 37 17 52;
     --card: 255 255 255;
-    --card-foreground: 27 29 31;
+    --card-foreground: 37 17 52;
     --popover: 255 255 255;
-    --popover-foreground: 27 29 31;
-    --primary: 51 96 58;
+    --popover-foreground: 37 17 52;
+    --primary: 62 56 136;
     --primary-foreground: 255 255 255;
-    --primary-surface: 231 238 232;
+    --primary-surface: 232 230 244;
     --secondary: 70 92 104;
     --secondary-foreground: 255 255 255;
     --secondary-surface: 232 236 238;
-    --muted: 232 235 229;
-    --muted-foreground: 80 87 82;
-    --accent: 158 107 34;
+    --muted: 235 233 242;
+    --muted-foreground: 84 79 104;
+    --accent: 29 118 114;
     --accent-foreground: 255 255 255;
     --destructive: 176 40 24;
     --destructive-foreground: 255 255 255;
@@ -122,31 +122,31 @@
     --suggested-surface: 251 239 168;
     --correction: 158 43 69;
     --correction-surface: 246 221 232;
-    --stamp: 58 63 154;
+    --stamp: 31 78 158;
     --scrim: 0 0 0;
-    --border: 204 215 206;
-    --input: 104 126 108;
-    --ring: 51 96 58;
+    --border: 211 208 227;
+    --input: 112 106 146;
+    --ring: 62 56 136;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: 17 20 20;
-      --foreground: 236 238 232;
-      --card: 27 31 31;
-      --card-foreground: 236 238 232;
-      --popover: 36 41 41;
-      --popover-foreground: 236 238 232;
-      --primary: 143 196 154;
-      --primary-foreground: 17 20 20;
-      --primary-surface: 41 51 46;
+      --background: 20 18 28;
+      --foreground: 236 234 244;
+      --card: 29 26 41;
+      --card-foreground: 236 234 244;
+      --popover: 38 35 52;
+      --popover-foreground: 236 234 244;
+      --primary: 185 179 242;
+      --primary-foreground: 20 18 28;
+      --primary-surface: 38 35 58;
       --secondary: 150 172 184;
       --secondary-foreground: 17 20 20;
       --secondary-surface: 40 46 48;
-      --muted: 36 41 40;
-      --muted-foreground: 164 172 165;
-      --accent: 222 176 104;
-      --accent-foreground: 17 20 20;
+      --muted: 38 35 50;
+      --muted-foreground: 170 166 186;
+      --accent: 108 201 194;
+      --accent-foreground: 20 18 28;
       --destructive: 255 140 120;
       --destructive-foreground: 17 20 20;
       --destructive-surface: 61 30 18;
@@ -163,11 +163,11 @@
       --suggested-surface: 58 51 18;
       --correction: 242 154 174;
       --correction-surface: 54 28 48;
-      --stamp: 163 168 242;
+      --stamp: 140 178 245;
       --scrim: 0 0 0;
-      --border: 56 72 62;
-      --input: 112 132 117;
-      --ring: 143 196 154;
+      --border: 58 54 80;
+      --input: 122 116 154;
+      --ring: 185 179 242;
     }
   }
 
@@ -175,21 +175,21 @@
    * `+html.tsx` pone la clase antes del primer pintado. `tema.test.ts` exige que repitan los
    * valores de arriba. En nativo, el modo se fija con `Appearance.setColorScheme`. */
   :root.light {
-    --background: 236 238 233;
-    --foreground: 27 29 31;
+    --background: 241 240 246;
+    --foreground: 37 17 52;
     --card: 255 255 255;
-    --card-foreground: 27 29 31;
+    --card-foreground: 37 17 52;
     --popover: 255 255 255;
-    --popover-foreground: 27 29 31;
-    --primary: 51 96 58;
+    --popover-foreground: 37 17 52;
+    --primary: 62 56 136;
     --primary-foreground: 255 255 255;
-    --primary-surface: 231 238 232;
+    --primary-surface: 232 230 244;
     --secondary: 70 92 104;
     --secondary-foreground: 255 255 255;
     --secondary-surface: 232 236 238;
-    --muted: 232 235 229;
-    --muted-foreground: 80 87 82;
-    --accent: 158 107 34;
+    --muted: 235 233 242;
+    --muted-foreground: 84 79 104;
+    --accent: 29 118 114;
     --accent-foreground: 255 255 255;
     --destructive: 176 40 24;
     --destructive-foreground: 255 255 255;
@@ -207,30 +207,30 @@
     --suggested-surface: 251 239 168;
     --correction: 158 43 69;
     --correction-surface: 246 221 232;
-    --stamp: 58 63 154;
+    --stamp: 31 78 158;
     --scrim: 0 0 0;
-    --border: 204 215 206;
-    --input: 104 126 108;
-    --ring: 51 96 58;
+    --border: 211 208 227;
+    --input: 112 106 146;
+    --ring: 62 56 136;
   }
 
   :root.dark {
-    --background: 17 20 20;
-    --foreground: 236 238 232;
-    --card: 27 31 31;
-    --card-foreground: 236 238 232;
-    --popover: 36 41 41;
-    --popover-foreground: 236 238 232;
-    --primary: 143 196 154;
-    --primary-foreground: 17 20 20;
-    --primary-surface: 41 51 46;
+    --background: 20 18 28;
+    --foreground: 236 234 244;
+    --card: 29 26 41;
+    --card-foreground: 236 234 244;
+    --popover: 38 35 52;
+    --popover-foreground: 236 234 244;
+    --primary: 185 179 242;
+    --primary-foreground: 20 18 28;
+    --primary-surface: 38 35 58;
     --secondary: 150 172 184;
     --secondary-foreground: 17 20 20;
     --secondary-surface: 40 46 48;
-    --muted: 36 41 40;
-    --muted-foreground: 164 172 165;
-    --accent: 222 176 104;
-    --accent-foreground: 17 20 20;
+    --muted: 38 35 50;
+    --muted-foreground: 170 166 186;
+    --accent: 108 201 194;
+    --accent-foreground: 20 18 28;
     --destructive: 255 140 120;
     --destructive-foreground: 17 20 20;
     --destructive-surface: 61 30 18;
@@ -247,11 +247,11 @@
     --suggested-surface: 58 51 18;
     --correction: 242 154 174;
     --correction-surface: 54 28 48;
-    --stamp: 163 168 242;
+    --stamp: 140 178 245;
     --scrim: 0 0 0;
-    --border: 56 72 62;
-    --input: 112 132 117;
-    --ring: 143 196 154;
+    --border: 58 54 80;
+    --input: 122 116 154;
+    --ring: 185 179 242;
   }
 }
 
