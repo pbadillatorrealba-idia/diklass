@@ -5,6 +5,7 @@ import {
   makeRequestId,
 } from "@/lib/observability/client-error-reporter";
 import type { Database } from "@/lib/supabase/database.types";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Búsqueda de pacientes en el servidor (RPC `search_patients`): filtros, orden por columna y
@@ -66,6 +67,7 @@ export async function searchPatients(
   client: SupabaseClient<Database>,
   params: PatientSearchParams,
 ): Promise<PatientPage> {
+  if (params.tutorId && !isUuid(params.tutorId)) return { rows: [], total: 0 };
   const requestId = makeRequestId();
   const from = validDateOnly(params.visitFrom);
   const to = validDateOnly(params.visitTo);

@@ -159,11 +159,11 @@ export default function PatientsScreen() {
   const pageHref = (target: number) =>
     patientsHref({ ...current, page: target > 1 ? String(target) : undefined });
 
-  const registerLink = (
+  const registerLink = (className?: string) => (
     <Link asChild href="/patients/new">
       <Button
         accessibilityLabel="Registrar paciente"
-        className="self-start"
+        className={className}
         testID="patients-register"
       >
         <ButtonText>Registrar paciente</ButtonText>
@@ -172,10 +172,14 @@ export default function PatientsScreen() {
   );
 
   return (
-    <Screen testID="patients-screen" title="Pacientes" width="wide">
-      {/* Con filtros, el vacío no invita a registrar: invita a limpiarlos. */}
-      {isEmpty && !hasFilters ? null : registerLink}
-
+    <Screen
+      // Con filtros, el vacío no invita a registrar: invita a limpiarlos. Sin filtros y vacío, el
+      // botón va dentro del aviso de vacío (FR-083: el resto, en la línea del título o al pie).
+      action={isEmpty && !hasFilters ? null : registerLink()}
+      testID="patients-screen"
+      title="Pacientes"
+      width="wide"
+    >
       <Card className="gap-3 md:flex-row md:items-end" testID="patients-filters">
         <FilterField label="Nombre">
           <Input>
@@ -237,7 +241,7 @@ export default function PatientsScreen() {
               <Text>
                 Aún no hay pacientes registrados. Registra el primero para abrir su ficha.
               </Text>
-              {registerLink}
+              {registerLink("self-start")}
             </Card>
           )
         }

@@ -9,10 +9,11 @@ import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { searchPatients } from "@/features/registro/patient-search";
-import { getTutor } from "@/features/registro/tutor-service";
+import { getTutor, tutorFullName } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -25,7 +26,7 @@ export default function TutorScreen() {
 
   const tutorQuery = useQuery({
     queryKey: ["registro", "tutor", tutorId],
-    queryFn: () => getTutor(supabase, tutorId),
+    queryFn: () => (isUuid(tutorId) ? getTutor(supabase, tutorId) : null),
   });
   const patientsQuery = useQuery({
     queryKey: ["registro", "patients", { tutorId }],
@@ -74,9 +75,7 @@ export default function TutorScreen() {
         {tutor ? (
           <>
             <Card className="gap-2" testID="tutor-card">
-              <Heading level={2}>
-                {[tutor.content.name, tutor.content.surname].filter(Boolean).join(" ")}
-              </Heading>
+              <Heading level={2}>{tutorFullName(tutor.content)}</Heading>
               {tutor.content.phone ? <Text selectable>Teléfono: {tutor.content.phone}</Text> : null}
               {tutor.content.email ? <Text selectable>Correo: {tutor.content.email}</Text> : null}
               {tutor.content.address || tutor.content.city ? (

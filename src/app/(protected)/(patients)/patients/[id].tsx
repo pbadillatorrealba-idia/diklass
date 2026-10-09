@@ -37,10 +37,11 @@ import {
 } from "@/features/registro/ficha-service";
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { AntecedentGroup, AntecedentItem } from "@/features/registro/schema";
-import { listTutors } from "@/features/registro/tutor-service";
+import { listTutors, tutorFullName } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -59,7 +60,7 @@ export default function PatientDetailScreen() {
 
   const patientQuery = useQuery({
     queryKey: ["registro", "patient", patientId],
-    queryFn: () => getPatient(supabase, patientId),
+    queryFn: () => (isUuid(patientId) ? getPatient(supabase, patientId) : null),
   });
   const tutorsQuery = useQuery({
     queryKey: ["registro", "tutors"],
@@ -228,14 +229,14 @@ export default function PatientDetailScreen() {
               <Heading level={2}>Tutor</Heading>
               {tutor ? (
                 <View className="w-full flex-row flex-wrap gap-y-4">
-                  <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
-                    <Text tone="muted" variant="label">
-                      Nombre
-                    </Text>
-                    <Link href={`/tutors/${tutor.record.id}`} testID="patient-tutor-link">
-                      <LinkText>{tutor.content.name}</LinkText>
-                    </Link>
-                  </View>
+                  <DataItem
+                    label="Nombre"
+                    value={
+                      <Link href={`/tutors/${tutor.record.id}`} testID="patient-tutor-link">
+                        <LinkText>{tutorFullName(tutor.content)}</LinkText>
+                      </Link>
+                    }
+                  />
                   <DataItem
                     label="Contacto"
                     value={tutor.content.phone ?? tutor.content.email ?? null}
