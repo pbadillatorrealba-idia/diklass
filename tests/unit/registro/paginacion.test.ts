@@ -111,6 +111,27 @@ describe("readAllPages", () => {
     expect(await readAllPages(servidor(filas(PAGE_SIZE), PAGE_SIZE))).toHaveLength(PAGE_SIZE);
   });
 
+  // Regresión del OOM de `bun test`: un cliente que no informa `count` (undefined, no null)
+  // dejaba el bucle sin condición de salida y acumulaba filas hasta agotar la RAM.
+  test.each([
+    ["null", null],
+    ["undefined", undefined],
+  ])(
+    "sin total (count %s) devuelve lo leído en la primera página y no itera sin fin",
+    async (_nombre, count) => {
+      let llamadas = 0;
+      const pagina = () => {
+        llamadas += 1;
+        if (llamadas > 3) {
+          throw new Error("pidió páginas sin fin");
+        }
+        return Promise.resolve({ data: filas(2) as never, error: null, count: count as never });
+      };
+      expect(await readAllPages(pagina)).toHaveLength(2);
+      expect(llamadas).toBe(1);
+    },
+  );
+
   test("un error en la segunda página se propaga y no devuelve una lista parcial", async () => {
     const todas = filas(1500);
     const falla = new Error("conexión perdida");
