@@ -50,12 +50,24 @@ const TUTOR_MODE_OPTIONS: { value: "existing" | "new"; label: string }[] = [
   { value: "new", label: "Nuevo tutor" },
 ];
 
-type TutorValues = { name: string; phone: string; email: string };
+type TutorValues = {
+  name: string;
+  surname: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  postalCode: string;
+};
 
 const TUTOR_FIELDS: { field: keyof TutorValues; label: string; testID: string }[] = [
   { field: "name", label: "Nombre del tutor", testID: "tutor-name" },
+  { field: "surname", label: "Apellidos del tutor", testID: "tutor-surname" },
   { field: "phone", label: "Teléfono del tutor", testID: "tutor-phone" },
   { field: "email", label: "Correo del tutor", testID: "tutor-email" },
+  { field: "address", label: "Dirección del tutor", testID: "tutor-address" },
+  { field: "city", label: "Población del tutor", testID: "tutor-city" },
+  { field: "postalCode", label: "Código postal del tutor", testID: "tutor-postal-code" },
 ];
 
 export default function NewPatientScreen() {
@@ -68,7 +80,15 @@ export default function NewPatientScreen() {
   const [fichaErrors, setFichaErrors] = useState<Record<string, string>>({});
   const [tutorMode, setTutorMode] = useState<"existing" | "new">("existing");
   const [selectedTutorId, setSelectedTutorId] = useState("");
-  const [tutorValues, setTutorValues] = useState<TutorValues>({ name: "", phone: "", email: "" });
+  const [tutorValues, setTutorValues] = useState<TutorValues>({
+    name: "",
+    surname: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    postalCode: "",
+  });
   const [tutorErrors, setTutorErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);

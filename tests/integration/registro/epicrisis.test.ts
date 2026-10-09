@@ -280,7 +280,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
     await recordAnamnesisEntry(ana.client, {
       clinicId: ana.clinicId,
       consultationId: consulta,
-      field: "frecuencia",
+      field: "historia_problema",
       text: "Todas las noches.",
       provenance: "reportada",
     });
@@ -298,7 +298,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
     expect(retomada?.consultation.content.status).toBe("open");
     expect(retomada?.anamnesis.map((entrada) => entrada.content.field)).toEqual([
       "motivo_consulta",
-      "frecuencia",
+      "historia_problema",
     ]);
     expect(retomada?.diagnoses.map((entrada) => entrada.content.text)).toEqual([
       "Ansiedad por separación",

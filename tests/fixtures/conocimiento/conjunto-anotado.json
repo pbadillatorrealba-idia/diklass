@@ -1,36 +1,56 @@
 {
   "preguntas": [
     {
-      "pregunta": "¿Qué antecedentes revisar ante un posible cuadro de ansiedad por separación?",
-      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 1 }
+      "pregunta": "¿Cuál es la prevalencia de miedo y ansiedad en perros?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 7 }
     },
     {
-      "pregunta": "¿Cómo se diagnostica la ansiedad por separación?",
-      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 2 }
+      "pregunta": "¿Cuándo el miedo es un problema de comportamiento y de bienestar?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 5 }
     },
     {
-      "pregunta": "¿Qué combina el tratamiento de la ansiedad por separación?",
-      "evidenciaEsperada": { "documentoClave": "protocolo-ansiedad-separacion", "ordinal": 3 }
+      "pregunta": "¿Qué conductas muestra un animal ante un estímulo amenazante?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 4 }
     },
     {
-      "pregunta": "¿Cuánto tarda el efecto de la fluoxetina?",
-      "evidenciaEsperada": { "documentoClave": "ficha-fluoxetina", "ordinal": 1 }
+      "pregunta": "¿Qué períodos de la vida temprana distingue el perro y el gato, y cuándo termina la socialización?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 11 }
     },
     {
-      "pregunta": "¿Qué revisar antes de iniciar fluoxetina?",
-      "evidenciaEsperada": { "documentoClave": "ficha-fluoxetina", "ordinal": 2 }
+      "pregunta": "¿Cómo influye la paternidad y la socialización en la docilidad de los gatitos?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 13 }
     },
     {
-      "pregunta": "¿Cómo se maneja el miedo a los fuegos artificiales?",
-      "evidenciaEsperada": { "documentoClave": "protocolo-miedo-fuegos", "ordinal": 1 }
+      "pregunta": "¿Qué es la generalización del miedo?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 19 }
     },
     {
-      "pregunta": "¿Cómo presentar a un perro y a un gato?",
-      "evidenciaEsperada": { "documentoClave": "protocolo-convivencia-especies", "ordinal": 1 }
+      "pregunta": "¿Qué pruebas médicas hay que hacer ante un problema de miedo?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 22 }
     },
     {
-      "pregunta": "¿Qué reduce la ansiedad generalizada?",
-      "evidenciaEsperada": { "documentoClave": "guia-modificacion-conducta", "ordinal": 2 }
+      "pregunta": "¿Qué datos incluye el historial etológico?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 22 }
+    },
+    {
+      "pregunta": "¿Cuáles son los factores de riesgo del miedo a ruidos?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 24 }
+    },
+    {
+      "pregunta": "¿Se puede acariciar a un animal que muestra signos de miedo?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 27 }
+    },
+    {
+      "pregunta": "¿Cómo se crea una zona segura para la fobia a ruidos?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 29 }
+    },
+    {
+      "pregunta": "¿Qué benzodiacepinas se usan en el tratamiento paliativo del miedo a ruidos?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 30 }
+    },
+    {
+      "pregunta": "¿En qué consiste el tratamiento curativo del miedo a ruidos?",
+      "evidenciaEsperada": { "documentoClave": "miedo-perros-gatos", "ordinal": 34 }
     }
   ],
   "preguntasFueraDeDominio": [
@@ -38,6 +58,6 @@
     "Vacunación antirrábica en aves rapaces",
     "Diagnóstico de sarna sarcóptica en ovejas",
     "Cirugía de esterilización en hurones",
-    "Suplementación con triptófano en reptiles"
+    "Suplementación mineral en vacas lecheras"
   ]
 }

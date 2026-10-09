@@ -15,7 +15,7 @@ import { fakeClient } from "./fakes";
 // SC-048 · US6-AC3 · US6-AC6 · US6-AC9 · US6-AC15).
 
 const propuesta = {
-  field: "comportamiento_problematico" as const,
+  field: "historia_problema" as const,
   text: "Destroza el sofá cuando se queda solo",
   excerptStart: 22,
   excerptEnd: 58,
@@ -46,7 +46,7 @@ const fila = (content: Record<string, unknown>) => ({
 
 const contenidoBorrador = {
   consultationId: "consulta-1",
-  field: "comportamiento_problematico",
+  field: "historia_problema",
   text: "Destroza el sofá cuando se queda solo",
   provenance: "inferida",
   confirmationState: "pending",
@@ -155,6 +155,16 @@ describe("confirmAudioFact", () => {
     });
     await expect(confirmAudioFact(client, "hecho-1")).rejects.toThrow(/anamnesisEntryId/i);
   });
+
+  test("D4: un borrador con un campo previo a la hoja etológica no se confirma ni escribe", async () => {
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ ...contenidoBorrador, field: "desencadenantes" }), error: null },
+      ],
+    });
+    await expect(confirmAudioFact(client, "hecho-1")).rejects.toThrow(/previo a la hoja/i);
+    expect(calls.filter((call) => call.method === "update")).toHaveLength(0);
+  });
 });
 
 // Revisión de la PR #29, hallazgo 4: editar, descartar y confirmar no pisan escrituras ajenas.
@@ -233,13 +243,17 @@ describe("listAudioFacts (lectura tolerante, revisión de la PR #29)", () => {
 // Revisión de la PR #29, hallazgo 10: los borradores de un tramo se insertan en bloque.
 describe("createAudioFactDrafts en bloque (revisión de la PR #29)", () => {
   test("un único INSERT para todas las propuestas del tramo, sin relecturas de la traza", async () => {
-    const segunda = { ...propuesta, field: "contexto" as const, text: "Cuando se queda solo" };
+    const segunda = {
+      ...propuesta,
+      field: "historia_problema" as const,
+      text: "Cuando se queda solo",
+    };
     const { client, calls } = fakeClient({
       "clinical_records:insert": [
         {
           data: [
             fila(contenidoBorrador),
-            { ...fila({ ...contenidoBorrador, field: "contexto" }), id: "hecho-2" },
+            { ...fila({ ...contenidoBorrador, field: "historia_problema" }), id: "hecho-2" },
           ],
           error: null,
         },

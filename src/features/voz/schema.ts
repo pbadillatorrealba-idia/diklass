@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidAnswer } from "@/features/registro/anamnesis-catalog";
 import { AnamnesisField } from "@/features/registro/schema";
 
 /**
@@ -38,18 +39,25 @@ const contradictionSchema = z.object({
 /** Señal de contradicción adjunta al borrador (FR-032 · US6-AC8). */
 export type ContradictionSignal = z.infer<typeof contradictionSchema>;
 
-export const audioFactContentSchema = z.object({
-  consultationId: requiredTextSchema,
-  field: z.enum(AnamnesisField),
-  text: requiredTextSchema,
-  provenance: z.literal("inferida"),
-  confirmationState: confirmationStateSchema,
-  transcriptSegmentId: requiredTextSchema,
-  transcriptExcerpt: requiredTextSchema,
-  segmentSeq: z.number().int().nonnegative(),
-  anamnesisEntryId: z.string().trim().min(1).nullish(),
-  contradiction: contradictionSchema.nullish(),
-});
+export const audioFactContentSchema = z
+  .object({
+    consultationId: requiredTextSchema,
+    field: z.enum(AnamnesisField),
+    text: requiredTextSchema,
+    provenance: z.literal("inferida"),
+    confirmationState: confirmationStateSchema,
+    transcriptSegmentId: requiredTextSchema,
+    transcriptExcerpt: requiredTextSchema,
+    segmentSeq: z.number().int().nonnegative(),
+    anamnesisEntryId: z.string().trim().min(1).nullish(),
+    contradiction: contradictionSchema.nullish(),
+  })
+  // Al confirmar, el servidor copia `field` y `text` a la anamnesis sin revalidar: una pregunta
+  // cerrada con texto libre dejaría una fila ilegible (FR-111).
+  .refine((fact) => isValidAnswer(fact.field, fact.text), {
+    path: ["text"],
+    message: "Elige una de las respuestas.",
+  });
 
 /** Contenido del hecho extraído del audio (D1 · FR-021 · SC-027). */
 export type AudioFactContent = z.infer<typeof audioFactContentSchema>;
