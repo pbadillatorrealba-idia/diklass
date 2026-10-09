@@ -28,11 +28,12 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
 
-    // Se llega desde Pacientes por un enlace, no por un botón.
+    // Sección propia en la barra lateral (enlace, no botón) y acceso también desde Pacientes.
+    const lateral = page.getByTestId("nav-sidebar-tutors");
+    await expect(lateral).toHaveAttribute("href", "/tutors");
     await page.goto("/patients");
-    const acceso = page.getByTestId("patients-tutors");
-    await expect(acceso).toHaveAttribute("href", "/tutors");
-    await acceso.click();
+    await expect(page.getByTestId("patients-tutors")).toHaveAttribute("href", "/tutors");
+    await lateral.click();
     await expect(page.getByTestId("tutors-screen")).toBeVisible({ timeout: 15_000 });
     await sinViolacionesAxe(page);
 

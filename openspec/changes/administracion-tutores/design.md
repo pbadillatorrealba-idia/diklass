@@ -57,11 +57,13 @@ no una compuerta.
 guarda con `updateTutor` (que ya pasa por el contrato de atribución). Evita una ruta
 `tutors/[id]/edit` y un cambio de estructura de carpetas. Tras guardar se invalida `registro`.
 
-### D5 — Acceso desde Pacientes, no una sección nueva
+### D5 — Sección propia en la barra lateral; en la inferior, por Pacientes
 
-La barra de navegación solo admite cuatro secciones con nombre a 320 px (D17 de `sistema-visual`).
-`/tutors` vive en la pila de Pacientes y se llega desde un botón «Tutores» en `/patients`; el
-retroceso de `/tutors` es «Pacientes». Si se quisiera como sección propia, habría que retirar otra.
+`Tutores` es una sección más de `SECTIONS` (grupo de rutas `(tutors)`, icono
+`account-group-outline`) y aparece en la barra lateral desde 1024 px. La barra inferior web sigue con
+cuatro secciones, porque a 320 px no caben más con el nombre visible (D17 de `sistema-visual`):
+ahí se llega por el botón «Tutores» de `/patients`, igual que Configuración se llega por el avatar.
+En nativo la barra de pestañas muestra las seis; en iOS la sexta queda bajo «Más».
 
 ### D6 — Reutilizar en vez de duplicar
 

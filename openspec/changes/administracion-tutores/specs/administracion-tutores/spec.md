@@ -7,7 +7,7 @@ nº de pacientes y una acción «Ver ficha». En pantallas anchas (≥ 1024 px) 
 roles de accesibilidad de tabla; en pantallas pequeñas, tarjetas apiladas con las mismas etiquetas
 y sin desplazamiento horizontal. «Ver ficha» MUST ser un enlace a `/tutors/<id>` (FR-084). Un
 contacto ausente MUST decir «Sin dato». «Registrar tutor» MUST ser la acción principal (FR-083)
-y `/patients` MUST ofrecer un enlace «Tutores» a esta lista.
+`Tutores` MUST ser una sección de la barra lateral y `/patients` MUST ofrecer un enlace «Tutores» a esta lista.
 
 #### Scenario: tabla en escritorio
 

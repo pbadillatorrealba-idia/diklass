@@ -18,8 +18,9 @@ mismo patrón que la lista de pacientes (`rediseno-pacientes`).
   teléfono o correo, avisa sin bloquear.
 - **Edición** en la ficha del tutor (`/tutors/[id]`): card de contacto con «Editar», con el mismo
   formulario. Revisa FR-116, que decía «sin edición».
-- **Acceso**: botón «Registrar tutor» como acción principal (FR-083) y un enlace «Tutores» desde
-  `/patients`. No es una sección nueva de la navegación: a 320 px solo caben cuatro (D17).
+- **Acceso**: sección «Tutores» en la barra lateral (`SECTIONS`, grupo `(tutors)`), botón
+  «Registrar tutor» como acción principal (FR-083) y un botón «Tutores» en `/patients`, que es el
+  acceso en la barra inferior web (a 320 px solo caben cuatro secciones, D17).
 - **Formulario compartido**: el alta de tutor y el bloque «Nuevo tutor» de «Registrar paciente»
   pasan a usar un solo `TutorForm`, con los mismos `testID`.
 - **Base de datos** (revisión de `clinical_records` para tutores, ver `design.md`): función

@@ -113,7 +113,6 @@ export default function TutorsScreen() {
     <Screen
       // Igual que en pacientes: sin filtros y vacío, el botón va dentro del aviso (FR-083).
       action={isEmpty && !hasFilters ? null : registerLink()}
-      back={{ href: "/patients", label: "Pacientes" }}
       testID="tutors-screen"
       title="Tutores"
       width="wide"
