@@ -30,4 +30,4 @@
 
 ## 3. Cierre
 
-- [ ] 3.1 Registrar la evidencia en `quickstart.md` y dejar CI en verde. Verificación: URLs de CI.
+- [x] 3.1 Registrar la evidencia en `quickstart.md` y dejar CI en verde. Verificación: URLs de CI.
