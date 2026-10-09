@@ -194,13 +194,13 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
     const despues = await getPatient(ana.client, pacienteId);
     expect(despues?.content.antecedentes.medicalHistory).toEqual([
-      { text: "Displasia de cadera", negative: false },
+      { text: "Displasia de cadera", negative: false, recordedAt: expect.any(String) },
     ]);
     expect(despues?.content.antecedentes.preexistingDiseases).toEqual([
-      { text: "Hipotiroidismo", negative: false },
+      { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
     ]);
     expect(despues?.content.antecedentes.knownAllergies).toEqual([
-      { text: "Sin alergias conocidas", negative: true },
+      { text: "Sin alergias conocidas", negative: true, recordedAt: expect.any(String) },
     ]);
   });
 
@@ -255,10 +255,10 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
     const lectura = await getPatient(ana.client, pacienteId);
     expect(lectura?.content.antecedentes.currentMedications).toEqual([
-      { text: "Fluoxetina 20 mg cada 24 h", negative: false },
+      { text: "Fluoxetina 20 mg cada 24 h", negative: false, recordedAt: expect.any(String) },
     ]);
     expect(lectura?.content.antecedentes.behavioralHistory).toEqual([
-      { text: "Ansiedad ante tormentas", negative: false },
+      { text: "Ansiedad ante tormentas", negative: false, recordedAt: expect.any(String) },
     ]);
   });
 
@@ -343,7 +343,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const final = await getPatient(ana.client, alta.record.id);
     expect(final?.content.weightKg).toBe(14);
     expect(final?.content.antecedentes.knownAllergies).toEqual([
-      { text: "Penicilina", negative: false },
+      { text: "Penicilina", negative: false, recordedAt: expect.any(String) },
     ]);
   });
 
