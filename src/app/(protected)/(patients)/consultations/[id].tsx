@@ -639,13 +639,9 @@ export default function ConsultationScreen() {
               <AttributionBadge attribution={status.attribution} inline />
             ) : null}
           </View>
-          {/*
-           * Dos columnas desde `lg` (design.md D9): el contexto de solo lectura va primero en el
-           * DOM —como en móvil, donde precede a la anamnesis— y a la derecha en escritorio. Al no
-           * tener controles, no altera el orden de foco del registro.
-           */}
-          <Box className="gap-6 lg:flex-row-reverse lg:items-start">
-            <VStack className="gap-6 lg:w-2/5" testID="consultation-aside">
+          {/* Una sola columna: el contexto de solo lectura precede al registro (D9). */}
+          <Box className="gap-6">
+            <VStack className="gap-6" testID="consultation-aside">
               {followUpQuery.data ? <FollowUpSummaryPanel summary={followUpQuery.data} /> : null}
               {data.isClosed && effectiveEntry !== null && correctionChain.length > 0 ? (
                 <Card testID="epicrisis-correction-history">
@@ -654,7 +650,7 @@ export default function ConsultationScreen() {
               ) : null}
             </VStack>
             {/* Un solo eje vertical con las secciones numeradas del protocolo (D20). */}
-            <VStack className="gap-6 lg:flex-1" testID="consultation-main">
+            <VStack className="gap-6" testID="consultation-main">
               <FormSection active={activeSection === 1} number={1} title="Anamnesis">
                 <AnamnesisSection
                   entries={anamnesisViews}
