@@ -222,6 +222,7 @@ node_modules/
 .expo/
 web-build/
 coverage/
+dist-e2e/
 playwright-report/
 test-results/
 .env.local

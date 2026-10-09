@@ -11,10 +11,13 @@
     "start:web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
+    "gate": "sh scripts/gate.sh",
     "format": "biome format --write .",
     "test": "bun test tests/unit tests/integration",
     "test:integration": "bun test tests/integration",
     "test:e2e:web": "playwright test",
+    "test:e2e:smoke": "playwright test login.spec.ts navegacion.spec.ts --project=chromium",
+    "db:start": "supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor",
     "test:e2e:native": "maestro test tests/e2e/native",
     "provision:veterinarians": "bun scripts/provision-veterinarians.ts",
     "db:types": "supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts"

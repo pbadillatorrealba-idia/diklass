@@ -4,11 +4,24 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.expo/tsconfig.tsbuildinfo",
     "allowImportingTsExtensions": true,
     "types": ["bun-types", "expo/types"],
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-e2e",
+    "maestro",
+    "openspec",
+    ".claude",
+    ".agents",
+    ".codex",
+    ".github"
+  ]
 }
