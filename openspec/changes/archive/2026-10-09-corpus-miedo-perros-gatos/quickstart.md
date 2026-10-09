@@ -49,9 +49,12 @@ de Blackwell, contenido solo de imágenes, el esquema de roedores y IDs de requi
 ya eran de `sistema-visual`: ahora FR-101–104). La segunda lectura de la tarea 1.2 no los detectó.
 Las pruebas unitarias son estructurales: la fidelidad clínica (US5-AC15/AC16) se revisa a mano.
 
-## Pendiente
+## Cierre (2026-10-09)
 
-- Licencia: confirmar con la autora o el AWEC (tarea 3.2). Mientras tanto consta «Por confirmar».
-- Comprobación en `/knowledge/sources` (tarea 3.1): la evaluación viva ya cargó el corpus nuevo y
-  retiró las demás fuentes del Supabase local, pero la lista en la UI no se ha mirado a mano.
-- e2e web de conocimiento con el corpus nuevo: lo ejecuta CI (tarea 3.3).
+- 3.1: en el Supabase local la colección activa tiene solo «Problemas de miedo en perros y gatos»
+  (verificado consultando la base, no a mano en `/knowledge/sources`; el e2e web de CI cubre la UI).
+- 3.3: CI verde de la PR #51, job «Supabase database tests and web E2E»:
+  https://github.com/pbadillatorrealba-idia/diklass/actions/runs/37945636254/job/113871089861
+- 3.2 **abierta**: licencia por confirmar con la autora o el AWEC. Archivado con esa advertencia por
+  decisión del usuario; la fuente sigue con licencia «Por confirmar».
+- SC-002/SC-003/SC-015 siguen pendientes de aceptación clínica.
