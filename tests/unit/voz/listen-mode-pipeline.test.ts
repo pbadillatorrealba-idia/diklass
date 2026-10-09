@@ -318,7 +318,7 @@ describe("crearCargadorContexto", () => {
         data: [
           fila("anamnesis-1", "anamnesis", {
             consultationId: "consulta-1",
-            field: "alimentacion",
+            field: "alimentacion_dieta",
             text: "Nunca come croquetas",
             provenance: "reportada",
           }),

@@ -25,13 +25,19 @@ export type DiagnosisEntry = { record: ClinicalRecordRow; content: DiagnosisCont
 
 export async function recordDiagnosis(
   client: SupabaseClient<Database>,
-  input: { clinicId: string; consultationId: string; text: string },
+  input: {
+    clinicId: string;
+    consultationId: string;
+    text: string;
+    plan?: DiagnosisContent["plan"];
+  },
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();
   try {
     const content = diagnosisContentSchema.parse({
       consultationId: input.consultationId,
       text: input.text,
+      plan: input.plan,
     });
     const registrado = await createClinicalRecord(client, {
       clinic_id: input.clinicId,

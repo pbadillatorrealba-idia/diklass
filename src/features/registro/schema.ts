@@ -1,9 +1,8 @@
 import { z } from "zod";
 import {
   ANAMNESIS_SECTIONS,
-  ANSWER_KIND_BY_FIELD,
-  ANSWER_VALUES,
   type CatalogField,
+  isValidAnswer,
   LEGACY_ANAMNESIS_FIELDS,
 } from "@/features/registro/anamnesis-catalog";
 
@@ -209,16 +208,9 @@ export const anamnesisContentSchema = z
       .array(z.object({ provenance: provenanceSchema, text: z.string().optional() }))
       .optional(),
   })
-  .superRefine((entry, ctx) => {
-    // FR-111: una pregunta cerrada solo guarda sus valores canónicos.
-    const kind = ANSWER_KIND_BY_FIELD[entry.field];
-    if (
-      kind &&
-      kind !== "texto" &&
-      !(ANSWER_VALUES[kind] as readonly string[]).includes(entry.text)
-    ) {
-      ctx.addIssue({ code: "custom", path: ["text"], message: "Elige una de las respuestas." });
-    }
+  .refine((entry) => isValidAnswer(entry.field, entry.text), {
+    path: ["text"],
+    message: "Elige una de las respuestas.",
   });
 
 /** Contenido de un antecedente de anamnesis (FR-004, FR-021). */

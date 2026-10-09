@@ -37,7 +37,12 @@ tratamiento se guardan como campos del `diagnosis` actual (extendido, `text` sig
 diagnóstico presuntivo) para no añadir un tipo ni tocar grants/auditoría. Confirmado en 1.1: `clinical_record_action` y los
 triggers de 009 solo miran `record_type`, `status` y `consultationId`, no el contenido.
 
-**D6 — Voz y epicrisis.** `features/voz` extrae hechos hacia `AnamnesisField`; se actualiza su
+**D6 — Voz y epicrisis.** Mapeo de los campos previos a la hoja (extractor y fixture comparten
+la misma función): comportamiento, frecuencia, duración, contexto, desencadenantes y cambios
+recientes → `historia_problema`; ambiente → `vivienda_tipo`; convivencia → `familia_otros_animales`;
+alimentación → `alimentacion_dieta`; actividad → `rutina_paseos`; rutinas → `rutina_comida`;
+respuesta a tratamientos → `tratamientos_anteriores`. El extractor emite a lo sumo una propuesta
+por cláusula y campo. `audioFactContentSchema` valida también las respuestas cerradas. `features/voz` extrae hechos hacia `AnamnesisField`; se actualiza su
 prompt/esquema al catálogo nuevo y los fixtures. `epicrisis-draft.ts` resume por sección.
 
 **D7 — UI.** Anamnesis en secciones plegables siguiendo el orden de la hoja; primitivas y tokens de

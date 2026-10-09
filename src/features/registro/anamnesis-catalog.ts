@@ -262,3 +262,9 @@ export function answerText(field: string, text: string): string {
 
 /** Rótulo de un campo de anamnesis; un id desconocido se muestra tal cual en vez de fallar. */
 export const fieldLabel = (field: string): string => ANAMNESIS_FIELD_LABELS[field] ?? field;
+
+/** FR-111: una pregunta cerrada solo admite sus valores canónicos; el texto libre admite cualquiera. */
+export function isValidAnswer(field: string, text: string): boolean {
+  const kind = ANSWER_KIND_BY_FIELD[field];
+  return !kind || kind === "texto" || (ANSWER_VALUES[kind] as readonly string[]).includes(text);
+}

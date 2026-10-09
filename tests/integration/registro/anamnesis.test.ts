@@ -155,7 +155,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
     await recordAnamnesisEntry(ana.client, {
       clinicId: ana.clinicId,
       consultationId: consultaId,
-      field: "comportamiento_problematico",
+      field: "historia_problema",
       text: "Destroza objetos cuando se queda solo.",
       provenance: "reportada",
     });
@@ -165,8 +165,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
       entradas.find((entrada) => entrada.content.field === "motivo_consulta")?.content.text,
     ).toBe("Ladra de noche.");
     expect(
-      entradas.find((entrada) => entrada.content.field === "comportamiento_problematico")?.content
-        .text,
+      entradas.find((entrada) => entrada.content.field === "historia_problema")?.content.text,
     ).toBe("Destroza objetos cuando se queda solo.");
   });
 
@@ -181,7 +180,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
     await recordAnamnesisEntry(ana.client, {
       clinicId: ana.clinicId,
       consultationId: consultaId,
-      field: "alimentacion",
+      field: "alimentacion_dieta",
       text: "Sin datos sobre la dieta.",
       provenance: "desconocida",
     });
@@ -191,10 +190,10 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
       (entrada) => entrada.content.field === "tratamientos_anteriores",
     );
     expect(inferida?.content.provenance).toBe("inferida");
-    const desconocida = entradas.find((entrada) => entrada.content.field === "alimentacion");
+    const desconocida = entradas.find((entrada) => entrada.content.field === "alimentacion_dieta");
     expect(desconocida?.content.provenance).toBe("desconocida");
     // Un campo sin registrar no aparece: «sin dato» no es un hallazgo negativo inventado.
-    expect(entradas.find((entrada) => entrada.content.field === "ambiente")).toBeUndefined();
+    expect(entradas.find((entrada) => entrada.content.field === "vivienda_tipo")).toBeUndefined();
   });
 
   test("corrección de procedencia recuperable (FR-021 · US2-AC5)", async () => {
@@ -240,7 +239,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
     const registrada = await recordAnamnesisEntry(bruno.client, {
       clinicId: ana.clinicId,
       consultationId: consultaId,
-      field: "ambiente",
+      field: "vivienda_tipo",
       text: "Vive en departamento.",
       provenance: "reportada",
     });
