@@ -1,0 +1,49 @@
+# Quickstart: corpus inicial «Problemas de miedo en perros y gatos»
+
+## Sustituir el corpus en un entorno vivo
+
+1. En `/knowledge/sources`, retirar cada fuente activa que no sea la nueva (no hay borrado,
+   FR-053; la retirada queda atribuida).
+2. Cargar el corpus (veterinario ya provisionado; local salvo `--allow-remote`):
+
+   ```bash
+   bun --env-file=.env scripts/cargar-corpus-conocimiento.ts
+   ```
+
+3. Comprobar que `/knowledge/sources` lista solo «Problemas de miedo en perros y gatos» y que
+   «¿Qué datos incluye el historial etológico?» devuelve una cita con su bibliografía.
+
+## Evidencia (2026-10-09, Supabase local)
+
+`SUPABASE_LIVE_TESTS=1 bun test tests/integration/conocimiento/evaluacion.test.ts`, verificado por
+máquina sobre 13 preguntas y 5 fuera de dominio:
+
+| Criterio | Medido | Umbral |
+|---|---|---|
+| SC-002 (hit@5) | 92 % (12/13) | ≥ 80 % |
+| SC-025 (ausencia declarada) | 100 % (5/5) | 100 % |
+| SC-010 / SC-003 (verbatim) | 0 incumplimientos en 35 citas | 0 |
+
+Falla la pregunta «¿Cuándo es el período de socialización del cachorro y del gatito?» (fragmento
+11): la búsqueda léxica no lo coloca entre los 5 primeros. Se deja como está; con 13 preguntas el
+umbral se cumple y ajustar el texto para acertarla sería sobreajustar el fragmento.
+
+Esto es verificación por máquina. SC-002/SC-003/SC-015 siguen **pendientes de aceptación** hasta
+que el equipo clínico revise el corpus y el conjunto anotado contra el PDF.
+
+## Notas de transcripción
+
+- Solo texto legible: de los gráficos solo se copian los valores rotulados (Diwoodie 2019,
+  González Martínez 2011, recuento de Yamada para la mesa de exploración).
+- La diapositiva 53 (producto con símbolo de prohibición y texto tapado) se describe sin
+  interpretarla; el PDF no dice el motivo.
+- Las diapositivas 1, 2, 10, 14, 34, 58 y 60 (portada, índices, vídeo y cierre) no aportan
+  contenido y no se transcriben.
+- El PDF no se versiona (`data/`); procedencia: `data/docs/MIEDO .pdf` de quien abre este cambio.
+
+## Pendiente
+
+- Licencia: confirmar con la autora o el AWEC (tarea 3.2). Mientras tanto consta «Por confirmar».
+- Comprobación en `/knowledge/sources` (tarea 3.1): la evaluación viva ya cargó el corpus nuevo y
+  retiró las demás fuentes del Supabase local, pero la lista en la UI no se ha mirado a mano.
+- e2e web de conocimiento con el corpus nuevo: lo ejecuta CI (tarea 3.3).

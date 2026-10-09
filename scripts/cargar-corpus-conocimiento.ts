@@ -1,5 +1,5 @@
 /**
- * Carga el corpus documental sintético en un entorno vivo, sin tocar `supabase/seed.sql`
+ * Carga el corpus documental inicial («Problemas de miedo en perros y gatos») en un entorno vivo, sin tocar `supabase/seed.sql`
  * (D9 del diseño del cambio). Uso:
  *
  *   bun --env-file=.env scripts/cargar-corpus-conocimiento.ts [--allow-remote]
@@ -28,14 +28,11 @@ try {
 }
 const { url, anonKey, email, password } = config;
 if (config.allowRemote) {
-  console.warn(`--allow-remote activo: se cargará el corpus sintético en ${url}.`);
+  console.warn(`--allow-remote activo: se cargará el corpus inicial en ${url}.`);
 }
 
 const corpus = JSON.parse(
-  readFileSync(
-    join(import.meta.dir, "../tests/fixtures/conocimiento/corpus-sintetico.json"),
-    "utf8",
-  ),
+  readFileSync(join(import.meta.dir, "../tests/fixtures/conocimiento/corpus-miedo.json"), "utf8"),
 );
 
 const client = createClient<Database>(url, anonKey, {
@@ -68,7 +65,7 @@ if (errorPerfil || !perfil) {
 }
 
 const { claves } = await loadSyntheticCorpus(client, { clinicId: perfil.clinic_id, corpus });
-console.log(`Corpus sintético cargado por ${email}:`);
+console.log(`Corpus inicial cargado por ${email}:`);
 for (const [clave, id] of Object.entries(claves)) {
   console.log(`  ${clave} → ${id}`);
 }
