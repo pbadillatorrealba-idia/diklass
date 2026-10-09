@@ -47,10 +47,11 @@ describe("NavItem", () => {
 });
 
 describe("secciones", () => {
-  test("son las cinco de D12/D17, con icono web y SF/Material para nativo", () => {
+  test("son las seis (D12/D17 y administracion-tutores), con icono web y SF/Material para nativo", () => {
     expect(SECTIONS.map((s) => [s.label, s.href])).toEqual([
       ["Inicio", "/home"],
       ["Pacientes", "/patients"],
+      ["Tutores", "/tutors"],
       ["Seguimiento", "/follow-up"],
       ["Conocimiento", "/knowledge"],
       ["Configuración", "/settings"],
@@ -60,7 +61,7 @@ describe("secciones", () => {
     }
   });
 
-  test("la barra inferior web lleva las 4 clínicas; Configuración va por el avatar (SC-059)", () => {
+  test("la barra inferior web lleva las 4 clínicas; Configuración va por el avatar (SC-059) y Tutores, por Pacientes", () => {
     expect(TABBAR_SECTIONS.map((s) => s.label)).toEqual([
       "Inicio",
       "Pacientes",

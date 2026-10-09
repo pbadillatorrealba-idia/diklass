@@ -587,6 +587,26 @@ export type Database = {
           tutor_name: string
         }[]
       }
+      search_tutors: {
+        Args: {
+          p_contact?: string
+          p_dir?: string
+          p_limit?: number
+          p_name?: string
+          p_offset?: number
+          p_sort?: string
+        }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          name: string
+          patient_count: number
+          phone: string
+          surname: string
+          total_count: number
+        }[]
+      }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
       update_own_profile: {

@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { type Href, Link, useLocalSearchParams, useRouter } from "expo-router";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 import { PatientsTable } from "@/components/registro/patients-table";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { hrefWithParams, useDebouncedParam } from "@/lib/url-filters";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -34,8 +35,6 @@ type Params = {
   page?: string;
 };
 
-const FILTER_DEBOUNCE_MS = 300;
-
 function FilterField({ children, label }: { children: ReactNode; label: string }) {
   return (
     <View className="flex-1 gap-1">
@@ -45,38 +44,8 @@ function FilterField({ children, label }: { children: ReactNode; label: string }
   );
 }
 
-/** Href de `/patients` con solo los parámetros que tienen valor. */
-function patientsHref(params: Record<string, string | undefined>): Href {
-  const query = new URLSearchParams(
-    Object.entries(params).filter((entry): entry is [string, string] => Boolean(entry[1])),
-  ).toString();
-  return (query ? `/patients?${query}` : "/patients") as Href;
-}
-
-/** Campo de texto cuyo valor sube a la URL tras una pausa al escribir. */
-function useDebouncedParam(value: string, onCommit: (value: string) => void) {
-  const [draft, setDraft] = useState(value);
-  const committed = useRef(value);
-  const commit = useRef(onCommit);
-  commit.current = onCommit;
-  // Solo un cambio externo de la URL (p. ej. «Limpiar filtros») reinicia el borrador: el eco
-  // de lo que este campo ya subió no debe pisar lo que se siguió escribiendo.
-  useEffect(() => {
-    if (value !== committed.current) {
-      committed.current = value;
-      setDraft(value);
-    }
-  }, [value]);
-  useEffect(() => {
-    if (draft === committed.current) return;
-    const timer = setTimeout(() => {
-      committed.current = draft;
-      commit.current(draft);
-    }, FILTER_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [draft]);
-  return [draft, setDraft] as const;
-}
+const patientsHref = (params: Record<string, string | undefined>) =>
+  hrefWithParams("/patients", params);
 
 export default function PatientsScreen() {
   const router = useRouter();
@@ -221,6 +190,11 @@ export default function PatientsScreen() {
             />
           </Input>
         </FilterField>
+        <Link asChild href="/tutors">
+          <Button accessibilityLabel="Ver tutores" testID="patients-tutors" variant="outline">
+            <ButtonText>Tutores</ButtonText>
+          </Button>
+        </Link>
         {hasFilters ? (
           <Link asChild href={patientsHref({ sort: raw.sort, dir: raw.dir })}>
             <Button accessibilityLabel="Limpiar filtros" testID="patients-clear" variant="ghost">
