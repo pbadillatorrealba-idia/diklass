@@ -15,7 +15,10 @@ export type ScreenProps = PropsWithChildren<{
   testID?: string;
   /** Título de la pantalla: en web, `h1` + `<title>`; en nativo, la cabecera del `Stack`. */
   title?: string;
-  /** Acción principal de la pantalla: en web, en la línea del `h1`; en nativo, sobre el contenido. */
+  /**
+   * Acción principal de la pantalla: en web desde 768 px, en la línea del `h1`; en nativo y en
+   * ventanas estrechas, en una barra fija al pie a todo el ancho.
+   */
   action?: ReactNode;
   /**
    * Retroceso explícito de las pantallas de detalle (FR-083): en web, un enlace «‹ Volver a …»;
@@ -58,11 +61,19 @@ function ScreenFrame({ children, title }: FrameProps) {
 /** Ventana desde la que el retroceso de web pasa a ser un breadcrumb (`lg`). */
 const BREADCRUMB_FROM = 1024;
 
+/** Ventana bajo la que la acción principal pasa a una barra fija al pie (`md`). */
+const ACTION_BAR_BELOW = 768;
+
+/** Nativo y web estrecho: la acción principal va en una barra fija al pie, al alcance del pulgar. */
+function useActionBar() {
+  const width = useWindowDimensions().width;
+  return process.env.EXPO_OS !== "web" || width < ACTION_BAR_BELOW;
+}
+
 /** En web, «‹ Volver a …» (o, desde `lg`, el breadcrumb) y el `h1`; en nativo, la cabecera. */
 function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "back" | "title">) {
   const isWide = useWindowDimensions().width >= BREADCRUMB_FROM;
-  if (process.env.EXPO_OS !== "web")
-    return action ? <View className="items-end">{action}</View> : null;
+  if (process.env.EXPO_OS !== "web") return null;
   if (!(back || title || action)) return null;
   const crumbs = back ? (back.crumbs ?? [{ href: back.href, label: back.label }]) : [];
   return (
@@ -119,12 +130,13 @@ export function Screen({
   title,
   width = "content",
 }: ScreenProps) {
+  const actionBar = useActionBar();
   const content = (
     <View
       className={`w-full ${WIDTHS[width]} self-center gap-6 p-4 md:p-6 ${className ?? ""}`.trim()}
       testID={testID}
     >
-      <ScreenHeading action={action} back={back} title={title} />
+      <ScreenHeading action={actionBar ? null : action} back={back} title={title} />
       {children}
     </View>
   );
@@ -141,6 +153,11 @@ export function Screen({
       >
         {content}
       </ScrollView>
+      {action && actionBar ? (
+        <View className="border-t border-border bg-card p-4" testID="screen-action-bar">
+          <View className={`w-full ${WIDTHS[width]} self-center`}>{action}</View>
+        </View>
+      ) : null}
     </ScreenFrame>
   );
 }

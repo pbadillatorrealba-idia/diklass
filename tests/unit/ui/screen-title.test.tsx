@@ -79,3 +79,33 @@ describe("Screen breadcrumb", () => {
     }
   });
 });
+
+// La acción principal va en la línea del título en web ancho y en una barra al pie si no.
+describe("Screen action", () => {
+  const render = async (os: string, width: number) => {
+    process.env.EXPO_OS = os;
+    const rn = await import("react-native");
+    const spy = spyOn(rn, "useWindowDimensions").mockReturnValue({
+      width,
+      height: 800,
+      scale: 1,
+      fontScale: 1,
+    });
+    try {
+      return renderToStaticMarkup(
+        <Screen action={<button type="button">Abrir</button>} title="Luna" />,
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  };
+
+  test("en web ancho no hay barra al pie", async () => {
+    expect(await render("web", 1280)).not.toContain("screen-action-bar");
+  });
+
+  test("en web estrecho y en nativo la acción va en la barra al pie", async () => {
+    expect(await render("web", 375)).toContain("screen-action-bar");
+    expect(await render("ios", 1280)).toContain("screen-action-bar");
+  });
+});
