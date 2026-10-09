@@ -1,9 +1,12 @@
 name: CI
 
+# Docs-only changes run nothing: no code, so nothing to verify (and no required checks to leave pending).
 on:
   pull_request:
+    paths-ignore: ["**.md", "docs/**", "openspec/**"]
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**", "openspec/**"]
 
 permissions:
   contents: read
@@ -77,10 +80,12 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
+      # `db:start` skips the services nothing here uses (same flags as local development); a fresh
+      # `supabase start` already applies migrations and seed, so no `db reset` before the tests.
+      # `gen types` and `test db` run their own one-off containers, not the excluded services.
       - name: Start local Supabase
         run: |
-          supabase start
-          supabase db reset
+          bun run db:start
           status=$(supabase status -o json)
           {
             echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
