@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { View } from "react-native";
 import { z } from "zod";
 import { ANTECEDENT_GROUP_LABELS, ANTECEDENT_GROUP_ORDER } from "@/components/registro/labels";
-import { OptionPicker } from "@/components/registro/option-picker";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 import {
   FormControl,
   FormControlError,
@@ -11,27 +12,12 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
+import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import type { AntecedentGroup, AntecedentItem, PatientContent } from "@/features/registro/schema";
 
 const antecedentTextSchema = z.string().trim().min(1, "Registra el texto del antecedente.");
-
-const FINDING_OPTIONS: { value: "reported" | "negative"; label: string }[] = [
-  { value: "reported", label: "Dato registrado" },
-  { value: "negative", label: "Hallazgo negativo" },
-];
-
-type AntecedentDraft = { text: string; negative: boolean };
-
-const EMPTY_DRAFTS: Record<AntecedentGroup, AntecedentDraft> = {
-  medicalHistory: { text: "", negative: false },
-  preexistingDiseases: { text: "", negative: false },
-  currentMedications: { text: "", negative: false },
-  knownAllergies: { text: "", negative: false },
-  behavioralHistory: { text: "", negative: false },
-};
 
 type AntecedentsPanelProps = {
   content: PatientContent;
@@ -41,98 +27,148 @@ type AntecedentsPanelProps = {
 };
 
 /**
- * Antecedentes de la ficha por grupo, con alta por apéndice (FR-001 · US1-AC2): cada alta
- * añade un ítem al grupo sin tocar los datos previos. Un ítem negativo se muestra como
- * hallazgo negativo registrado, nunca como ausencia de dato (FR-044 · SC-024).
+ * Antecedentes de la ficha en una sola card, un bloque por grupo (FR-001 · US1-AC2): cada alta
+ * añade un ítem al grupo sin tocar los datos previos. El alta se abre por grupo y se envía con
+ * Enter. Un ítem negativo se muestra como hallazgo negativo registrado, nunca como ausencia de
+ * dato (FR-044 · SC-024).
  */
 export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelProps) {
-  const [drafts, setDrafts] = useState<Record<AntecedentGroup, AntecedentDraft>>(EMPTY_DRAFTS);
-  const [errors, setErrors] = useState<Partial<Record<AntecedentGroup, string>>>({});
+  const [adding, setAdding] = useState<AntecedentGroup | null>(null);
+  const [text, setText] = useState("");
+  const [negative, setNegative] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const open = (group: AntecedentGroup) => {
+    setAdding(group);
+    setText("");
+    setNegative(false);
+    setError(null);
+  };
 
   const handleAdd = async (group: AntecedentGroup) => {
-    const result = antecedentTextSchema.safeParse(drafts[group].text);
+    const result = antecedentTextSchema.safeParse(text);
     if (!result.success) {
-      setErrors((prev) => ({
-        ...prev,
-        [group]: result.error.issues[0]?.message ?? "Este campo es obligatorio.",
-      }));
+      setError(result.error.issues[0]?.message ?? "Este campo es obligatorio.");
       return;
     }
-    setErrors((prev) => ({ ...prev, [group]: undefined }));
-    const registered = await onAdd(group, {
-      text: result.data,
-      negative: drafts[group].negative,
-    });
-    if (registered) {
-      setDrafts((prev) => ({ ...prev, [group]: { text: "", negative: false } }));
+    setError(null);
+    if (await onAdd(group, { text: result.data, negative })) {
+      setText("");
+      setNegative(false);
     }
   };
 
   return (
-    <VStack className="w-full gap-3" testID="antecedents-panel">
-      <Text variant="strong">Antecedentes</Text>
-      {ANTECEDENT_GROUP_ORDER.map((group) => {
-        const draft = drafts[group];
-        const error = errors[group];
+    <Card className="gap-4" testID="antecedents-panel">
+      <Heading level={2}>Antecedentes</Heading>
+      {ANTECEDENT_GROUP_ORDER.map((group, index) => {
         const groupLabel = ANTECEDENT_GROUP_LABELS[group];
+        const items = content.antecedentes[group];
+        const isAdding = adding === group;
         return (
-          <Card key={group} testID="antecedent-group">
-            <Text variant="strong">{groupLabel}</Text>
-            {content.antecedentes[group].length === 0 ? (
-              <Text testID="antecedent-empty">Sin registrar</Text>
+          <View
+            className={`gap-3 ${index > 0 ? "border-t border-border pt-4" : ""}`}
+            key={group}
+            testID="antecedent-group"
+          >
+            <View className="flex-row items-center justify-between gap-3">
+              <Text variant="rubric">
+                {groupLabel}
+                {items.length > 0 ? ` · ${items.length}` : ""}
+              </Text>
+              {isAdding ? null : (
+                <Button
+                  accessibilityLabel={`Añadir antecedente a ${groupLabel}`}
+                  isDisabled={isBusy}
+                  onPress={() => open(group)}
+                  size="sm"
+                  testID="antecedent-open"
+                  variant="ghost"
+                >
+                  <ButtonText>+ Añadir</ButtonText>
+                </Button>
+              )}
+            </View>
+            {items.length === 0 ? (
+              <Text testID="antecedent-empty" tone="muted">
+                Sin registrar
+              </Text>
             ) : (
-              content.antecedentes[group].map((item, index) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; dos antecedentes pueden repetir su texto.
-                <Text key={`${item.text}-${index}`} selectable testID="antecedent-item">
-                  {item.negative ? "Hallazgo negativo registrado" : "Dato registrado"}: {item.text}
-                </Text>
+              items.map((item, itemIndex) => (
+                <View
+                  className="flex-row flex-wrap items-center gap-x-3 gap-y-1"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; dos antecedentes pueden repetir su texto.
+                  key={`${item.text}-${itemIndex}`}
+                >
+                  <Chip tone={item.negative ? "info" : "neutral"}>
+                    {item.negative ? "Negativo" : "Dato"}
+                  </Chip>
+                  <Text className="shrink" selectable testID="antecedent-item">
+                    {item.text}
+                  </Text>
+                  {item.recordedAt ? (
+                    <Text tone="muted" variant="data">
+                      {new Date(item.recordedAt).toLocaleDateString("es-CL")}
+                    </Text>
+                  ) : null}
+                </View>
               ))
             )}
-            <FormControl isInvalid={Boolean(error)}>
-              <FormControlLabel>
-                <FormControlLabelText>Nuevo antecedente</FormControlLabelText>
-              </FormControlLabel>
-              <Input>
-                <InputField
-                  accessibilityLabel={`Nuevo antecedente para ${groupLabel}`}
-                  aria-label={`Nuevo antecedente para ${groupLabel}`}
-                  editable={!isBusy}
-                  onChangeText={(text) =>
-                    setDrafts((prev) => ({ ...prev, [group]: { ...prev[group], text } }))
-                  }
-                  testID="antecedent-add-text"
-                  value={draft.text}
-                />
-              </Input>
-              {error ? (
-                <FormControlError>
-                  <FormControlErrorText>{error}</FormControlErrorText>
-                </FormControlError>
-              ) : null}
-            </FormControl>
-            <OptionPicker
-              label="Tipo de hallazgo"
-              onChange={(value) =>
-                setDrafts((prev) => ({
-                  ...prev,
-                  [group]: { ...prev[group], negative: value === "negative" },
-                }))
-              }
-              options={FINDING_OPTIONS}
-              testID="antecedent-finding"
-              value={draft.negative ? "negative" : "reported"}
-            />
-            <Button
-              accessibilityLabel={`Añadir antecedente a ${groupLabel}`}
-              isDisabled={isBusy}
-              onPress={() => void handleAdd(group)}
-              testID="antecedent-add"
-            >
-              <ButtonText>Añadir antecedente</ButtonText>
-            </Button>
-          </Card>
+            {isAdding ? (
+              <FormControl isInvalid={Boolean(error)}>
+                <FormControlLabel>
+                  <FormControlLabelText>Nuevo antecedente</FormControlLabelText>
+                </FormControlLabel>
+                <View className="flex-row flex-wrap items-center gap-2">
+                  <Input className="min-w-48 flex-1">
+                    <InputField
+                      accessibilityLabel={`Nuevo antecedente para ${groupLabel}`}
+                      aria-label={`Nuevo antecedente para ${groupLabel}`}
+                      autoFocus
+                      editable={!isBusy}
+                      onChangeText={setText}
+                      onSubmitEditing={() => void handleAdd(group)}
+                      returnKeyType="done"
+                      testID="antecedent-add-text"
+                      value={text}
+                    />
+                  </Input>
+                  <Button
+                    accessibilityLabel="Marcar como hallazgo negativo"
+                    aria-pressed={negative}
+                    onPress={() => setNegative((prev) => !prev)}
+                    testID="antecedent-negative"
+                    variant={negative ? "primary" : "outline"}
+                  >
+                    <ButtonText>Negativo</ButtonText>
+                  </Button>
+                  <Button
+                    accessibilityLabel={`Añadir antecedente a ${groupLabel}`}
+                    isDisabled={isBusy}
+                    onPress={() => void handleAdd(group)}
+                    testID="antecedent-add"
+                  >
+                    <ButtonText>Añadir</ButtonText>
+                  </Button>
+                  <Button
+                    accessibilityLabel="Cerrar el alta de antecedentes"
+                    onPress={() => setAdding(null)}
+                    testID="antecedent-close"
+                    variant="ghost"
+                  >
+                    <ButtonText>Cerrar</ButtonText>
+                  </Button>
+                </View>
+                {error ? (
+                  <FormControlError>
+                    <FormControlErrorText>{error}</FormControlErrorText>
+                  </FormControlError>
+                ) : null}
+              </FormControl>
+            ) : null}
+          </View>
         );
       })}
-    </VStack>
+    </Card>
   );
 }

@@ -86,7 +86,14 @@ export default function KnowledgeSourceScreen() {
   return (
     <Screen
       title="Base de conocimiento · Fuente clínica"
-      back={{ href: "/knowledge/sources", label: "la colección" }}
+      back={{
+        href: "/knowledge/sources",
+        label: "la colección",
+        crumbs: [
+          { href: "/knowledge", label: "Conocimiento" },
+          { href: "/knowledge/sources", label: "Colección" },
+        ],
+      }}
     >
       <QueryState
         empty={

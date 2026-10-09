@@ -89,7 +89,14 @@ export default function NewKnowledgeSourceScreen() {
   return (
     <Screen
       title="Base de conocimiento · Incorporar fuente"
-      back={{ href: "/knowledge/sources", label: "la colección" }}
+      back={{
+        href: "/knowledge/sources",
+        label: "la colección",
+        crumbs: [
+          { href: "/knowledge", label: "Conocimiento" },
+          { href: "/knowledge/sources", label: "Colección" },
+        ],
+      }}
     >
       <Text tone="muted" variant="caption">
         Una fuente incorporada queda atribuida a tu identidad y no puede editarse después: si hay

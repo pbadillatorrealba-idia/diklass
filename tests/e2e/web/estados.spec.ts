@@ -43,9 +43,9 @@ test.describe("estados de datos", () => {
     page,
   }) => {
     let fallar = true;
-    await page.route("**/rest/v1/clinical_records?*", async (route) => {
-      const esLista = route.request().url().includes("record_type=eq.patient");
-      if (fallar && esLista && route.request().method() === "GET") {
+    // La lista de pacientes sale de la RPC `search_patients` (rediseno-pacientes).
+    await page.route("**/rest/v1/rpc/search_patients*", async (route) => {
+      if (fallar) {
         return route.fulfill({
           status: 500,
           contentType: "application/json",
@@ -79,10 +79,8 @@ test.describe("estados de datos", () => {
     expect(seleccion).toBe(texto);
     expect(await nombre.evaluate((el) => getComputedStyle(el).userSelect)).toBe("text");
 
-    await page.route("**/rest/v1/clinical_records?*", (route) =>
-      route.request().url().includes("record_type=eq.patient")
-        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
-        : route.continue(),
+    await page.route("**/rest/v1/rpc/search_patients*", (route) =>
+      route.fulfill({ status: 500, contentType: "application/json", body: "{}" }),
     );
     await page.reload();
     const mensaje = page

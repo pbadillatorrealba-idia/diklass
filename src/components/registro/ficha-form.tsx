@@ -265,10 +265,19 @@ type FichaFormProps = {
   errors: Record<string, string>;
   isDisabled?: boolean;
   onChange: (field: FichaField, text: string) => void;
+  /** Subconjunto de campos a pintar (edición por card); sin él, la ficha completa. */
+  fields?: FichaField[];
 };
 
 /** Campos de FR-001 con etiqueta programática y error por campo (WCAG 2.2 AA 3.3.1). */
-export function FichaForm({ values, errors, isDisabled = false, onChange }: FichaFormProps) {
+export function FichaForm({
+  values,
+  errors,
+  isDisabled = false,
+  onChange,
+  fields,
+}: FichaFormProps) {
+  const shows = (field: FichaField) => !fields || fields.includes(field);
   const renderField = ({
     field,
     label,
@@ -306,16 +315,18 @@ export function FichaForm({ values, errors, isDisabled = false, onChange }: Fich
 
   return (
     <VStack className="w-full gap-4" testID="patient-form">
-      {FICHA_FORM_FIELDS.map(renderField)}
-      <OptionPicker
-        isDisabled={isDisabled}
-        label="Refiere el caso otro veterinario"
-        onChange={(value) => onChange("referrerRefers", value)}
-        options={[...REFERS_OPTIONS]}
-        testID={TEST_ID_BY_FIELD.referrerRefers}
-        value={values.referrerRefers}
-      />
-      {REFERRER_FORM_FIELDS.map(renderField)}
+      {FICHA_FORM_FIELDS.filter((item) => shows(item.field)).map(renderField)}
+      {shows("referrerRefers") ? (
+        <OptionPicker
+          isDisabled={isDisabled}
+          label="Refiere el caso otro veterinario"
+          onChange={(value) => onChange("referrerRefers", value)}
+          options={[...REFERS_OPTIONS]}
+          testID={TEST_ID_BY_FIELD.referrerRefers}
+          value={values.referrerRefers}
+        />
+      ) : null}
+      {REFERRER_FORM_FIELDS.filter((item) => shows(item.field)).map(renderField)}
     </VStack>
   );
 }

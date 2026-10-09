@@ -226,9 +226,8 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     }
   });
 
-  // sistema-visual FR-079 · US13-AC5 (design.md D9): registro y apoyo lado a lado en escritorio,
-  // una sola columna en móvil con el contexto de solo lectura antes del registro.
-  test("la consulta usa dos columnas a 1280 px y una a 375 px", async ({ page }) => {
+  // rediseno-pacientes: la consulta va en una sola columna, con el contexto antes del registro.
+  test("la consulta usa una sola columna a 1280 px y a 375 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     const cajas = async (width: number) => {
@@ -251,15 +250,12 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       });
     };
 
-    const ancho = await cajas(1280);
-    expect(ancho.lateral.x, "la columna lateral va a la derecha").toBeGreaterThan(
-      ancho.principal.x + ancho.principal.width - 1,
-    );
-    expect(Math.abs(ancho.lateral.y - ancho.principal.y)).toBeLessThan(2);
-
-    const angosto = await cajas(375);
-    expect(angosto.lateral.y + angosto.lateral.height).toBeLessThanOrEqual(angosto.principal.y + 1);
-    expect(Math.abs(angosto.lateral.x - angosto.principal.x)).toBeLessThan(2);
+    // Una sola columna en cualquier ancho: el contexto va encima del registro.
+    for (const width of [1280, 375]) {
+      const { principal, lateral } = await cajas(width);
+      expect(lateral.y + lateral.height).toBeLessThanOrEqual(principal.y + 1);
+      expect(Math.abs(lateral.x - principal.x)).toBeLessThan(2);
+    }
   });
 
   // sistema-visual FR-084 · SC-055 (design.md D13): navegar es un enlace real (`<a href>`), que
@@ -319,14 +315,14 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     );
   });
 
-  // sistema-visual FR-079 · escenario «Listas en escritorio» (design.md D18): las listas usan el
-  // ancho de escritorio y los formularios conservan el de lectura.
-  test("a 1280 px la lista de pacientes va a 2 columnas y el formulario sigue en 720 px", async ({
+  // rediseno-pacientes: la lista de pacientes es una tabla desde 1024 px y tarjetas debajo; el
+  // formulario conserva el ancho de lectura.
+  test("la lista de pacientes es tabla a 1280 px y tarjetas a 768 px; el formulario sigue en 720 px", async ({
     page,
   }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const cajas = async (width: number) => {
+    const medir = async (width: number) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/patients");
       await expect(page.getByTestId("patient-item").nth(1)).toBeVisible({ timeout: 15_000 });
@@ -335,28 +331,23 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
           .slice(0, 2)
           .map((el) => el.getBoundingClientRect());
         const lista = document.querySelector('[data-testid="patients-list"]');
-        const ancho = Math.max(
-          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
-            (el) => el.getBoundingClientRect().right,
-          ),
-        );
-        const izquierda = Math.min(
-          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
-            (el) => el.getBoundingClientRect().left,
-          ),
-        );
-        if (!a || !b || !lista) throw new Error("faltan tarjetas o lista");
-        return { a: { x: a.x, y: a.y }, b: { x: b.x, y: b.y }, contenido: ancho - izquierda };
+        if (!a || !b || !lista) throw new Error("faltan filas o lista");
+        return {
+          filaApilada: b.y > a.y,
+          rolTabla: lista.getAttribute("role") === "table",
+          contenido: lista.getBoundingClientRect().width,
+        };
       });
     };
 
-    const ancho = await cajas(1280);
-    expect(Math.abs(ancho.a.y - ancho.b.y), "dos tarjetas en la misma fila").toBeLessThan(2);
-    expect(ancho.b.x).toBeGreaterThan(ancho.a.x);
+    const ancho = await medir(1280);
+    expect(ancho.rolTabla, "tabla a 1280 px").toBe(true);
+    expect(ancho.filaApilada, "una fila por paciente").toBe(true);
     expect(ancho.contenido).toBeGreaterThan(720);
 
-    const medio = await cajas(1024);
-    expect(medio.b.y, "una columna a 1024 px").toBeGreaterThan(medio.a.y);
+    const angosto = await medir(768);
+    expect(angosto.rolTabla, "tarjetas a 768 px").toBe(false);
+    expect(angosto.filaApilada).toBe(true);
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/patients/new");
@@ -366,19 +357,12 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
   });
 
   // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
-  test("Inicio, Configuración y la ficha van a 2 columnas a 1280 px y a 1 a 375 px", async ({
-    page,
-  }) => {
+  test("Inicio y Configuración van a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     const pares = [
       { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
       { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
-      {
-        url: `/patients/${caso.patientId}`,
-        izquierda: "patient-main",
-        derecha: "patient-aside",
-      },
     ];
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 900 });

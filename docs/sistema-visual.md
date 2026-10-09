@@ -38,6 +38,11 @@ Reglas para cualquier UI nueva o modificada:
     `SignatureStamp`.
   - Corrección de un registro firmado: `CorrectionLine` (anterior tachado tras «Reemplazado» y el
     vigente en el pliego rosa) y `ProvenanceCorrection` en la anamnesis.
+  - Lectura de ficha: `DataItem` (rótulo `label` apagado arriba y dato debajo; `null` = «Sin dato») y
+    `DataGroup` (subtítulo `rubric` con separador). `Field` queda para el formulario clínico con marca
+    de procedencia; no se mezclan en una misma card.
+  - Etiqueta corta de tipo o estado de un dato: `Chip tone="neutral|info|success|warning"` (texto
+    siempre visible, `rounded-sm`).
   - Severidad clínica: `SeverityBadge` (nombre, icono y barra de 4 segmentos).
   - Iconos: `Icon` (`label` o `decorative`, obligatorio).
   - Persona: `Avatar` con iniciales; es decorativo, así que el nombre siempre va al lado como

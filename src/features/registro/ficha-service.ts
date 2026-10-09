@@ -190,7 +190,10 @@ export async function addAntecedentItem(
     const grupo = grupoParseado.data;
     const actualizada = await writePatientContent(client, patientId, (actual) => ({
       ...actual,
-      antecedentes: { ...actual.antecedentes, [grupo]: [...actual.antecedentes[grupo], item] },
+      antecedentes: {
+        ...actual.antecedentes,
+        [grupo]: [...actual.antecedentes[grupo], { ...item, recordedAt: new Date().toISOString() }],
+      },
     }));
     logEvent("registro.patient_antecedent_added", { requestId, operation: "addAntecedentItem" });
     return actualizada;

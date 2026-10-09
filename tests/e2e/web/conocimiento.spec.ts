@@ -63,7 +63,9 @@ test.describe("base de conocimiento web", () => {
     const titulo = `Guía E2E de colección ${Date.now()}`;
     try {
       await page.goto("/knowledge/sources");
-      await expect(page.getByText("Base de conocimiento · Colección")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Base de conocimiento · Colección" }),
+      ).toBeVisible();
       // La lista ya está en caché antes de incorporar.
       await expect(page.getByRole("link", { name: "Incorporar fuente clínica" })).toBeVisible();
 
