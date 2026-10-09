@@ -265,7 +265,8 @@ El sistema MUST permitir crear, consultar y actualizar fichas de pacientes canin
 
 El sistema MUST aceptar una ficha con campos sin completar y MUST señalar cuáles de
   los campos de FR-001 quedaron sin información, distinguiendo visiblemente un campo sin dato de un
-  hallazgo negativo registrado.
+  hallazgo negativo registrado. Revisado por `rediseno-pacientes`: un grupo de antecedentes sin
+  ítems no se señala como faltante; sí los campos de datos de la ficha.
 
 #### Scenario: US1-AC3
 

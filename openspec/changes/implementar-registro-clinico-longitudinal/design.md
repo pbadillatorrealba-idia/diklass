@@ -275,8 +275,9 @@ fuera de contrato se omite con log `registro.row_content_skipped` en vez de tumb
 ### D11. Interfaz: rutas nuevas, componentes de `src/components/registro`, WCAG 2.2 AA
 
 `/patients` (lista), `/patients/new` (ficha + tutor con selector de tutor existente),
-`/patients/[id]` (ficha con panel de campos faltantes y antecedentes, historial cronológico,
-abrir consulta), `/consultations/[id]` (resumen previo automático, editor de anamnesis por campo
+`/patients/[id]` (ficha por cards con edición por card, antecedentes, historial cronológico en
+línea de tiempo, abrir consulta; revisado por `rediseno-pacientes`, que retira el panel de campos
+faltantes), `/consultations/[id]` (resumen previo automático, editor de anamnesis por campo
 con procedencia y corrección, diagnóstico, generación/aprobación de epicrisis y corrección
 posterior). Etiquetas programáticas (`FormControlLabel`), operabilidad completa por teclado, foco
 visible y contraste del paletín vigente; `testID` estables para la suite web. Reutiliza

@@ -347,7 +347,9 @@ pestaña Pacientes queda marcada.
   contexto y el navegador ya tiene su botón atrás. En su lugar, `Screen` recibe dos props nuevas:
   - `title`: pinta `Heading level={1}` y el `<title>` del documento, sustituyendo los `Head`
     sueltos de cada pantalla.
-  - `back={{ href, label }}`: pinta un `Link` «‹ Volver a …» antes del título. `href` es explícito
+  - `back={{ href, label, crumbs? }}`: pinta un `Link` «‹ Volver a …» antes del título; desde 1024 px
+    en web (`rediseno-pacientes` D7) pinta un breadcrumb con `crumbs`, y la página actual como
+    `aria-current="page"`. `Screen` admite además `action` en la línea del `h1`. `href` es explícito
     (la raíz de la sección o la pantalla padre), no `router.back()`, para que la entrada por URL
     directa funcione (escenario de FR-083).
 - **Nativo:** `Screen` con `title` fija `Stack.Screen options={{ title }}` y no pinta el
@@ -582,18 +584,20 @@ vacía junto a la barra lateral. El ancho pasa a depender del tipo de pantalla.
 | Pantalla | Ancho en `lg` | Disposición |
 |---|---|---|
 | `/home` | `wide` | Panel de secciones y calendario lado a lado |
-| `/patients`, `/follow-up`, `/knowledge/sources` | `ScreenList width="wide"` | 2 columnas desde `xl` (1280 px de ventana) |
+| `/follow-up`, `/knowledge/sources` | `ScreenList width="wide"` | 2 columnas desde `xl` (1280 px de ventana) |
+| `/patients` | `Screen width="wide"` | Tabla desde 1024 px y tarjetas apiladas por debajo (`rediseno-pacientes` D3) |
 | `/settings` | `wide` | Tarjetas en 2 columnas |
-| `/patients/[id]` | `wide` | 2 columnas: ficha y campos faltantes a la izquierda; antecedentes e historial a la derecha |
+| `/patients/[id]` | `wide` | 1 columna de cards (revisado por `rediseno-pacientes` D4): cabecera, tutor, procedencia, derivante, antecedentes e historial |
 | Formularios, visor de fuente, `/knowledge`, `/follow-up/[id]`, `/login` | `content` (720 px) | Una columna de lectura |
 
 - Las columnas de `ScreenList` se toman de `useWindowDimensions()`: `numColumns` es 2 con 1280 px
   o más, y el `key` del `FlatList` cambia con él, porque RN no admite cambiar `numColumns` en
   caliente. Desde `xl`, 1280 px de ventana menos 240 px de barra lateral dejan unos 1040 px: dos
   tarjetas de unos 500 px.
-- En la ficha, el orden del DOM no cambia (ficha, campos faltantes, edición, antecedentes,
-  historial y abrir consulta), y el foco de teclado tampoco. Las dos columnas se forman con
-  `lg:flex-row` sobre dos contenedores que ya siguen ese orden.
+- En la ficha, una sola columna: el orden del DOM, el visual y el del foco coinciden (cabecera,
+  tutor, procedencia, derivante, antecedentes, historial). «Abrir consulta» va en la línea del
+  título (`Screen action`). Revisado por `rediseno-pacientes`; antes eran dos columnas con
+  `lg:flex-row`.
 - Los formularios conservan 720 px: las líneas largas y los campos anchos dificultan la lectura y
   el llenado (WCAG 1.4.8, orientativo).
 
