@@ -248,3 +248,15 @@ output/
 # Reportes de las skills de seguridad: nunca se commitean
 security_best_practices_report.md
 *-threat-model.md
+
+# Copia de impeccable para Copilot: no se versiona (AGENTS.md: dos espejos, .claude y .agents)
+.github/skills/
+.github/agents/
+.github/hooks/
+
+# Bases y documentos clínicos locales
+/data/
+
+# Binario de impeccable (16 MB por espejo): el lanzador lo descarga en el primer uso
+.claude/skills/impeccable/scripts/bin/
+.agents/skills/impeccable/scripts/bin/
