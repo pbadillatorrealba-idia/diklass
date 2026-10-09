@@ -20,13 +20,12 @@ máquina sobre 13 preguntas y 5 fuera de dominio:
 
 | Criterio | Medido | Umbral |
 |---|---|---|
-| SC-002 (hit@5) | 92 % (12/13) | ≥ 80 % |
+| SC-002 (hit@5) | 100 % (13/13) | ≥ 80 % |
 | SC-025 (ausencia declarada) | 100 % (5/5) | 100 % |
-| SC-010 / SC-003 (verbatim) | 0 incumplimientos en 34 citas | 0 |
+| SC-010 / SC-003 (verbatim) | 0 incumplimientos en 33 citas | 0 |
 
-Falla la pregunta «¿Cuándo es el período de socialización del cachorro y del gatito?» (fragmento
-11): la búsqueda léxica no lo coloca entre los 5 primeros. Se deja como está; con 13 preguntas el
-umbral se cumple y ajustar el texto para acertarla sería sobreajustar el fragmento.
+La pregunta del período de socialización se reformuló (decisión del usuario) porque la versión
+anterior fallaba en hit@5 (92 %, 12/13); el fragmento no se tocó.
 
 Esto es verificación por máquina. SC-002/SC-003/SC-015 siguen **pendientes de aceptación** hasta
 que el equipo clínico revise el corpus y el conjunto anotado contra el PDF.
