@@ -1,4 +1,4 @@
-import { type Ref, useState } from "react";
+import { type Ref, useLayoutEffect, useRef, useState } from "react";
 import { TextInput, type TextInputProps, View, type ViewProps } from "react-native";
 import { useFormControl } from "@/components/ui/form-control";
 import { useThemeColors } from "@/theme/use-theme-colors";
@@ -23,15 +23,38 @@ export function Input({ className, style, ...props }: InputProps) {
 type InputFieldHandle = TextInput;
 export type InputFieldProps = TextInputProps & { className?: string; ref?: Ref<InputFieldHandle> };
 
+const IS_WEB = process.env.EXPO_OS === "web";
 // Relleno vertical de `py-3`: en web `contentSize` ya lo incluye (`scrollHeight`); en nativo no.
-const VERTICAL_PADDING = process.env.EXPO_OS === "web" ? 0 : 24;
+const VERTICAL_PADDING = IS_WEB ? 0 : 24;
 
-export function InputField({ className, style, onContentSizeChange, ...props }: InputFieldProps) {
+export function InputField({
+  className,
+  style,
+  onContentSizeChange,
+  ref,
+  ...props
+}: InputFieldProps) {
   const { isInvalid } = useFormControl();
   const colors = useThemeColors();
   // Un campo multilínea crece con su contenido desde su mínimo (`min-h-textarea`), para que el
   // texto no quede oculto tras un desplazamiento interno (revisión final de D20).
   const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const node = useRef<InputFieldHandle | null>(null);
+
+  // Web: `scrollHeight` no baja de la altura fijada, así que se mide con `height: auto` para que
+  // el campo también encoja al borrar (revisión de la PR #41). Al ser un efecto de layout, la
+  // primera medida ocurre antes del primer pintado y no produce un salto.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se vuelve a medir con cada valor.
+  useLayoutEffect(() => {
+    if (!IS_WEB || !props.multiline) return;
+    const textarea = node.current as unknown as HTMLTextAreaElement | null;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const height = textarea.scrollHeight;
+    textarea.style.height = `${height}px`;
+    setContentHeight(height);
+  }, [props.multiline, props.value]);
+
   return (
     <TextInput
       aria-invalid={isInvalid}
@@ -55,6 +78,11 @@ export function InputField({ className, style, onContentSizeChange, ...props }: 
         style,
       ]}
       {...props}
+      ref={(instance: InputFieldHandle | null) => {
+        node.current = instance;
+        if (typeof ref === "function") ref(instance);
+        else if (ref) ref.current = instance;
+      }}
     />
   );
 }

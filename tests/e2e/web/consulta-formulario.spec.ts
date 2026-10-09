@@ -166,6 +166,12 @@ test.describe("consulta como formulario", () => {
       await expect
         .poll(() => campo.evaluate((el) => el.scrollHeight - el.clientHeight))
         .toBeLessThanOrEqual(1);
+      const alto = () => campo.evaluate((el) => el.getBoundingClientRect().height);
+      const largo = await alto();
+
+      // Revisión de la PR #41: al borrar, el campo vuelve a encoger hasta su mínimo.
+      await campo.fill("Una línea");
+      await expect.poll(alto).toBeLessThan(largo / 2);
     } finally {
       await api.dispose();
     }
