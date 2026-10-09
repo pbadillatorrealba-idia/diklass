@@ -61,7 +61,7 @@ const vetFor = (index: number) => vets[index % vets.length] as Vet;
 const first = TUTORES_DEMO[0];
 if (first && (await findTutorByRut(vetFor(0).client, first.rut))) {
   console.log(
-    "La clínica de demostración ya está cargada. Para empezar de cero: bun run demo:reset",
+    "La clínica de demostración ya está cargada (o quedó incompleta). Para empezar de cero: bun run demo:reset",
   );
   process.exit(0);
 }

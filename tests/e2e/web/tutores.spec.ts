@@ -87,9 +87,15 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await page.getByTestId("tutor-submit").click();
     await expect(page).toHaveURL(/\/tutors\/[0-9a-f-]{36}$/, { timeout: 15_000 });
 
-    // FR-123: edición del contacto en la ficha.
+    // FR-123: edición del contacto en la ficha. Cambiar el RUT al de otro tutor se señala junto al campo.
     const nuevoTelefono = `+56 9 ${sufijo.split("").reverse().join("")}`;
     await page.getByTestId("tutor-edit").click();
+    await page.getByTestId("tutor-card").getByTestId("tutor-rut").fill(rut);
+    await page.getByTestId("tutor-edit-save").click();
+    await expect(page.getByText(`Ya hay un tutor con este RUT: Tutora E2E ${sufijo}`)).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByTestId("tutor-card").getByTestId("tutor-rut").fill(randomRut());
     // La pila deja montada la pantalla de alta: se acota a la card de la ficha.
     await page.getByTestId("tutor-card").getByTestId("tutor-phone").fill(nuevoTelefono);
     await page.getByTestId("tutor-edit-save").click();

@@ -2,7 +2,7 @@
 -- verificador) y búsqueda de tutores por RUT. Patrón: 017_administracion_tutores.sql.
 
 begin;
-select plan(14);
+select plan(17);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -95,6 +95,30 @@ select throws_ok(
             '{"name":"Toby","species":"canino","breed":"Quiltro","sex":"M","reproductiveStatus":"entero","tutorId":"t"}',
             'draft')$$,
   '23514', null, 'el sexo fuera del catálogo se rechaza'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+    values ('c18c18c1-0000-4000-8000-00000000000c', 'patient',
+            '{"name":"Toby","breed":"Quiltro","sex":"macho","reproductiveStatus":"entero","tutorId":"t"}',
+            'draft')$$,
+  '23514', null, 'una especie ausente se rechaza (NULL no pasa el check)'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+    values ('c18c18c1-0000-4000-8000-00000000000c', 'patient',
+            '{"name":"Toby","species":"canino","breed":"Quiltro","sex":null,"reproductiveStatus":"entero","tutorId":"t"}',
+            'draft')$$,
+  '23514', null, 'un sexo null se rechaza'
+);
+
+select throws_ok(
+  $$insert into public.clinical_records (clinic_id, record_type, content, status)
+    values ('c18c18c1-0000-4000-8000-00000000000c', 'patient',
+            '{"name":"Toby","species":"canino","breed":"Quiltro","sex":"macho","tutorId":"t"}',
+            'draft')$$,
+  '23514', null, 'un estado reproductivo ausente se rechaza'
 );
 
 select throws_ok(

@@ -50,9 +50,10 @@ alter table public.clinical_records
   check (
     record_type <> 'patient'
     or (
-      content->>'species' in ('canino', 'felino')
-      and content->>'sex' in ('macho', 'hembra')
-      and content->>'reproductiveStatus' in ('entero', 'esterilizado')
+      -- `coalesce`: una clave ausente o null da NULL, y un CHECK con NULL se acepta.
+      coalesce(content->>'species' in ('canino', 'felino'), false)
+      and coalesce(content->>'sex' in ('macho', 'hembra'), false)
+      and coalesce(content->>'reproductiveStatus' in ('entero', 'esterilizado'), false)
       and btrim(coalesce(content->>'name', '')) <> ''
       and btrim(coalesce(content->>'breed', '')) <> ''
       and btrim(coalesce(content->>'tutorId', '')) <> ''

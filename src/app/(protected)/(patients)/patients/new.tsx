@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   emptyFichaFormValues,
   type FichaField,
@@ -84,7 +84,22 @@ export default function NewPatientScreen() {
     });
   }, [queryError, openExpiredDialog, setAccessState]);
 
+  // `isSaving` llega en el siguiente render y hay un `await` antes de escribir: esta guarda frena
+  // un doble toque inmediato.
+  const submitting = useRef(false);
   const handleSubmit = async () => {
+    if (submitting.current) {
+      return;
+    }
+    submitting.current = true;
+    try {
+      await submit();
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const submit = async () => {
     if (!clinicId) {
       return;
     }

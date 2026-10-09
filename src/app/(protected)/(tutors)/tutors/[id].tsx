@@ -20,6 +20,7 @@ import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { searchPatients } from "@/features/registro/patient-search";
 import { invalidateRegistro } from "@/features/registro/query-cache";
+import { findTutorByRut } from "@/features/registro/tutor-search";
 import { getTutor, tutorFullName, updateTutor } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
@@ -84,6 +85,12 @@ export default function TutorScreen() {
     if (!parsed.value) return;
     const content = parsed.value;
     setIsSaving(true);
+    const sameRut = await findTutorByRut(supabase, content.rut, tutorId);
+    if (sameRut) {
+      setErrors({ rut: `Ya hay un tutor con este RUT: ${sameRut.fullName}.` });
+      setIsSaving(false);
+      return;
+    }
     const outcome = await guard("update_tutor", async () => {
       await updateTutor(supabase, tutorId, content);
       await invalidateRegistro(queryClient);
