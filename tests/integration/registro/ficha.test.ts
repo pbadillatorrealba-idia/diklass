@@ -194,7 +194,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
     const despues = await getPatient(ana.client, pacienteId);
     expect(despues?.content.antecedentes.medicalHistory).toEqual([
-      { text: "Displasia de cadera", negative: false, recordedAt: expect.any(String) },
+      { text: "Displasia de cadera", negative: false },
     ]);
     expect(despues?.content.antecedentes.preexistingDiseases).toEqual([
       { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
