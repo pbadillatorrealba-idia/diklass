@@ -90,6 +90,13 @@ obligatorias). Igual que el provisioning, falla cerrado: rechaza cualquier Supab
 Playwright corre con Node, que no carga `.env`. Sin `--env-file=.env`, los escenarios de login y la
 compuerta de accesibilidad con sesión se omiten y la ejecución sale verde sin haberlos probado.
 
+En local, Playwright corre con un worker y solo Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox
+y WebKit). La app se exporta una vez (`expo export`, pico de ~1,2 GB) y se sirve estática en vez de
+mantener Metro; `E2E_DEV_SERVER=1` vuelve a `expo start`. En CI, Chromium corre dentro del job
+`database` (un solo Supabase, tras un `db reset`) y las variables pasan por `GITHUB_ENV`.
+`bun run gate` ejecuta `biome ci`, `tsc` y todos los tests en secuencia, con tope de 3 GB si hay
+systemd; `--changed` solo acota Biome.
+
 ## CI
 
 `.github/workflows/ci.yml` se ejecuta en cada PR y en cada push a `main`:
