@@ -20,7 +20,7 @@ Trabajo en el worktree `~/.omp/wt/identidad-logo` (rama `feat/identidad-logo`).
 
 - [x] 3.1 Escribir en rojo una prueba de `Logo` (nombre accesible `Diklass`, tamaños y proporción) e implementar `src/components/ui/logo.tsx` (FR-102). Verificación: rojo → verde.
 - [x] 3.2 Usar `Logo` en `src/app/(auth)/login.tsx` y en `app-navigation.web.tsx` / `app-navigation.tsx` (cabecera compacta y barra lateral), con variante legible en claro y oscuro (FR-102 · US19-AC2). Verificación: capturas Playwright de `/login` y `/patients` en `chromium` y `chromium-dark` en `quickstart.md`.
-- [ ] 3.3 Ejecutar `accessibility.spec.ts` en `chromium` y `chromium-dark` (uno a la vez) y registrar 0 violaciones; revisar visualmente los pliegos de copias (D20) con la paleta nueva (SC-062). Verificación: resultados y capturas antes/después en `quickstart.md`.
+- [x] 3.3 Ejecutar `accessibility.spec.ts` en `chromium` y `chromium-dark` (uno a la vez) y registrar 0 violaciones; revisar visualmente los pliegos de copias (D20) con la paleta nueva (SC-062). Verificación: resultados y capturas antes/después en `quickstart.md`.
 
 ## 4. Mejora opcional: SVG trazado (D4)
 

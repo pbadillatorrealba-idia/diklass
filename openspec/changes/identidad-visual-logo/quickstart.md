@@ -33,9 +33,12 @@
 
 ## Grupo 3.3 — compuerta de accesibilidad (SC-062)
 
-Con Supabase local y veterinarios provisionados, de a una proyecto a la vez:
-- `chromium`: 12 passed, 0 violaciones.
-- `chromium-dark`: 10 passed, 2 failed — `login` y `login error`, `color-contrast` 1.01:1 en `#username`/`#password`. **Preexistente**: `main` (`d0e40ad`) falla igual (`#1b1d1f` sobre `#1b1f1f`). Causa observada: el texto escrito del `Input` queda con el color del esquema claro (`rgb(37 17 52)`) en la web exportada con el sistema en oscuro, es decir, es un fallo real y no de esta paleta. Se deja fuera de este cambio; SC-062 no se da por cumplido hasta corregirlo. La tarea 3.3 queda abierta.
+Con Supabase local y veterinarios provisionados, un proyecto a la vez:
+- Antes del arreglo: `chromium` 12 passed; `chromium-dark` 10 passed y 2 failed (`login` y `login error`, `color-contrast` 1.01:1 en `#username`/`#password`). El mismo fallo ocurre en `main` (`d0e40ad`).
+- **Causa raíz** (hidratación): el primer render del cliente ya usaba el esquema oscuro, mientras el HTML estático se había pintado en claro. React no corrige atributos al hidratar, así que el `style` en línea del `Input` (`color: colors.foreground`) se quedaba claro sobre fondo oscuro. Al alternar el esquema después sí se corregía.
+- **Arreglo:** `useColorScheme` (`src/theme/use-color-scheme.ts`) devuelve `light` en el render del servidor y en el primero de la hidratación (`useSyncExternalStore` con `getServerSnapshot`) y el esquema real después. El e2e `accessibility.spec.ts` en `chromium-dark` era el rojo; verde tras el arreglo.
+- Después: `chromium-dark` 12 passed, 0 violaciones; `chromium`: suite web completa, 72 passed (0 fallos).
+- Otro fallo, este sí causado por la paleta nueva: `tema.spec.ts` tenía escritos a mano los fondos de la paleta anterior (`17 20 20`, `236 238 233`); actualizados a `20 18 28` y `241 240 246`. Búsqueda de otros restos de la paleta vieja en `tests/`, `src/`, `docs/`: ninguno.
 
 ## Grupo 4 — SVG trazado (4.1)
 
