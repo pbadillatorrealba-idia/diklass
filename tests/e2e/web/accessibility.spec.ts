@@ -315,14 +315,14 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     );
   });
 
-  // sistema-visual FR-079 · escenario «Listas en escritorio» (design.md D18): las listas usan el
-  // ancho de escritorio y los formularios conservan el de lectura.
-  test("a 1280 px la lista de pacientes va a 2 columnas y el formulario sigue en 720 px", async ({
+  // rediseno-pacientes: la lista de pacientes es una tabla desde 1024 px y tarjetas debajo; el
+  // formulario conserva el ancho de lectura.
+  test("la lista de pacientes es tabla a 1280 px y tarjetas a 768 px; el formulario sigue en 720 px", async ({
     page,
   }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const cajas = async (width: number) => {
+    const medir = async (width: number) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/patients");
       await expect(page.getByTestId("patient-item").nth(1)).toBeVisible({ timeout: 15_000 });
@@ -331,28 +331,23 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
           .slice(0, 2)
           .map((el) => el.getBoundingClientRect());
         const lista = document.querySelector('[data-testid="patients-list"]');
-        const ancho = Math.max(
-          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
-            (el) => el.getBoundingClientRect().right,
-          ),
-        );
-        const izquierda = Math.min(
-          ...Array.from(document.querySelectorAll('[data-testid="patient-item"]')).map(
-            (el) => el.getBoundingClientRect().left,
-          ),
-        );
-        if (!a || !b || !lista) throw new Error("faltan tarjetas o lista");
-        return { a: { x: a.x, y: a.y }, b: { x: b.x, y: b.y }, contenido: ancho - izquierda };
+        if (!a || !b || !lista) throw new Error("faltan filas o lista");
+        return {
+          filaApilada: b.y > a.y,
+          rolTabla: lista.getAttribute("role") === "table",
+          contenido: lista.getBoundingClientRect().width,
+        };
       });
     };
 
-    const ancho = await cajas(1280);
-    expect(Math.abs(ancho.a.y - ancho.b.y), "dos tarjetas en la misma fila").toBeLessThan(2);
-    expect(ancho.b.x).toBeGreaterThan(ancho.a.x);
+    const ancho = await medir(1280);
+    expect(ancho.rolTabla, "tabla a 1280 px").toBe(true);
+    expect(ancho.filaApilada, "una fila por paciente").toBe(true);
     expect(ancho.contenido).toBeGreaterThan(720);
 
-    const medio = await cajas(1024);
-    expect(medio.b.y, "una columna a 1024 px").toBeGreaterThan(medio.a.y);
+    const angosto = await medir(768);
+    expect(angosto.rolTabla, "tarjetas a 768 px").toBe(false);
+    expect(angosto.filaApilada).toBe(true);
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/patients/new");

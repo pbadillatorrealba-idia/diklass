@@ -232,7 +232,7 @@ export default function PatientDetailScreen() {
                     <Text tone="muted" variant="label">
                       Nombre
                     </Text>
-                    <Link href={`/tutors/${tutor.record.id}`}>
+                    <Link href={`/tutors/${tutor.record.id}`} testID="patient-tutor-link">
                       <LinkText>{tutor.content.name}</LinkText>
                     </Link>
                   </View>
