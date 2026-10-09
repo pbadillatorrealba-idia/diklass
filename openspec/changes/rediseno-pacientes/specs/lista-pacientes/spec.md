@@ -85,6 +85,9 @@ paginador MUST ser enlaces.
 El sistema MUST ofrecer `/tutors/<id>` con el contacto del tutor y la tabla de sus pacientes, y
 MUST decir cuando el tutor no existe. No MUST permitir editar al tutor desde esa pantalla.
 
+> Nota de revisión (`administracion-tutores`, FR-123): la ficha del tutor pasa a permitir editar su
+> contacto; la oración anterior queda redefinida por ese cambio.
+
 #### Scenario: tutor con dos pacientes
 
 - **GIVEN** un tutor con Luna y Rocky
