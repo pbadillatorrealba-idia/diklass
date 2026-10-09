@@ -17,6 +17,11 @@ import {
   type OperationStatus,
   operationStatus,
 } from "@/components/registro/operation-status";
+import {
+  buildPlan,
+  emptyPlanFormValues,
+  type PlanFormValues,
+} from "@/components/registro/plan-form";
 import { useSignatureMotion } from "@/components/registro/signature-motion";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Box } from "@/components/ui/box";
@@ -185,6 +190,8 @@ export default function ConsultationScreen() {
   const [composerError, setComposerError] = useState<string | null>(null);
   const [diagnosisText, setDiagnosisText] = useState("");
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
+  const [planValues, setPlanValues] = useState<PlanFormValues>(emptyPlanFormValues);
+  const [planError, setPlanError] = useState<string | null>(null);
   const [correctionContent, setCorrectionContent] = useState<EpicrisisContent | null>(null);
   const [draftEdits, setDraftEdits] = useState<{
     sourceId: string;
@@ -429,7 +436,12 @@ export default function ConsultationScreen() {
   };
 
   const submitDiagnosis = async () => {
-    const parsed = diagnosisContentSchema.safeParse({ consultationId, text: diagnosisText });
+    const { plan, error: planProblem } = buildPlan(planValues);
+    setPlanError(planProblem);
+    if (planProblem) {
+      return;
+    }
+    const parsed = diagnosisContentSchema.safeParse({ consultationId, text: diagnosisText, plan });
     if (!parsed.success) {
       setDiagnosisError(getFieldErrors(parsed.error).text ?? "Este campo es obligatorio.");
       return;
@@ -445,10 +457,12 @@ export default function ConsultationScreen() {
         clinicId,
         consultationId,
         text: parsed.data.text,
+        plan: parsed.data.plan,
       });
       attribution = result.attribution;
       setEditedSection(2);
       setDiagnosisText("");
+      setPlanValues(emptyPlanFormValues);
       await refetchWorkspace();
     });
     setIsBusy(false);
@@ -656,6 +670,7 @@ export default function ConsultationScreen() {
                   isSealed={data.isClosed}
                   onSubmit={() => void submitDiagnosis()}
                   onTextChange={setDiagnosisText}
+                  plan={{ values: planValues, error: planError, onChange: setPlanValues }}
                   text={diagnosisText}
                   textError={diagnosisError}
                 />

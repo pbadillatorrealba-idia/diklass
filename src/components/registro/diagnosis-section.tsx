@@ -1,4 +1,5 @@
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { PlanForm, type PlanFormValues, PlanSummary } from "@/components/registro/plan-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
   FormControl,
@@ -27,6 +28,12 @@ type DiagnosisSectionProps = {
   /** Consulta cerrada (D5): sus registros son inmutables — sin altas. */
   isSealed?: boolean;
   onTextChange: (text: string) => void;
+  /** Plan de la consulta (FR-112): sus valores viven en la pantalla, como el texto. */
+  plan: {
+    values: PlanFormValues;
+    error: string | null;
+    onChange: (values: PlanFormValues) => void;
+  };
   onSubmit: () => void;
 };
 
@@ -38,6 +45,7 @@ export function DiagnosisSection({
   isBusy,
   isSealed = false,
   onTextChange,
+  plan,
   onSubmit,
 }: DiagnosisSectionProps) {
   return (
@@ -68,6 +76,14 @@ export function DiagnosisSection({
         </FormControl>
       )}
       {isSealed ? null : (
+        <PlanForm
+          error={plan.error}
+          isDisabled={isBusy}
+          onChange={plan.onChange}
+          values={plan.values}
+        />
+      )}
+      {isSealed ? null : (
         <Button
           accessibilityLabel="Registrar diagnóstico"
           isDisabled={isBusy}
@@ -89,6 +105,7 @@ export function DiagnosisSection({
             testID="diagnosis-entry"
           >
             <Text selectable>{entry.content.text}</Text>
+            {entry.content.plan ? <PlanSummary plan={entry.content.plan} /> : null}
             <AttributionBadge attribution={entry.attribution} />
           </VStack>
         ))

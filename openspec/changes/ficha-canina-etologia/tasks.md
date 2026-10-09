@@ -18,11 +18,11 @@
 
 ## 3. Interfaz (D7)
 
-- [ ] 3.1 `ficha-form`: paciente ampliado, tutor ampliado, bloque derivante; etiquetas en
+- [x] 3.1 `ficha-form`: paciente ampliado, tutor ampliado, bloque derivante; etiquetas en
   `labels.ts`. Verificación: test de componente + e2e de alta de ficha.
-- [ ] 3.2 `anamnesis-section` por secciones plegables con campos `texto` y `tri`; «Campo previo» y
+- [x] 3.2 `anamnesis-section` por secciones plegables con campos `texto` y `tri`; «Campo previo» y
   panel de faltantes por sección. Verificación: `anamnesis-section.test.tsx`, axe claro/oscuro.
-- [ ] 3.3 Formulario del plan de la consulta (FR-112) y su inclusión en la epicrisis como
+- [x] 3.3 Formulario del plan de la consulta (FR-112) y su inclusión en la epicrisis como
   propuesta del veterinario. Verificación: e2e `consulta-formulario.spec.ts` actualizado y sellado
   tras cierre.
 
