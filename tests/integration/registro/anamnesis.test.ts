@@ -266,4 +266,38 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
       "Ansiedad por separación",
     ]);
   });
+
+  test("pregunta cerrada y plan de la consulta se guardan y se leen (FR-111 · FR-112)", async () => {
+    await recordAnamnesisEntry(ana.client, {
+      clinicId: ana.clinicId,
+      consultationId: consultaId,
+      field: "soledad_vocaliza",
+      text: "a_veces",
+      provenance: "reportada",
+    });
+    await recordDiagnosis(ana.client, {
+      clinicId: ana.clinicId,
+      consultationId: consultaId,
+      text: "Ansiedad por separación (presuntivo)",
+      plan: {
+        tests: ["analisis_sangre"],
+        differentials: ["Fobia", "Hiperapego"],
+        medication: [{ activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" }],
+        followUp: "Control en 15 días",
+      },
+    });
+
+    const entradas = await listAnamnesisEntries(ana.client, consultaId);
+    expect(
+      entradas.find((entrada) => entrada.content.field === "soledad_vocaliza")?.content.text,
+    ).toBe("a_veces");
+    const diagnosticos = await listDiagnoses(ana.client, consultaId);
+    const conPlan = diagnosticos.find(
+      (d) => d.content.text === "Ansiedad por separación (presuntivo)",
+    );
+    expect(conPlan?.content.plan?.differentials).toEqual(["Fobia", "Hiperapego"]);
+    expect(conPlan?.content.plan?.medication).toEqual([
+      { activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" },
+    ]);
+  });
 });

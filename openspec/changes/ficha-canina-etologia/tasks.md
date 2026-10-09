@@ -6,7 +6,7 @@
   tutor sin contacto rechazado, `tri` inválido rechazado, plan con 4 diferenciales rechazado.
 - [x] 1.3 Extender `schema.ts` (paciente, tutor, derivante) y crear el catálogo
   `ANAMNESIS_SECTIONS` con `kind` y `LEGACY_FIELDS` (D2–D4). Verificación: 1.2 en verde, `tsc`.
-- [ ] 1.4 Extender `diagnosis` con protocolo, diferenciales, presuntivo, tratamiento y seguimiento
+- [x] 1.4 Extender `diagnosis` con protocolo, diferenciales, presuntivo, tratamiento y seguimiento
   (D5) y su servicio. Verificación: unit + integración viva (`SUPABASE_LIVE_TESTS=1`).
 
 ## 2. Servicios y consumidores (D6)
@@ -18,11 +18,11 @@
 
 ## 3. Interfaz (D7)
 
-- [x] 3.1 `ficha-form`: paciente ampliado, tutor ampliado, bloque derivante; etiquetas en
+- [ ] 3.1 `ficha-form`: paciente ampliado, tutor ampliado, bloque derivante; etiquetas en
   `labels.ts`. Verificación: test de componente + e2e de alta de ficha.
-- [x] 3.2 `anamnesis-section` por secciones plegables con campos `texto` y `tri`; «Campo previo» y
+- [ ] 3.2 `anamnesis-section` por secciones plegables con campos `texto` y `tri`; «Campo previo» y
   panel de faltantes por sección. Verificación: `anamnesis-section.test.tsx`, axe claro/oscuro.
-- [x] 3.3 Formulario del plan de la consulta (FR-112) y su inclusión en la epicrisis como
+- [ ] 3.3 Formulario del plan de la consulta (FR-112) y su inclusión en la epicrisis como
   propuesta del veterinario. Verificación: e2e `consulta-formulario.spec.ts` actualizado y sellado
   tras cierre.
 

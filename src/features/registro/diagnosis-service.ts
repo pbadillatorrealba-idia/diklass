@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseRows } from "@/features/registro/read-rows";
-import { type DiagnosisContent, diagnosisContentSchema } from "@/features/registro/schema";
+import {
+  type ConsultationPlanInput,
+  type DiagnosisContent,
+  diagnosisContentSchema,
+} from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createClinicalRecord } from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
@@ -29,7 +33,7 @@ export async function recordDiagnosis(
     clinicId: string;
     consultationId: string;
     text: string;
-    plan?: DiagnosisContent["plan"];
+    plan?: ConsultationPlanInput;
   },
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();

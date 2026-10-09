@@ -266,6 +266,9 @@ const consultationPlanSchema = z
   .nullish()
   .transform((value) => value ?? null);
 
+/** Entrada del plan: los campos que el veterinario no completó pueden omitirse. */
+export type ConsultationPlanInput = z.input<typeof consultationPlanSchema>;
+
 export const diagnosisContentSchema = z.object({
   consultationId: requiredTextSchema,
   text: requiredTextSchema,
