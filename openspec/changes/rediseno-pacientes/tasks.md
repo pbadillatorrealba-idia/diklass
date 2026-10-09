@@ -48,6 +48,11 @@ es aceptación. Lo pendiente queda sin marcar.
   reemplazar los `testID` de alta de antecedentes por `antecedent-open` en `caso-sintetico.ts`
   (hecho) y **ejecutarlos** (workers=1). Añadir un caso del breadcrumb a 1280 px.
 
+- [x] 4.4 Búsqueda de pacientes con tutor «nombre apellido» (migración 016, con la nota de
+  rendimiento de los joins), ids de la URL que no son UUID resueltos como «no encontrado»
+  (`isUuid`), «Registrar paciente» como `action` de `Screen`, y pruebas de `PatientsTable`,
+  `DataItem` y `isUuid`. Verificación: Biome, `tsc` y `bun test tests/unit/registro tests/unit/ui`.
+
 ## 5. Cierre
 
 - [ ] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y
