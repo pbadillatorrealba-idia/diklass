@@ -174,11 +174,52 @@ queda fijada en `.bun-version`). Las filas que no invocan un script de `package.
 | `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. CI ejecuta `bun run test:e2e:web` y pasa las variables por `GITHUB_ENV`. En local corre con un worker y solo Chromium; `PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit. La app se exporta una vez (`expo export`, pico ~1,2 GB) y se sirve estática en vez de mantener Metro; `E2E_DEV_SERVER=1` vuelve a `expo start`. En CI, Chromium corre dentro del job `database` (un solo Supabase, tras un `db reset`). | Sí |
 | `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | `main`, nightly y a demanda (Maestro Cloud) |
 
-Antes de hacer push, reproduce al menos los pasos de CI que toca tu cambio: `typecheck`,
-`biome ci --error-on-warnings` y `test`; si tocas migraciones, también `supabase test db` y
-`db:types`. La definición completa está en `.github/workflows/ci.yml`.
+Para qué ejecutar y cuándo, ver «Desarrollo ligero» y «Cierre de una PR»: los pasos completos de
+CI se reproducen al cerrar la PR, no en cada push. La definición completa está en
+`.github/workflows/ci.yml`.
 
 No añadas scripts ni dependencias sin justificarlos conforme al Principio III de la constitución.
+
+## Desarrollo ligero
+
+La máquina de desarrollo tiene poca RAM: mientras se desarrolla, se ejecuta lo mínimo que
+valida el cambio, y la batería completa se reserva para el cierre.
+
+- **Durante el desarrollo** (cada iteración y cada commit):
+  - Biome solo sobre lo tocado: `bunx biome check --write <rutas>` o `bun run gate --changed`.
+  - Solo los tests pertinentes: el archivo o el directorio afectado (`bun test <ruta>`); si el
+    cambio toca el tema, `tests/unit/theme/tema.test.ts`.
+  - `bun run typecheck` solo si cambian tipos o firmas públicas.
+  - E2E: como mucho `bun run test:e2e:smoke`, y solo si el cambio toca login o navegación.
+  - Nada de `bun run gate` completo, `bun run test`, `supabase test db` ni Playwright completo
+    «por si acaso».
+- **Se ejecuta lo pesado solo cuando:**
+  - se va a mergear la rama (o se cierra la PR, ver más abajo);
+  - el cambio toca migraciones, RLS o `database.types.ts` (`supabase test db` y `db:types`);
+  - el cambio toca un contrato transversal (autenticación, atribución, guarda de tema) y un test
+    focalizado no basta para dar confianza;
+  - un fallo en CI no se puede reproducir con un test focalizado;
+  - el usuario lo pide.
+- Los e2e y las exportaciones pesadas se ejecutan de uno en uno, con un solo worker.
+- Al declarar algo terminado, di qué se ejecutó y qué no. «Verificado» solo cubre lo ejecutado;
+  `verification-before-completion` aplica a ese alcance, no obliga a la batería completa.
+
+## Cierre de una PR
+
+Cuando el trabajo parezca listo para cerrar la PR, **pregunta al usuario** si quiere cerrarla
+antes de empezar el flujo. Si confirma:
+
+1. Ejecuta la verificación completa una sola vez: `bun run gate`, y además `supabase test db` y
+   `db:types` si hay migraciones, y Playwright si el cambio toca UI o navegación.
+2. Lanza la skill `requesting-code-review` sobre la rama.
+3. Procesa el resultado con `receiving-code-review`: aplica los comentarios, sugerencias y
+   nitpicks que sean correctos técnicamente, verificando cada uno antes de implementarlo.
+4. **Pregunta al usuario siempre que haya una decisión difícil**: sugerencias contradictorias
+   entre sí o con la constitución, cambios de alcance o de diseño, un hallazgo que exige tocar
+   migraciones o contratos, o una sugerencia que no se comparte. No decidas esos casos en
+   silencio ni ignores un hallazgo sin decirlo.
+5. Repite la verificación solo sobre lo que cambió al aplicar la revisión y resume qué se
+   aplicó, qué se descartó y por qué.
 
 ## Skills de agentes
 
@@ -189,13 +230,26 @@ No añadas scripts ni dependencias sin justificarlos conforme al Principio III d
   - `test-driven-development`: al implementar cualquier funcionalidad o corrección.
   - `systematic-debugging`: ante un bug, un test roto o un comportamiento inesperado, antes de
     proponer un arreglo.
-  - `verification-before-completion`: antes de declarar algo terminado, hacer commit o abrir un PR.
-  - `requesting-code-review` / `receiving-code-review`: al cerrar un bloque de trabajo y al
-    procesar comentarios de revisión.
+  - `verification-before-completion`: antes de declarar algo terminado, hacer commit o abrir un PR,
+    con el alcance de «Desarrollo ligero».
+  - `requesting-code-review` / `receiving-code-review`: en el flujo de «Cierre de una PR».
   - `security-best-practices` / `security-threat-model`: cuando se pida explícitamente una
     revisión de seguridad o un modelo de amenazas.
   - `playwright`: para automatizar el navegador desde terminal (depurar flujos de UI, capturas).
-  - `frontend-design`: al crear o rediseñar UI.
+  - `frontend-design`: al crear UI nueva.
+  - `impeccable`: asesora, no dicta. La identidad visual (D20) es la de `sistema-visual`, el
+    brief y la constitución; `DESIGN.md`, `PRODUCT.md` y `.impeccable/` la describen y están
+    subordinados a ellos. Un cambio de identidad se propone por OpenSpec, nunca con un comando
+    de impeccable.
+    - Permitido: `critique`, `audit`, `polish`, `harden` y `document` (este solo para actualizar
+      `DESIGN.md`). Úsalo al cerrar una PR que toque UI, antes de `requesting-code-review`.
+    - Con confirmación del usuario y paso por OpenSpec: `bolder`, `colorize`, `overdrive`,
+      `delight`, `typeset` y `shape` de una identidad nueva.
+    - Sus subagentes (`.claude/agents/`: `impeccable-finish-reviewer`, `-documenter`,
+      `-asset-producer`, `-manual-edit-applier`) solo se invocan desde esta skill.
+    - El hook de `.codex/hooks.json` revisa los cambios de UI tras cada edición; es informativo
+      y no sustituye a `bun run gate`. No hay hook de cierre de turno.
+    - Ningún resultado puede violar las reglas de «Sistema visual» ni `tema.test.ts`.
   - `using-git-worktrees`: cuando un cambio necesita aislarse del espacio de trabajo actual.
   - `openspec-*`: flujo de propuestas, aplicación, sincronización y archivo de cambios.
 
