@@ -155,6 +155,16 @@ describe("confirmAudioFact", () => {
     });
     await expect(confirmAudioFact(client, "hecho-1")).rejects.toThrow(/anamnesisEntryId/i);
   });
+
+  test("D4: un borrador con un campo previo a la hoja etológica no se confirma ni escribe", async () => {
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ ...contenidoBorrador, field: "desencadenantes" }), error: null },
+      ],
+    });
+    await expect(confirmAudioFact(client, "hecho-1")).rejects.toThrow(/previo a la hoja/i);
+    expect(calls.filter((call) => call.method === "update")).toHaveLength(0);
+  });
 });
 
 // Revisión de la PR #29, hallazgo 4: editar, descartar y confirmar no pisan escrituras ajenas.

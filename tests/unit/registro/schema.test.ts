@@ -403,3 +403,16 @@ describe("plan de la consulta (FR-112)", () => {
     expect(prueba.success).toBe(false);
   });
 });
+
+describe("catálogo de anamnesis", () => {
+  test("los ids son únicos, no vacíos y cada sección tiene campos", () => {
+    const ids = ANAMNESIS_SECTIONS.flatMap((section) => section.fields.map((f) => f.id));
+
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ANAMNESIS_SECTIONS.every((section) => section.fields.length > 0)).toBe(true);
+    expect(LEGACY_ANAMNESIS_FIELDS.some((legacy) => (ids as string[]).includes(legacy))).toBe(
+      false,
+    );
+  });
+});

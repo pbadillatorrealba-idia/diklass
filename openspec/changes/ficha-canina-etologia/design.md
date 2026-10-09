@@ -24,8 +24,8 @@ catálogo. Conserva procedencia (FR-021) y atribución (FR-004) sin cambios de s
 descartada: un solo registro `anamnesis_etologica` con todo el formulario: pierde procedencia y
 atribución por campo.
 
-**D3 — Tipos de respuesta.** Cada campo declara `kind: "texto" | "tri"`; `tri` guarda
-`"si" | "no" | "a_veces"` en `text` (validado por Zod según el catálogo). Un `tri` sin responder
+**D3 — Tipos de respuesta.** Cada campo declara `kind: "texto" | "sino" | "tri"`; `sino` (preguntas de la hoja con solo SI/NO)
+guarda `"si" | "no"` y `tri` guarda `"si" | "no" | "a_veces"` en `text` (validado por Zod según el catálogo). Un `tri` sin responder
 sigue siendo «sin dato», nunca «no» (SC-024).
 
 **D4 — Compatibilidad hacia atrás.** Los ids antiguos se conservan en `LEGACY_FIELDS` solo para
@@ -50,6 +50,10 @@ prompt/esquema al catálogo nuevo y los fixtures. `epicrisis-draft.ts` resume po
 
 ## Risks / Trade-offs
 
+- Límite conocido (D6): al fusionar seis campos de voz en `historia_problema`, la detección de
+  contradicciones compara hechos de aspectos distintos del problema; solo salta con una marca de
+  corrección o una polaridad opuesta. Si genera falsos positivos, separar la comparación por
+  subaspecto.
 - Catálogo grande (~70 campos) → formulario largo. Mitigación: secciones plegables y
   «campos sin dato» del panel de faltantes agrupados por sección.
 - Cambiar `AnamnesisField` rompe consumidores de voz. Mitigación: tipos compilan o fallan; tests de

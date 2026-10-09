@@ -68,7 +68,7 @@ otras conductas, tratamientos anteriores, historial médico), conservando proced
 
 ### Requirement: FR-111 Respuestas Sí/No/A veces
 
-El sistema MUST registrar las preguntas cerradas de la hoja con los valores Sí, No o A veces, y MUST
+El sistema MUST registrar las preguntas cerradas de la hoja con los valores Sí, No o A veces (las que la hoja plantea solo como Sí/No admiten Sí o No), y MUST
 mantener una pregunta sin responder como «sin dato», nunca como «No».
 
 #### Scenario: respuesta tri-estado

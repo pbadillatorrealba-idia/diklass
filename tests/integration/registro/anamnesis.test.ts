@@ -300,4 +300,19 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
       { activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" },
     ]);
   });
+
+  test("el plan no se anexa a una consulta cerrada (FR-112 · FR-024)", async () => {
+    const cerrada = await cerrarConsulta(ana.client, ana.clinicId, patientId, "sellada");
+
+    await expect(
+      recordDiagnosis(ana.client, {
+        clinicId: ana.clinicId,
+        consultationId: cerrada,
+        text: "Diagnóstico tardío",
+        plan: { differentials: ["Fobia"] },
+      }),
+    ).rejects.toThrow();
+    const diagnosticos = await listDiagnoses(ana.client, cerrada);
+    expect(diagnosticos.map((d) => d.content.text)).toEqual(["Diagnóstico previo sellada."]);
+  });
 });
