@@ -16,6 +16,10 @@ Stack local con `DOCKER_HOST` apuntando a Podman; veterinarios con `bun run prov
   `supabase gen types` no pasa por el formateador del repositorio (Biome ignora el archivo).
 - No verificado: Firefox/WebKit y nativo.
 
-## Pendiente
+## CI
 
-- 3.1: URLs de CI en verde tras abrir la PR.
+El trabajo de perfil llegó a `main` junto con la rama `feat/sistema-visual-d20` (sin PR propia).
+CI en verde sobre `main` en `07a1d7f`, que contiene los commits de perfil:
+
+- CI: https://github.com/pbadillatorrealba-idia/diklass/actions/runs/37940389142
+- Native E2E: https://github.com/pbadillatorrealba-idia/diklass/actions/runs/37940388774
