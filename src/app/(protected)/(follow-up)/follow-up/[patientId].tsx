@@ -39,6 +39,7 @@ import {
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -70,11 +71,11 @@ export default function FollowUpPanelScreen() {
 
   const patientQuery = useQuery({
     queryKey: ["registro", "patient", patientId],
-    queryFn: () => getPatient(supabase, patientId),
+    queryFn: () => (isUuid(patientId) ? getPatient(supabase, patientId) : null),
   });
   const consultationsQuery = useQuery({
     queryKey: ["registro", "patient-consultations", patientId],
-    queryFn: () => listConsultationsByPatient(supabase, patientId),
+    queryFn: () => (isUuid(patientId) ? listConsultationsByPatient(supabase, patientId) : []),
   });
   // Las entradas se leen sobre las consultas que ya trajo `consultationsQuery` (revisión de la
   // PR #28): la clave lleva sus ids, así que una consulta nueva o cerrada relee lo suyo.

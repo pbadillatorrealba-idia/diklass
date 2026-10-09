@@ -13,6 +13,7 @@ import { getTutor } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -25,7 +26,7 @@ export default function TutorScreen() {
 
   const tutorQuery = useQuery({
     queryKey: ["registro", "tutor", tutorId],
-    queryFn: () => getTutor(supabase, tutorId),
+    queryFn: () => (isUuid(tutorId) ? getTutor(supabase, tutorId) : null),
   });
   const patientsQuery = useQuery({
     queryKey: ["registro", "patients", { tutorId }],

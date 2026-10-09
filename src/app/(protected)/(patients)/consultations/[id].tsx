@@ -82,6 +82,7 @@ import { getFieldErrors } from "@/lib/forms/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import type { ConsultationDraft } from "@/lib/storage/drafts";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useThemeColors } from "@/theme/use-theme-colors";
@@ -119,6 +120,7 @@ async function loadHeader(consultation: ConsultationEntry): Promise<HeaderData> 
 }
 
 async function loadWorkspace(consultationId: string): Promise<WorkspaceData | null> {
+  if (!isUuid(consultationId)) return null;
   const resumed = await resumeConsultation(supabase, consultationId);
   if (resumed) {
     return {
