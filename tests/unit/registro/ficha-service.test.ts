@@ -355,7 +355,9 @@ describe("addAntecedentItem (FR-001 · US1-AC2, FR-044)", () => {
         ...previa,
         antecedentes: {
           medicalHistory: [{ text: "Displasia de cadera", negative: false }],
-          preexistingDiseases: [{ text: "Hipotiroidismo", negative: false }],
+          preexistingDiseases: [
+            { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
+          ],
           currentMedications: [],
           knownAllergies: [{ text: "Sin alergias conocidas", negative: true }],
           behavioralHistory: [],
@@ -407,7 +409,9 @@ describe("addAntecedentItem (FR-001 · US1-AC2, FR-044)", () => {
         ...editadaPorOtro,
         antecedentes: {
           ...editadaPorOtro.antecedentes,
-          preexistingDiseases: [{ text: "Hipotiroidismo", negative: false }],
+          preexistingDiseases: [
+            { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
+          ],
         },
       },
     });

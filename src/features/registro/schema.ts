@@ -46,6 +46,8 @@ export type Provenance = z.infer<typeof provenanceSchema>;
 const antecedentItemSchema = z.object({
   text: z.string().trim().min(1, "Registra el texto del antecedente."),
   negative: z.boolean(),
+  /** Instante del alta (ISO); los ítems anteriores a este campo no lo tienen. */
+  recordedAt: z.string().optional(),
 });
 
 /** Ítem de antecedente: `negative: true` es un hallazgo negativo registrado (FR-044). */

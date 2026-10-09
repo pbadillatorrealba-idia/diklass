@@ -16,10 +16,23 @@ export type ScreenProps = PropsWithChildren<{
   /** Título de la pantalla: en web, `h1` + `<title>`; en nativo, la cabecera del `Stack`. */
   title?: string;
   /**
+   * Acción principal de la pantalla: en web desde 768 px, en la línea del `h1`; en nativo y en
+   * ventanas estrechas, en una barra fija al pie a todo el ancho.
+   */
+  action?: ReactNode;
+  /**
    * Retroceso explícito de las pantallas de detalle (FR-083): en web, un enlace «‹ Volver a …»;
    * en nativo lo da la cabecera. `href` es fijo para que funcione al entrar por URL directa.
    */
-  back?: { href: Href; label: string };
+  back?: {
+    href: Href;
+    label: string;
+    /**
+     * Ruta de ancestros (de la raíz al padre) para el breadcrumb de escritorio; sin ella se usa
+     * solo el padre con `label`. En pantallas pequeñas siempre se ve «‹ Volver a …».
+     */
+    crumbs?: { href: Href; label: string }[];
+  };
 }>;
 
 type FrameProps = PropsWithChildren<Pick<ScreenProps, "title">>;
@@ -45,19 +58,60 @@ function ScreenFrame({ children, title }: FrameProps) {
   );
 }
 
-/** En web, «‹ Volver a …» y el `h1`; en nativo los da la cabecera del `Stack`. */
-function ScreenHeading({ back, title }: Pick<ScreenProps, "back" | "title">) {
-  if (process.env.EXPO_OS !== "web" || !(back || title)) return null;
+/** Ventana desde la que el retroceso de web pasa a ser un breadcrumb (`lg`). */
+const BREADCRUMB_FROM = 1024;
+
+/** Ventana bajo la que la acción principal pasa a una barra fija al pie (`md`). */
+const ACTION_BAR_BELOW = 768;
+
+/** Nativo y web estrecho: la acción principal va en una barra fija al pie, al alcance del pulgar. */
+function useActionBar() {
+  const width = useWindowDimensions().width;
+  return process.env.EXPO_OS !== "web" || width < ACTION_BAR_BELOW;
+}
+
+/** En web, «‹ Volver a …» (o, desde `lg`, el breadcrumb) y el `h1`; en nativo, la cabecera. */
+function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "back" | "title">) {
+  const isWide = useWindowDimensions().width >= BREADCRUMB_FROM;
+  if (process.env.EXPO_OS !== "web") return null;
+  if (!(back || title || action)) return null;
+  const crumbs = back ? (back.crumbs ?? [{ href: back.href, label: back.label }]) : [];
   return (
     <View className="gap-2">
-      {back ? (
+      {back && isWide ? (
+        <View role="navigation" aria-label="Ruta" className="flex-row flex-wrap gap-2">
+          {crumbs.map((crumb, index) => (
+            <View className="flex-row gap-2" key={String(crumb.href)}>
+              <Link
+                href={crumb.href}
+                testID={index === crumbs.length - 1 ? "screen-back" : `screen-crumb-${index}`}
+              >
+                <Text tone="muted" variant="label">
+                  {crumb.label}
+                </Text>
+              </Link>
+              <Text aria-hidden tone="muted" variant="label">
+                ›
+              </Text>
+            </View>
+          ))}
+          <Text aria-current="page" variant="label">
+            {title}
+          </Text>
+        </View>
+      ) : back ? (
         <Link href={back.href} testID="screen-back">
           <Text tone="muted" variant="label">
             ‹ Volver a {back.label}
           </Text>
         </Link>
       ) : null}
-      {title ? <Heading level={1}>{title}</Heading> : null}
+      {title || action ? (
+        <View className="flex-row flex-wrap items-center justify-between gap-3">
+          {title ? <Heading level={1}>{title}</Heading> : <View />}
+          {action}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -68,6 +122,7 @@ function ScreenHeading({ back, title }: Pick<ScreenProps, "back" | "title">) {
  * contenido y se aplica al final.
  */
 export function Screen({
+  action,
   back,
   children,
   className,
@@ -75,12 +130,13 @@ export function Screen({
   title,
   width = "content",
 }: ScreenProps) {
+  const actionBar = useActionBar();
   const content = (
     <View
       className={`w-full ${WIDTHS[width]} self-center gap-6 p-4 md:p-6 ${className ?? ""}`.trim()}
       testID={testID}
     >
-      <ScreenHeading back={back} title={title} />
+      <ScreenHeading action={actionBar ? null : action} back={back} title={title} />
       {children}
     </View>
   );
@@ -97,6 +153,14 @@ export function Screen({
       >
         {content}
       </ScrollView>
+      {action && actionBar ? (
+        // `SafeAreaView` mide su solape real con el indicador de inicio o la barra de gestos.
+        <View className="border-t border-border bg-card" testID="screen-action-bar">
+          <SafeAreaView edges={["bottom"]}>
+            <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
+          </SafeAreaView>
+        </View>
+      ) : null}
     </ScreenFrame>
   );
 }

@@ -89,7 +89,7 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
   }) => {
     await page.goto(`/follow-up/${caso.patientId}`);
     await expect(page.getByTestId("feedback-antecedents")).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("link", { name: /Volver a Seguimiento/ }).click();
+    await page.getByTestId("screen-back").filter({ visible: true }).click();
     await expect(page).toHaveURL(/\/follow-up$/);
   });
 

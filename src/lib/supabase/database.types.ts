@@ -564,6 +564,29 @@ export type Database = {
           texto: string
         }[]
       }
+      search_patients: {
+        Args: {
+          p_breed?: string
+          p_dir?: string
+          p_limit?: number
+          p_name?: string
+          p_offset?: number
+          p_sort?: string
+          p_tutor_id?: string
+          p_visit_from?: string
+          p_visit_to?: string
+        }
+        Returns: {
+          breed: string
+          id: string
+          last_visit_at: string
+          name: string
+          species: string
+          total_count: number
+          tutor_id: string
+          tutor_name: string
+        }[]
+      }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
       update_own_profile: {

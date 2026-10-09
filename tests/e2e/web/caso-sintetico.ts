@@ -299,14 +299,7 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
       url: `/patients/${caseIds.patientId}`,
       // El historial se lee después de la ficha (sistema-visual 8.4): «listo» es cuando ya está.
       readyTestID: "history-open",
-      keyboardTestIDs: [
-        "patient-edit",
-        "antecedent-add-text",
-        "antecedent-finding-reported",
-        "antecedent-add",
-        "history-open",
-        "open-consultation",
-      ],
+      keyboardTestIDs: ["patient-edit", "antecedent-open", "history-open", "open-consultation"],
     },
     {
       name: "consulta en curso",
