@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
-import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AuthenticationError } from "@/features/auth/auth-service";
 import { type LoginValues, loginSchema } from "@/lib/forms/form";
