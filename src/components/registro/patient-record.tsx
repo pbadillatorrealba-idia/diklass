@@ -9,7 +9,6 @@ import {
 import { MISSING_FIELD_LABELS } from "@/components/registro/labels";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Field } from "@/components/ui/field";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -42,10 +41,13 @@ export function ageLabel(
   return [y, m].filter(Boolean).join(" ");
 }
 
-/** Dato destacado de la cabecera: valor grande en la mono de datos y su rótulo debajo. */
-function Stat({ label, value }: { label: string; value: string | null }) {
+/** Dato destacado de la cabecera: rótulo arriba y valor en la mono de datos debajo. */
+export function Stat({ label, value }: { label: string; value: string | null }) {
   return (
-    <View className="w-1/2 gap-1 lg:w-1/4">
+    <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
+      <Text tone="muted" variant="label">
+        {label}
+      </Text>
       {value === null ? (
         <Text tone="muted">Sin dato</Text>
       ) : (
@@ -53,8 +55,17 @@ function Stat({ label, value }: { label: string; value: string | null }) {
           {value}
         </Text>
       )}
-      <Text variant="rubric">{label}</Text>
     </View>
+  );
+}
+
+/** Grupo de datos con subtítulo: una columna en móvil, dos en tablet y cuatro en escritorio. */
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <VStack className="gap-3 border-border border-t pt-4">
+      <Text variant="rubric">{title}</Text>
+      <View className="flex-row flex-wrap gap-y-4">{children}</View>
+    </VStack>
   );
 }
 
@@ -72,14 +83,19 @@ export function PatientHeader({ content, lastVisitAt, consultationCount }: Patie
     .map((item) => MISSING_FIELD_LABELS[item.field] ?? item.field);
   return (
     <VStack className="gap-4">
-      <View className="flex-row flex-wrap gap-y-4">
+      <Heading level={3}>Resumen</Heading>
+      <Group title="Identidad">
         <Stat label="Especie" value={content.species} />
         <Stat label="Raza" value={content.breed} />
         <Stat label="Sexo" value={content.sex} />
         <Stat label="Estado reproductivo" value={content.reproductiveStatus} />
+      </Group>
+      <Group title="Edad y medidas">
         <Stat label="Edad" value={ageLabel(content.birthDate, content.ageMonths)} />
-        <Stat label="Peso" value={content.weightKg === null ? null : `${content.weightKg} kg`} />
         <Stat label="Nacimiento" value={content.birthDate} />
+        <Stat label="Peso" value={content.weightKg === null ? null : `${content.weightKg} kg`} />
+      </Group>
+      <Group title="Seguimiento">
         <Stat label="Expediente" value={content.fileNumber || null} />
         <Stat label="1ª visita" value={content.firstVisitDate ?? null} />
         <Stat
@@ -87,13 +103,17 @@ export function PatientHeader({ content, lastVisitAt, consultationCount }: Patie
           value={lastVisitAt ? new Date(lastVisitAt).toLocaleDateString("es-CL") : null}
         />
         <Stat label="Consultas" value={String(consultationCount)} />
-      </View>
+      </Group>
       {/* Un campo sin dato no es un hallazgo negativo (FR-044): lo negativo solo cuenta si se registró. */}
       {missing.length > 0 ? (
-        <Text testID="patient-missing" tone="warning">
-          {missing.length === 1 ? "1 dato sin completar" : `${missing.length} datos sin completar`}:{" "}
-          {missing.join(", ")}.
-        </Text>
+        <Group title="Alertas">
+          <Text testID="patient-missing" tone="warning">
+            {missing.length === 1
+              ? "1 dato sin completar"
+              : `${missing.length} datos sin completar`}
+            : {missing.join(", ")}.
+          </Text>
+        </Group>
       ) : null}
     </VStack>
   );
@@ -130,61 +150,29 @@ export const REFERRER_FIELDS: FichaField[] = [
 
 const REFIERE = { si: "Sí", no: "No", sin: null } as const;
 
-function Dato({ value }: { value: string | null | undefined }) {
-  return value ? (
-    <Text selectable variant="data">
-      {value}
-    </Text>
-  ) : (
-    <Text tone="muted">Sin dato</Text>
-  );
-}
-
 export function OriginFields({ content }: { content: PatientContent }) {
   return (
-    <VStack className="w-full">
-      <Field label="Procedencia">
-        <Dato value={content.origin} />
-      </Field>
-      <Field label="Edad con que fue adoptado">
-        <Dato value={content.adoptionAge} />
-      </Field>
-      <Field label="Estado en la adopción">
-        <Dato value={content.adoptionState} />
-      </Field>
-      <Field label="Edad de gonadectomía">
-        <Dato value={content.neuterAge} />
-      </Field>
-      <Field label="Progenitores / camada">
-        <Dato value={content.litterInfo} />
-      </Field>
-    </VStack>
+    <View className="w-full flex-row flex-wrap gap-y-4">
+      <Stat label="Procedencia" value={content.origin ?? null} />
+      <Stat label="Edad con que fue adoptado" value={content.adoptionAge ?? null} />
+      <Stat label="Estado en la adopción" value={content.adoptionState ?? null} />
+      <Stat label="Edad de gonadectomía" value={content.neuterAge ?? null} />
+      <Stat label="Progenitores / camada" value={content.litterInfo ?? null} />
+    </View>
   );
 }
 
 export function ReferrerFields({ content }: { content: PatientContent }) {
   const referrer = content.referrer;
   return (
-    <VStack className="w-full">
-      <Field label="Refiere el caso">
-        <Dato value={REFIERE[referrer?.refers ?? "sin"]} />
-      </Field>
-      <Field label="Veterinario derivante">
-        <Dato value={referrer?.name} />
-      </Field>
-      <Field label="Centro veterinario">
-        <Dato value={referrer?.center} />
-      </Field>
-      <Field label="Teléfono del derivante">
-        <Dato value={referrer?.phone} />
-      </Field>
-      <Field label="Seguro veterinario">
-        <Dato value={referrer?.insurance} />
-      </Field>
-      <Field label="Opinión del derivante">
-        <Dato value={referrer?.opinion} />
-      </Field>
-    </VStack>
+    <View className="w-full flex-row flex-wrap gap-y-4">
+      <Stat label="Refiere el caso" value={REFIERE[referrer?.refers ?? "sin"] ?? null} />
+      <Stat label="Veterinario derivante" value={referrer?.name ?? null} />
+      <Stat label="Centro veterinario" value={referrer?.center ?? null} />
+      <Stat label="Teléfono del derivante" value={referrer?.phone ?? null} />
+      <Stat label="Seguro veterinario" value={referrer?.insurance ?? null} />
+      <Stat label="Opinión del derivante" value={referrer?.opinion ?? null} />
+    </View>
   );
 }
 

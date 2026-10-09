@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ANTECEDENT_GROUP_LABELS, ANTECEDENT_GROUP_ORDER } from "@/components/registro/labels";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 import {
   FormControl,
   FormControlError,
@@ -24,19 +25,6 @@ type AntecedentsPanelProps = {
   /** Resuelve `true` cuando el ítem quedó registrado; el formulario se limpia solo entonces. */
   onAdd: (group: AntecedentGroup, item: AntecedentItem) => Promise<boolean>;
 };
-
-/** Chip del tipo de ítem: lo negativo es información registrada (FR-044), no una ausencia. */
-function KindChip({ negative }: { negative: boolean }) {
-  return (
-    <View
-      className={`rounded-full border px-2 ${negative ? "border-info bg-info-surface" : "border-border"}`}
-    >
-      <Text tone={negative ? "info" : "muted"} variant="caption">
-        {negative ? "Negativo" : "Dato"}
-      </Text>
-    </View>
-  );
-}
 
 /**
  * Antecedentes de la ficha en una sola card, un bloque por grupo (FR-001 · US1-AC2): cada alta
@@ -84,7 +72,7 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
             testID="antecedent-group"
           >
             <View className="flex-row items-center justify-between gap-3">
-              <Text variant="strong">
+              <Text variant="rubric">
                 {groupLabel}
                 {items.length > 0 ? ` · ${items.length}` : ""}
               </Text>
@@ -112,12 +100,14 @@ export function AntecedentsPanel({ content, isBusy, onAdd }: AntecedentsPanelPro
                   // biome-ignore lint/suspicious/noArrayIndexKey: lista de solo render, sin estado por fila; dos antecedentes pueden repetir su texto.
                   key={`${item.text}-${itemIndex}`}
                 >
-                  <KindChip negative={item.negative} />
+                  <Chip tone={item.negative ? "info" : "neutral"}>
+                    {item.negative ? "Negativo" : "Dato"}
+                  </Chip>
                   <Text className="shrink" selectable testID="antecedent-item">
                     {item.text}
                   </Text>
                   {item.recordedAt ? (
-                    <Text tone="muted" variant="caption">
+                    <Text tone="muted" variant="data">
                       {new Date(item.recordedAt).toLocaleDateString("es-CL")}
                     </Text>
                   ) : null}

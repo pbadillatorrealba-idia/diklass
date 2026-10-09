@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 import { Heading } from "@/components/ui/heading";
 import { QueryState } from "@/components/ui/query-state";
 import { Text } from "@/components/ui/text";
@@ -49,7 +50,9 @@ export function PatientHistory({ entries, error, isPending, onRetry }: PatientHi
                 <Text variant="strong">
                   Consulta del <Text variant="data">{openedAt}</Text>
                 </Text>
-                <Text tone="muted">{entry.status === "closed" ? "Cerrada" : "Abierta"}</Text>
+                <Chip tone={entry.status === "closed" ? "success" : "warning"}>
+                  {entry.status === "closed" ? "Cerrada" : "Abierta"}
+                </Chip>
                 {entry.epicrisis ? (
                   <Text testID="history-epicrisis">
                     Diagnóstico registrado:{" "}

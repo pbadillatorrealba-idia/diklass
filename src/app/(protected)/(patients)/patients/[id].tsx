@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { AntecedentsPanel } from "@/components/registro/antecedents-panel";
 import {
   type FichaFormValues,
@@ -16,6 +17,7 @@ import {
   PatientHeader,
   REFERRER_FIELDS,
   ReferrerFields,
+  Stat,
 } from "@/components/registro/patient-record";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -215,14 +217,17 @@ export default function PatientDetailScreen() {
           <Card className="gap-3" testID="patient-tutor-card">
             <Heading level={2}>Tutor</Heading>
             {tutor ? (
-              <VStack className="gap-1">
-                <Link href={`/tutors/${tutor.record.id}`}>
-                  <LinkText>{tutor.content.name}</LinkText>
-                </Link>
-                <Text selectable variant="data">
-                  {tutor.content.phone ?? tutor.content.email ?? "sin medio de contacto"}
-                </Text>
-              </VStack>
+              <View className="w-full flex-row flex-wrap gap-y-4">
+                <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
+                  <Text tone="muted" variant="label">
+                    Nombre
+                  </Text>
+                  <Link href={`/tutors/${tutor.record.id}`}>
+                    <LinkText>{tutor.content.name}</LinkText>
+                  </Link>
+                </View>
+                <Stat label="Contacto" value={tutor.content.phone ?? tutor.content.email ?? null} />
+              </View>
             ) : (
               <Text tone="muted">Sin tutor asociado</Text>
             )}
