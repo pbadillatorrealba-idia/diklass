@@ -73,7 +73,8 @@ Para cualquier UI nueva o modificada, estas reglas hacen fallar una guarda (`tem
   `useThemeColors()` de `src/theme/colors.ts`. Nunca hex, `rgb()`, paleta fija de Tailwind,
   escalas numeradas (`text-warning-700`), `text-foreground/70` ni tintes `/N` salvo `scrim`.
   Un token nuevo va en `global.css` (también en los bloques `:root.light`/`:root.dark`), en
-  `colors.ts` y en `tema.test.ts` con su par de contraste AA.
+  `colors.ts` y en `tema.test.ts` con su par de contraste AA. `stamp` debe distinguirse de
+  `primary` (ΔE*ab ≥ 10, FR-104) y la paleta de marca fija sus valores (FR-103).
 - **Texto** con `Text`/`Heading`; sin `text-xs` ni `text-sm` sueltos.
 - **Layout:** `rounded-sm` (nunca `rounded-lg|xl|2xl`), sin `border-l-[2-8]`, espaciado de la
   escala y dimensiones con nombre (`max-w-content`, `min-h-touch`), nunca valores `[…]`.
@@ -131,8 +132,8 @@ el cambio, y la batería completa se reserva para el cierre de la PR.
   - E2E: como mucho `bun run test:e2e:smoke`, y solo si el cambio toca login o navegación.
 - **Lo pesado** (`bun run gate`, `bun run test`, Playwright completo) se ejecuta únicamente
   cuando: (1) se cierra la PR; (2) el cambio toca `supabase/migrations/` o `database.types.ts`
-  (basta `supabase test db`, `db:types` y `bun run typecheck`, sin gate completo); (3) toca `src/lib/supabase/`, autenticación
-  o atribución (añade `SUPABASE_LIVE_TESTS=1 bun run test:integration`); (4) un fallo de CI no se
+  (basta `supabase test db`, `db:types` y `bun run typecheck`, sin gate completo); (3) toca
+  `src/lib/supabase/`, autenticación o atribución (añade `SUPABASE_LIVE_TESTS=1 bun run test:integration`); (4) un fallo de CI no se
   reproduce con un test focalizado; (5) el usuario lo pide.
 - Los e2e y las exportaciones se ejecutan de uno en uno, con un solo worker.
 - Ejemplos: un ajuste en un `Button` de `src/components/ui/` → Biome sobre el archivo y
@@ -146,7 +147,8 @@ el cambio, y la batería completa se reserva para el cierre de la PR.
 Al terminar el trabajo, haz **una sola pregunta**: «¿Cierro la PR?». No ejecutes nada pesado
 antes de la respuesta. Si el usuario confirma:
 
-1. **Verificación, una vez.** Solo docs/openspec: ninguna (CI no corre), pero los pasos 3 a 6 aplican igual. Código: `bun run gate`;
+1. **Verificación, una vez.** Solo docs/openspec: ninguna (CI no corre), pero los pasos 3 a 6
+   aplican igual. Código: `bun run gate`;
    con migraciones, además `supabase test db` y `db:types`; con autenticación o atribución,
    `SUPABASE_LIVE_TESTS=1 bun run test:integration`; con UI o navegación,
    `bun run test:e2e:web -- --project=chromium`.
