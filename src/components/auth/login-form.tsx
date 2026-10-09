@@ -12,7 +12,6 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
-import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -82,9 +81,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     <AuthForm onSubmit={submit}>
       <Card className="w-full max-w-form gap-6">
         <VStack className="gap-2">
-          <Icon decorative name="paw" size="lg" tone="primary" />
-          <Heading level={1}>Diklass</Heading>
-          <Text tone="muted">Acceso para profesionales veterinarios</Text>
+          {/* La marca la pone `Logo` en la pantalla; el h1 nombra el propósito del formulario. */}
+          <Heading level={1}>Acceso para profesionales veterinarios</Heading>
         </VStack>
 
         <form.Field name="email">

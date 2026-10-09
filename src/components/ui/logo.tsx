@@ -20,7 +20,7 @@ export function Logo({ size = "md" }: { size?: keyof typeof HEIGHTS }) {
       resizeMode="contain"
       role="img"
       source={SOURCES[useColorScheme()]}
-      style={{ aspectRatio: ASPECT_RATIO, height: HEIGHTS[size] }}
+      style={{ height: HEIGHTS[size], width: Math.round(HEIGHTS[size] * ASPECT_RATIO) }}
     />
   );
 }

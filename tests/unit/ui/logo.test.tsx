@@ -18,7 +18,8 @@ describe("Logo", () => {
     expect(renderToStaticMarkup(<Logo size={size} />)).toContain(`height:${px}px`);
   });
 
-  test("conserva la proporción del wordmark", () => {
-    expect(renderToStaticMarkup(<Logo />)).toContain("aspect-ratio:5.435");
+  // Sin ancho explícito el <img> oculto de RN Web hereda el ancho natural del PNG y desborda a 320 px.
+  test("fija el ancho según la proporción del wordmark", () => {
+    expect(renderToStaticMarkup(<Logo size="sm" />)).toContain("width:109px");
   });
 });

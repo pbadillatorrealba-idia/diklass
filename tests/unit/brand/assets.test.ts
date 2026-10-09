@@ -33,4 +33,13 @@ describe("assets de marca (FR-101)", () => {
     expect(width).toBe(height);
     expect(width).toBeGreaterThanOrEqual(48);
   });
+
+  test("splash: plugin de expo-splash-screen con el wordmark sobre índigo", () => {
+    const entry = expo.plugins.find(
+      (p: unknown) => Array.isArray(p) && p[0] === "expo-splash-screen",
+    );
+    expect(entry?.[1].image).toBe("./assets/brand/splash-wordmark.png");
+    expect(entry?.[1].backgroundColor).toBe("#2D1E50");
+    expect(png(entry[1].image).width).toBeGreaterThanOrEqual(1000);
+  });
 });

@@ -14,7 +14,7 @@ Trabajo en el worktree `~/.omp/wt/identidad-logo` (rama `feat/identidad-logo`).
 ## 2. Assets de marca (D4)
 
 - [x] 2.1 Escribir en rojo `tests/unit/brand/assets.test.ts`: `app.json` referencia ícono (1024², sin alfa), ícono adaptativo (foreground + fondo `#3E3888`), splash y favicon, y cada archivo existe con las dimensiones de plataforma (FR-101 · SC-063). Verificación: rojo por referencias ausentes.
-- [ ] 2.2 Generar con un script local (fuera del bundle) desde `assets/brand/logo-fuente.png`: isotipo, wordmark con transparencia (blanco y tinta), splash y favicon; commitearlos en `assets/brand/` y referenciarlos en `app.json` y en `src/app/+html.tsx` (favicon) (FR-101). Verificación: prueba 2.1 en verde y cotejo visual a tamaño de uso registrado en `quickstart.md`.
+- [x] 2.2 Generar con un script local (fuera del bundle) desde `assets/brand/logo-fuente.png`: isotipo, wordmark con transparencia (blanco y tinta), splash y favicon; commitearlos en `assets/brand/` y referenciarlos en `app.json` y en `src/app/+html.tsx` (favicon) (FR-101). Verificación: prueba 2.1 en verde y cotejo visual a tamaño de uso registrado en `quickstart.md`.
 
 ## 3. Logo en la interfaz (D5)
 
@@ -24,8 +24,8 @@ Trabajo en el worktree `~/.omp/wt/identidad-logo` (rama `feat/identidad-logo`).
 
 ## 4. Mejora opcional: SVG trazado (D4)
 
-- [ ] 4.1 Trazar wordmark e isotipo desde el PNG con una herramienta local; si el cotejo a tamaño de uso (acceso, barra lateral, favicon) no muestra diferencias, sustituir la fuente dentro de `Logo`; si no, descartar y dejar constancia en `quickstart.md` (FR-102). Verificación: decisión y comparativa registradas; las pruebas 3.1 y 2.1 siguen en verde.
+- [x] 4.1 Trazar wordmark e isotipo desde el PNG con una herramienta local; si el cotejo a tamaño de uso (acceso, barra lateral, favicon) no muestra diferencias, sustituir la fuente dentro de `Logo` si la plataforma lo permite sin dependencias nuevas; si no, conservar el SVG como master y descartar el cambio de fuente y dejar constancia en `quickstart.md` (FR-102). Verificación: decisión y comparativa registradas; las pruebas 3.1 y 2.1 siguen en verde.
 
 ## 5. Cierre
 
-- [ ] 5.1 Ejecutar `bun run typecheck`, `bun run lint` y `bun test`, y registrar el resultado en `quickstart.md`; diferenciar pendiente/implementado/aceptado sin archivar el cambio (FR-101–FR-104).
+- [x] 5.1 Ejecutar `bun run typecheck`, `bun run lint` y `bun test`, y registrar el resultado en `quickstart.md`; diferenciar pendiente/implementado/aceptado sin archivar el cambio (FR-101–FR-104).

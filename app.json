@@ -77,6 +77,14 @@
             ]
           }
         }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/brand/splash-wordmark.png",
+          "imageWidth": 240,
+          "backgroundColor": "#2D1E50"
+        }
       ]
     ],
     "experiments": {

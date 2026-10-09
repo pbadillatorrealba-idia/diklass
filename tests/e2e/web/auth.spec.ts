@@ -17,7 +17,9 @@ const backendOnly = "Requires local Supabase with the synthetic veterinarians pr
 test.describe("auth web shell", () => {
   test("shows the accessible login without a registration path", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "Diklass" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Acceso para profesionales veterinarios" }),
+    ).toBeVisible();
     await expect(page.getByLabel("Correo de acceso")).toBeVisible();
     await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
