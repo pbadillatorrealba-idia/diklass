@@ -90,17 +90,15 @@ mantener una pregunta sin responder como «sin dato», nunca como «No».
 
 ### Requirement: FR-112 Plan de la consulta
 
-El sistema MUST permitir al veterinario registrar protocolo diagnóstico (exploración física y
-neurológica, análisis de sangre, urianálisis, coprológico, ecografía, radiografía, resonancia,
-otras, grabación en vídeo), hasta tres diagnósticos diferenciales de conducta, diagnóstico
-presuntivo, medidas de tratamiento (pautas generales, específicas y complementarias, castración
-quirúrgica o médica, hasta dos principios activos con su pauta) y seguimiento. El sistema MUST NOT
-proponer ni completar automáticamente ninguno de ellos.
+El sistema MUST permitir al veterinario registrar el plan de la consulta: protocolo diagnóstico,
+hasta tres diagnósticos diferenciales de conducta, diagnóstico presuntivo, medidas de tratamiento
+(hasta dos principios activos con su pauta) y seguimiento. El sistema MUST NOT proponer ni completar
+automáticamente ninguno de ellos.
 
 #### Scenario: protocolo y diferenciales
 
 - **GIVEN** una consulta abierta
-- **WHEN** el veterinario marca análisis de sangre y radiografía y escribe dos diferenciales
+- **WHEN** el veterinario marca análisis de sangre y radiografía (el catálogo incluye exploración física y neurológica, urianálisis, coprológico, ecografía, resonancia, otras y grabación en vídeo) y escribe dos diferenciales
 - **THEN** quedan registrados con su autor y se incluyen en la epicrisis como propuesta del veterinario.
 
 #### Scenario: medicación

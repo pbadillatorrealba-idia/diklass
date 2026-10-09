@@ -329,9 +329,7 @@ export function PlanSummary({ plan }: { plan: NonNullable<DiagnosisContent["plan
   const rows: [string, string | null][] = [
     [
       "Pruebas requeridas",
-      plan.tests && plan.tests.length
-        ? plan.tests.map((t) => DIAGNOSTIC_TEST_LABELS[t]).join(", ")
-        : null,
+      plan.tests?.length ? plan.tests.map((t) => DIAGNOSTIC_TEST_LABELS[t]).join(", ") : null,
     ],
     ["Otras pruebas", plan.otherTests],
     ["Grabación en vídeo", plan.video ? yn[plan.video] : null],
