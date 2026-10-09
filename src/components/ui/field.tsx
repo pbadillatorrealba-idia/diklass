@@ -32,7 +32,7 @@ export function Field({ label, children, provenance, mark, testID }: FieldProps)
         // Tope del margen: una historia de correcciones larga salta de línea en vez de apretar el
         // valor a 320 px (revisión de la PR #41).
         <View
-          className="max-w-[40%] shrink items-end"
+          className="max-w-margin shrink items-end"
           testID={testID ? `${testID}-margin` : undefined}
         >
           {margin}

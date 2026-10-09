@@ -21,6 +21,7 @@ module.exports = {
         wide: "1200px", // consulta a dos columnas en escritorio
         dialog: "440px",
         form: "480px", // formularios centrados (login)
+        margin: "40%", // margen de procedencia de un campo (D20)
       },
       // Etiquetas de la barra de pestañas web (D17): 12 px como las de iOS/Material. El mínimo de
       // 14 px (D5) es para metadatos clínicos.
