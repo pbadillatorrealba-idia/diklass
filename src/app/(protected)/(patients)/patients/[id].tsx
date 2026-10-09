@@ -7,6 +7,7 @@ import {
   type FichaField,
   FichaForm,
   type FichaFormValues,
+  fichaValuesFromContent,
   parseFichaValues,
 } from "@/components/registro/ficha-form";
 import { FichaSummary } from "@/components/registro/ficha-summary";
@@ -91,16 +92,7 @@ export default function PatientDetailScreen() {
     if (!content) {
       return;
     }
-    setFichaValues({
-      name: content.name,
-      species: content.species,
-      breed: content.breed,
-      birthDate: content.birthDate ?? "",
-      ageMonths: content.ageMonths === null ? "" : String(content.ageMonths),
-      weightKg: content.weightKg === null ? "" : String(content.weightKg),
-      sex: content.sex,
-      reproductiveStatus: content.reproductiveStatus,
-    });
+    setFichaValues(fichaValuesFromContent(content));
     setFichaErrors({});
     setIsEditing(true);
   };

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
 import { parseRows } from "@/features/registro/read-rows";
 import type { AnamnesisField } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
@@ -209,6 +210,13 @@ export async function confirmAudioFact(
     const actual = await leerHecho(client, factId);
     if (actual.content.confirmationState !== "pending") {
       throw new Error("Solo se puede confirmar un hecho pendiente (D5 · estados terminales).");
+    }
+    // D4: el trigger de aterrizaje copia `field` sin validarlo; un borrador anterior a la hoja
+    // etológica no debe escribir un campo previo (que la anamnesis ya no admite).
+    if (isLegacyAnamnesisField(actual.content.field)) {
+      throw new Error(
+        "Ese campo es previo a la hoja etológica: edita el campo antes de confirmar.",
+      );
     }
     const content = audioFactContentSchema.parse({
       ...actual.content,

@@ -1,8 +1,10 @@
-import type {
-  AnamnesisField,
-  AntecedentGroup,
-  EpicrisisContent,
-  Provenance,
+import { fieldLabel, isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
+import {
+  ANAMNESIS_SECTIONS,
+  type AnamnesisField,
+  type AntecedentGroup,
+  type EpicrisisContent,
+  type Provenance,
 } from "@/features/registro/schema";
 
 /**
@@ -26,46 +28,17 @@ export const ANTECEDENT_GROUP_ORDER: AntecedentGroup[] = [
   "behavioralHistory",
 ];
 
-export const ANAMNESIS_FIELD_LABELS: Record<AnamnesisField, string> = {
-  motivo_consulta: "Motivo de consulta",
-  comportamiento_problematico: "Comportamiento problemático",
-  frecuencia: "Frecuencia",
-  duracion: "Duración",
-  contexto: "Contexto",
-  desencadenantes: "Desencadenantes",
-  cambios_recientes: "Cambios recientes",
-  ambiente: "Ambiente",
-  convivencia: "Convivencia",
-  alimentacion: "Alimentación",
-  actividad: "Actividad",
-  rutinas: "Rutinas",
-  tratamientos_anteriores: "Tratamientos anteriores",
-  respuesta_tratamientos: "Respuesta a tratamientos",
-  texto_libre: "Texto libre",
-};
+export { isLegacyAnamnesisField };
 
-/** Orden de aparición de los campos estructurados de US2 (sin el texto libre de FR-004). */
-export const ANAMNESIS_STRUCTURED_ORDER: AnamnesisField[] = [
-  "motivo_consulta",
-  "comportamiento_problematico",
-  "frecuencia",
-  "duracion",
-  "contexto",
-  "desencadenantes",
-  "cambios_recientes",
-  "ambiente",
-  "convivencia",
-  "alimentacion",
-  "actividad",
-  "rutinas",
-  "tratamientos_anteriores",
-  "respuesta_tratamientos",
-];
+/** Orden de aparición de los campos estructurados de la hoja (sin el texto libre de FR-004). */
+export const ANAMNESIS_STRUCTURED_ORDER: AnamnesisField[] = ANAMNESIS_SECTIONS.flatMap((section) =>
+  section.fields.map((f) => f.id),
+);
 
 export const ANAMNESIS_FIELD_OPTIONS: { value: AnamnesisField; label: string }[] =
   ANAMNESIS_STRUCTURED_ORDER.concat("texto_libre").map((value) => ({
     value,
-    label: ANAMNESIS_FIELD_LABELS[value],
+    label: fieldLabel(value),
   }));
 
 export const PROVENANCE_LABELS: Record<Provenance, string> = {
@@ -84,6 +57,8 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   birthDate: "Fecha de nacimiento",
   ageMonths: "Edad (meses)",
   weightKg: "Peso (kg)",
+  origin: "Procedencia",
+  adoptionAge: "Edad con que fue adoptado",
   ...ANTECEDENT_GROUP_LABELS,
 };
 

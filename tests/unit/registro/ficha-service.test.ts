@@ -147,11 +147,27 @@ function ficha(
       knownAllergies: [],
       behavioralHistory: [],
     },
+    fileNumber: null,
+    firstVisitDate: null,
+    origin: null,
+    adoptionAge: null,
+    adoptionState: null,
+    neuterAge: null,
+    litterInfo: null,
+    referrer: null,
     ...cambios,
   };
 }
 
-const tutorNuevo: TutorContent = { name: "Sra. Pérez", phone: "+56 9 1111 1111", email: null };
+const tutorNuevo: TutorContent = {
+  name: "Sra. Pérez",
+  phone: "+56 9 1111 1111",
+  email: null,
+  surname: null,
+  address: null,
+  city: null,
+  postalCode: null,
+};
 
 const contenidoFichaConTutor = {
   ...ficha(),

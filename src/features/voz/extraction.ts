@@ -4,7 +4,7 @@ import type { ExtractedFactDraft, TranscriptQuality } from "@/features/voz/schem
 /**
  * Extracción determinista de antecedentes clínicos desde la transcripción (D4 · FR-016).
  *
- * Reglas por campo sobre cláusulas normalizadas (minúsculas, sin acentos); cada regla produce a
+ * Reglas por campo sobre cláusulas normalizadas (minúsculas, sin acentos); cada campo recibe a
  * lo sumo una propuesta por cláusula, y toda propuesta conserva el fragmento que la originó
  * (SC-027 · US6-AC6). De un tramo con calidad insuficiente NO se deriva ningún antecedente
  * (FR-031 · US6-AC7). Sin extractor externo (Principio III): si un requisito futuro exige NLP/LLM,
@@ -30,43 +30,43 @@ const REGLAS: readonly ReglaExtraccion[] = [
     patron: /el problema es[^,;.]*|vengo por[^,;.]*|me preocupa que[^,;.]*/,
   },
   {
-    field: "comportamiento_problematico",
+    field: "historia_problema",
     patron:
       /destroz\w*|ladr\w*|muerd\w*|orin\w*|llor\w*|grun\w*|maull\w*|se persigue|monta\w*|agred\w*/,
   },
   {
-    field: "frecuencia",
+    field: "historia_problema",
     patron:
       /todos los dias[^,;.]*|todas las noches[^,;.]*|cada dia[^,;.]*|varias veces al dia[^,;.]*|sin parar[^,;.]*|de vez en cuando[^,;.]*/,
   },
   {
-    field: "duracion",
+    field: "historia_problema",
     patron: /desde hace [^,;.]+|hace ([a-z0-9]+ )?(meses|dias|semanas|anos)[^,;.]*/,
   },
-  { field: "contexto", patron: /de noche[^,;.]*|de dia[^,;.]*|de madrugada[^,;.]*/ },
+  { field: "historia_problema", patron: /de noche[^,;.]*|de dia[^,;.]*|de madrugada[^,;.]*/ },
   {
-    field: "desencadenantes",
+    field: "historia_problema",
     patron: /cuando [^,;.]+|despues de [^,;.]+|cada vez que [^,;.]+/,
   },
   {
-    field: "cambios_recientes",
+    field: "historia_problema",
     patron: /hace poco[^,;.]*|recientemente[^,;.]*|ultimamente[^,;.]*|desde que [^,;.]*/,
   },
-  { field: "ambiente", patron: /departamento[^,;.]*|vive en [^,;.]*|casa con [^,;.]*/ },
+  { field: "vivienda_tipo", patron: /departamento[^,;.]*|vive en [^,;.]*|casa con [^,;.]*/ },
   {
-    field: "convivencia",
+    field: "familia_otros_animales",
     patron: /mi gata[^,;.]*|mi perro[^,;.]*|mi bebe[^,;.]*|vive con [^,;.]*|convive con [^,;.]*/,
   },
   {
-    field: "alimentacion",
+    field: "alimentacion_dieta",
     patron: /come [^,;.]*|croquetas[^,;.]*|dieta[^,;.]*|alimento[^,;.]*/,
   },
   {
-    field: "actividad",
+    field: "rutina_paseos",
     patron: /pasear[^,;.]*|pasea[^,;.]*|ejercicio[^,;.]*|correr[^,;.]*/,
   },
   {
-    field: "rutinas",
+    field: "rutina_comida",
     patron: /todas las mananas[^,;.]*|rutina[^,;.]*|a la misma hora[^,;.]*/,
   },
   {
@@ -75,7 +75,7 @@ const REGLAS: readonly ReglaExtraccion[] = [
       /le dimos [^,;.]*|probamos [^,;.]*|tratamiento con [^,;.]*|ya no toma [^,;.]*|no toma [^,;.]*|suspendimos[^,;.]*/,
   },
   {
-    field: "respuesta_tratamientos",
+    field: "tratamientos_anteriores",
     patron: /no hubo mejor\w*[^,;.]*|mejoro\w*[^,;.]*|empeoro\w*[^,;.]*|mejoria[^,;.]*/,
   },
   { field: "texto_libre", patron: /dermatitis[^,;.]*|alergia[^,;.]*|epilepsia[^,;.]*/ },
@@ -111,8 +111,12 @@ export function extractClinicalFacts(tramo: {
   const propuestas: ExtractedFactDraft[] = [];
   for (const cláusula of partirCláusulas(tramo.text)) {
     const normalizada = normalizeSpanish(cláusula.text);
+    // Varias reglas apuntan al mismo campo (p. ej. el relato del problema): una sola propuesta
+    // por cláusula y campo, para no duplicar el mismo fragmento.
+    const camposUsados = new Set<string>();
     for (const regla of REGLAS) {
-      if (regla.patron.test(normalizada)) {
+      if (!camposUsados.has(regla.field) && regla.patron.test(normalizada)) {
+        camposUsados.add(regla.field);
         propuestas.push({
           field: regla.field,
           text: cláusula.text.trim(),

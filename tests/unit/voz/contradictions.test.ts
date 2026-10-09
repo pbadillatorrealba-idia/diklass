@@ -14,7 +14,7 @@ describe("detectContradictions", () => {
     const señales = detectContradictions(
       {
         id: "borrador-2",
-        field: "contexto",
+        field: "historia_problema",
         text: "en realidad es de día cuando salgo a trabajar",
         negation: false,
       },
@@ -22,7 +22,7 @@ describe("detectContradictions", () => {
         previos: [
           {
             id: "borrador-1",
-            field: "contexto",
+            field: "historia_problema",
             text: "Al principio era solo de noche",
             negation: false,
           },
@@ -66,7 +66,7 @@ describe("detectContradictions", () => {
     const señales = detectContradictions(
       {
         id: "borrador-4",
-        field: "alimentacion",
+        field: "alimentacion_dieta",
         text: "en realidad nunca le damos croquetas",
         negation: true,
       },
@@ -76,7 +76,7 @@ describe("detectContradictions", () => {
         anamnesis: [
           {
             id: "anamnesis-1",
-            field: "alimentacion",
+            field: "alimentacion_dieta",
             text: "Come croquetas dos veces al día",
             negation: false,
           },
@@ -91,7 +91,7 @@ describe("detectContradictions", () => {
     const señales = detectContradictions(
       {
         id: "borrador-6",
-        field: "desencadenantes",
+        field: "historia_problema",
         text: "cuando llegan visitas",
         negation: false,
       },
@@ -99,7 +99,7 @@ describe("detectContradictions", () => {
         previos: [
           {
             id: "borrador-5",
-            field: "desencadenantes",
+            field: "historia_problema",
             text: "cuando se queda solo",
             negation: false,
           },
@@ -113,13 +113,15 @@ describe("detectContradictions", () => {
 
   test("solo devuelve señales: la decisión de resolverla es siempre del veterinario (FR-032)", () => {
     const contexto = {
-      previos: [{ id: "borrador-1", field: "frecuencia", text: "todos los días", negation: false }],
+      previos: [
+        { id: "borrador-1", field: "historia_problema", text: "todos los días", negation: false },
+      ],
       anamnesis: [],
       ficha: [],
     };
     const antes = JSON.stringify(contexto);
     detectContradictions(
-      { id: "borrador-7", field: "frecuencia", text: "mejor dicho, nunca", negation: true },
+      { id: "borrador-7", field: "historia_problema", text: "mejor dicho, nunca", negation: true },
       contexto,
     );
     expect(JSON.stringify(contexto)).toBe(antes);
@@ -131,7 +133,7 @@ describe("flagContradictions (lote de propuestas de un tramo)", () => {
     const propuestas = extractClinicalFacts({
       text: "Al principio era solo de noche, no, perdón, en realidad es de día cuando salgo a trabajar.",
       quality: "ok",
-    }).filter((propuesta) => propuesta.field === "contexto");
+    }).filter((propuesta) => propuesta.field === "historia_problema");
     expect(propuestas.length).toBe(2);
     const marcadas = flagContradictions(propuestas, { previos: [], anamnesis: [], ficha: [] });
     expect(marcadas.some((propuesta) => propuesta.contradiction?.refKind === "borrador")).toBe(
@@ -143,7 +145,7 @@ describe("flagContradictions (lote de propuestas de un tramo)", () => {
     const contexto = { previos: [], anamnesis: [], ficha: [] };
     const antes = JSON.stringify(contexto);
     flagContradictions(
-      [{ field: "frecuencia", text: "todos los días", excerptStart: 0, excerptEnd: 11 }],
+      [{ field: "historia_problema", text: "todos los días", excerptStart: 0, excerptEnd: 11 }],
       contexto,
     );
     expect(JSON.stringify(contexto)).toBe(antes);
@@ -168,17 +170,19 @@ describe("detectContradictions: polaridad simétrica (revisión de la PR #29)", 
     const [propuesta] = extractClinicalFacts({
       text: "Ladra sin parar cuando se va",
       quality: "ok",
-    }).filter((hecho) => hecho.field === "frecuencia");
+    }).filter((hecho) => hecho.field === "historia_problema");
     expect(propuesta).toBeDefined();
     const señales = detectContradictions(
       {
         id: "nuevo",
-        field: "frecuencia",
+        field: "historia_problema",
         text: propuesta?.text ?? "",
         negation: esNegativo(propuesta?.text ?? ""),
       },
       {
-        previos: [{ id: "previo", field: "frecuencia", text: "todos los días", negation: false }],
+        previos: [
+          { id: "previo", field: "historia_problema", text: "todos los días", negation: false },
+        ],
         anamnesis: [],
         ficha: [],
       },
@@ -207,14 +211,14 @@ describe("detectContradictions: polaridad simétrica (revisión de la PR #29)", 
     const [propuesta] = extractClinicalFacts({
       text: "Come croquetas dos veces al día",
       quality: "ok",
-    }).filter((hecho) => hecho.field === "alimentacion");
+    }).filter((hecho) => hecho.field === "alimentacion_dieta");
     expect(propuesta).toBeDefined();
     const marcadas = flagContradictions(propuesta ? [propuesta] : [], {
       previos: [],
       anamnesis: [
         {
           id: "anamnesis-1",
-          field: "alimentacion",
+          field: "alimentacion_dieta",
           text: "Nunca come croquetas",
           negation: esNegativo("Nunca come croquetas"),
         },

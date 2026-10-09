@@ -9,6 +9,8 @@ export type FichaSummaryProps = {
   tutor: { name: string; contact: string } | null;
 };
 
+const REFIERE = { si: "Sí", no: "No", sin: null } as const;
+
 /** Valor de un dato: en la mono de datos (D20), o «Sin dato» si falta. */
 function Dato({ value }: { value: string | number | null }) {
   return value === null ? (
@@ -41,6 +43,45 @@ export function FichaSummary({ content, tutor }: FichaSummaryProps) {
       </Field>
       <Field label="Sexo">{content.sex}</Field>
       <Field label="Estado reproductivo">{content.reproductiveStatus}</Field>
+      <Field label="Número de expediente">
+        <Dato value={content.fileNumber ?? null} />
+      </Field>
+      <Field label="Fecha de la 1ª visita">
+        <Dato value={content.firstVisitDate ?? null} />
+      </Field>
+      <Field label="Procedencia">
+        <Dato value={content.origin ?? null} />
+      </Field>
+      <Field label="Edad con que fue adoptado">
+        <Dato value={content.adoptionAge ?? null} />
+      </Field>
+      <Field label="Estado en la adopción">
+        <Dato value={content.adoptionState ?? null} />
+      </Field>
+      <Field label="Edad de gonadectomía">
+        <Dato value={content.neuterAge ?? null} />
+      </Field>
+      <Field label="Progenitores / camada">
+        <Dato value={content.litterInfo ?? null} />
+      </Field>
+      <Field label="Refiere el caso">
+        <Dato value={REFIERE[content.referrer?.refers ?? "sin"]} />
+      </Field>
+      <Field label="Veterinario derivante">
+        <Dato value={content.referrer?.name ?? null} />
+      </Field>
+      <Field label="Centro veterinario">
+        <Dato value={content.referrer?.center ?? null} />
+      </Field>
+      <Field label="Teléfono del derivante">
+        <Dato value={content.referrer?.phone ?? null} />
+      </Field>
+      <Field label="Seguro veterinario">
+        <Dato value={content.referrer?.insurance ?? null} />
+      </Field>
+      <Field label="Opinión del derivante">
+        <Dato value={content.referrer?.opinion ?? null} />
+      </Field>
       <Field label="Tutor">
         {tutor ? `${tutor.name} — ${tutor.contact}` : <Text tone="muted">Sin tutor asociado</Text>}
       </Field>

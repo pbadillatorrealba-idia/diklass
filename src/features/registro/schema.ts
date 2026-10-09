@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  ANAMNESIS_SECTIONS,
+  type CatalogField,
+  isValidAnswer,
+  LEGACY_ANAMNESIS_FIELDS,
+} from "@/features/registro/anamnesis-catalog";
 
 /**
  * Forma del contenido por entidad clínica (D2 del diseño del cambio).
@@ -13,24 +19,22 @@ import { z } from "zod";
  * - Toda entrada se valida con Zod; los textos obligatorios viajan recortados y no vacíos.
  */
 
-/** Campos estructurados de US2 más el texto libre de FR-004. */
+type AnamnesisFieldId =
+  | CatalogField["id"]
+  | (typeof LEGACY_ANAMNESIS_FIELDS)[number]
+  | "texto_libre";
+
+/**
+ * Campos de anamnesis: el catálogo de la hoja etológica, los campos previos (solo lectura, D4)
+ * y el texto libre de FR-004.
+ */
 export const AnamnesisField = [
-  "motivo_consulta",
-  "comportamiento_problematico",
-  "frecuencia",
-  "duracion",
-  "contexto",
-  "desencadenantes",
-  "cambios_recientes",
-  "ambiente",
-  "convivencia",
-  "alimentacion",
-  "actividad",
-  "rutinas",
-  "tratamientos_anteriores",
-  "respuesta_tratamientos",
+  ...ANAMNESIS_SECTIONS.flatMap((section) => section.fields.map((field) => field.id)),
+  ...LEGACY_ANAMNESIS_FIELDS,
   "texto_libre",
-] as const;
+] as unknown as readonly [AnamnesisFieldId, ...AnamnesisFieldId[]];
+
+export { ANAMNESIS_SECTIONS, LEGACY_ANAMNESIS_FIELDS };
 
 export type AnamnesisField = (typeof AnamnesisField)[number];
 
@@ -54,6 +58,9 @@ export type AntecedentGroup =
   | "currentMedications"
   | "knownAllergies"
   | "behavioralHistory";
+
+/** Los campos añadidos por la hoja etológica son opcionales al construir el tipo (parse → `null`). */
+type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 const requiredTextSchema = z.string().trim().min(1, "Este campo es obligatorio.");
 
@@ -93,6 +100,27 @@ const antecedentesSchema = z
       },
   );
 
+const optionalTextSchema = z
+  .string()
+  .trim()
+  .nullish()
+  .transform((value) => (value ? value : null));
+
+const referrerSchema = z
+  .object({
+    refers: z
+      .enum(["si", "no"])
+      .nullish()
+      .transform((value) => value ?? null),
+    name: optionalTextSchema,
+    center: optionalTextSchema,
+    phone: optionalTextSchema,
+    insurance: optionalTextSchema,
+    opinion: optionalTextSchema,
+  })
+  .nullish()
+  .transform((value) => value ?? null);
+
 export const patientContentSchema = z.object({
   name: requiredTextSchema,
   species: requiredTextSchema,
@@ -112,10 +140,29 @@ export const patientContentSchema = z.object({
   reproductiveStatus: requiredTextSchema,
   antecedentes: antecedentesSchema,
   tutorId: requiredTextSchema,
+  // Hoja de etología clínica (FR-001 ampliado, FR-110): todo opcional, sin dato = null.
+  fileNumber: optionalTextSchema,
+  firstVisitDate: isoDateSchema.nullish().transform((value) => value ?? null),
+  origin: optionalTextSchema,
+  adoptionAge: optionalTextSchema,
+  adoptionState: optionalTextSchema,
+  neuterAge: optionalTextSchema,
+  litterInfo: optionalTextSchema,
+  referrer: referrerSchema,
 });
 
 /** Contenido de la ficha del paciente (FR-001, FR-044). */
-export type PatientContent = z.infer<typeof patientContentSchema>;
+export type PatientContent = WithOptional<
+  z.infer<typeof patientContentSchema>,
+  | "fileNumber"
+  | "firstVisitDate"
+  | "origin"
+  | "adoptionAge"
+  | "adoptionState"
+  | "neuterAge"
+  | "litterInfo"
+  | "referrer"
+>;
 
 const contactSchema = z
   .string()
@@ -128,13 +175,20 @@ export const tutorContentSchema = z
     name: requiredTextSchema,
     phone: contactSchema,
     email: contactSchema,
+    surname: optionalTextSchema,
+    address: optionalTextSchema,
+    city: optionalTextSchema,
+    postalCode: optionalTextSchema,
   })
   .refine((tutor) => tutor.phone !== null || tutor.email !== null, {
     message: "Registra al menos un medio de contacto del tutor.",
   });
 
 /** Contenido del tutor (FR-027): nombre y al menos un medio de contacto. */
-export type TutorContent = z.infer<typeof tutorContentSchema>;
+export type TutorContent = WithOptional<
+  z.infer<typeof tutorContentSchema>,
+  "surname" | "address" | "city" | "postalCode"
+>;
 
 export const consultationContentSchema = z.object({
   patientId: requiredTextSchema,
@@ -144,26 +198,85 @@ export const consultationContentSchema = z.object({
 /** Contenido de la consulta clínica (FR-003). */
 export type ConsultationContent = z.infer<typeof consultationContentSchema>;
 
-export const anamnesisContentSchema = z.object({
-  consultationId: requiredTextSchema,
-  field: z.enum(AnamnesisField),
-  text: requiredTextSchema,
-  provenance: provenanceSchema,
-  provenanceHistory: z
-    .array(z.object({ provenance: provenanceSchema, text: z.string().optional() }))
-    .optional(),
-});
+export const anamnesisContentSchema = z
+  .object({
+    consultationId: requiredTextSchema,
+    field: z.enum(AnamnesisField),
+    text: requiredTextSchema,
+    provenance: provenanceSchema,
+    provenanceHistory: z
+      .array(z.object({ provenance: provenanceSchema, text: z.string().optional() }))
+      .optional(),
+  })
+  .refine((entry) => isValidAnswer(entry.field, entry.text), {
+    path: ["text"],
+    message: "Elige una de las respuestas.",
+  });
 
 /** Contenido de un antecedente de anamnesis (FR-004, FR-021). */
 export type AnamnesisContent = z.infer<typeof anamnesisContentSchema>;
 
+export const DIAGNOSTIC_TESTS = [
+  "exploracion_fisica",
+  "exploracion_neurologica",
+  "analisis_sangre",
+  "urianalisis",
+  "coprologico",
+  "ecografia",
+  "radiografia",
+  "resonancia",
+] as const;
+
+const yesNoSchema = z
+  .enum(["si", "no"])
+  .nullish()
+  .transform((value) => value ?? null);
+
+/**
+ * Plan de la consulta de la hoja etológica (FR-112): lo escribe el veterinario; el sistema no
+ * propone ni completa nada. Los límites son los renglones de la hoja (3 diferenciales, 2
+ * principios activos).
+ */
+const consultationPlanSchema = z
+  .object({
+    tests: z
+      .array(z.enum(DIAGNOSTIC_TESTS))
+      .nullish()
+      .transform((v) => v ?? []),
+    otherTests: optionalTextSchema,
+    video: yesNoSchema,
+    videoDetails: optionalTextSchema,
+    differentials: z
+      .array(requiredTextSchema)
+      .max(3, "Máximo tres diferenciales.")
+      .nullish()
+      .transform((v) => v ?? []),
+    generalGuidelines: optionalTextSchema,
+    specificGuidelines: optionalTextSchema,
+    complementaryGuidelines: optionalTextSchema,
+    neuterSurgical: yesNoSchema,
+    neuterMedical: yesNoSchema,
+    medication: z
+      .array(z.object({ activeIngredient: requiredTextSchema, guideline: requiredTextSchema }))
+      .max(2, "Máximo dos principios activos.")
+      .nullish()
+      .transform((v) => v ?? []),
+    followUp: optionalTextSchema,
+  })
+  .nullish()
+  .transform((value) => value ?? null);
+
+/** Entrada del plan: los campos que el veterinario no completó pueden omitirse. */
+export type ConsultationPlanInput = z.input<typeof consultationPlanSchema>;
+
 export const diagnosisContentSchema = z.object({
   consultationId: requiredTextSchema,
   text: requiredTextSchema,
+  plan: consultationPlanSchema,
 });
 
 /** Contenido del diagnóstico registrado por el veterinario (US3-AC1). */
-export type DiagnosisContent = z.infer<typeof diagnosisContentSchema>;
+export type DiagnosisContent = WithOptional<z.infer<typeof diagnosisContentSchema>, "plan">;
 
 export const epicrisisContentSchema = z.object({
   consultationId: requiredTextSchema,

@@ -11,7 +11,7 @@ import {
 describe("audioFactContentSchema", () => {
   const borrador = {
     consultationId: "11111111-0000-0000-0000-000000000001",
-    field: "comportamiento_problematico",
+    field: "historia_problema",
     text: "Destroza el sofá cuando se queda solo",
     provenance: "inferida",
     confirmationState: "pending",
