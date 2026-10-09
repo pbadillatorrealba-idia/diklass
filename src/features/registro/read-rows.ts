@@ -52,7 +52,8 @@ export async function readAllPages(
     }
     rows.push(...(data ?? []));
     // Sin total, o sin avance, no hay forma segura de seguir: se devuelve lo leído.
-    if (count === null || !data?.length || rows.length >= count) {
+    // `typeof` y no `=== null`: un cliente sin `count` (undefined) también debe cortar el bucle.
+    if (typeof count !== "number" || !data?.length || rows.length >= count) {
       return rows;
     }
   }
