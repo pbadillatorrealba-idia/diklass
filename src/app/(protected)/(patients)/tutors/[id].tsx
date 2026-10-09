@@ -9,7 +9,7 @@ import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { searchPatients } from "@/features/registro/patient-search";
-import { getTutor } from "@/features/registro/tutor-service";
+import { getTutor, tutorFullName } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
@@ -75,9 +75,7 @@ export default function TutorScreen() {
         {tutor ? (
           <>
             <Card className="gap-2" testID="tutor-card">
-              <Heading level={2}>
-                {[tutor.content.name, tutor.content.surname].filter(Boolean).join(" ")}
-              </Heading>
+              <Heading level={2}>{tutorFullName(tutor.content)}</Heading>
               {tutor.content.phone ? <Text selectable>Teléfono: {tutor.content.phone}</Text> : null}
               {tutor.content.email ? <Text selectable>Correo: {tutor.content.email}</Text> : null}
               {tutor.content.address || tutor.content.city ? (

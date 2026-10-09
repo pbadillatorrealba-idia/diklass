@@ -37,7 +37,7 @@ import {
 } from "@/features/registro/ficha-service";
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { AntecedentGroup, AntecedentItem } from "@/features/registro/schema";
-import { listTutors } from "@/features/registro/tutor-service";
+import { listTutors, tutorFullName } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
@@ -233,9 +233,7 @@ export default function PatientDetailScreen() {
                     label="Nombre"
                     value={
                       <Link href={`/tutors/${tutor.record.id}`} testID="patient-tutor-link">
-                        <LinkText>
-                          {[tutor.content.name, tutor.content.surname].filter(Boolean).join(" ")}
-                        </LinkText>
+                        <LinkText>{tutorFullName(tutor.content)}</LinkText>
                       </Link>
                     }
                   />

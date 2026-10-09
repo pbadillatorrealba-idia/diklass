@@ -75,7 +75,7 @@ import {
   type ClinicalRecordRow,
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
-import { getTutor } from "@/features/registro/tutor-service";
+import { getTutor, tutorFullName } from "@/features/registro/tutor-service";
 import type { Attribution } from "@/lib/attribution/types";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { getFieldErrors } from "@/lib/forms/errors";
@@ -114,7 +114,7 @@ async function loadHeader(consultation: ConsultationEntry): Promise<HeaderData> 
   const position = consultations.findIndex((entry) => entry.record.id === consultation.record.id);
   return {
     patientName: patient?.content.name ?? "Paciente no disponible",
-    tutorName: tutor?.content.name ?? null,
+    tutorName: tutor ? tutorFullName(tutor.content) : null,
     ordinal: position < 0 ? null : position + 1,
   };
 }

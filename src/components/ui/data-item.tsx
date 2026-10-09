@@ -13,7 +13,7 @@ export function DataItem({ label, value }: { label: string; value: ReactNode }) 
       <Text tone="muted" variant="label">
         {label}
       </Text>
-      {value === null ? (
+      {value == null ? (
         <Text tone="muted">Sin dato</Text>
       ) : typeof value === "string" ? (
         <Text selectable variant="data">
