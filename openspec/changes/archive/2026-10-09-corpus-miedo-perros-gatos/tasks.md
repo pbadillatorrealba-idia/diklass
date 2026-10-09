@@ -26,13 +26,13 @@
 
 ## 3. Entornos vivos y cierre
 
-- [ ] 3.1 Escribir `quickstart.md` con el procedimiento de sustitución (retirar fuentes
+- [x] 3.1 Escribir `quickstart.md` con el procedimiento de sustitución (retirar fuentes
   sintéticas, `bun --env-file=.env scripts/cargar-corpus-conocimiento.ts`) y ejecutarlo en el
   Supabase local. Verificación: `/knowledge/sources` lista solo la fuente nueva, y una pregunta
   de ejemplo devuelve una cita con su bibliografía.
 - [ ] 3.2 Confirmar la licencia con la autora o el AWEC y registrar el resultado; mientras no
   exista, la fuente sigue «Por confirmar». Verificación: nota en `quickstart.md`.
-- [ ] 3.3 e2e web de conocimiento en verde con el corpus nuevo
+- [x] 3.3 e2e web de conocimiento en verde con el corpus nuevo
   (`bun --env-file=.env run test:e2e:web`, un worker). Verificación: URL de CI en `quickstart.md`.
 
 ## Workflow follow-up
