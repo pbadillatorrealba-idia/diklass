@@ -1,7 +1,9 @@
+import { Link } from "expo-router";
 import { View } from "react-native";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { Avatar } from "@/components/ui/avatar";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Screen } from "@/components/ui/screen";
@@ -41,9 +43,15 @@ export default function SettingsScreen() {
               </Text>
             </VStack>
           </View>
-          <Text tone="muted" variant="caption">
-            La edición de tus datos personales estará disponible próximamente.
-          </Text>
+          <Link asChild href="/settings/profile">
+            <Button
+              accessibilityLabel="Editar datos personales"
+              testID="settings-edit-profile"
+              variant="outline"
+            >
+              <ButtonText>Editar datos personales</ButtonText>
+            </Button>
+          </Link>
         </Card>
         <View className="gap-6 lg:flex-1">
           <Card className="gap-4" testID="settings-appearance">
