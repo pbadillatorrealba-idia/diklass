@@ -17,13 +17,15 @@ import {
   PatientHeader,
   REFERRER_FIELDS,
   ReferrerFields,
-  Stat,
 } from "@/components/registro/patient-record";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Callout, type CalloutTone } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
+import { DataItem } from "@/components/ui/data-item";
 import { Heading } from "@/components/ui/heading";
 import { LinkText } from "@/components/ui/link-text";
+import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -51,7 +53,8 @@ export default function PatientDetailScreen() {
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const queryClient = useQueryClient();
   const guard = useClinicalGuard();
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatusState] = useState<{ text: string; tone: CalloutTone } | null>(null);
+  const setStatus = (text: string, tone: CalloutTone = "info") => setStatusState({ text, tone });
   const [isBusy, setIsBusy] = useState(false);
 
   const patientQuery = useQuery({
@@ -110,7 +113,7 @@ export default function PatientDetailScreen() {
     );
     const ficha = parsed.value;
     if (!ficha) {
-      setStatus("Revisa los campos marcados antes de continuar.");
+      setStatus("Revisa los campos marcados antes de continuar.", "warning");
       return parsed.errors;
     }
     setIsBusy(true);
@@ -120,11 +123,12 @@ export default function PatientDetailScreen() {
     });
     setIsBusy(false);
     if (outcome === "ok") {
-      setStatus("Ficha actualizada.");
+      setStatus("Ficha actualizada.", "success");
       return null;
     }
     setStatus(
       outcome === "expired" ? "La sesión ya no es válida." : "No pudimos actualizar la ficha.",
+      "error",
     );
     return {};
   };
@@ -140,11 +144,12 @@ export default function PatientDetailScreen() {
     });
     setIsBusy(false);
     if (outcome === "ok") {
-      setStatus("Antecedente añadido. Los datos previos se conservan.");
+      setStatus("Antecedente añadido. Los datos previos se conservan.", "success");
       return true;
     }
     setStatus(
       outcome === "expired" ? "La sesión ya no es válida." : "No pudimos añadir el antecedente.",
+      "error",
     );
     return false;
   };
@@ -161,11 +166,11 @@ export default function PatientDetailScreen() {
     });
     setIsBusy(false);
     if (outcome === "ok") {
-      setStatus("Consulta abierta.");
+      setStatus("Consulta abierta.", "success");
     } else if (outcome === "expired") {
-      setStatus("La sesión ya no es válida.");
+      setStatus("La sesión ya no es válida.", "error");
     } else {
-      setStatus("No pudimos abrir la consulta.");
+      setStatus("No pudimos abrir la consulta.", "error");
     }
   };
 
@@ -187,82 +192,91 @@ export default function PatientDetailScreen() {
       title="Ficha del paciente"
       width="wide"
     >
-      {patientQuery.isLoading ? <Text testID="patient-detail-loading">Cargando ficha…</Text> : null}
-      {patientQuery.isSuccess && patient === null ? (
-        <Text testID="patient-detail-missing">No encontramos esta ficha.</Text>
-      ) : null}
       {status ? (
-        <Text accessibilityLiveRegion="polite" testID="patient-detail-status">
-          {status}
-        </Text>
+        <Callout testID="patient-detail-status" tone={status.tone}>
+          {status.text}
+        </Callout>
       ) : null}
-      {content ? (
-        <VStack className="w-full gap-6" testID="patient-main">
-          <EditableCard
-            content={content}
-            editTestID="patient-edit"
-            fields={HEADER_FIELDS}
-            isBusy={isBusy}
-            onSave={handleSaveFicha}
-            testID="patient-ficha"
-            label="ficha"
-            title={content.name}
-          >
-            <PatientHeader
-              consultationCount={history.length}
+      <QueryState
+        empty={<Text testID="patient-detail-missing">No encontramos esta ficha.</Text>}
+        error={patientQuery.error}
+        errorMessage="No pudimos cargar la ficha."
+        isEmpty={patient === null}
+        isPending={patientQuery.isPending}
+        onRetry={() => void patientQuery.refetch()}
+        testID="patient-detail"
+      >
+        {content ? (
+          <VStack className="w-full gap-6" testID="patient-main">
+            <EditableCard
               content={content}
-              lastVisitAt={lastVisitAt}
-            />
-          </EditableCard>
-          <Card className="gap-3" testID="patient-tutor-card">
-            <Heading level={2}>Tutor</Heading>
-            {tutor ? (
-              <View className="w-full flex-row flex-wrap gap-y-4">
-                <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
-                  <Text tone="muted" variant="label">
-                    Nombre
-                  </Text>
-                  <Link href={`/tutors/${tutor.record.id}`}>
-                    <LinkText>{tutor.content.name}</LinkText>
-                  </Link>
+              editTestID="patient-edit"
+              fields={HEADER_FIELDS}
+              isBusy={isBusy}
+              onSave={handleSaveFicha}
+              testID="patient-ficha"
+              label="ficha"
+              title={content.name}
+            >
+              <PatientHeader
+                consultationCount={history.length}
+                content={content}
+                lastVisitAt={lastVisitAt}
+              />
+            </EditableCard>
+            <Card className="gap-3" testID="patient-tutor-card">
+              <Heading level={2}>Tutor</Heading>
+              {tutor ? (
+                <View className="w-full flex-row flex-wrap gap-y-4">
+                  <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
+                    <Text tone="muted" variant="label">
+                      Nombre
+                    </Text>
+                    <Link href={`/tutors/${tutor.record.id}`}>
+                      <LinkText>{tutor.content.name}</LinkText>
+                    </Link>
+                  </View>
+                  <DataItem
+                    label="Contacto"
+                    value={tutor.content.phone ?? tutor.content.email ?? null}
+                  />
                 </View>
-                <Stat label="Contacto" value={tutor.content.phone ?? tutor.content.email ?? null} />
-              </View>
-            ) : (
-              <Text tone="muted">Sin tutor asociado</Text>
-            )}
-          </Card>
-          <EditableCard
-            content={content}
-            editTestID="patient-edit-origin"
-            fields={ORIGIN_FIELDS}
-            isBusy={isBusy}
-            onSave={handleSaveFicha}
-            testID="patient-origin-card"
-            title="Procedencia y adopción"
-          >
-            <OriginFields content={content} />
-          </EditableCard>
-          <EditableCard
-            content={content}
-            editTestID="patient-edit-referrer"
-            fields={REFERRER_FIELDS}
-            isBusy={isBusy}
-            onSave={handleSaveFicha}
-            testID="patient-referrer-card"
-            title="Derivante y seguro"
-          >
-            <ReferrerFields content={content} />
-          </EditableCard>
-          <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
-          <PatientHistory
-            entries={history}
-            error={historyQuery.error}
-            isPending={historyQuery.isPending}
-            onRetry={() => void historyQuery.refetch()}
-          />
-        </VStack>
-      ) : null}
+              ) : (
+                <Text tone="muted">Sin tutor asociado</Text>
+              )}
+            </Card>
+            <EditableCard
+              content={content}
+              editTestID="patient-edit-origin"
+              fields={ORIGIN_FIELDS}
+              isBusy={isBusy}
+              onSave={handleSaveFicha}
+              testID="patient-origin-card"
+              title="Procedencia y adopción"
+            >
+              <OriginFields content={content} />
+            </EditableCard>
+            <EditableCard
+              content={content}
+              editTestID="patient-edit-referrer"
+              fields={REFERRER_FIELDS}
+              isBusy={isBusy}
+              onSave={handleSaveFicha}
+              testID="patient-referrer-card"
+              title="Derivante y seguro"
+            >
+              <ReferrerFields content={content} />
+            </EditableCard>
+            <AntecedentsPanel content={content} isBusy={isBusy} onAdd={handleAddAntecedent} />
+            <PatientHistory
+              entries={history}
+              error={historyQuery.error}
+              isPending={historyQuery.isPending}
+              onRetry={() => void historyQuery.refetch()}
+            />
+          </VStack>
+        ) : null}
+      </QueryState>
     </Screen>
   );
 }

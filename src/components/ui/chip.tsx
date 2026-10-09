@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { View } from "react-native";
+import { CONTINUOUS_CURVE } from "@/components/ui/border-curve";
 import { Text } from "@/components/ui/text";
 
 /** Tono → borde y fondo; el texto toma el mismo tono (pares verificados en `tema.test.ts`). */
@@ -16,7 +17,7 @@ export type ChipTone = keyof typeof TONES;
 export function Chip({ tone = "neutral", children }: { tone?: ChipTone; children: ReactNode }) {
   const { box, text } = TONES[tone];
   return (
-    <View className={`rounded-full border px-2 ${box}`}>
+    <View className={`rounded-sm border px-2 ${box}`} style={CONTINUOUS_CURVE}>
       <Text tone={text} variant="caption">
         {children}
       </Text>

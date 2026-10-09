@@ -9,6 +9,7 @@ import {
 import { MISSING_FIELD_LABELS } from "@/components/registro/labels";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DataGroup, DataItem } from "@/components/ui/data-item";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -41,34 +42,6 @@ export function ageLabel(
   return [y, m].filter(Boolean).join(" ");
 }
 
-/** Dato destacado de la cabecera: rótulo arriba y valor en la mono de datos debajo. */
-export function Stat({ label, value }: { label: string; value: string | null }) {
-  return (
-    <View className="w-full gap-1 sm:w-1/2 lg:w-1/4">
-      <Text tone="muted" variant="label">
-        {label}
-      </Text>
-      {value === null ? (
-        <Text tone="muted">Sin dato</Text>
-      ) : (
-        <Text selectable variant="data">
-          {value}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-/** Grupo de datos con subtítulo: una columna en móvil, dos en tablet y cuatro en escritorio. */
-function Group({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <VStack className="gap-3 border-border border-t pt-4">
-      <Text variant="rubric">{title}</Text>
-      <View className="flex-row flex-wrap gap-y-4">{children}</View>
-    </VStack>
-  );
-}
-
 export type PatientHeaderProps = {
   content: PatientContent;
   /** Última consulta (ISO) o `null`; viene del historial. */
@@ -84,36 +57,39 @@ export function PatientHeader({ content, lastVisitAt, consultationCount }: Patie
   return (
     <VStack className="gap-4">
       <Heading level={3}>Resumen</Heading>
-      <Group title="Identidad">
-        <Stat label="Especie" value={content.species} />
-        <Stat label="Raza" value={content.breed} />
-        <Stat label="Sexo" value={content.sex} />
-        <Stat label="Estado reproductivo" value={content.reproductiveStatus} />
-      </Group>
-      <Group title="Edad y medidas">
-        <Stat label="Edad" value={ageLabel(content.birthDate, content.ageMonths)} />
-        <Stat label="Nacimiento" value={content.birthDate} />
-        <Stat label="Peso" value={content.weightKg === null ? null : `${content.weightKg} kg`} />
-      </Group>
-      <Group title="Seguimiento">
-        <Stat label="Expediente" value={content.fileNumber || null} />
-        <Stat label="1ª visita" value={content.firstVisitDate ?? null} />
-        <Stat
+      <DataGroup title="Identidad">
+        <DataItem label="Especie" value={content.species} />
+        <DataItem label="Raza" value={content.breed} />
+        <DataItem label="Sexo" value={content.sex} />
+        <DataItem label="Estado reproductivo" value={content.reproductiveStatus} />
+      </DataGroup>
+      <DataGroup title="Edad y medidas">
+        <DataItem label="Edad" value={ageLabel(content.birthDate, content.ageMonths)} />
+        <DataItem label="Nacimiento" value={content.birthDate} />
+        <DataItem
+          label="Peso"
+          value={content.weightKg === null ? null : `${content.weightKg} kg`}
+        />
+      </DataGroup>
+      <DataGroup title="Seguimiento">
+        <DataItem label="Expediente" value={content.fileNumber || null} />
+        <DataItem label="1ª visita" value={content.firstVisitDate ?? null} />
+        <DataItem
           label="Última visita"
           value={lastVisitAt ? new Date(lastVisitAt).toLocaleDateString("es-CL") : null}
         />
-        <Stat label="Consultas" value={String(consultationCount)} />
-      </Group>
+        <DataItem label="Consultas" value={String(consultationCount)} />
+      </DataGroup>
       {/* Un campo sin dato no es un hallazgo negativo (FR-044): lo negativo solo cuenta si se registró. */}
       {missing.length > 0 ? (
-        <Group title="Alertas">
+        <DataGroup title="Alertas">
           <Text testID="patient-missing" tone="warning">
             {missing.length === 1
               ? "1 dato sin completar"
               : `${missing.length} datos sin completar`}
             : {missing.join(", ")}.
           </Text>
-        </Group>
+        </DataGroup>
       ) : null}
     </VStack>
   );
@@ -153,11 +129,11 @@ const REFIERE = { si: "Sí", no: "No", sin: null } as const;
 export function OriginFields({ content }: { content: PatientContent }) {
   return (
     <View className="w-full flex-row flex-wrap gap-y-4">
-      <Stat label="Procedencia" value={content.origin ?? null} />
-      <Stat label="Edad con que fue adoptado" value={content.adoptionAge ?? null} />
-      <Stat label="Estado en la adopción" value={content.adoptionState ?? null} />
-      <Stat label="Edad de gonadectomía" value={content.neuterAge ?? null} />
-      <Stat label="Progenitores / camada" value={content.litterInfo ?? null} />
+      <DataItem label="Procedencia" value={content.origin ?? null} />
+      <DataItem label="Edad con que fue adoptado" value={content.adoptionAge ?? null} />
+      <DataItem label="Estado en la adopción" value={content.adoptionState ?? null} />
+      <DataItem label="Edad de gonadectomía" value={content.neuterAge ?? null} />
+      <DataItem label="Progenitores / camada" value={content.litterInfo ?? null} />
     </View>
   );
 }
@@ -166,12 +142,12 @@ export function ReferrerFields({ content }: { content: PatientContent }) {
   const referrer = content.referrer;
   return (
     <View className="w-full flex-row flex-wrap gap-y-4">
-      <Stat label="Refiere el caso" value={REFIERE[referrer?.refers ?? "sin"] ?? null} />
-      <Stat label="Veterinario derivante" value={referrer?.name ?? null} />
-      <Stat label="Centro veterinario" value={referrer?.center ?? null} />
-      <Stat label="Teléfono del derivante" value={referrer?.phone ?? null} />
-      <Stat label="Seguro veterinario" value={referrer?.insurance ?? null} />
-      <Stat label="Opinión del derivante" value={referrer?.opinion ?? null} />
+      <DataItem label="Refiere el caso" value={REFIERE[referrer?.refers ?? "sin"] ?? null} />
+      <DataItem label="Veterinario derivante" value={referrer?.name ?? null} />
+      <DataItem label="Centro veterinario" value={referrer?.center ?? null} />
+      <DataItem label="Teléfono del derivante" value={referrer?.phone ?? null} />
+      <DataItem label="Seguro veterinario" value={referrer?.insurance ?? null} />
+      <DataItem label="Opinión del derivante" value={referrer?.opinion ?? null} />
     </View>
   );
 }

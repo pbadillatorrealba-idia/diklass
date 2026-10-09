@@ -42,7 +42,7 @@ export function PatientHistory({ entries, error, isPending, onRetry }: PatientHi
               {/* Riel de la línea de tiempo: punto por estado y hilo hasta la entrada siguiente. */}
               <View className="items-center">
                 <View
-                  className={`mt-2 size-3 rounded-full ${entry.status === "closed" ? "bg-primary" : "bg-warning"}`}
+                  className={`mt-2 size-3 rounded-sm ${entry.status === "closed" ? "bg-primary" : "bg-warning"}`}
                 />
                 {index < entries.length - 1 ? <View className="w-px flex-1 bg-border" /> : null}
               </View>
