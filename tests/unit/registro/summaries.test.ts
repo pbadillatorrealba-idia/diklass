@@ -89,6 +89,8 @@ function ficha(cambios: Partial<PatientContent> = {}): PatientContent {
       behavioralHistory: [{ text: "Sin antecedentes conductuales", negative: true }],
     },
     tutorId: "tutor-1",
+    origin: "Protectora",
+    adoptionAge: "3 meses",
     ...cambios,
   };
 }
@@ -341,6 +343,8 @@ describe("computeMissingFichaFields (FR-044 · US1-AC3)", () => {
         birthDate: null,
         ageMonths: null,
         weightKg: null,
+        origin: null,
+        adoptionAge: null,
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [],
@@ -355,6 +359,8 @@ describe("computeMissingFichaFields (FR-044 · US1-AC3)", () => {
       { field: "birthDate", kind: "sin_dato" },
       { field: "ageMonths", kind: "sin_dato" },
       { field: "weightKg", kind: "sin_dato" },
+      { field: "origin", kind: "sin_dato" },
+      { field: "adoptionAge", kind: "sin_dato" },
       { field: "medicalHistory", kind: "sin_registrar_grupo" },
       { field: "preexistingDiseases", kind: "sin_registrar_grupo" },
       { field: "currentMedications", kind: "sin_registrar_grupo" },

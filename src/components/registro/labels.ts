@@ -57,6 +57,8 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   birthDate: "Fecha de nacimiento",
   ageMonths: "Edad (meses)",
   weightKg: "Peso (kg)",
+  origin: "Procedencia",
+  adoptionAge: "Edad con que fue adoptado",
   ...ANTECEDENT_GROUP_LABELS,
 };
 

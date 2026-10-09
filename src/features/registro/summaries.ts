@@ -183,6 +183,13 @@ export function computeMissingFichaFields(content: PatientContent): MissingField
   if (content.weightKg === null) {
     faltantes.push({ field: "weightKg", kind: "sin_dato" });
   }
+  // Hoja etológica (FR-001 ampliado): la procedencia y la adopción pesan en el diagnóstico.
+  if ((content.origin ?? null) === null) {
+    faltantes.push({ field: "origin", kind: "sin_dato" });
+  }
+  if ((content.adoptionAge ?? null) === null) {
+    faltantes.push({ field: "adoptionAge", kind: "sin_dato" });
+  }
   for (const group of ANTECEDENT_GROUPS) {
     if (content.antecedentes[group].length === 0) {
       faltantes.push({ field: group, kind: "sin_registrar_grupo" });
