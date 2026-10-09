@@ -3,8 +3,8 @@ import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 // Canales de `--background` en `global.css`: el token que pinta el fondo de toda la app.
-const DARK_BACKGROUND = "17 20 20";
-const LIGHT_BACKGROUND = "236 238 233";
+const DARK_BACKGROUND = "20 18 28";
+const LIGHT_BACKGROUND = "241 240 246";
 
 const background = (page: import("@playwright/test").Page) =>
   page.evaluate(() =>
