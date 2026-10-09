@@ -25,10 +25,10 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "bun run web -- --port 8083",
+    command: "sh scripts/e2e-web-server.sh 8083",
     url: "http://127.0.0.1:8083",
     reuseExistingServer: false,
-    timeout: 120_000,
+    timeout: 240_000, // incluye el export estático de la app
   },
   // Local: solo Chromium (con su variante oscura). Firefox y WebKit corren en CI al hacer push
   // a main; en local se piden con PLAYWRIGHT_ALL_BROWSERS=1.

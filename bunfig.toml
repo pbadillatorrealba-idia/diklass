@@ -2,6 +2,10 @@
 # Sustituye react-native por react-native-web en las pruebas de componentes (design.md D11 de sistema-visual).
 preload = ["./tests/unit/setup/react-native.ts"]
 
+# Ninguna prueba legítima tarda 10 s: un bucle que espera (como el de readAllPages sin `count`,
+# que acumulaba filas hasta el OOM) falla rápido en vez de agotar la RAM.
+timeout = 10000
+
 # Los paquetes de React Native importan imágenes (p. ej. las flechas de react-native-calendars);
 # en las pruebas basta con su ruta.
 [loader]

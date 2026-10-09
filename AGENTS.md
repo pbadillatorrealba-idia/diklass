@@ -143,14 +143,16 @@ queda fijada en `.bun-version`). Las filas que no invocan un script de `package.
 | `bun run typecheck` | `tsc --noEmit` sobre todo el proyecto. | Sí |
 | `bun run lint` | `biome check .` en local. | — |
 | `bunx biome ci --error-on-warnings .` | Biome en modo CI: los warnings también fallan. | Sí |
-| `bun run gate` | `biome ci`, `tsc` y `bun test` en secuencia y, con systemd, dentro de un cgroup de 3 GB: un test descontrolado muere en vez de reiniciar el equipo. Úsalo antes de hacer push. | — |
+| `bun run gate` | `biome ci`, `tsc` y `bun test` (un proceso por directorio) en secuencia y, con systemd, dentro de un cgroup de 3 GB: un test descontrolado muere en vez de reiniciar el equipo. `bun run gate --changed` limita Biome a lo que difiere de `origin/main`. Úsalo antes de hacer push. | — |
+| `bun run db:start` | `supabase start` sin los servicios que no usan los e2e (realtime, storage, studio, analytics…). Ahorra ~300 MB de RAM. | Sí (job de Firefox/WebKit) |
+| `bun run test:e2e:smoke` | Solo `login` y `navegacion` en Chromium: iteración rápida. | — |
 | `bun run format` | Formatea con Biome. | — |
 | `bun run test` | Tests unitarios y de integración (`bun test`). Sin Supabase, las suites vivas se omiten. | Sí |
 | `bun run test:integration` | Solo integración; con `SUPABASE_LIVE_TESTS=1` y Supabase local ejecuta las suites vivas. | Sí |
 | `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. | Sí |
 | `bun run db:types` | Regenera `src/lib/supabase/database.types.ts` desde el Supabase local. CI falla si difiere de las migraciones. | Sí (diff) |
 | `bun run provision:veterinarians` | Provisiona veterinarios sintéticos en el Supabase local. | Sí |
-| `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. CI ejecuta `bun run test:e2e:web` y pasa las variables por `GITHUB_ENV`. En local corre con un worker y solo Chromium; `PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit. Para levantar Supabase solo con lo que usan los e2e: `supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor`. | Sí |
+| `bun --env-file=.env run test:e2e:web` | Playwright (incluye el gate de accesibilidad WCAG 2.2 AA). Playwright corre con Node y no lee `.env` por sí solo: sin `--env-file`, los escenarios con backend se omiten en silencio. CI ejecuta `bun run test:e2e:web` y pasa las variables por `GITHUB_ENV`. En local corre con un worker y solo Chromium; `PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit. La app se exporta una vez (`expo export`, pico ~1,2 GB) y se sirve estática en vez de mantener Metro; `E2E_DEV_SERVER=1` vuelve a `expo start`. En CI, Chromium corre dentro del job `database` (un solo Supabase, tras un `db reset`). | Sí |
 | `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | `main`, nightly y a demanda (Maestro Cloud) |
 
 Antes de hacer push, reproduce al menos los pasos de CI que toca tu cambio: `typecheck`,
