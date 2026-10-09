@@ -37,20 +37,20 @@ set local session_replication_role = replica;
 -- y un paciente de otra clínica que nunca debe aparecer.
 insert into public.clinical_records (id, clinic_id, record_type, content, status, created_by) values
   ('e1500000-0000-4000-8000-000000000001', 'c15c15c1-0000-4000-8000-00000000000c', 'tutor',
-   '{"name":"Marta Soto","phone":"111"}', 'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
+   '{"name":"Marta Soto","rut":"11111111-1","phone":"111"}', 'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
   ('e1500000-0000-4000-8000-000000000002', 'c15c15c1-0000-4000-8000-00000000000c', 'tutor',
-   '{"name":"50%","surname":"Perez","phone":"222"}', 'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
+   '{"name":"50%","surname":"Perez","rut":"12345678-5","phone":"222"}', 'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
   ('f1500000-0000-4000-8000-000000000001', 'c15c15c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Luna","species":"Canino","breed":"Labrador","tutorId":"e1500000-0000-4000-8000-000000000001"}',
+   '{"name":"Luna","species":"canino","sex":"macho","reproductiveStatus":"entero","breed":"Labrador","tutorId":"e1500000-0000-4000-8000-000000000001"}',
    'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
   ('f1500000-0000-4000-8000-000000000002', 'c15c15c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Rocky","species":"Canino","breed":"Beagle","tutorId":"e1500000-0000-4000-8000-000000000001"}',
+   '{"name":"Rocky","species":"canino","sex":"macho","reproductiveStatus":"entero","breed":"Beagle","tutorId":"e1500000-0000-4000-8000-000000000001"}',
    'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
   ('f1500000-0000-4000-8000-000000000003', 'c15c15c1-0000-4000-8000-00000000000c', 'patient',
-   '{"name":"Nube","species":"Felino","breed":"Siames","tutorId":"e1500000-0000-4000-8000-000000000002"}',
+   '{"name":"Nube","species":"felino","sex":"hembra","reproductiveStatus":"entero","breed":"Siames","tutorId":"e1500000-0000-4000-8000-000000000002"}',
    'draft', 'a15a15a1-0000-4000-8000-00000000000a'),
   ('f1500000-0000-4000-8000-000000000004', 'd15d15d1-0000-4000-8000-00000000000d', 'patient',
-   '{"name":"Lunar","species":"Canino","breed":"Labrador","tutorId":"x"}',
+   '{"name":"Lunar","species":"canino","sex":"macho","reproductiveStatus":"entero","breed":"Labrador","tutorId":"x"}',
    'draft', 'b15b15b1-0000-4000-8000-00000000000b');
 
 insert into public.clinical_records (clinic_id, record_type, content, status, created_by, created_at) values
