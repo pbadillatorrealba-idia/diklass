@@ -1,6 +1,7 @@
 #!/bin/sh
-# Gate previo al push, en secuencia (nunca en paralelo) y con tope de memoria si hay systemd:
-# un test descontrolado muere en su cgroup en vez de reiniciar el equipo. Mismos pasos que CI.
+# Batería completa de cierre de PR (no de cada iteración), en secuencia (nunca en paralelo) y con
+# tope de memoria si hay systemd: un test descontrolado muere en su cgroup en vez de reiniciar
+# el equipo. Mismos pasos que CI.
 # `bun run gate --changed` limita Biome a los archivos que difieren de origin/main.
 set -e
 if command -v systemd-run >/dev/null 2>&1; then

@@ -249,5 +249,14 @@ output/
 security_best_practices_report.md
 *-threat-model.md
 
+# Copia de impeccable para Copilot: no se versiona (AGENTS.md: dos espejos, .claude y .agents)
+.github/skills/
+.github/agents/
+.github/hooks/
+
+# Binario de impeccable (16 MB por espejo): solo se instala a propósito (ver AGENTS.md)
+.claude/skills/impeccable/scripts/bin/
+.agents/skills/impeccable/scripts/bin/
+
 # Material de trabajo con derechos de terceros (PDF fuente del corpus)
 data/
