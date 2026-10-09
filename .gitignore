@@ -248,3 +248,6 @@ output/
 # Reportes de las skills de seguridad: nunca se commitean
 security_best_practices_report.md
 *-threat-model.md
+
+# Material de trabajo con derechos de terceros (PDF fuente del corpus)
+data/

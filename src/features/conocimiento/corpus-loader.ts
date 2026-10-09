@@ -5,7 +5,7 @@ import { incorporateSource } from "./coleccion-service";
 import { fuenteContentSchema } from "./schema";
 
 /**
- * Carga del corpus documental sintético por la misma puerta de escritura que la ingesta
+ * Carga del corpus documental (sintético en origen; hoy el corpus inicial real) por la misma puerta de escritura que la ingesta
  * manual desde la UI (D9 del diseño del cambio; decisión de usuario: corpus sintético con
  * estructura de citas documento+fragmento y metadatos de licencia, en fixtures propios y
  * nunca en `supabase/seed.sql`).
@@ -14,7 +14,7 @@ import { fuenteContentSchema } from "./schema";
 export const corpusSinteticoSchema = z.object({
   fuentes: z
     .array(z.object({ clave: z.string().trim().min(1), fuente: fuenteContentSchema }))
-    .min(1, "El corpus sintético trae al menos una fuente."),
+    .min(1, "El corpus trae al menos una fuente."),
 });
 
 export type CorpusSintetico = z.infer<typeof corpusSinteticoSchema>;
