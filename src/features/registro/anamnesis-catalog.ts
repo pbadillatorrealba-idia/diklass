@@ -268,3 +268,18 @@ export function isValidAnswer(field: string, text: string): boolean {
   const kind = ANSWER_KIND_BY_FIELD[field];
   return !kind || kind === "texto" || (ANSWER_VALUES[kind] as readonly string[]).includes(text);
 }
+
+/** Id de la sección que contiene al campo; el texto libre y los campos previos van en `texto_libre`. */
+export function sectionOf(field: string): string {
+  return (
+    ANAMNESIS_SECTIONS.find((section) => section.fields.some((f) => f.id === field))?.id ??
+    "texto_libre"
+  );
+}
+
+/** Valores que admite la respuesta cerrada de un campo, o `null` si el campo es de texto. */
+export function answerOptions(field: string): { value: string; label: string }[] | null {
+  const kind = ANSWER_KIND_BY_FIELD[field];
+  if (!kind || kind === "texto") return null;
+  return ANSWER_VALUES[kind].map((value) => ({ value, label: ANSWER_LABELS[value] }));
+}

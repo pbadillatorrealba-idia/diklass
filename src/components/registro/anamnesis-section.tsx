@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { ProvenanceCorrection } from "@/components/clinical/correction-line";
-import {
-  ANAMNESIS_FIELD_OPTIONS,
-  ANAMNESIS_STRUCTURED_ORDER,
-  PROVENANCE_OPTIONS,
-} from "@/components/registro/labels";
+import { PROVENANCE_OPTIONS } from "@/components/registro/labels";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -20,7 +16,13 @@ import {
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { fieldLabel } from "@/features/registro/anamnesis-catalog";
+import {
+  ANAMNESIS_SECTIONS,
+  answerOptions,
+  answerText,
+  fieldLabel,
+  sectionOf,
+} from "@/features/registro/anamnesis-catalog";
 import type { AnamnesisContent, AnamnesisField, Provenance } from "@/features/registro/schema";
 import type { Attribution } from "@/lib/attribution/types";
 
@@ -66,21 +68,50 @@ export function AnamnesisSection({
   onSubmit,
   onCorrectProvenance,
 }: AnamnesisSectionProps) {
-  const unknownFields = ANAMNESIS_STRUCTURED_ORDER.filter(
-    (candidate) => !entries.some((entry) => entry.content.field === candidate),
-  );
+  const activeSection = sectionOf(field);
+  const closedAnswers = answerOptions(field);
+  const registered = new Set(entries.map((entry) => entry.content.field as string));
+  // Sin información no es un hallazgo negativo (US2-AC4): cada sección cuenta lo que falta y la
+  // sección activa lista sus campos como «Desconocido».
+  const unknownBySection = ANAMNESIS_SECTIONS.map((section) => ({
+    section,
+    unknown: section.fields.filter((f) => !registered.has(f.id)),
+  })).filter(({ unknown }) => unknown.length > 0);
+  const unknownInActive =
+    unknownBySection.find(({ section }) => section.id === activeSection)?.unknown ?? [];
+
+  const changeField = (next: AnamnesisField) => {
+    // El texto de una pregunta abierta no vale como respuesta cerrada, ni al revés.
+    if (Boolean(answerOptions(next)) !== Boolean(closedAnswers) || closedAnswers) onTextChange("");
+    onFieldChange(next);
+  };
+  const sectionOptions = [
+    ...ANAMNESIS_SECTIONS.map((section) => ({ value: section.id, label: section.label })),
+    { value: "texto_libre", label: "Texto libre" },
+  ];
+  const fieldOptions =
+    activeSection === "texto_libre"
+      ? [{ value: "texto_libre" as AnamnesisField, label: "Texto libre" }]
+      : (ANAMNESIS_SECTIONS.find((section) => section.id === activeSection)?.fields ?? []).map(
+          (f) => ({ value: f.id as AnamnesisField, label: f.label }),
+        );
 
   return (
     <VStack className="w-full gap-4" testID="anamnesis-section">
-      {unknownFields.length > 0 ? (
+      {unknownBySection.length > 0 ? (
         <VStack className="gap-1 border-b border-border pb-3" testID="anamnesis-unknown-panel">
           <Text variant="strong">Campos estructurados sin información</Text>
           <Text tone="muted">
             Aparecen como desconocidos: sin información no es un hallazgo negativo.
           </Text>
-          {unknownFields.map((candidate) => (
-            <Text key={candidate} testID="anamnesis-unknown-field">
-              {fieldLabel(candidate)}: Desconocido
+          {unknownBySection.map(({ section, unknown }) => (
+            <Text key={section.id} testID="anamnesis-unknown-section">
+              {section.label}: {unknown.length} de {section.fields.length} sin información
+            </Text>
+          ))}
+          {unknownInActive.map((f) => (
+            <Text key={f.id} testID="anamnesis-unknown-field">
+              {f.label}: Desconocido
             </Text>
           ))}
         </VStack>
@@ -92,35 +123,66 @@ export function AnamnesisSection({
       ) : (
         <VStack className="gap-4 border-b border-border pb-4">
           <OptionPicker
+            label="Sección de la anamnesis"
+            onChange={(sectionId) => {
+              const first =
+                sectionId === "texto_libre"
+                  ? "texto_libre"
+                  : ANAMNESIS_SECTIONS.find((section) => section.id === sectionId)?.fields[0]?.id;
+              if (first) changeField(first as AnamnesisField);
+            }}
+            options={sectionOptions}
+            testID="anamnesis-section-picker"
+            value={activeSection}
+          />
+          <OptionPicker
             label="Campo de anamnesis"
-            onChange={onFieldChange}
-            options={ANAMNESIS_FIELD_OPTIONS}
+            onChange={changeField}
+            options={fieldOptions}
             testID="anamnesis-field"
             value={field}
           />
-          <FormControl isInvalid={Boolean(textError)}>
-            <FormControlLabel>
-              <FormControlLabelText>Texto del antecedente</FormControlLabelText>
-            </FormControlLabel>
-            <Input>
-              <InputField
-                accessibilityLabel="Texto del antecedente"
-                aria-label="Texto del antecedente"
-                className="min-h-textarea"
-                editable={!isBusy}
-                multiline
-                onChangeText={onTextChange}
-                testID="anamnesis-text"
-                textAlignVertical="top"
-                value={text}
-              />
-            </Input>
-            {textError ? (
+          {closedAnswers ? (
+            <OptionPicker
+              isDisabled={isBusy}
+              label="Respuesta"
+              onChange={onTextChange}
+              options={closedAnswers}
+              testID="anamnesis-answer"
+              value={text}
+            />
+          ) : (
+            <FormControl isInvalid={Boolean(textError)}>
+              <FormControlLabel>
+                <FormControlLabelText>Texto del antecedente</FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  accessibilityLabel="Texto del antecedente"
+                  aria-label="Texto del antecedente"
+                  className="min-h-textarea"
+                  editable={!isBusy}
+                  multiline
+                  onChangeText={onTextChange}
+                  testID="anamnesis-text"
+                  textAlignVertical="top"
+                  value={text}
+                />
+              </Input>
+              {textError ? (
+                <FormControlError>
+                  <FormControlErrorText>{textError}</FormControlErrorText>
+                </FormControlError>
+              ) : null}
+            </FormControl>
+          )}
+          {closedAnswers && textError ? (
+            <FormControl isInvalid>
               <FormControlError>
                 <FormControlErrorText>{textError}</FormControlErrorText>
               </FormControlError>
-            ) : null}
-          </FormControl>
+            </FormControl>
+          ) : null}
           <OptionPicker
             label="Procedencia"
             onChange={onProvenanceChange}
@@ -157,7 +219,7 @@ export function AnamnesisSection({
               }
               provenance={entry.content.provenance}
             >
-              {entry.content.text}
+              {answerText(entry.content.field, entry.content.text)}
             </Field>
             <AttributionBadge attribution={entry.attribution} />
             {isSealed ? null : (
