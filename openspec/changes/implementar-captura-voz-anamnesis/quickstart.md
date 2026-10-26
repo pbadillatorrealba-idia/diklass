@@ -163,7 +163,7 @@ de `database.types.ts` se resolvió regenerando tras `supabase db reset` (sin di
 | ID | Requisito | Comando / acción |
 |---|---|---|
 | R1 | **APLICADA** (autorización RI-1 del orquestador, fix post-cierre) — tipos regenerados y seam eliminado | `bun run db:types` (`supabase gen types --lang=typescript --local`, añade `listening_sessions` y `transcript_segments`, 472 → 571 líneas) + eliminación de `src/features/voz/db-types.ts` (`asVozClient`) con los servicios usando el cliente tipado directo. Cerraba el único fallo del CI run [#35803072019](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/35803072019) (diff de tipos); batería mínima: typecheck limpio, biome sin diagnósticos, unidades 51/51 |
-| R2 | Montar `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx` | ver snippet de arriba |
+| R2 | **APLICADA** (7.13) — montar `<ListenModeSection consultationId={…} />` en `src/app/(protected)/consultations/[id].tsx` | ver snippet de arriba |
 | R3 | Actualizar la nota de transiciones del quickstart de 002 | su «INSERT cubre los 12 `record_type` salvo `epicrisis`» ya no incluye `audio_fact` (D6) |
 
 Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.types.ts`
@@ -176,11 +176,8 @@ Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.type
 
 - **Compuerta de tipos de CI**: resuelta con R1 aplicada (regen de `database.types.ts` + seam
   eliminado, autorización RI-1). La integración viva local corrió en verde (arriba).
-- **Verificación visual/e2e de la UI**: la sección no está montada (R2), así que no hay e2e del
-  modo de escucha; los arreglos de la revisión de la PR #29 se prueban con unitarias de
-  `listen-mode-pipeline.ts` (tarea 7.13).
-- **Carrera de cierre automatizada**: verificada a mano con dos sesiones `psql` (arriba), sin
-  prueba automatizada (tarea 7.12).
+- **Verificación e2e de la UI**: `tests/e2e/web/modo-escucha.spec.ts` (chromium, tarea 7.13); Firefox/WebKit solo en CI.
+- **Carrera de cierre**: automatizada en `tests/integration/voz/carrera-cierre.test.ts` (tarea 7.12).
 - **Micrófono real y ASR real**: extensiones documentadas del diseño (D2 · D3), sin implementar y
   sin dependencias nuevas. FR-054 se ejercita por la señal de indisponibilidad de `CaptureSource`;
   el flujo real de permisos de micrófono no está verificado.

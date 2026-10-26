@@ -174,8 +174,8 @@ cada rojo se observó antes del arreglo.
 - [x] 7.9 `listAudioFacts` con `parseRows` (lectura tolerante) (FR-017, D6). Verificación: caso de fila malformada en `audio-fact-service.test.ts`, rojo→verde.
 - [x] 7.10 Lecturas del contexto en paralelo, consulta y ficha una vez por sesión, y borradores en un único INSERT (SC-028, presupuestos). Verificación: concurrencia ≥ 3 y una lectura de consulta y ficha en dos tramos (`listen-mode-pipeline.test.ts`), un único INSERT sin relecturas de la traza (`audio-fact-service.test.ts`), rojos antes del arreglo.
 - [x] 7.11 Actualizar `design.md` (D4, D5, D6, D8, D9, D10, complejidad, presupuestos y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-captura-voz-anamnesis` y artefactos coherentes con el código.
-- [ ] 7.12 Automatizar la prueba de la carrera de cierre (`FOR SHARE`) de las sesiones y los tramos. Pendiente declarado en los riesgos de `design.md`: pgTap no ejerce dos sesiones y hoy se verifica a mano.
-- [ ] 7.13 Verificar en la interfaz el modo de escucha (e2e) cuando se monte la sección en `[id].tsx` (R2). Pendiente declarado: los arreglos del hook se prueban con unitarias de `listen-mode-pipeline.ts`.
+- [x] 7.12 Automatizar la prueba de la carrera de cierre (`FOR SHARE`) de las sesiones y los tramos. Verificación: `tests/integration/voz/carrera-cierre.test.ts` (3 casos vivos: A cierra sin confirmar y B espera y falla con `CONSULTATION_NOT_OPEN` / `LISTENING_SESSION_NOT_ACTIVE`; falla si B no queda esperando el lock).
+- [x] 7.13 Montar la sección en `src/app/(protected)/(patients)/consultations/[id].tsx` (R2, solo con la consulta abierta) y verificar en la interfaz el modo de escucha. Verificación: `tests/e2e/web/modo-escucha.spec.ts` (activar → tramos y borradores → confirmar aterriza en la anamnesis → detener), chromium.
 
 ## 8. Segunda auditoría de tests (2026-10-26)
 
