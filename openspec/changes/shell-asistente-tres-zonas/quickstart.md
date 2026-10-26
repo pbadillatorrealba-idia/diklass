@@ -80,3 +80,4 @@ hoja con foco). El tiempo del riel es variante `nav`, dentro de la excepción de
 - **«Pacientes de hoy»** = pacientes con una consulta creada hoy (hora local); no hay agenda de citas. **Eventos**: siempre vacío hasta que exista una fuente (`useAgendaEvents`).
 - **Ancho del panel**: ya no es fijo en 360 px (el e2e y las capturas anteriores lo asumen por defecto).
 - **Sin verificar**: arrastre en táctil (solo mouse y teclado); el e2e completo no se reejecutó tras este grupo (corrieron `panel-asistente`, `accessibility`, `navegacion`, `conocimiento` y `panel-conocimiento`, en claro y oscuro donde aplica).
+- **Spec movida**: los requisitos «Conocimiento en el panel» y «Hilo del asistente con consultas básicas» salieron de este delta y pasan a `chat-del-asistente` (`asistente-conversacional`). El código de esta rama sigue teniendo la pestaña «Conocimiento» y el asistente básico; sin el chat, esa conducta queda construida pero sin requisito en esta spec.
