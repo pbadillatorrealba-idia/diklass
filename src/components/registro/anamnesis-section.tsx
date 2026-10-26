@@ -14,6 +14,7 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
+import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -41,6 +42,8 @@ type AnamnesisSectionProps = {
   isBusy: boolean;
   /** Consulta cerrada (D5): sus registros son inmutables — sin alta ni corrección de procedencia. */
   isSealed?: boolean;
+  /** Entrada que acaba de aterrizar desde un borrador confirmado: se marca «Nuevo» y se trae a la vista. */
+  landedEntryId?: string | null;
   onFieldChange: (field: AnamnesisField) => void;
   onTextChange: (text: string) => void;
   onProvenanceChange: (provenance: Provenance) => void;
@@ -62,6 +65,7 @@ export function AnamnesisSection({
   textError,
   isBusy,
   isSealed = false,
+  landedEntryId = null,
   onFieldChange,
   onTextChange,
   onProvenanceChange,
@@ -204,36 +208,87 @@ export function AnamnesisSection({
         <Text testID="anamnesis-empty">Sin antecedentes registrados en esta consulta.</Text>
       ) : (
         entries.map((entry) => (
-          <VStack className="gap-2" key={entry.id} testID="anamnesis-entry">
-            {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
-                deja la procedencia anterior tachada junto al vigente (FR-098). */}
-            <Field
-              label={fieldLabel(entry.content.field)}
-              mark={
-                entry.content.provenanceHistory?.length ? (
-                  <ProvenanceCorrection
-                    current={entry.content.provenance}
-                    previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
-                  />
-                ) : undefined
-              }
-              provenance={entry.content.provenance}
-            >
-              {answerText(entry.content.field, entry.content.text)}
-            </Field>
-            <AttributionBadge attribution={entry.attribution} />
-            {isSealed ? null : (
-              <ProvenanceCorrector
-                current={entry.content.provenance}
-                fieldLabel={fieldLabel(entry.content.field)}
-                isBusy={isBusy}
-                onConfirm={(next) => onCorrectProvenance(entry.id, next)}
-              />
-            )}
-          </VStack>
+          <AnamnesisEntryRow
+            entry={entry}
+            isBusy={isBusy}
+            isSealed={isSealed}
+            key={entry.id}
+            landed={entry.id === landedEntryId}
+            onCorrectProvenance={onCorrectProvenance}
+          />
         ))
       )}
     </VStack>
+  );
+}
+
+type AnamnesisEntryRowProps = {
+  entry: AnamnesisEntryView;
+  isBusy: boolean;
+  isSealed: boolean;
+  landed: boolean;
+  onCorrectProvenance: (entryId: string, provenance: Provenance) => void;
+};
+
+/**
+ * Una entrada de anamnesis. Si acaba de aterrizar desde un borrador confirmado, se trae a la vista
+ * con desplazamiento instantáneo y lleva el rótulo «Nuevo» junto al código de procedencia, sin
+ * animación: la única animación de autor del sistema es la firma (FR-099 · design.md D9).
+ */
+function AnamnesisEntryRow({
+  entry,
+  isBusy,
+  isSealed,
+  landed,
+  onCorrectProvenance,
+}: AnamnesisEntryRowProps) {
+  const ref = useRef<View>(null);
+  useEffect(() => {
+    if (!landed) return;
+    // Solo web tiene `scrollIntoView`; en nativo el desplazamiento lo resuelve la lista.
+    (ref.current as unknown as HTMLElement | null)?.scrollIntoView?.({
+      behavior: "instant",
+      block: "center",
+    });
+  }, [landed]);
+  const provenanceMark = entry.content.provenanceHistory?.length ? (
+    <ProvenanceCorrection
+      current={entry.content.provenance}
+      previous={entry.content.provenanceHistory.map(({ provenance }) => provenance)}
+    />
+  ) : undefined;
+  return (
+    <View className="gap-2" ref={ref} testID="anamnesis-entry">
+      {/* Dato con procedencia (FR-021): el código va al margen (FR-097) y una corrección
+          deja la procedencia anterior tachada junto al vigente (FR-098). */}
+      <Field
+        label={fieldLabel(entry.content.field)}
+        mark={
+          landed ? (
+            <View className="items-end gap-1">
+              <Text testID="anamnesis-entry-new" tone="primary" variant="rubric">
+                Nuevo
+              </Text>
+              {provenanceMark ?? <ProvenanceMark provenance={entry.content.provenance} />}
+            </View>
+          ) : (
+            provenanceMark
+          )
+        }
+        provenance={entry.content.provenance}
+      >
+        {answerText(entry.content.field, entry.content.text)}
+      </Field>
+      <AttributionBadge attribution={entry.attribution} />
+      {isSealed ? null : (
+        <ProvenanceCorrector
+          current={entry.content.provenance}
+          fieldLabel={fieldLabel(entry.content.field)}
+          isBusy={isBusy}
+          onConfirm={(next) => onCorrectProvenance(entry.id, next)}
+        />
+      )}
+    </View>
   );
 }
 

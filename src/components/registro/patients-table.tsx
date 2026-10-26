@@ -1,9 +1,10 @@
 import { type Href, Link } from "expo-router";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LinkText } from "@/components/ui/link-text";
 import { Text } from "@/components/ui/text";
+import { useContentWidth } from "@/features/asistente/use-content-width";
 import { catalogLabel, SPECIES_LABELS } from "@/features/registro/catalogs";
 import type {
   PatientRow,
@@ -11,18 +12,24 @@ import type {
   SortDirection,
 } from "@/features/registro/patient-search";
 
-/** Ventana desde la que los pacientes se pintan como tabla; debajo, como tarjetas (`lg`). */
-const TABLE_FROM = 1024;
+/**
+ * Ancho de contenido desde el que los pacientes se pintan como tabla; debajo, como tarjetas. Se
+ * mide el contenido y no la ventana: con el panel de asistente acoplado la tabla de una ventana de
+ * 1440 px tiene 840 px, y con el riel a 1024 px, 728 px (sistema-visual «Shell de tres zonas»).
+ */
+const TABLE_FROM = 800;
 
-type Column = { key: PatientSortColumn; label: string; width: string };
+type Column = { key: PatientSortColumn; label: string; flex: number };
 
-// Anchos en fracciones; el tutor toma el resto: sin scroll horizontal.
+// Pesos de reparto del ancho disponible (no fracciones fijas): el tutor y el nombre, los más
+// largos, reciben más y la tabla no desborda ni parte un nombre letra a letra.
+const FLEX = { name: 2, species: 1, breed: 1.2, last_visit: 1.7, tutor: 2 } as const;
 const COLUMNS: Column[] = [
-  { key: "name", label: "Nombre", width: "w-1/5" },
-  { key: "species", label: "Especie", width: "w-1/6" },
-  { key: "breed", label: "Raza", width: "w-1/6" },
-  { key: "last_visit", label: "Última visita", width: "w-1/6" },
-  { key: "tutor", label: "Tutor", width: "flex-1" },
+  { key: "name", label: "Nombre", flex: FLEX.name },
+  { key: "species", label: "Especie", flex: FLEX.species },
+  { key: "breed", label: "Raza", flex: FLEX.breed },
+  { key: "last_visit", label: "Última visita", flex: FLEX.last_visit },
+  { key: "tutor", label: "Tutor", flex: FLEX.tutor },
 ];
 
 export type PatientsTableProps = {
@@ -84,8 +91,8 @@ function HeaderCell({
   return (
     <View
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
-      className={column.width}
       role="columnheader"
+      style={{ flex: column.flex, minWidth: 0 }}
     >
       {href ? (
         <Link asChild href={href}>
@@ -93,6 +100,7 @@ function HeaderCell({
             accessibilityLabel={`Ordenar por ${column.label}`}
             className="items-start self-start"
             size="sm"
+            style={{ paddingHorizontal: 0 }}
             testID={`patients-sort-${column.key}`}
             variant="ghost"
           >
@@ -107,11 +115,11 @@ function HeaderCell({
 }
 
 /**
- * Pacientes como tabla desde `lg` y como tarjetas etiquetadas debajo (sin scroll horizontal).
+ * Pacientes como tabla desde 800 px de contenido y como tarjetas etiquetadas debajo (sin scroll horizontal).
  * Las cabeceras ordenan en el servidor: son enlaces con los parámetros de la URL.
  */
 export function PatientsTable({ dir, rows, sort, sortHref }: PatientsTableProps) {
-  const isTable = useWindowDimensions().width >= TABLE_FROM;
+  const isTable = useContentWidth() >= TABLE_FROM;
 
   if (!isTable) {
     return (
@@ -171,21 +179,21 @@ export function PatientsTable({ dir, rows, sort, sortHref }: PatientsTableProps)
           role="row"
           testID="patient-item"
         >
-          <View className="w-1/5" role="cell">
+          <View role="cell" style={{ flex: FLEX.name, minWidth: 0 }}>
             <Text selectable variant="strong">
               {row.name}
             </Text>
           </View>
-          <View className="w-1/6" role="cell">
+          <View role="cell" style={{ flex: FLEX.species, minWidth: 0 }}>
             <Text selectable>{catalogLabel(SPECIES_LABELS, row.species)}</Text>
           </View>
-          <View className="w-1/6" role="cell">
+          <View role="cell" style={{ flex: FLEX.breed, minWidth: 0 }}>
             <Text selectable>{row.breed}</Text>
           </View>
-          <View className="w-1/6" role="cell">
+          <View role="cell" style={{ flex: FLEX.last_visit, minWidth: 0 }}>
             <Text variant="data">{formatVisit(row.lastVisitAt)}</Text>
           </View>
-          <View className="flex-1" role="cell">
+          <View role="cell" style={{ flex: FLEX.tutor, minWidth: 0 }}>
             <TutorLink row={row} />
           </View>
           <View className="w-28 items-end" role="cell">

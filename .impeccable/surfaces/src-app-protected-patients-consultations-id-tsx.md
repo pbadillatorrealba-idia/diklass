@@ -48,8 +48,38 @@ fijo; solo cambia la composición del shell.
   oculto (vive en el riel y en el dock), el dock compite con el teclado en móvil y la hoja modal necesita
   foco atrapado explícito en web.
 
+## Built (verificado en web, 1440 · 1280 · 1024 · 375 px, claro y oscuro)
+
+- **Composición por ancho del contenido, no de la ventana.** El panel acoplado le quita 360 px al
+  contenido, así que las listas y tablas deciden por el ancho que les queda: dos columnas en
+  `ScreenList` desde 960 px de contenido, y tabla de pacientes y tutores desde 800 px, con las
+  columnas repartidas por peso (no por fracciones fijas, que partían «Tutor» letra a letra a 840 px).
+  A 1024 px, con el riel, la lista pasa a tarjetas.
+- **El hilo de escucha**: tramos cronológicos (el más antiguo arriba) con su hora, y bajo cada uno sus
+  borradores con fragmento, contradicción y Confirmar / Corregir / Descartar. Sin hablantes ni
+  burbujas. Un borrador que llega antes que su tramo no se oculta: va al final.
+- **Escucha siempre visible**: el riel de 56 px muestra el punto, «Grabando» (texto corto; el aviso
+  completo es el nombre accesible), el tiempo y «Detener»; la cinta, el aviso completo «Grabando y
+  conservando audio» en su propia fila, el tiempo y «Detener» de 44×44 px. El tiempo cuenta desde el
+  inicio de la captura, no desde que se monta el riel o la cinta. El contador de borradores por confirmar
+  va pegado al icono de su hilo.
+- **Aterrizaje sin animación**: «Nuevo» (rubric) junto al código «I», desplazamiento instantáneo a la
+  entrada y anuncio en `consultation-status`; la marca dura hasta la siguiente acción.
+- **Hoja en compacto**: título «Asistente» con «Cerrar» en la primera fila y los hilos en la segunda
+  (en 375 px los tres hilos más «Cerrar» no caben en una fila). Foco atrapado explícito (el `Modal` de
+  React Native Web lo devuelve a la cinta pero no lo lleva dentro ni lo mantiene), Escape y retorno del
+  foco a la cinta.
+- **Cajón** (1024–1439 px): mientras está abierto, el estado del riel que queda bajo el `scrim` no se
+  pinta, para que no sea enfocable estando tapado.
+
 ## Unresolved
 
-- Orden del hilo de escucha (más nuevo arriba o abajo) y desplazamiento al último tramo.
-- Ancho del panel expandido (360 px) frente a las pantallas más densas.
-- Verificación nativa en iOS y Android (sin dispositivo en esta máquina).
+- Orden del hilo de escucha: se dejó el más antiguo arriba y sin desplazamiento automático al último
+  tramo. Decidirlo con voz real y consultas largas.
+- Ancho del panel (360 px): suficiente para las tablas (840 px de contenido a 1440 px). El hilo
+  «Conocimiento» es alto en ese ancho porque el selector de paciente lista todas las fichas; con un
+  paciente de contexto ya fijado podría plegarse.
+- «Conocimiento» aparece en el panel también dentro de `/knowledge`, donde la pantalla es ese mismo
+  hilo: dos campos de pregunta sobre la misma conversación.
+- Verificación nativa en iOS y Android (sin dispositivo en esta máquina): el dock se publica por el
+  mismo contexto que en web, pero no se ha visto en un dispositivo ni con el teclado abierto.

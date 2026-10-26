@@ -32,6 +32,14 @@ la anamnesis (texto y voz), conocimiento clínico trazable, detección de inform
 al diagnóstico diferencial, al tratamiento y al plan de seguimiento, epicrisis estructurada y
 recuperación del historial.
 
+El asistente vive en un **panel a la derecha de toda pantalla protegida** (acoplado, riel y cajón en
+escritorio; cinta y hoja en móvil), con tres hilos: **Escucha** (la captura de voz con sus tramos y
+borradores, solo con una consulta abierta), **Conocimiento** (la consulta con citas) y **Asistente**.
+Lo implementado son los dos primeros. El tercero está **reservado y planificado, no implementado**: la
+visión es que la app llegue a ser agéntica —un agente que propone y el veterinario decide—, pero hoy no
+hay agente; el hilo lo declara y no simula respuestas. Cuando exista, solo propondrá: nada se escribe
+en el registro clínico sin la confirmación explícita del profesional.
+
 El éxito del PoC es demostrar el flujo clínico completo y generar evidencia técnica y clínica para
 postular a fondos. Prioriza el flujo completo sobre la cobertura exhaustiva de conocimiento.
 
@@ -51,6 +59,11 @@ longitudinal.
 Uso mixto según el momento: computador (escritorio o notebook en el consultorio) para ficha,
 epicrisis y consulta de conocimiento; móvil o tablet para la captura de voz y el seguimiento. La
 captura de voz procesa el audio en ventanas de unos 30 segundos, no en tiempo real estricto.
+
+El panel de asistente mantiene a la vista el estado de la escucha (grabando, tiempo, «Detener») aunque
+esté colapsado, porque el veterinario mira al tutor y no la pantalla; en escritorio el formulario no
+se mueve cuando llegan tramos y borradores. La verificación en iOS y Android está pendiente: lo
+construido se ha visto en web.
 
 ## Capabilities and Constraints
 

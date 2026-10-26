@@ -100,3 +100,49 @@ describe("AnamnesisSection", () => {
     expect(boton).toContain('aria-expanded="false"');
   });
 });
+
+// sistema-visual «El borrador confirmado aterriza en su campo» (shell-asistente-tres-zonas, D9).
+describe("AnamnesisSection: entrada aterrizada desde un borrador", () => {
+  const entradas = ["a1", "a2"].map((id) => ({
+    id,
+    content: {
+      consultationId: "c1",
+      field: "motivo_consulta" as const,
+      text: `Texto ${id}`,
+      provenance: "inferida" as const,
+    },
+    attribution: { actorId: "v1", occurredAt: "2026-09-30T10:00:00Z", action: null },
+  }));
+  const pintar = (landedEntryId: string | null) =>
+    renderToStaticMarkup(
+      <QueryClientProvider client={new QueryClient()}>
+        <AnamnesisSection
+          entries={entradas}
+          field="motivo_consulta"
+          isBusy={false}
+          landedEntryId={landedEntryId}
+          onCorrectProvenance={() => {}}
+          onFieldChange={() => {}}
+          onProvenanceChange={() => {}}
+          onSubmit={() => {}}
+          onTextChange={() => {}}
+          provenance="reportada"
+          text=""
+          textError={null}
+        />
+      </QueryClientProvider>,
+    );
+
+  test("solo la entrada aterrizada lleva «Nuevo», junto al código de procedencia «I»", () => {
+    const html = pintar("a2");
+    expect(html.match(/data-testid="anamnesis-entry-new"/g)).toHaveLength(1);
+    const entrada = html.split('data-testid="anamnesis-entry"')[2] ?? "";
+    expect(entrada).toContain("Nuevo");
+    expect(entrada).toContain('aria-label="Procedencia: Inferida"');
+    expect(entrada).toContain("Texto a2");
+  });
+
+  test("sin entrada aterrizada no hay «Nuevo»", () => {
+    expect(pintar(null)).not.toContain("anamnesis-entry-new");
+  });
+});

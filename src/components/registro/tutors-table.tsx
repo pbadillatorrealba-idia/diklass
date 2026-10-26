@@ -1,24 +1,30 @@
 import { type Href, Link } from "expo-router";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { useContentWidth } from "@/features/asistente/use-content-width";
 import type { SortDirection } from "@/features/registro/patient-search";
 import type { TutorRow, TutorSortColumn } from "@/features/registro/tutor-search";
 import { formatRut } from "@/lib/rut";
 
-/** Ventana desde la que los tutores se pintan como tabla; debajo, como tarjetas (`lg`). */
-const TABLE_FROM = 1024;
+/**
+ * Ancho de contenido desde el que los tutores se pintan como tabla; debajo, como tarjetas. Se mide
+ * el contenido y no la ventana (ver `patients-table`).
+ */
+const TABLE_FROM = 800;
 
-type Column = { key: TutorSortColumn | null; label: string; width: string };
+type Column = { key: TutorSortColumn | null; label: string; flex?: number; className?: string };
 
+// Pesos de reparto del ancho disponible; «Pacientes» es un número y lleva ancho fijo.
+const FLEX = { name: 2, rut: 1.3, phone: 1.3, email: 2.2 } as const;
 // Solo nombre y pacientes ordenan en el servidor; contacto va como texto.
 const COLUMNS: Column[] = [
-  { key: "name", label: "Nombre", width: "w-1/5" },
-  { key: null, label: "RUT", width: "w-1/6" },
-  { key: null, label: "Teléfono", width: "w-1/6" },
-  { key: null, label: "Correo", width: "flex-1" },
-  { key: "patients", label: "Pacientes", width: "w-24" },
+  { key: "name", label: "Nombre", flex: FLEX.name },
+  { key: null, label: "RUT", flex: FLEX.rut },
+  { key: null, label: "Teléfono", flex: FLEX.phone },
+  { key: null, label: "Correo", flex: FLEX.email },
+  { key: "patients", label: "Pacientes", className: "w-24" },
 ];
 
 export type TutorsTableProps = {
@@ -64,8 +70,9 @@ function HeaderCell({
   return (
     <View
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
-      className={column.width}
+      className={column.className}
       role="columnheader"
+      style={column.flex ? { flex: column.flex, minWidth: 0 } : undefined}
     >
       {href && column.key ? (
         <Link asChild href={href}>
@@ -73,6 +80,7 @@ function HeaderCell({
             accessibilityLabel={`Ordenar por ${column.label}`}
             className="items-start self-start"
             size="sm"
+            style={{ paddingHorizontal: 0 }}
             testID={`tutors-sort-${column.key}`}
             variant="ghost"
           >
@@ -87,11 +95,11 @@ function HeaderCell({
 }
 
 /**
- * Tutores como tabla desde `lg` y como tarjetas etiquetadas debajo (sin scroll horizontal).
+ * Tutores como tabla desde 800 px de contenido y como tarjetas etiquetadas debajo (sin scroll horizontal).
  * Las cabeceras ordenan en el servidor: son enlaces con los parámetros de la URL (FR-119).
  */
 export function TutorsTable({ dir, rows, sort, sortHref }: TutorsTableProps) {
-  const isTable = useWindowDimensions().width >= TABLE_FROM;
+  const isTable = useContentWidth() >= TABLE_FROM;
 
   if (!isTable) {
     return (
@@ -158,18 +166,18 @@ export function TutorsTable({ dir, rows, sort, sortHref }: TutorsTableProps) {
           role="row"
           testID="tutor-item"
         >
-          <View className="w-1/5" role="cell">
+          <View role="cell" style={{ flex: FLEX.name, minWidth: 0 }}>
             <Text selectable variant="strong">
               {row.fullName}
             </Text>
           </View>
-          <View className="w-1/6" role="cell">
+          <View role="cell" style={{ flex: FLEX.rut, minWidth: 0 }}>
             {rutOrMissing(row.rut)}
           </View>
-          <View className="w-1/6" role="cell">
+          <View role="cell" style={{ flex: FLEX.phone, minWidth: 0 }}>
             {orMissing(row.phone)}
           </View>
-          <View className="flex-1" role="cell">
+          <View role="cell" style={{ flex: FLEX.email, minWidth: 0 }}>
             {orMissing(row.email)}
           </View>
           <View className="w-24" role="cell">

@@ -257,10 +257,12 @@ export async function ejecutarEscucha(input: {
 export async function confirmarHecho(
   input: { client: SupabaseClient<Database>; queryClient: QueryClient },
   factId: string,
-): Promise<void> {
-  await confirmAudioFact(input.client, factId);
+): Promise<string> {
+  const { landedEntryId } = await confirmAudioFact(input.client, factId);
   await Promise.all([
     input.queryClient.invalidateQueries({ queryKey: VOZ_QUERY_KEY }),
     invalidateRegistro(input.queryClient),
   ]);
+  // La entrada de anamnesis aterrizada: la pantalla la trae a la vista y la marca «Nuevo».
+  return landedEntryId;
 }

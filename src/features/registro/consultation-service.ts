@@ -146,6 +146,34 @@ export async function listConsultationsByPatient(
   }
 }
 
+/** Consultas creadas desde `sinceIso` (p. ej. el inicio del día): quién se atiende hoy. */
+export async function listConsultationsSince(
+  client: SupabaseClient<Database>,
+  sinceIso: string,
+): Promise<ConsultationEntry[]> {
+  const requestId = makeRequestId();
+  try {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("*")
+      .eq("record_type", "consultation")
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
+    if (error) {
+      throw error;
+    }
+    return parseRows(data, consultationContentSchema, "listConsultationsSince");
+  } catch (error) {
+    void captureClientError(client as unknown as ErrorReporterClient, {
+      error,
+      operation: "listConsultationsSince",
+      requestId,
+    });
+    throw error;
+  }
+}
+
 export async function resumeConsultation(
   client: SupabaseClient<Database>,
   consultationId: string,

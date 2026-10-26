@@ -285,7 +285,11 @@ Tinta sobre papel con dos pliegos de color: estrategia restringida, en la que el
 
 Un solo eje vertical. `Screen` centra el contenido con un ancho de lectura de 720 px (`content`) o, para la consulta, listas y paneles, de 1200 px (`wide`); los formularios centrados (login) se limitan a 480 px y los diálogos a 440 px. El margen es de 16 px, 24 px desde `md` (768 px), y los bloques de una pantalla se separan 24 px.
 
-En la consulta, el encabezado del formulario (paciente, tutor, fecha, estado, «Consulta n.º N» y la clave de procedencia) cierra con una regla de 1 px y precede a las secciones numeradas. Desde `lg` (1024 px) la consulta va a dos columnas: las secciones en la columna principal y, a la derecha, el resumen de seguimiento longitudinal en 2/5 del ancho; en el DOM el contexto de solo lectura va primero, como en compacto, donde todo es una columna. En web, desde `lg`, la navegación pasa a una barra lateral de 240 px; las listas `wide` van a dos columnas desde `xl` (1280 px).
+En la consulta, el encabezado del formulario (paciente, tutor, fecha, estado, «Consulta n.º N» y la clave de procedencia) cierra con una regla de 1 px y precede a las secciones numeradas. La consulta va siempre en una sola columna, con el contexto de solo lectura (el resumen de seguimiento longitudinal) antes del registro, en el DOM y a la vista.
+
+**Shell de tres zonas.** En web, desde `lg` (1024 px), toda pantalla protegida se compone de navegación | contenido | panel de asistente. La barra lateral mide 240 px. El panel de asistente va a la derecha y es del shell, no de la pantalla: no altera las columnas ni el orden del contenido. Desde 1440 px va acoplado y expandido (360 px) y colapsa a un riel de 56 px; de 1024 a 1439 px es un riel y el panel se abre como cajón superpuesto de 360 px con `scrim`, sin reflujo del contenido; bajo 1024 px y en iOS/Android es una cinta al pie de cada pantalla (el dock) y una hoja modal. El orden del DOM es barra lateral, contenido, panel. El estado expandido o colapsado se recuerda por dispositivo.
+
+Como el panel acoplado le quita 360 px al contenido sin cambiar la ventana, las composiciones que dependen del ancho se deciden por el ancho del contenido, no por el de la ventana: las listas `wide` van a dos columnas desde 960 px de contenido (1280 px de ventana con el riel) y los pacientes y tutores se pintan como tabla desde 800 px de contenido, con las columnas repartidas por peso; por debajo, como tarjetas.
 
 El ritmo interno usa la escala de 4 px: 4 px entre rótulo y valor, 8 px en las reglas de campo (arriba y abajo), 16 px entre bloques dentro de una sección y de padding de sección y tarjeta, 24 px entre secciones. Todo control tiene un área táctil mínima de 44 px; los campos multilínea arrancan en 120 px y crecen con su contenido para que el borrador se lea entero antes de firmarlo. Las opciones de un vocabulario cerrado fluyen en fila con salto de línea.
 
@@ -336,6 +340,17 @@ Rectangulares, firmes, de tinta llena: la acción principal es la tinta del form
 ### Navigation
 - Nativa en iOS y Android (`NativeTabs`, cabeceras y retroceso del sistema), tintada con `primary`. En web, barra lateral de 240 px desde `lg` y pestañas con etiquetas `nav` de 12 px en compacto. Las pantallas de detalle llevan en web el enlace «‹ Volver a …» en `label` apagado, sobre el `h1`.
 
+### Panel de asistente, riel, cinta e hilo
+Composición con piezas que ya existen; no añade tokens, colores ni tipografía.
+- **Panel acoplado** (≥ 1440 px, 360 px): borde izquierdo de 1 px en `border`, fondo `card`. Cabecera con los hilos («Escucha», «Conocimiento», «Asistente») como botones —el activo en `outline`, los demás en `ghost`— y el control de colapsar con `aria-expanded`; debajo, el hilo activo con su propio desplazamiento.
+- **Riel** (56 px): un icono por hilo con su contador de cosas por confirmar (recuadro con borde `primary`, número en `nav`), el estado de la escucha y el control de expandir. El estado es texto: punto `destructive`, «Grabando» en `nav` (el aviso completo «Grabando y conservando audio» es su nombre accesible), el tiempo en mono y «Detener».
+- **Cajón** (1024–1439 px): el mismo panel superpuesto sobre `bg-scrim/55`, que se cierra con Escape, con su control o tocando el `scrim`; el foco vuelve al control del riel.
+- **Cinta** (bajo 1024 px y nativo): vive en el contenedor de la barra al pie de `Screen` (borde superior de 1 px, fondo `card`, área segura), a cualquier ancho y sobre la barra de pestañas. Lleva el hilo activo, los contadores, y, con la captura en curso, el aviso completo en texto, el tiempo y «Detener»; todos sus controles miden al menos 44×44 px.
+- **Hoja** (cinta activada): modal con título «Asistente» y «Cerrar» en la primera fila y los hilos en la segunda; atrapa el foco, se cierra con Escape y devuelve el foco a la cinta.
+- **Hilo de escucha**: una columna cronológica; cada tramo con su hora en `data` y, debajo, sus borradores como `SuggestedBlock` con fragmento de origen, contradicción como `Callout` y Confirmar / Corregir / Descartar. No separa hablantes ni usa burbujas.
+- **Propuestas de un agente**: son `SuggestedBlock` con su origen y el código «I»; solo al confirmar pasan a timbre de firma con el nombre de quien confirmó. El hilo «Asistente» declara que no está disponible mientras no exista un agente.
+- **Aterrizaje de un borrador confirmado**: el campo recibe el rótulo «Nuevo» (`rubric`) junto al código «I», se trae a la vista con desplazamiento instantáneo y se anuncia en `consultation-status`. No se anima nada.
+
 ### Form Section (componente firma)
 Sección numerada del protocolo: contenedor de hoja con regla de 1 px y esquinas de 2 px; banda de título con el número en `data` semibold y el título en `title`. La banda es `primary-surface` con tinta `primary`; la sección activa (al cargar, el paso siguiente del protocolo: 1 sin borrador, 3 con borrador, ninguna si está cerrada; después, la última editada) invierte a `primary` sólido con tinta `primary-foreground`. El cuerpo va sobre la hoja con 16 px de padding y 16 px entre bloques.
 
@@ -366,7 +381,8 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Do** llevar cifras, fechas, horas, dosis y códigos de procedencia en `data` (mono, cifras tabulares).
 - **Do** dar a cada distinción clínica una forma además del color: letra de procedencia, trazo discontinuo, tachado, segmentos de severidad, icono con nombre, etiqueta visible.
 - **Do** usar solo tokens del tema, opacos y verificados AA en claro y oscuro en `tema.test.ts`; un token nuevo entra en los cuatro bloques de `global.css` y en el espejo `colors.ts`.
-- **Do** mantener la firma como la única animación de autor: ≤ 300 ms (hoy 240 ms), salida exponencial e inmediata con Reduce Motion.
+- **Do** mantener la firma como la única animación de autor: ≤ 300 ms (hoy 240 ms), salida exponencial e inmediata con Reduce Motion. El panel, el cajón, la hoja y el aterrizaje de un borrador aparecen sin animación.
+- **Do** mostrar el estado de la escucha en texto, con su aviso de grabación, en el riel y en la cinta aunque el panel esté colapsado o la hoja cerrada.
 
 ### Don't:
 - **Don't** usar sombras, degradados, destellos ni violeta de «IA»; el tablero de tarjetas con panel de «Hallazgos IA» es la anti-referencia de este sistema.
@@ -377,4 +393,5 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Don't** confundir corrección con error: `correction-surface` y `destructive-surface` mantienen ΔE*ab ≥ 10.
 - **Don't** bajar de 14 px (salvo las etiquetas `nav` de 12 px) ni poner texto corrido en mono.
 - **Don't** convertir un aviso en caja flotante o temporal; es un renglón dentro de su sección.
+- **Don't** presentar el hilo de escucha como una conversación con el sistema: sin burbujas, sin hablantes, sin respuestas simuladas.
 - **Don't** añadir ilustraciones de perros, patitas ni gris clínico sin tinta.

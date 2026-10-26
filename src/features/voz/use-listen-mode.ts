@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type AudioFactEntry,
   discardAudioFactDraft,
@@ -22,6 +22,7 @@ import {
   listTranscriptSegments,
   type TranscriptSegmentEntry,
 } from "@/features/voz/transcript-service";
+import { startedAtFor } from "@/features/voz/use-elapsed";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
@@ -36,6 +37,8 @@ import { useSessionStore } from "@/stores/session-store";
  */
 export type ListenModeApi = {
   state: ListenModeState;
+  /** Instante en que la captura pasó a `capturando`; `null` si no hay captura (`startedAtFor`). */
+  startedAt: number | null;
   /** Micrófono y transcripción reales (D1): la interfaz avisa de la grabación y su conservación. */
   modoReal: boolean;
   facts: AudioFactEntry[];
@@ -48,13 +51,26 @@ export type ListenModeApi = {
   editFact: (factId: string, text: string) => Promise<void>;
 };
 
-export function useListenMode(consultationId: string): ListenModeApi {
+export function useListenMode(
+  consultationId: string,
+  /** Se llama con la entrada de anamnesis aterrizada al confirmar un borrador (design.md D9). */
+  onLanded?: (entryId: string) => void,
+): ListenModeApi {
   const clinicId = useSessionStore((estado) => estado.clinicId) ?? "";
   const queryClient = useQueryClient();
   const [state, setState] = useState<ListenModeState>("inactivo");
+  const [startedAt, setStartedAt] = useState<number | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [busyFactId, setBusyFactId] = useState<string | null>(null);
   const controllerRef = useRef<ListenModeController | null>(null);
+  // Siempre la última función: `confirmFact` no cambia de identidad con cada render.
+  const onLandedRef = useRef(onLanded);
+  onLandedRef.current = onLanded;
+
+  // El reloj es de la captura: quien lo muestre (hilo, riel o cinta) cuenta desde este instante.
+  useEffect(() => {
+    setStartedAt((previous) => startedAtFor(previous, state, Date.now()));
+  }, [state]);
 
   const factsQuery = useQuery({
     enabled: consultationId.length > 0,
@@ -119,7 +135,8 @@ export function useListenMode(consultationId: string): ListenModeApi {
     async (factId: string) => {
       setBusyFactId(factId);
       try {
-        await confirmarHecho({ client: supabase, queryClient }, factId);
+        const entryId = await confirmarHecho({ client: supabase, queryClient }, factId);
+        onLandedRef.current?.(entryId);
       } finally {
         setBusyFactId(null);
       }
@@ -155,6 +172,7 @@ export function useListenMode(consultationId: string): ListenModeApi {
 
   return {
     state,
+    startedAt,
     modoReal: MODO_REAL,
     facts: factsQuery.data ?? [],
     segments: segmentsQuery.data ?? [],
