@@ -183,6 +183,8 @@ Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.type
   el flujo real de permisos de micrófono no está verificado.
 - **Aceptación humana de SC-004/SC-016 sobre conversaciones reales**: aquí se miden sobre la
   conversación simulada de referencia (SC-004 y SC-016 medidos por test, no aceptados).
+  Archivado el 2026-10-26 por decisión explícita del responsable con esta aceptación aún pendiente:
+  archivar sincroniza la spec, no acepta la capacidad.
 
 ## Segunda auditoría de tests (2026-10-26)
 
