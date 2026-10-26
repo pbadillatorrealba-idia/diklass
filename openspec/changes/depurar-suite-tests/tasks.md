@@ -41,8 +41,8 @@ CI pasa, pero no sustituye la resolución de ese fallo.
 
 ## 6. Corregir el bloqueo de rendimiento (ampliación autorizada)
 
-- [ ] 6.1 Diagnosticar el plan de `search_patients` con rol autenticado, identificando el trabajo repetido y los índices aplicables; registrar la causa y la corrección elegida en `design.md`.
-- [ ] 6.2 Escribir y observar fallando una regresión con volumen sintético, paginación y aislamiento por clínica, sin persistir sus fixtures; conservar el timeout del E2E existente (Principios II y V).
+- [x] 6.1 Diagnosticar el plan de `search_patients` con rol autenticado, identificando el trabajo repetido y los índices aplicables; registrar la causa y la corrección elegida en `design.md`.
+- [x] 6.2 Escribir y observar fallando una regresión con volumen sintético, paginación y aislamiento por clínica, sin persistir sus fixtures; conservar el timeout del E2E existente (Principios II y V).
 - [ ] 6.3 Aplicar la corrección mínima de SQL/índices con migración, preservando RLS, privilegios, firma, resultados y datos; ejecutar regresión verde, pgTap, `db:types`, typecheck e integración viva afectada.
 - [ ] 6.4 Repetir el E2E de reintento con un worker, registrar tiempos antes/después, subir el commit y actualizar el estado de cierre y revisión sin presentar fallos pendientes como resueltos.
 

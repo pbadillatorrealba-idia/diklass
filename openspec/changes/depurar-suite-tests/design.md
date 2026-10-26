@@ -177,3 +177,33 @@ rojo/verde y registrar tiempos comparables. No se añaden dependencias ni abstra
 4. Verificar pgTap, tipos generados sin diferencias y typecheck si hay migración; integración viva
 afectada y caso web fallido, un worker, sin repetir todo por fase. Actualizar evidencia y PR.
 La revisión independiente y la aceptación siguen pendientes; no se descartan fallos del cierre.
+
+### Diagnóstico y corrección de la ampliación
+
+- Plan real bajo `authenticated`, con `auto_explain` solo en la sesión de diagnóstico: la unión
+  por `tutor.id::text` no usa la PK UUID. Repite lectura/RLS de 129 tutores por 775 pacientes,
+  descartando 99.237 combinaciones; el plan tarda 4.071 ms sin red. Los índices existentes
+  sobre `patientId` y `tutorId` no cubren esta expresión. No se cambia RLS ni se usa definer.
+- Corrección mínima: migración `020_indice_busqueda_tutor.sql`, índice parcial de `id::text`
+  para tutores. La RPC, sus permisos y resultados permanecen idénticos. Se usa 020 porque la
+  base local compartida ya tiene 019 de audio aplicada por otro worktree; su archivo se facilitó
+  temporalmente al CLI solo para reconocer el historial y se retiró sin añadirlo a esta rama.
+- Regresión en la suite pgTap existente: 1.000 pacientes y 200 tutores sintéticos, insertados
+  dentro de la transacción revertida de la suite. Antes del índice falla solo el límite de 5 s
+  (14 s de suite); después pasan sus 14 casos (1 s), incluidos página de 25 y total 1.003 de su
+  clínica. Los casos anteriores mantienen filtros, orden, nombres y aislamiento. No quedan fixtures.
+- Tras aplicar el índice, el plan usa `clinical_records_tutor_text_id_idx` sin releer los tutores
+  por paciente (240 ms). Llamada autenticada directa: 325/321/317 ms, 25 filas, total 776; el
+  volumen local varió en un paciente por el entorno compartido (antes: 775 y 5.318 ms).
+  Son mediciones locales, no un presupuesto para producción ni ahorro medido de CI.
+- Verificación: pgTap completo 340 pass en 19 archivos; typecheck pasa; integración viva
+  focalizada de ficha y atribución: 15 pass, sin omisiones. El E2E antes fallido pasa 3/3,
+  conservando sus 5.000 ms y usando el export estático anterior con configuración temporal y
+  un worker. No hubo cambios de cliente que requirieran regenerar ese export.
+- `bun run db:types` ejecutado, pero la comparación local tiene drift ajeno: CLI local 2.122.0
+  frente a 2.117.0 de CI, y esquema compartido de audio/storage. Repetir generación con CLI
+  2.117.0 reduce el diff a `audio_path` y al esquema storage del otro trabajo. Se conserva el
+  archivo versionado sin editar a mano; equivalencia exacta de la rama pendiente de CI limpio.
+- Reversión de la corrección: eliminar únicamente el índice con `drop index
+  public.clinical_records_tutor_text_id_idx` mediante una migración de reversión. No afecta datos;
+  vuelve a permitir el plan lento, por lo que no resuelve el bloqueo de rendimiento.
