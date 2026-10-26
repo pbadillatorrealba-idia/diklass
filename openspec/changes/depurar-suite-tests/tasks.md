@@ -1,7 +1,7 @@
 # Tasks
 
-Estado inicial: todas las tareas están pendientes. Crear y publicar este plan no acredita su
-implementación ni la aceptación de las funcionalidades afectadas. Las referencias D1–D5
+Implementación en curso: las marcas registran las tareas realizadas y su evidencia se detalla
+en `design.md`; no acreditan la aceptación de las funcionalidades afectadas. Las referencias D1–D5
 corresponden a `design.md`; no son nuevos IDs de requisitos.
 
 ## 1. Confirmar la base y conservar la trazabilidad
@@ -26,8 +26,8 @@ corresponden a `design.md`; no son nuevos IDs de requisitos.
 
 ## 4. Eliminar código sin consumidores
 
-- [ ] 4.1 Revalidar los seis símbolos de D3 en los cinco archivos enumerados, incluyendo referencias por string, namespace, reexports, scripts, tests, configuración y OpenSpec; retirar solo los confirmados sin uso y sus imports exclusivos. Verificación: registrar por símbolo la evidencia de ausencia o el consumidor que obliga a conservarlo; no retirar utilidades de tests/scripts ni compatibilidad histórica (Principio III; FR-024; D3, D4).
-- [ ] 4.2 Ejecutar Biome sobre los archivos tocados, `bun run typecheck` y `bun test tests/unit/auth tests/unit/registro tests/unit/voz tests/unit/storage tests/integration/auth/auth-contract.test.ts`. Verificación: comandos sin errores tras retirar exports, sin cambios en contratos ni supresión de validaciones (Principios II, III y V; D3, D5).
+- [x] 4.1 Revalidar los seis símbolos de D3 en los cinco archivos enumerados, incluyendo referencias por string, namespace, reexports, scripts, tests, configuración y OpenSpec; retirar solo los confirmados sin uso y sus imports exclusivos. Verificación: registrar por símbolo la evidencia de ausencia o el consumidor que obliga a conservarlo; no retirar utilidades de tests/scripts ni compatibilidad histórica (Principio III; FR-024; D3, D4).
+- [x] 4.2 Ejecutar Biome sobre los archivos tocados, `bun run typecheck` y `bun test tests/unit/auth tests/unit/registro tests/unit/voz tests/unit/storage tests/integration/auth/auth-contract.test.ts`. Verificación: comandos sin errores tras retirar exports, sin cambios en contratos ni supresión de validaciones (Principios II, III y V; D3, D5).
 
 ## 5. Verificación conjunta y revisión
 

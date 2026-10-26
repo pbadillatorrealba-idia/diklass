@@ -1,11 +1,5 @@
-import { fieldLabel, isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
-import {
-  ANAMNESIS_SECTIONS,
-  type AnamnesisField,
-  type AntecedentGroup,
-  type EpicrisisContent,
-  type Provenance,
-} from "@/features/registro/schema";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
+import type { AntecedentGroup, EpicrisisContent, Provenance } from "@/features/registro/schema";
 
 /**
  * Etiquetas de interfaz del registro clínico. Vocabulario visible en español; los valores
@@ -29,17 +23,6 @@ export const ANTECEDENT_GROUP_ORDER: AntecedentGroup[] = [
 ];
 
 export { isLegacyAnamnesisField };
-
-/** Orden de aparición de los campos estructurados de la hoja (sin el texto libre de FR-004). */
-export const ANAMNESIS_STRUCTURED_ORDER: AnamnesisField[] = ANAMNESIS_SECTIONS.flatMap((section) =>
-  section.fields.map((f) => f.id),
-);
-
-export const ANAMNESIS_FIELD_OPTIONS: { value: AnamnesisField; label: string }[] =
-  ANAMNESIS_STRUCTURED_ORDER.concat("texto_libre").map((value) => ({
-    value,
-    label: fieldLabel(value),
-  }));
 
 export const PROVENANCE_LABELS: Record<Provenance, string> = {
   reportada: "Reportada",
