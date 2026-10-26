@@ -639,23 +639,6 @@ export type Database = {
       [_ in never]: never
     }
   }
-  storage: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
@@ -783,9 +766,6 @@ export const Constants = {
     Enums: {
       access_session_status: ["active", "expired", "revoked"],
     },
-  },
-  storage: {
-    Enums: {},
   },
 } as const
 
