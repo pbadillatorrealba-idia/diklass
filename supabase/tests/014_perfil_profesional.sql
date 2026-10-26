@@ -47,9 +47,11 @@ select is(
 );
 
 select public.update_own_profile('Dra. Ana Nueva');
+-- Acotado a la entidad: los e2e (perfil.spec.ts) dejan eventos de otras veterinarias en la base.
 select is(
   (select count(*)::int from public.clinical_audit_events
-   where action = 'veterinarian_profile_updated'),
+   where action = 'veterinarian_profile_updated'
+     and entity_id = 'a14a14a1-0000-4000-8000-00000000000a'),
   1,
   'el mismo valor no deja evento'
 );

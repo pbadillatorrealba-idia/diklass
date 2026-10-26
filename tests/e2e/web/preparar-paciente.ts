@@ -42,7 +42,7 @@ export async function prepararPaciente(
     const respuesta = await api.post("/rest/v1/clinical_records", {
       data: { clinic_id: clinicId, record_type: recordType, content, status: "draft" },
     });
-    expect(respuesta.status()).toBe(201);
+    expect(respuesta.status(), await respuesta.text()).toBe(201);
     const [fila] = (await respuesta.json()) as Array<{ id: string }>;
     if (!fila) {
       throw new Error(`The ${recordType} insert returned no row.`);

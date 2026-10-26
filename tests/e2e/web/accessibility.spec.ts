@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import {
   provisionClinicalCase,
   type SyntheticCase,
@@ -7,6 +8,7 @@ import {
   syntheticScreens,
 } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
+import { prepararPaciente } from "./preparar-paciente";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -320,8 +322,32 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
   test("la lista de pacientes es tabla a 1280 px y tarjetas a 768 px; el formulario sigue en 720 px", async ({
     page,
   }) => {
-    await submitLogin(page, ANA);
-    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    // La lista necesita dos filas; en una base recién reseteada no hay pacientes.
+    const { crear } = await prepararPaciente(page, "Lista E2E uno");
+    const tutorId = await crear("tutor", {
+      name: "Tutor lista E2E",
+      rut: randomRut(),
+      phone: "+56 9 5550 0102",
+      email: null,
+    });
+    await crear("patient", {
+      name: "Lista E2E dos",
+      species: "felino",
+      breed: "Siamés",
+      birthDate: "2022-05-01",
+      ageMonths: null,
+      weightKg: 4,
+      sex: "macho",
+      reproductiveStatus: "esterilizado",
+      antecedentes: {
+        medicalHistory: [],
+        preexistingDiseases: [],
+        currentMedications: [],
+        knownAllergies: [],
+        behavioralHistory: [],
+      },
+      tutorId,
+    });
     const medir = async (width: number) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/patients");
