@@ -178,8 +178,8 @@ Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.type
   eliminado, autorización RI-1). La integración viva local corrió en verde (arriba).
 - **Verificación e2e de la UI**: `tests/e2e/web/modo-escucha.spec.ts` (chromium, tarea 7.13); Firefox/WebKit solo en CI.
 - **Carrera de cierre**: automatizada en `tests/integration/voz/carrera-cierre.test.ts` (tarea 7.12).
-- **Micrófono real y ASR real**: extensiones documentadas del diseño (D2 · D3), sin implementar y
-  sin dependencias nuevas. FR-054 se ejercita por la señal de indisponibilidad de `CaptureSource`;
+- **Micrófono real y ASR real**: fuera de este cambio; los implementa `implementar-asr-real-captura-voz`
+  (ahí, con dependencias y evidencia propias). FR-054 se ejercita por la señal de indisponibilidad de `CaptureSource`;
   el flujo real de permisos de micrófono no está verificado.
 - **Aceptación humana de SC-004/SC-016 sobre conversaciones reales**: aquí se miden sobre la
   conversación simulada de referencia (SC-004 y SC-016 medidos por test, no aceptados).

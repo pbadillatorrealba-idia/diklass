@@ -5,10 +5,9 @@ import type { TranscriptQuality } from "@/features/voz/schema";
  *
  * Implementación por defecto `SimulatedTranscriptionAdapter`, determinista sobre el guion de la
  * conversación de referencia (datos sintéticos; nada de audio real es requisito del PoC).
- * Extensión documentada, SIN implementar: un adaptador a un servicio real de ASR que materialice
- * `AudioWindow.audio` y devuelva texto + calidad; se inyecta en el controlador de escucha sin
- * tocar el resto del pipeline. Decisión dura reversible (Principio III: sin dependencias nuevas
- * sin requisito).
+ * La transcripción real es `RemoteTranscriptionAdapter` (`remote-transcription-adapter.ts`): envía
+ * `AudioWindow.audio` a la Edge Function `transcribe-audio` y devuelve texto + calidad; se inyecta
+ * en el controlador de escucha sin tocar el resto del pipeline (`listen-mode-inputs.ts` elige).
  */
 
 /** Audio de una ventana (D2 del cambio implementar-asr-real-captura-voz): un archivo autocontenido. */

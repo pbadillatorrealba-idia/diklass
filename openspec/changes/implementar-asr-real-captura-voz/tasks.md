@@ -43,7 +43,7 @@ implementa. Cuenta de RAM baja: ejecutar las verificaciones pesadas una a la vez
 ## 7. Cierre
 
 - [x] 7.1 Escribir `quickstart.md` del cambio: cómo activar el modo real localmente (stack, secreto, función, variable), evidencia real de las compuertas y pendientes declarados (política de retención y consentimiento, cuota por usuario, base legal del proveedor).
-- [ ] 7.2 Reconciliar con `captura-voz-anamnesis` al archivar: actualizar su supuesto «Sin retención de audio» y D10 «sin audio» para que apunten a esta capacidad. Verificación: no quedan afirmaciones contradictorias en las specs principales tras `/opsx:archive`.
+- [x] 7.2 Reconciliar con `captura-voz-anamnesis`: su supuesto «Sin retención de audio» (spec), D2/D3/D10, la tabla de complejidad, los riesgos y el quickstart, y los comentarios de `capture-source.ts` y `transcription-port.ts`, ya apuntan a esta capacidad en vez de afirmar «sin audio» o «extensión sin implementar». Verificación: `grep -rn -i "sin implementar\|nunca se persiste" openspec/changes/implementar-captura-voz-anamnesis src/features/voz` no devuelve afirmaciones contradictorias, y `openspec validate` pasa en ambos cambios. Las specs principales se sincronizan al archivar (`/opsx:archive`, primero captura-voz y luego este cambio).
 - [ ] 7.3 Verificación manual en dispositivo (iOS y Android) del permiso, la grabación, el aviso y la transcripción real, con evidencia en `quickstart.md`. Verificación: checklist completado; mientras no se haga, el cambio NO declara soporte nativo verificado.
 
 ## Workflow follow-up

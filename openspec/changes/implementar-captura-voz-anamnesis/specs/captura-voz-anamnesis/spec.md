@@ -148,8 +148,10 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Idioma único**: transcripción y extracción en español.
 - **Un solo canal de audio**: no se asume separación de hablantes; distinguir quién dijo qué no es
   requisito del PoC.
-- **Sin retención de audio como requisito clínico**: el audio se procesa para producir la
-  transcripción; su conservación posterior es una decisión de discovery.
+- **Sin retención de audio como requisito clínico**: este cambio no exige conservar el audio ni lo
+  conserva (la entrada es simulada). Con micrófono real, el cambio `implementar-asr-real-captura-voz`
+  (capacidad `asr-real-captura-voz`) sí lo conserva por tramo, con aviso visible; la política de
+  retención sigue siendo una decisión de discovery.
 
 ### Dependencias
 
