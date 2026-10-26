@@ -16,6 +16,7 @@ export const corsHeaders = {
 
 /** Coincide con el límite del bucket `consultation-audio` (migración 019). */
 export const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
+const MARGEN_MULTIPART_BYTES = 64 * 1024;
 
 // `video/webm`: el mismo contenedor WebM de solo audio; algunos runtimes y navegadores lo
 // reetiquetan así al armar el FormData.
@@ -82,6 +83,13 @@ export async function handleTranscribeAudio(
   const authorization = request.headers.get("Authorization");
   if (!authorization) {
     return fallo("UNAUTHENTICATED", 401);
+  }
+
+  // Antes de parsear: `formData()` bufferiza el cuerpo entero, así que un multipart enorme se
+  // rechaza por la cabecera declarada (el margen cubre los campos y los límites del multipart).
+  const declarado = Number(request.headers.get("Content-Length"));
+  if (Number.isFinite(declarado) && declarado > MAX_AUDIO_BYTES + MARGEN_MULTIPART_BYTES) {
+    return fallo("PAYLOAD_TOO_LARGE", 413);
   }
 
   let form: globalThis.FormData;

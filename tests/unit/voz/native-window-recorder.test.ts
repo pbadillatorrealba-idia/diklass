@@ -23,10 +23,13 @@ function audioFalso(opciones: { permiso?: boolean; falla?: "prepare" } = {}) {
         eventos.push("stop");
         return "file:///tmp/tramo.m4a";
       },
+      release: () => {
+        eventos.push("liberar");
+      },
     }),
     readFile: async (uri) => {
       eventos.push(`leer:${uri}`);
-      return new Blob([new Uint8Array(32)], { type: "" });
+      return new Uint8Array(32).buffer;
     },
   };
   return { audio, eventos };
@@ -47,14 +50,17 @@ describe("createNativeWindowRecorder (D2)", () => {
     const archivo = await grabador.stop();
     expect(archivo.mimeType).toBe("audio/mp4");
     expect(archivo.extension).toBe("m4a");
-    expect(archivo.blob.type).toBe("audio/mp4");
-    expect(archivo.blob.size).toBe(32);
+    // `uri` viaja con el archivo: React Native sube partes {uri,name,type}, no Blob (hallazgo de la PR #66).
+    expect(archivo.uri).toBe("file:///tmp/tramo.m4a");
+    expect(archivo.data.byteLength).toBe(32);
     expect(eventos).toEqual([
       "modo:true",
       "prepare",
       "record",
       "stop",
       "leer:file:///tmp/tramo.m4a",
+      // Cada ventana crea un grabador nativo: se libera al terminar (hallazgo de la PR #66).
+      "liberar",
     ]);
   });
 

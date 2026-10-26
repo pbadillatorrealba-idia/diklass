@@ -109,6 +109,28 @@ describe("transcribe-audio · handler", () => {
     expect(h.llamadas.transcribir).toBe(0);
   });
 
+  test("un Content-Length declarado mayor al máximo responde 413 sin leer el cuerpo (PR #66)", async () => {
+    const h = harness();
+    let leido = false;
+    const real = peticion();
+    // Un Request cuyo cuerpo no debe parsearse: solo importa la cabecera declarada.
+    const request = {
+      method: "POST",
+      headers: new Headers({
+        Authorization: "Bearer x",
+        "Content-Length": String(MAX_AUDIO_BYTES * 2),
+      }),
+      formData: async () => {
+        leido = true;
+        return real.formData();
+      },
+    } as unknown as Request;
+    const res = await handleTranscribeAudio(request, h.deps);
+    expect(res.status).toBe(413);
+    expect(leido).toBe(false);
+    expect(h.llamadas).toEqual({ autorizar: 0, transcribir: 0 });
+  });
+
   test("FR-014: sesión ajena, cerrada o de consulta cerrada responde 403 sin llamar al proveedor", async () => {
     const h = harness({ autoriza: false });
     const res = await handleTranscribeAudio(peticion(), h.deps);

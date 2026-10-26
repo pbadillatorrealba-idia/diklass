@@ -46,6 +46,18 @@ implementa. Cuenta de RAM baja: ejecutar las verificaciones pesadas una a la vez
 - [x] 7.2 Reconciliar con `captura-voz-anamnesis`: su supuesto «Sin retención de audio» (spec), D2/D3/D10, la tabla de complejidad, los riesgos y el quickstart, y los comentarios de `capture-source.ts` y `transcription-port.ts`, ya apuntan a esta capacidad en vez de afirmar «sin audio» o «extensión sin implementar». Verificación: `grep -rn -i "sin implementar\|nunca se persiste" openspec/changes/implementar-captura-voz-anamnesis src/features/voz` no devuelve afirmaciones contradictorias, y `openspec validate` pasa en ambos cambios. Las specs principales se sincronizan al archivar (`/opsx:archive`, primero captura-voz y luego este cambio).
 - [ ] 7.3 Verificación manual en dispositivo (iOS y Android) del permiso, la grabación, el aviso y la transcripción real, con evidencia en `quickstart.md`. Verificación: checklist completado; mientras no se haga, el cambio NO declara soporte nativo verificado.
 
+## 8. Revisión de la PR #66 (`/code-review` high)
+
+7 hallazgos confirmados y 2 descartados (ver el cuerpo de la revisión). Cada rojo se observó antes del arreglo.
+
+- [x] 8.1 Nativo: `FormData` de React Native no tiene `set` y solo sube partes `{ uri, name, type }`; storage-js sube vacío un `Blob`. `AudioPayload` pasa a `data: ArrayBuffer` (+ `uri` en nativo) y el adaptador usa `append` con `File` en web y `{uri,name,type}` en nativo. Verificación: `remote-transcription-adapter.test.ts` (parte web/nativa y un `FormData` sin `set`), `audio-storage.test.ts` (sube bytes) y `native-window-recorder.test.ts`.
+- [x] 8.2 `MicrophoneCaptureSource` entrega la ventana ya grabada aunque reiniciar la grabación falle, y propaga el error después (FR-055). Verificación: caso nuevo en `microphone-capture-source.test.ts`, rojo antes.
+- [x] 8.3 El grabador web no se cuelga si el navegador corta la grabación solo ni ante `onerror`. Verificación: 2 casos nuevos en `web-window-recorder.test.ts`, rojos antes.
+- [x] 8.4 Migración `021_audio_voz_revision.sql` (la 020 la usa `chore/depurar-suite-tests`): el cliente puede poner `audio_path` en NULL —solo NULL— y la tubería lo hace al descartar por fallo de subida. Verificación: `supabase/tests/021_audio_voz_revision.sql` (casos 1–4) y el caso del pipeline con `audio_path: null`, rojos antes.
+- [x] 8.5 La política de INSERT de Storage exige que la sesión sea de `auth.uid()` y el tramo esté `pending`. Verificación: `021_audio_voz_revision.sql` casos 5–7 y el caso vivo «otro veterinario no puede adelantarse» en `tests/integration/voz/audio-storage.test.ts`.
+- [x] 8.6 La función rechaza con 413 por `Content-Length` antes de parsear el multipart. Verificación: caso nuevo en `transcribe-audio-handler.test.ts`, rojo antes.
+- [x] 8.7 El grabador nativo libera su objeto `expo-audio` tras cada ventana. Verificación: `native-window-recorder.test.ts` («liberar» tras leer el archivo). Pendiente de confirmar en dispositivo (7.3) que el archivo sigue disponible tras `release()`.
+
 ## Workflow follow-up
 
 - Archivar primero `implementar-captura-voz-anamnesis` y luego este cambio.

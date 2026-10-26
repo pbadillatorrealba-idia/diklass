@@ -24,7 +24,7 @@ export async function subirAudio(
 ): Promise<void> {
   const { error } = await client.storage
     .from(AUDIO_BUCKET)
-    .upload(path, audio.blob, { contentType: audio.mimeType, upsert: false });
+    .upload(path, audio.data, { contentType: audio.mimeType, upsert: false });
   if (error) {
     throw new Error(`No se pudo conservar el audio del tramo: ${error.message}`);
   }

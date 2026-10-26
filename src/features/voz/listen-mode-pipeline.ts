@@ -148,6 +148,7 @@ async function guardarTramo(
       await settleTranscriptSegment(deps.client, {
         segmentId: tramo.id,
         processingState: "discarded",
+        clearAudioPath: true,
       }).catch(() => undefined);
       deps.onWritten?.();
       throw error;

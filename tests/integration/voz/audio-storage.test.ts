@@ -22,7 +22,7 @@ describe.skipIf(!isLiveSupabase)("audio por tramo en Storage (integración viva)
   let sessionId: string;
 
   const audio = {
-    blob: new Blob([new Uint8Array(64)], { type: "audio/webm" }),
+    data: new Uint8Array(64).buffer,
     mimeType: "audio/webm",
     extension: "webm" as const,
   };
@@ -63,6 +63,14 @@ describe.skipIf(!isLiveSupabase)("audio por tramo en Storage (integración viva)
     await expect(
       subirAudio(ana.client, rutaAudio(ana.clinicId, sessionId, 99, "webm"), audio),
     ).rejects.toThrow(/conservar el audio/i);
+  });
+
+  test("otro veterinario de la clínica no puede adelantarse a subir el audio de un tramo ajeno (PR #66)", async () => {
+    const tramo = await guardarTramo(3, true);
+    const path = tramo.audioPath as string;
+    await expect(subirAudio(bruno.client, path, audio)).rejects.toThrow(/conservar el audio/i);
+    // La subida legítima de quien activó la sesión sigue siendo posible.
+    await subirAudio(ana.client, path, audio);
   });
 
   test("el audio no se sobrescribe ni se borra por la API (es evidencia)", async () => {

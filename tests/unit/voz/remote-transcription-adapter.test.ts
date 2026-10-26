@@ -1,12 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { RemoteTranscriptionAdapter } from "@/features/voz/remote-transcription-adapter";
+import {
+  parteDeAudio,
+  RemoteTranscriptionAdapter,
+} from "@/features/voz/remote-transcription-adapter";
 import type { AudioWindow } from "@/features/voz/transcription-port";
 
 const SESION = "59999999-0000-4000-8000-000000000001";
 
 const ventana = (
   audio: AudioWindow["audio"] | undefined = {
-    blob: new Blob([new Uint8Array(64)], { type: "audio/webm" }),
+    data: new Uint8Array(64).buffer,
     mimeType: "audio/webm",
     extension: "webm",
   },
@@ -57,6 +60,42 @@ describe("RemoteTranscriptionAdapter (D3)", () => {
     const f = clienteFalso({ data: { text: "", quality: "insufficient" } });
     const resultado = await new RemoteTranscriptionAdapter(f.client).transcribe(ventana());
     expect(resultado).toEqual({ text: "", quality: "insufficient" });
+  });
+
+  test("web: la parte es un File con nombre y tipo; nativo: una parte {uri,name,type} (RN no sube Blob)", () => {
+    const web = parteDeAudio(ventana());
+    expect(web instanceof File).toBe(true);
+    expect((web as File).name).toBe("tramo-3.webm");
+    expect((web as File).type).toBe("audio/webm");
+
+    const nativa = parteDeAudio(
+      ventana({
+        data: new Uint8Array(8).buffer,
+        uri: "file:///tmp/tramo.m4a",
+        mimeType: "audio/mp4",
+        extension: "m4a",
+      }),
+    );
+    expect(nativa).toEqual({
+      uri: "file:///tmp/tramo.m4a",
+      name: "tramo-3.m4a",
+      type: "audio/mp4",
+    });
+  });
+
+  test("arma el multipart solo con `append` (el FormData de React Native no tiene `set`)", async () => {
+    const f = clienteFalso({ data: { text: "Ladra", quality: "ok" } });
+    const original = FormData.prototype.set;
+    // biome-ignore lint/suspicious/noExplicitAny: se simula un FormData sin `set`.
+    (FormData.prototype as any).set = () => {
+      throw new TypeError("set no existe en React Native");
+    };
+    try {
+      await new RemoteTranscriptionAdapter(f.client).transcribe(ventana());
+    } finally {
+      FormData.prototype.set = original;
+    }
+    expect(f.invocaciones).toHaveLength(1);
   });
 
   test("una ventana sin audio falla de forma explícita (Constitución IV)", async () => {

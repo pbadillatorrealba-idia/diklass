@@ -37,6 +37,23 @@ async function motivo(error: FunctionError): Promise<string> {
 }
 
 /**
+ * La parte `audio` del multipart. Web: un `File`. React Native: su `FormData` solo tiene `append` y
+ * sube partes `{ uri, name, type }`, no `Blob`.
+ */
+export function parteDeAudio(
+  window: AudioWindow,
+): File | { uri: string; name: string; type: string } {
+  if (!window.audio) {
+    // Constitución IV: una ventana sin audio no se transcribe «en silencio».
+    throw new Error(`La ventana ${window.seq} llegó sin audio para transcribir.`);
+  }
+  const name = `tramo-${window.seq}.${window.audio.extension}`;
+  return window.audio.uri
+    ? { uri: window.audio.uri, name, type: window.audio.mimeType }
+    : new File([window.audio.data], name, { type: window.audio.mimeType });
+}
+
+/**
  * Transcripción real (D3 del cambio implementar-asr-real-captura-voz, FR-015): envía la ventana a
  * la Edge Function `transcribe-audio`, que es la única que conoce la credencial del proveedor.
  * Todo fallo se propaga con su motivo; la tubería descarta el tramo (FR-055).
@@ -49,13 +66,11 @@ export class RemoteTranscriptionAdapter implements TranscriptionPort {
   }
 
   async transcribe(window: AudioWindow): Promise<TranscriptResult> {
-    if (!window.audio) {
-      // Constitución IV: una ventana sin audio no se transcribe «en silencio».
-      throw new Error(`La ventana ${window.seq} llegó sin audio para transcribir.`);
-    }
+    const parte = parteDeAudio(window);
     const body = new FormData();
-    body.set("audio", window.audio.blob, `tramo-${window.seq}.${window.audio.extension}`);
-    body.set("listeningSessionId", window.listenSessionId);
+    // `append`, no `set`: el FormData de React Native no tiene `set`.
+    body.append("audio", parte as unknown as Blob);
+    body.append("listeningSessionId", window.listenSessionId);
 
     const { data, error } = await this.#client.functions.invoke("transcribe-audio", {
       body,

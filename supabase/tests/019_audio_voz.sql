@@ -82,12 +82,12 @@ select lives_ok(
   'D4: un tramo con su ruta canónica de audio se acepta'
 );
 
--- 4. D4: el audio_path es inmutable para el cliente (el grant de UPDATE es solo processing_state).
+-- 4. D4: el cliente no reescribe el audio_path a otra ruta (la 021 solo le permite ponerlo en NULL).
 select throws_ok(
   $$update public.transcript_segments
     set audio_path = 'e9e9e9e9-0000-4000-8000-00000000000e/59999999-0000-4000-8000-000000000001/9.webm'
     where id = '79999999-0000-4000-8000-000000000001'$$,
-  '42501', null,
+  '23514', 'AUDIO_PATH_IMMUTABLE',
   'D4: el cliente no reescribe el audio_path de un tramo'
 );
 

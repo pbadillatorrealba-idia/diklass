@@ -103,16 +103,20 @@ ruta `{clinic_id}/{listening_session_id}/{seq}.{ext}`. Orden en el cliente, por 
    la clínica y la sesión en `guard_transcript_segment`);
 2. `upload` del audio a esa ruta.
 
-La política INSERT de `storage.objects` exige que exista un `transcript_segments` de la clínica
-con ese `audio_path`: el audio no puede existir sin un tramo aceptado por los guardas (spec
-«Conservación del audio»). Si la subida falla, el tramo se resuelve `discarded` y se informa
-(fallar cerrado, sin audio huérfano ni tramo sin audio). Políticas SELECT/INSERT por clínica; sin
+La política INSERT de `storage.objects` exige que exista un `transcript_segments` con ese
+`audio_path`, que esté `pending` y cuya sesión sea de quien sube (migración 021, revisión de la
+PR #66): el audio no puede existir sin un tramo aceptado por los guardas (spec «Conservación del
+audio») y nadie más de la clínica puede adelantarse a la subida. Si la subida falla, el tramo se
+resuelve `discarded` y su `audio_path` pasa a NULL (la 021 deja al cliente poner SOLO NULL), así que
+no queda una ruta que apunta a nada (fallar cerrado, sin audio huérfano ni ruta colgante).
+El audio viaja como `ArrayBuffer` (y, en nativo, con su `uri`): storage-js sube vacío un `Blob` en
+React Native y su `FormData` solo sube partes `{ uri, name, type }`. Políticas SELECT/INSERT por clínica; sin
 UPDATE ni DELETE (el audio es evidencia; el borrado queda para la política de retención pendiente).
 El audio viaja dos veces (función y Storage): ~100–300 KB por ventana de 30 s, aceptable.
 *Alternativa rechazada*: que la función suba el audio — dejaría archivos huérfanos si luego se
 rechaza el tramo.
 
-Migración `019_audio_voz.sql`: columna `audio_path text` en `transcript_segments` (inmutable tras el
+Migraciones `019_audio_voz.sql` y `021_audio_voz_revision.sql`: columna `audio_path text` en `transcript_segments` (inmutable tras el
 INSERT, grant de columna), ampliación del guardia, bucket y políticas.
 
 ### D5. Aviso de grabación y conservación

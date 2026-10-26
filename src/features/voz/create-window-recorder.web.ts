@@ -1,3 +1,4 @@
+import type { AudioPayload } from "@/features/voz/transcription-port";
 import type { WindowRecorder } from "@/features/voz/window-recorder";
 
 /** Lo que usa del navegador: se inyecta en las pruebas. */
@@ -68,13 +69,17 @@ export function createWebWindowRecorder(
       const usado = formato;
       if (!actual || !usado) return Promise.reject(new Error("No hay una grabación en curso."));
       recorder = null;
-      return new Promise((resolve) => {
-        actual.onstop = () =>
-          resolve({
-            blob: new Blob(chunks, { type: usado.base }),
-            mimeType: usado.base,
-            extension: usado.extension,
-          });
+      const empaquetar = async (): Promise<AudioPayload> => ({
+        data: await new Blob(chunks, { type: usado.base }).arrayBuffer(),
+        mimeType: usado.base,
+        extension: usado.extension,
+      });
+      // El navegador pudo cortar la grabación solo (micrófono desconectado, flujo cerrado): ya
+      // entregó lo grabado y `stop()` lanzaría `InvalidStateError`; se devuelve lo acumulado.
+      if (actual.state === "inactive") return empaquetar();
+      return new Promise((resolve, reject) => {
+        actual.onstop = () => void empaquetar().then(resolve, reject);
+        actual.onerror = () => reject(new Error("La grabación del micrófono falló."));
         actual.stop();
       });
     },

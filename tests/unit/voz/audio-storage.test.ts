@@ -4,18 +4,18 @@ import { AUDIO_BUCKET, rutaAudio, subirAudio } from "@/features/voz/audio-storag
 import type { Database } from "@/lib/supabase/database.types";
 
 const audio = {
-  blob: new Blob([new Uint8Array(32)], { type: "audio/webm" }),
+  data: new Uint8Array(32).buffer,
   mimeType: "audio/webm",
   extension: "webm" as const,
 };
 
 function clienteStorage(error: { message: string } | null = null) {
-  const subidas: Array<{ bucket: string; path: string; opciones: unknown }> = [];
+  const subidas: Array<{ bucket: string; path: string; opciones: unknown; bytes: number }> = [];
   const client = {
     storage: {
       from: (bucket: string) => ({
-        upload: async (path: string, _blob: Blob, opciones: unknown) => {
-          subidas.push({ bucket, path, opciones });
+        upload: async (path: string, cuerpo: ArrayBuffer, opciones: unknown) => {
+          subidas.push({ bucket, path, opciones, bytes: cuerpo.byteLength });
           return { data: null, error };
         },
       }),
@@ -30,7 +30,7 @@ describe("audio-storage (D4)", () => {
     expect(rutaAudio("clinica-1", "sesion-1", 0, "m4a")).toBe("clinica-1/sesion-1/0.m4a");
   });
 
-  test("sube el audio al bucket privado con su tipo y sin sobrescribir", async () => {
+  test("sube los bytes (ArrayBuffer: un Blob llega vacío en React Native) al bucket privado, sin sobrescribir", async () => {
     const { client, subidas } = clienteStorage();
     await subirAudio(client, "clinica-1/sesion-1/0.webm", audio);
     expect(subidas).toEqual([
@@ -38,6 +38,7 @@ describe("audio-storage (D4)", () => {
         bucket: AUDIO_BUCKET,
         path: "clinica-1/sesion-1/0.webm",
         opciones: { contentType: "audio/webm", upsert: false },
+        bytes: 32,
       },
     ]);
   });

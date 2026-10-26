@@ -63,11 +63,19 @@ export class MicrophoneCaptureSource implements CaptureSource {
           durationMs: Date.now() - startedAt,
           audio,
         };
+        // FR-055: si reiniciar falla, la ventana ya grabada se entrega igualmente (el consumidor la
+        // transcribe y la guarda) y el error se propaga después; sin esto el audio se perdería.
+        let falloReinicio: unknown;
         if (!aborted) {
-          startedAt = Date.now();
-          await this.#recorder.start();
+          try {
+            startedAt = Date.now();
+            await this.#recorder.start();
+          } catch (error) {
+            falloReinicio = error ?? new Error("No se pudo reiniciar la grabación.");
+          }
         }
         yield window;
+        if (falloReinicio) throw falloReinicio;
         if (aborted) return;
       }
     } finally {

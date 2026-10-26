@@ -103,14 +103,19 @@ export async function saveTranscriptSegment(
 
 export async function settleTranscriptSegment(
   client: SupabaseClient<Database>,
-  input: { segmentId: string; processingState: "processed" | "discarded" },
+  input: {
+    segmentId: string;
+    processingState: "processed" | "discarded";
+    /** Descarte por fallo de subida: el tramo no conserva un audio_path que apunta a nada (021). */
+    clearAudioPath?: boolean;
+  },
 ): Promise<TranscriptSegmentEntry> {
   const requestId = makeRequestId();
   try {
     const resuelto = settleStateSchema.parse(input.processingState);
     const { data, error } = await client
       .from("transcript_segments")
-      .update({ processing_state: resuelto })
+      .update({ processing_state: resuelto, ...(input.clearAudioPath ? { audio_path: null } : {}) })
       .eq("id", input.segmentId)
       .select()
       .single();

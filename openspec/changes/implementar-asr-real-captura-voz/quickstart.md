@@ -21,15 +21,15 @@ Sin `EXPO_PUBLIC_VOZ_MODO=real` todo sigue como antes (guion simulado, sin micr�
 
 | Qué | Cómo | Resultado |
 |---|---|---|
-| Esquema y políticas (D4) | `supabase test db supabase/tests/019_audio_voz.sql` | **rojo antes** de la 019 (10/11 fallan); **11/11** después |
-| Resto de pgTap | `supabase test db` | **All tests successful** (20 archivos, 348 pruebas) |
+| Esquema y políticas (D4) | `supabase test db supabase/tests/019_audio_voz.sql` y `021_audio_voz_revision.sql` | **rojo antes** de la 019 (10/11 fallan) y de la 021 (5/7); **11/11** y **7/7** después |
+| Resto de pgTap | `supabase test db` | **All tests successful** (21 archivos, 355 pruebas) |
 | Handler de la función | `bun test tests/unit/voz/transcribe-audio-handler.test.ts` | 9/9; rojo antes (módulo inexistente) |
 | Adaptador remoto, fuente de micrófono, grabadores web/nativo, Storage, entradas | `bun test tests/unit/voz` | **122 pass / 0 fail** |
 | Transcripción real (OpenAI `gpt-transcribe`), WebM y M4A | `SUPABASE_LIVE_TESTS=1 VOZ_ASR_LIVE=1 bun test tests/integration/voz/asr-openai.test.ts` | **3/3**: ambos formatos se transcriben en español con calidad `ok` y la sesión inexistente da 403 sin llamar al proveedor |
-| Storage real | `tests/integration/voz/audio-storage.test.ts` (vivo) | 4/4 |
+| Storage real | `tests/integration/voz/audio-storage.test.ts` (vivo) | 5/5 |
 | e2e web con micrófono real (Chromium, dispositivo falso, función interceptada) | `E2E_CLEAR_CACHE=1 EXPO_PUBLIC_VOZ_MODO=real EXPO_PUBLIC_VOZ_VENTANA_MS=2000 bunx playwright test modo-escucha-real.spec.ts --project=chromium --workers=1` | 2/2 (captura, aviso, audio en Storage, permiso denegado) |
 | e2e web en modo simulado | `E2E_CLEAR_CACHE=1 bunx playwright test modo-escucha.spec.ts --project=chromium --workers=1` | 1/1 |
-| Compuertas | `bunx biome ci --error-on-warnings .`, `bun run typecheck`, `openspec validate --strict`, `SUPABASE_LIVE_TESTS=1 bun run test` | sin diagnósticos; verde; válido; **1151 pass / 4 skip / 0 fail** |
+| Compuertas | `bunx biome ci --error-on-warnings .`, `bun run typecheck`, `openspec validate --strict`, `SUPABASE_LIVE_TESTS=1 bun run test` | sin diagnósticos; verde; válido; **1158 pass / 4 skip / 0 fail** |
 
 `database.types.ts`: se añadió `audio_path` a mano porque el CLI local formatea distinto que el de CI;
 el campo coincide con la salida de `supabase gen types --local` (comprobado), y el job de CI lo verifica.
@@ -42,12 +42,18 @@ el campo coincide con la salida de `supabase gen types --local` (comprobado), y 
 - Se añadieron `EXPO_PUBLIC_VOZ_VENTANA_MS` y `E2E_CLEAR_CACHE` (ver complejidad en `design.md`).
 - Streaming evaluado y diferido (`design.md` D3): el costo es por minuto, no cambia el precio.
 - `supabase db reset` no se ejecutó en el stack compartido (borra datos locales); se aplicó la 019
-  con `migration up`.
+  con `migration up`. La revisión de la PR #66 es la **021** (no 020: `chore/depurar-suite-tests` ya
+  usa `020_*` y su versión está aplicada en la base compartida, así que el CLI se niega a aplicar
+  migraciones nuevas); se aplicó su SQL directamente en el contenedor y se registró la versión.
+- Revisión de la PR #66: el audio pasa a `ArrayBuffer`/`uri` (React Native) y se endurecieron la
+  política de Storage y el descarte por fallo de subida (tareas 8.1–8.7).
 
 ## Pendientes declarados
 
 - **Dispositivo iOS/Android**: el grabador nativo (`expo-audio`) se prueba con un módulo simulado; el
-  permiso, la grabación y el aviso reales no se han ejercido (tarea 7.3). **No se afirma soporte nativo
+  permiso, la grabación y el aviso reales no se han ejercido (tarea 7.3). Hay que confirmar allí que
+  la parte `{uri,name,type}` del multipart sube bien, que storage-js sube el `ArrayBuffer` y que el
+  archivo sigue disponible tras `release()`. **No se afirma soporte nativo
   verificado.**
 - **Retención y consentimiento del audio**: sin política (PoC sintético); sin UPDATE/DELETE del audio.
 - **Cuota por usuario** en la función (cualquier veterinario autenticado puede disparar transcripciones).

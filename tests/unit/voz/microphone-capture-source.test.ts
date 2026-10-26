@@ -6,13 +6,16 @@ import type { WindowRecorder } from "@/features/voz/window-recorder";
 const SESION = "59999999-0000-4000-8000-000000000001";
 
 /** Grabador falso: registra el orden de las llamadas y cuántas grabaciones hay corriendo. */
-function grabadorFalso(opciones: { disponible?: boolean } = {}) {
+function grabadorFalso(opciones: { disponible?: boolean; fallaReinicio?: boolean } = {}) {
   const eventos: string[] = [];
   let grabando = 0;
   let maxSimultaneas = 0;
   const recorder: WindowRecorder = {
     available: async () => opciones.disponible ?? true,
     start: async () => {
+      if (opciones.fallaReinicio && eventos.includes("stop")) {
+        throw new Error("dispositivo ocupado");
+      }
       grabando += 1;
       maxSimultaneas = Math.max(maxSimultaneas, grabando);
       eventos.push("start");
@@ -21,7 +24,7 @@ function grabadorFalso(opciones: { disponible?: boolean } = {}) {
       grabando -= 1;
       eventos.push("stop");
       return {
-        blob: new Blob([new Uint8Array(8)], { type: "audio/webm" }),
+        data: new Uint8Array(8).buffer,
         mimeType: "audio/webm",
         extension: "webm" as const,
       };
@@ -114,5 +117,21 @@ describe("MicrophoneCaptureSource (D2)", () => {
     }
     expect(g.eventos.at(-1)).toBe("release");
     expect(g.enCurso()).toBe(0);
+  });
+
+  test("FR-055: si reiniciar la grabación falla, la ventana ya grabada se entrega y luego se propaga el error", async () => {
+    const g = grabadorFalso({ fallaReinicio: true });
+    const entregadas: number[] = [];
+    let error: unknown;
+    try {
+      for await (const ventana of fuente(g.recorder).windows()) {
+        entregadas.push(ventana.seq);
+      }
+    } catch (e) {
+      error = e;
+    }
+    expect(entregadas).toEqual([0]);
+    expect((error as Error).message).toBe("dispositivo ocupado");
+    expect(g.eventos.at(-1)).toBe("release");
   });
 });

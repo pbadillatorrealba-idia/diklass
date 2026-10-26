@@ -11,13 +11,15 @@ export type NativeRecorder = {
   record(): void;
   /** Termina la grabación y devuelve el URI del archivo. */
   stop(): Promise<string | null>;
+  /** Libera el objeto nativo: cada ventana crea uno y el GC no basta (hallazgo de la PR #66). */
+  release(): void;
 };
 
 export type NativeAudio = {
   requestPermission(): Promise<boolean>;
   setRecordingMode(activo: boolean): Promise<void>;
   createRecorder(): NativeRecorder;
-  readFile(uri: string): Promise<Blob>;
+  readFile(uri: string): Promise<ArrayBuffer>;
 };
 
 export function createNativeWindowRecorder(audio: NativeAudio): WindowRecorder {
@@ -46,20 +48,22 @@ export function createNativeWindowRecorder(audio: NativeAudio): WindowRecorder {
       const actual = recorder;
       if (!actual) throw new Error("No hay una grabación en curso.");
       recorder = null;
-      const uri = await actual.stop();
-      if (!uri) throw new Error("La grabación no produjo un archivo.");
-      const archivo = await audio.readFile(uri);
-      return {
-        blob: new Blob([archivo], { type: "audio/mp4" }),
-        mimeType: "audio/mp4",
-        extension: "m4a",
-      };
+      try {
+        const uri = await actual.stop();
+        if (!uri) throw new Error("La grabación no produjo un archivo.");
+        return { data: await audio.readFile(uri), uri, mimeType: "audio/mp4", extension: "m4a" };
+      } finally {
+        actual.release();
+      }
     },
 
     release() {
       const actual = recorder;
       recorder = null;
-      void actual?.stop().catch(() => {});
+      void actual
+        ?.stop()
+        .catch(() => {})
+        .finally(() => actual.release());
       if (modoActivo) {
         modoActivo = false;
         void audio.setRecordingMode(false).catch(() => {});
@@ -90,10 +94,11 @@ async function expoAudio(): Promise<NativeAudio> {
           await grabadora.stop();
           return grabadora.uri;
         },
+        release: () => grabadora.release(),
       };
     },
-    // `fetch` de React Native lee archivos locales como Blob.
-    readFile: async (uri) => (await fetch(uri)).blob(),
+    // `fetch` de React Native lee archivos locales; ArrayBuffer porque storage-js sube vacío un Blob.
+    readFile: async (uri) => (await fetch(uri)).arrayBuffer(),
   };
 }
 

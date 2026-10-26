@@ -261,7 +261,7 @@ describe("procesarTramo", () => {
 const conAudio = (seq: number): AudioWindow => ({
   ...ventana(seq),
   audio: {
-    blob: new Blob([new Uint8Array(32)], { type: "audio/webm" }),
+    data: new Uint8Array(32).buffer,
     mimeType: "audio/webm",
     extension: "webm",
   },
@@ -302,6 +302,11 @@ describe("audio conservado por tramo (D4)", () => {
       /storage caído/,
     );
     expect(resoluciones(peticiones)).toEqual(["discarded"]);
+    // PR #66: el tramo descartado por fallo de subida no conserva un audio_path que apunta a nada.
+    const descarte = peticiones.find(
+      (peticion) => peticion.table === "transcript_segments" && peticion.op === "update",
+    );
+    expect(descarte?.payload).toEqual({ processing_state: "discarded", audio_path: null });
     expect(altasDeHechos(peticiones)).toHaveLength(0);
   });
 

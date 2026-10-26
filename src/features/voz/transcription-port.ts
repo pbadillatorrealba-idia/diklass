@@ -10,9 +10,14 @@ import type { TranscriptQuality } from "@/features/voz/schema";
  * en el controlador de escucha sin tocar el resto del pipeline (`listen-mode-inputs.ts` elige).
  */
 
-/** Audio de una ventana (D2 del cambio implementar-asr-real-captura-voz): un archivo autocontenido. */
+/**
+ * Audio de una ventana (D2 del cambio implementar-asr-real-captura-voz): un archivo autocontenido.
+ * `data` es un `ArrayBuffer`: storage-js sube vacío un `Blob` en React Native. Con grabación nativa
+ * `uri` apunta al archivo, porque el `FormData` de React Native solo sube partes `{ uri, name, type }`.
+ */
 export type AudioPayload = {
-  blob: Blob;
+  data: ArrayBuffer;
+  uri?: string;
   mimeType: string;
   /** Extensión canónica: la ruta de Storage del tramo la usa (migración 019). */
   extension: "webm" | "m4a";
