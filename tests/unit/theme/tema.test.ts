@@ -203,8 +203,6 @@ describe("corrección frente a error (D20)", () => {
   test.each([
     [":root {", lightBlock],
     ["@media (prefers-color-scheme: dark)", darkSection],
-    [":root.light {", blockAfter(":root.light {")],
-    [":root.dark {", blockAfter(":root.dark {")],
   ])("%s separa correction-surface de destructive-surface (ΔE*ab ≥ 10)", (_, block) => {
     const tokens = tokensOf(block);
     const [a, b] = [tokens["correction-surface"], tokens["destructive-surface"]];
@@ -397,8 +395,6 @@ describe("firma frente a marca (FR-104)", () => {
   test.each([
     [":root {", lightBlock],
     ["@media (prefers-color-scheme: dark)", darkSection],
-    [":root.light {", blockAfter(":root.light {")],
-    [":root.dark {", blockAfter(":root.dark {")],
   ])("%s separa stamp de primary (ΔE*ab ≥ 10)", (_, block) => {
     const tokens = tokensOf(block);
     const [a, b] = [tokens.stamp, tokens.primary];

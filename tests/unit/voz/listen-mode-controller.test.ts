@@ -46,35 +46,24 @@ describe("ListenModeController", () => {
   test("SC-028 · FR-015: el tramo N queda procesado antes de que se abra el tramo N+1", async () => {
     const fuente = new FuenteFija(3);
     const transcripcion = new TranscripciónFija();
-    const eventos: string[] = [];
     const controlador = new ListenModeController({
       source: fuente,
       transcription: transcripcion,
-      processWindow: (window) => {
-        eventos.push(`procesado:${window.seq}`);
-        return Promise.resolve();
+      processWindow: async (window) => {
+        await Promise.resolve();
+        fuente.eventos.push(`procesado:${window.seq}`);
       },
     });
     await controlador.run();
-    for (let seq = 0; seq < 2; seq++) {
-      const procesado = eventos.indexOf(`procesado:${seq}`);
-      const siguiente = fuente.eventos.indexOf(`ventana:${seq + 1}`);
-      expect(procesado).toBeGreaterThanOrEqual(0);
-      expect(procesado).toBeLessThan(siguiente);
-    }
+    expect(fuente.eventos).toEqual([
+      "ventana:0",
+      "procesado:0",
+      "ventana:1",
+      "procesado:1",
+      "ventana:2",
+      "procesado:2",
+    ]);
     expect(controlador.state).toBe("detenido");
-  });
-
-  test("presupuesto: procesar cada ventana ≤ 2 s (adaptador simulado)", async () => {
-    const fuente = new FuenteFija(3);
-    const inicio = performance.now();
-    const controlador = new ListenModeController({
-      source: fuente,
-      transcription: new TranscripciónFija(),
-      processWindow: () => Promise.resolve(),
-    });
-    await controlador.run();
-    expect((performance.now() - inicio) / 3).toBeLessThanOrEqual(2_000);
   });
 
   test("FR-054 · US6-AC10: con la captura no disponible el estado es no_disponible y nada se procesa", async () => {
@@ -91,19 +80,6 @@ describe("ListenModeController", () => {
     const estado = await controlador.run();
     expect(estado).toBe("no_disponible");
     expect(procesados).toBe(0);
-  });
-
-  test("FR-025 · US6-AC5: detener deja el estado detenido y lo indica por callback", async () => {
-    const fuente = new FuenteFija(2);
-    const estados: string[] = [];
-    const controlador = new ListenModeController({
-      source: fuente,
-      transcription: new TranscripciónFija(),
-      processWindow: () => Promise.resolve(),
-      onState: (estado) => estados.push(estado),
-    });
-    await controlador.run();
-    expect(estados).toEqual(["capturando", "detenido"]);
   });
 
   test("US6-AC11 · FR-055: en una consulta larga se conservan los antecedentes de los primeros tramos", async () => {
@@ -173,13 +149,16 @@ describe("ListenModeController", () => {
     expect(controlador.wasInterrupted).toBe(true);
   });
 
-  test("el fin natural de la captura NO es una interrupción (detención normal ≠ interrupción)", async () => {
+  test("el fin natural indica capturando → detenido y no cuenta como interrupción", async () => {
+    const estados: string[] = [];
     const controlador = new ListenModeController({
       source: new FuenteFija(2),
       transcription: new TranscripciónFija(),
       processWindow: () => Promise.resolve(),
+      onState: (estado) => estados.push(estado),
     });
     await controlador.run();
+    expect(estados).toEqual(["capturando", "detenido"]);
     expect(controlador.wasInterrupted).toBe(false);
   });
 

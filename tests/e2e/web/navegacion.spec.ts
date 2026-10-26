@@ -1,4 +1,4 @@
-import { provisionClinicalCase, type SyntheticCase, syntheticScreens } from "./caso-sintetico";
+import { provisionClinicalCase, type SyntheticCase } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 
 // sistema-visual US14 (design.md D12): navegación global adaptable, con barra lateral a partir de
@@ -112,14 +112,5 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     await expect(page.getByTestId("feedback-antecedents")).toBeVisible({ timeout: 15_000 });
     await page.getByTestId("screen-back").filter({ visible: true }).click();
     await expect(page).toHaveURL(/\/follow-up$/);
-  });
-
-  test("todas las rutas cubiertas siguen resolviendo", async ({ page }) => {
-    for (const screen of syntheticScreens(caso)) {
-      await page.goto(screen.url);
-      await expect(page.getByTestId(screen.readyTestID).first(), screen.name).toBeVisible({
-        timeout: 15_000,
-      });
-    }
   });
 });

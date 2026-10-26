@@ -176,3 +176,15 @@ cada rojo se observó antes del arreglo.
 - [x] 7.11 Actualizar `design.md` (D4, D5, D6, D8, D9, D10, complejidad, presupuestos y riesgos), este archivo y `quickstart.md`. Verificación: `openspec validate implementar-captura-voz-anamnesis` y artefactos coherentes con el código.
 - [x] 7.12 Automatizar la prueba de la carrera de cierre (`FOR SHARE`) de las sesiones y los tramos. Verificación: `tests/integration/voz/carrera-cierre.test.ts` (3 casos vivos: A cierra sin confirmar y B espera y falla con `CONSULTATION_NOT_OPEN` / `LISTENING_SESSION_NOT_ACTIVE`; falla si B no queda esperando el lock).
 - [x] 7.13 Montar la sección en `src/app/(protected)/(patients)/consultations/[id].tsx` (R2, solo con la consulta abierta) y verificar en la interfaz el modo de escucha. Verificación: `tests/e2e/web/modo-escucha.spec.ts` (activar → tramos y borradores → confirmar aterriza en la anamnesis → detener), chromium.
+
+## 8. Segunda auditoría de tests (2026-10-26)
+
+Alcance aprobado por el responsable: aplicar los cuatro casos fusionables y corregir las
+dos pruebas engañosas de la auditoría posterior a la PR #65. No cambia comportamiento de
+producto, requisitos, escenarios ni presupuestos; no acepta esta capacidad.
+
+- [x] 8.1 Fusionar el caso separado de procedencia recuperada en el recorrido del vocabulario de `tests/unit/registro/schema.test.ts`, conservando el valor parseado (FR-021). Verificación: suite focalizada y mutación de la procedencia detectada.
+- [x] 8.2 Fusionar creación/traza y confirmación/procedencia en `audio-fact-service.test.ts`, conservando las aserciones sobre payload y resultado (FR-016, FR-017, FR-021, SC-027, US6-AC6/AC9). Verificación: tests focalizados y mutaciones de traza/procedencia detectadas.
+- [x] 8.3 Corregir el orden SC-028 con una secuencia compartida que observe el fin asíncrono del procesamiento; fusionar el callback de fin natural sin presentarlo como `stop()` (FR-015, FR-025, FR-055, US6-AC2/AC5). Verificación: mutaciones de procesamiento aplazado y sin `await` fallan; controlador original pasa.
+- [x] 8.4 Sustituir el promedio unitario sobre operaciones vacías por medición individual desde la transcripción hasta la persistencia completa en el caso vivo existente (D11, presupuesto ≤ 2 s, SC-028, FR-016, FR-055). Reutilizar adaptador simulado, controlador y pipeline reales, conservar traza, borradores iniciales y presupuesto de listado. Verificación: integración viva sin omisiones y una demora de más de 2 s en un solo tramo falla.
+- [x] 8.5 Actualizar diseño, spec y evidencia, subir commits de código y documentación separados y preparar PR con revisión en español. Verificación: Biome de lo tocado, tests afectados, OpenSpec estricto y reporte publicado. La batería completa se reserva para el cierre autorizado.

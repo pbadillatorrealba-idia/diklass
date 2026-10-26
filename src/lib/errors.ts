@@ -59,15 +59,6 @@ export function normalizeAuthError(error: unknown, requestId?: string): Normaliz
   };
 }
 
-export class AccessDeniedError extends Error {
-  readonly code = "ACCESS_DENIED";
-
-  constructor(message = "La sesión no permite realizar esta operación.") {
-    super(message);
-    this.name = "AccessDeniedError";
-  }
-}
-
 /**
  * The access session is no longer active although the read itself did not fail: RLS answers
  * with zero rows instead of an error. Carries the same SQLSTATE the server raises with

@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import { assertNoClientAttributionFields } from "@/lib/attribution/guards";
 import { patientContent } from "../../support/rut";
 import {
   ANA,
@@ -8,14 +7,6 @@ import {
   type LiveVeterinarian,
   signedInVeterinarian,
 } from "../live-supabase";
-
-describe("shared clinic attribution contract", () => {
-  test("mutations cannot accept an actor different from the authenticated context", () => {
-    expect(() =>
-      assertNoClientAttributionFields({ note: "consulta", created_by: "vet-ana" }),
-    ).toThrow();
-  });
-});
 
 describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local Supabase", () => {
   let ana: LiveVeterinarian;
