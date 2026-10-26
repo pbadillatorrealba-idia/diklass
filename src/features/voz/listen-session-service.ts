@@ -115,29 +115,3 @@ export async function endListenSession(
     throw error;
   }
 }
-
-export async function listListenSessions(
-  client: SupabaseClient<Database>,
-  consultationId: string,
-): Promise<ListeningSessionEntry[]> {
-  const requestId = makeRequestId();
-  try {
-    const { data, error } = await client
-      .from("listening_sessions")
-      .select("*")
-      .eq("consultation_id", consultationId)
-      .order("started_at", { ascending: true });
-    if (error) {
-      throw error;
-    }
-    const filas = (data ?? []) as ListeningSessionRow[];
-    return filas.map((fila) => aSesiónDeEscucha(fila));
-  } catch (error) {
-    void captureClientError(client as unknown as ErrorReporterClient, {
-      error,
-      operation: "listListenSessions",
-      requestId,
-    });
-    throw error;
-  }
-}

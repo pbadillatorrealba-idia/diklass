@@ -52,7 +52,10 @@ test.describe("consulta como formulario", () => {
       ).toHaveText("I");
 
       // Secciones numeradas en el orden del flujo clínico (D20).
-      const secciones = page.getByRole("heading", { level: 2 }).filter({ visible: true });
+      // Solo las numeradas: el modo de escucha montado en Anamnesis trae sus propios `h2`.
+      const secciones = page
+        .getByRole("heading", { level: 2 })
+        .filter({ visible: true, hasText: /^\s*\d/ });
       await expect(secciones).toHaveText(["1 Anamnesis", "2 Diagnóstico", "3 Epicrisis y firma"]);
     } finally {
       await api.dispose();

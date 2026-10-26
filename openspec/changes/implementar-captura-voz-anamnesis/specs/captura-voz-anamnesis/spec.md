@@ -134,6 +134,25 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
   concluya el tramo siguiente, de modo que el veterinario puede revisarlo durante la consulta y no
   solo al final.
 
+### Verification
+
+La revisión de pruebas del 2026-10-26 conserva los requisitos, escenarios y umbrales anteriores.
+Su evidencia y limitaciones están en [el diseño](../../design.md#segunda-auditoría-de-tests-plan-aprobado-2026-10-26)
+y [el quickstart](../../quickstart.md#segunda-auditoría-de-tests-2026-10-26).
+
+- **FR-015 · SC-028 · US6-AC2**: la prueba unitaria usa una única secuencia de apertura y
+  terminación asíncrona del procesamiento. Detecta procesar todos los tramos al final y omitir
+  el `await`; no compara posiciones de listas independientes.
+- **Presupuesto por ventana de D11 (≤ 2 s)**: el caso vivo existente de conservación de
+  borradores ejecuta el adaptador simulado, la extracción, el contexto y la persistencia reales.
+  Mide cada tramo desde su cierre sintético, antes de transcribir, hasta terminar
+  `procesarTramo`, sin promediar ventanas. El presupuesto de listado se mide aparte.
+- **FR-021 · SC-027 · US6-AC6/AC9**: las comprobaciones fusionadas conservan la procedencia
+  parseada, la traza enviada y la procedencia tras confirmar; no se elimina esa cobertura.
+
+Estas pruebas verifican el recorrido sintético con red local. No acreditan micrófono o ASR
+reales, el e2e pendiente 7.13, la carrera pendiente 7.12 ni la aceptación de esta capacidad.
+
 ## Assumptions
 
 - **Ventana de captura**: el brief fija como decisión de producto que el procesamiento puede ser

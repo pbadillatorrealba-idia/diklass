@@ -6,10 +6,3 @@ export const loginSchema = z.object({
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
-
-export function validateWithSchema<T>(schema: z.ZodType<T>, value: unknown) {
-  const result = schema.safeParse(value);
-  return result.success
-    ? { value: result.data, errors: {} }
-    : { value: null, errors: result.error };
-}
