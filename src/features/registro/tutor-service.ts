@@ -25,6 +25,10 @@ import type { Database } from "@/lib/supabase/database.types";
 /** Tutor leído desde la traza clínica: fila cruda y contenido ya validado. */
 export type TutorEntry = { record: ClinicalRecordRow; content: TutorContent };
 
+/** «Nombre Apellido»; sin apellido, solo el nombre (igual que `search_patients`). */
+export const tutorFullName = (content: Pick<TutorContent, "name" | "surname">) =>
+  [content.name, content.surname].filter(Boolean).join(" ");
+
 export async function createTutor(
   client: SupabaseClient<Database>,
   input: { clinicId: string; tutor: TutorContent },

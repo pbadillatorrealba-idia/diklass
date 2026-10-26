@@ -27,7 +27,7 @@ select set_config('request.jwt.claim.sub', 'a3a3a3a3-0000-0000-0000-0000000000a3
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status, created_at)
 values ('d3d3d3d3-0000-0000-0000-0000000000d1', 'c3c3c3c3-0000-0000-0000-0000000000c3',
-        'patient', '{"name":"Luna"}', 'draft', '2001-01-01T00:00:00Z');
+        'patient', '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"esterilizado","tutorId":"t"}', 'draft', '2001-01-01T00:00:00Z');
 
 select ok(
   (select created_at > timezone('utc', now()) - interval '1 minute'
@@ -150,7 +150,7 @@ select ok(
 
 select set_config('request.jwt.claim.sub', '', true);
 select throws_ok(
-  $$update public.clinical_records set content = '{"name":"Luna","weightKg":12}'
+  $$update public.clinical_records set content = '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"esterilizado","tutorId":"t","weightKg":12}'
     where id = 'd3d3d3d3-0000-0000-0000-0000000000d1'$$,
   '42501',
   'AUTHENTICATION_REQUIRED',

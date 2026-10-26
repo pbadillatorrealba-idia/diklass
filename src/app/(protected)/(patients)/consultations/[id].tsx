@@ -75,13 +75,14 @@ import {
   type ClinicalRecordRow,
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
-import { getTutor } from "@/features/registro/tutor-service";
+import { getTutor, tutorFullName } from "@/features/registro/tutor-service";
 import type { Attribution } from "@/lib/attribution/types";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { getFieldErrors } from "@/lib/forms/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import type { ConsultationDraft } from "@/lib/storage/drafts";
 import { errorReporter, supabase } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useThemeColors } from "@/theme/use-theme-colors";
@@ -113,12 +114,13 @@ async function loadHeader(consultation: ConsultationEntry): Promise<HeaderData> 
   const position = consultations.findIndex((entry) => entry.record.id === consultation.record.id);
   return {
     patientName: patient?.content.name ?? "Paciente no disponible",
-    tutorName: tutor?.content.name ?? null,
+    tutorName: tutor ? tutorFullName(tutor.content) : null,
     ordinal: position < 0 ? null : position + 1,
   };
 }
 
 async function loadWorkspace(consultationId: string): Promise<WorkspaceData | null> {
+  if (!isUuid(consultationId)) return null;
   const resumed = await resumeConsultation(supabase, consultationId);
   if (resumed) {
     return {

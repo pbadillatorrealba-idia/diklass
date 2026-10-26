@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { z } from "zod";
 import { OptionPicker } from "@/components/registro/option-picker";
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { VStack } from "@/components/ui/vstack";
+import { REPRODUCTIVE_OPTIONS, SEX_OPTIONS, SPECIES_OPTIONS } from "@/features/registro/catalogs";
 import { type PatientContent, patientContentSchema } from "@/features/registro/schema";
 import { getFieldErrors } from "@/lib/forms/errors";
 
@@ -97,13 +99,10 @@ export const FICHA_FORM_FIELDS: {
   keyboardType?: "numeric";
 }[] = [
   { field: "name", label: "Nombre" },
-  { field: "species", label: "Especie" },
   { field: "breed", label: "Raza" },
   { field: "birthDate", label: "Fecha de nacimiento (AAAA-MM-DD)" },
   { field: "ageMonths", label: "Edad (meses)", keyboardType: "numeric" },
   { field: "weightKg", label: "Peso (kg)", keyboardType: "numeric" },
-  { field: "sex", label: "Sexo" },
-  { field: "reproductiveStatus", label: "Estado reproductivo" },
   { field: "fileNumber", label: "Número de expediente" },
   { field: "firstVisitDate", label: "Fecha de la 1ª visita (AAAA-MM-DD)" },
   { field: "origin", label: "Procedencia" },
@@ -120,6 +119,24 @@ export const REFERRER_FORM_FIELDS: { field: FichaField; label: string }[] = [
   { field: "referrerPhone", label: "Veterinario derivante: teléfono" },
   { field: "referrerInsurance", label: "Dispone de seguro veterinario" },
   { field: "referrerOpinion", label: "Opinión del veterinario sobre el problema" },
+];
+
+/** Vocabularios cerrados (catálogos): grupo de opciones en vez de texto libre. */
+export const CATALOG_FIELDS: {
+  field: FichaField;
+  /** Se pinta justo antes de este campo, para conservar el orden de la hoja. */
+  before: FichaField;
+  label: string;
+  options: { value: string; label: string }[];
+}[] = [
+  { field: "species", before: "breed", label: "Especie", options: SPECIES_OPTIONS },
+  { field: "sex", before: "fileNumber", label: "Sexo", options: SEX_OPTIONS },
+  {
+    field: "reproductiveStatus",
+    before: "fileNumber",
+    label: "Estado reproductivo",
+    options: REPRODUCTIVE_OPTIONS,
+  },
 ];
 
 const REFERS_OPTIONS = [
@@ -313,9 +330,34 @@ export function FichaForm({
     );
   };
 
+  const renderCatalogField = ({ field, label, options }: (typeof CATALOG_FIELDS)[number]) => (
+    <FormControl isInvalid={Boolean(errors[field])} key={field}>
+      <OptionPicker
+        isDisabled={isDisabled}
+        label={label}
+        onChange={(value) => onChange(field, value)}
+        options={options}
+        testID={TEST_ID_BY_FIELD[field]}
+        value={values[field]}
+      />
+      {errors[field] ? (
+        <FormControlError>
+          <FormControlErrorText>{errors[field]}</FormControlErrorText>
+        </FormControlError>
+      ) : null}
+    </FormControl>
+  );
+
   return (
     <VStack className="w-full gap-4" testID="patient-form">
-      {FICHA_FORM_FIELDS.filter((item) => shows(item.field)).map(renderField)}
+      {FICHA_FORM_FIELDS.filter((item) => shows(item.field)).map((item) => (
+        <Fragment key={item.field}>
+          {CATALOG_FIELDS.filter((c) => c.before === item.field && shows(c.field)).map(
+            renderCatalogField,
+          )}
+          {renderField(item)}
+        </Fragment>
+      ))}
       {shows("referrerRefers") ? (
         <OptionPicker
           isDisabled={isDisabled}

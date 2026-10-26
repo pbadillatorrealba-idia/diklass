@@ -98,7 +98,7 @@ insert into public.clinical_records (id, clinic_id, record_type, content, status
 values (
   'd5d5d5d5-0000-0000-0000-000000000001', 'c5c5c5c5-0000-0000-0000-00000000000c',
   'patient',
-  '{"name":"Luna Retro","species":"perro","breed":"Mestizo","birthDate":null,"ageMonths":36,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"esterilizada","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d5d5d5d5-0000-0000-0000-00000000000b"}',
+  '{"name":"Luna Retro","species":"canino","breed":"Mestizo","birthDate":null,"ageMonths":36,"weightKg":12.5,"sex":"hembra","reproductiveStatus":"esterilizado","antecedentes":{"medicalHistory":[],"preexistingDiseases":[],"currentMedications":[],"knownAllergies":[],"behavioralHistory":[]},"tutorId":"d5d5d5d5-0000-0000-0000-00000000000b"}',
   'draft'
 );
 

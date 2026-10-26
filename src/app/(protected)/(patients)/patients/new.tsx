@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   emptyFichaFormValues,
   type FichaField,
@@ -9,30 +9,26 @@ import {
   parseFichaValues,
 } from "@/components/registro/ficha-form";
 import { OptionPicker } from "@/components/registro/option-picker";
+import {
+  emptyTutorValues,
+  parseTutorValues,
+  TutorForm,
+  type TutorFormValues,
+} from "@/components/registro/tutor-form";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
-import { Input, InputField } from "@/components/ui/input";
+import { FormControl, FormControlError, FormControlErrorText } from "@/components/ui/form-control";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import { invalidateRegistro } from "@/features/registro/query-cache";
-import {
-  type PatientContent,
-  type TutorContent,
-  tutorContentSchema,
-} from "@/features/registro/schema";
+import type { PatientContent, TutorContent } from "@/features/registro/schema";
+import { findTutorByRut } from "@/features/registro/tutor-search";
 import { listTutors } from "@/features/registro/tutor-service";
 import { isAuthenticationRequired } from "@/lib/errors";
-import { getFieldErrors } from "@/lib/forms/errors";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { formatRut } from "@/lib/rut";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -50,26 +46,6 @@ const TUTOR_MODE_OPTIONS: { value: "existing" | "new"; label: string }[] = [
   { value: "new", label: "Nuevo tutor" },
 ];
 
-type TutorValues = {
-  name: string;
-  surname: string;
-  phone: string;
-  email: string;
-  address: string;
-  city: string;
-  postalCode: string;
-};
-
-const TUTOR_FIELDS: { field: keyof TutorValues; label: string; testID: string }[] = [
-  { field: "name", label: "Nombre del tutor", testID: "tutor-name" },
-  { field: "surname", label: "Apellidos del tutor", testID: "tutor-surname" },
-  { field: "phone", label: "Teléfono del tutor", testID: "tutor-phone" },
-  { field: "email", label: "Correo del tutor", testID: "tutor-email" },
-  { field: "address", label: "Dirección del tutor", testID: "tutor-address" },
-  { field: "city", label: "Población del tutor", testID: "tutor-city" },
-  { field: "postalCode", label: "Código postal del tutor", testID: "tutor-postal-code" },
-];
-
 export default function NewPatientScreen() {
   const router = useRouter();
   const clinicId = useSessionStore((state) => state.clinicId);
@@ -80,15 +56,7 @@ export default function NewPatientScreen() {
   const [fichaErrors, setFichaErrors] = useState<Record<string, string>>({});
   const [tutorMode, setTutorMode] = useState<"existing" | "new">("existing");
   const [selectedTutorId, setSelectedTutorId] = useState("");
-  const [tutorValues, setTutorValues] = useState<TutorValues>({
-    name: "",
-    surname: "",
-    phone: "",
-    email: "",
-    address: "",
-    city: "",
-    postalCode: "",
-  });
+  const [tutorValues, setTutorValues] = useState<TutorFormValues>(emptyTutorValues);
   const [tutorErrors, setTutorErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,7 +84,22 @@ export default function NewPatientScreen() {
     });
   }, [queryError, openExpiredDialog, setAccessState]);
 
+  // `isSaving` llega en el siguiente render y hay un `await` antes de escribir: esta guarda frena
+  // un doble toque inmediato.
+  const submitting = useRef(false);
   const handleSubmit = async () => {
+    if (submitting.current) {
+      return;
+    }
+    submitting.current = true;
+    try {
+      await submit();
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const submit = async () => {
     if (!clinicId) {
       return;
     }
@@ -129,11 +112,14 @@ export default function NewPatientScreen() {
         tutor = { existingTutorId: selectedTutorId };
       }
     } else {
-      const parsed = tutorContentSchema.safeParse(tutorValues);
-      if (parsed.success) {
-        tutor = { newTutor: parsed.data };
+      const parsed = parseTutorValues(tutorValues);
+      const sameRut = parsed.value ? await findTutorByRut(supabase, parsed.value.rut) : null;
+      if (parsed.value && sameRut) {
+        nextTutorErrors = { rut: `Ya hay un tutor con este RUT: ${sameRut.fullName}.` };
+      } else if (parsed.value) {
+        tutor = { newTutor: parsed.value };
       } else {
-        nextTutorErrors = getFieldErrors(parsed.error);
+        nextTutorErrors = parsed.errors;
       }
     }
     const ficha = parseFichaValues(fichaValues, EMPTY_ANTECEDENTES);
@@ -196,7 +182,7 @@ export default function NewPatientScreen() {
               onChange={setSelectedTutorId}
               options={(tutorsQuery.data ?? []).map((entry) => ({
                 value: entry.record.id,
-                label: `${entry.content.name} — ${entry.content.phone ?? entry.content.email ?? "sin medio de contacto"}`,
+                label: `${entry.content.name} — ${formatRut(entry.content.rut)}`,
               }))}
               testID="tutor-picker"
               value={selectedTutorId}
@@ -211,42 +197,12 @@ export default function NewPatientScreen() {
           ) : null}
         </VStack>
       ) : (
-        <VStack className="w-full gap-4">
-          {TUTOR_FIELDS.map(({ field, label, testID }) => {
-            const error = tutorErrors[field];
-            return (
-              <FormControl isInvalid={Boolean(error)} key={field}>
-                <FormControlLabel>
-                  <FormControlLabelText>{label}</FormControlLabelText>
-                </FormControlLabel>
-                <Input>
-                  <InputField
-                    accessibilityLabel={label}
-                    aria-label={label}
-                    autoCapitalize="none"
-                    editable={!isSaving}
-                    keyboardType={field === "email" ? "email-address" : "default"}
-                    onChangeText={(text) => setTutorValues((prev) => ({ ...prev, [field]: text }))}
-                    testID={testID}
-                    value={tutorValues[field]}
-                  />
-                </Input>
-                {error ? (
-                  <FormControlError>
-                    <FormControlErrorText>{error}</FormControlErrorText>
-                  </FormControlError>
-                ) : null}
-              </FormControl>
-            );
-          })}
-          {tutorErrors.form ? (
-            <FormControl isInvalid>
-              <FormControlError>
-                <FormControlErrorText>{tutorErrors.form}</FormControlErrorText>
-              </FormControlError>
-            </FormControl>
-          ) : null}
-        </VStack>
+        <TutorForm
+          errors={tutorErrors}
+          isDisabled={isSaving}
+          onChange={(field, text) => setTutorValues((prev) => ({ ...prev, [field]: text }))}
+          values={tutorValues}
+        />
       )}
       {status ? (
         <Text accessibilityLiveRegion="polite" testID="patient-new-status">

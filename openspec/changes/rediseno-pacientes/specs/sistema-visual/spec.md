@@ -32,13 +32,22 @@ desplazamiento para no tapar el contenido.
 
 ### Requirement: FR-079 (rediseño: ficha y tabla de pacientes)
 
-La ficha del paciente MUST usar una sola columna (ancho `wide`), con el orden del DOM igual al
-visual. `/patients` MUST usar `wide` y adaptar su contenido por ancho: tabla desde 1024 px y
+La ficha del paciente y la consulta (`/consultations/[id]`) MUST usar una sola columna (ancho
+`wide`), con el orden del DOM igual al visual: en la consulta, el contexto de solo lectura precede
+al registro. `/patients` MUST usar `wide` y adaptar su contenido por ancho: tabla desde 1024 px y
 tarjetas apiladas por debajo, sin desplazamiento horizontal desde 320 px. Sustituye, para estas
-dos pantallas, a los escenarios de «2 columnas» de la ficha y de las tarjetas de la lista.
+pantallas, a los escenarios de «2 columnas» de la ficha y de la consulta («lado a lado») y de las
+tarjetas de la lista.
 
 #### Scenario: ficha a una columna
 
 - **GIVEN** una ventana de 1280 px
 - **WHEN** se abre la ficha de un paciente
 - **THEN** las cards se apilan en una columna y ocupan más de 720 px.
+
+#### Scenario: consulta a una columna
+
+- **GIVEN** una ventana de 1280 px
+- **WHEN** se abre una consulta
+- **THEN** el contexto del paciente (`consultation-aside`) queda sobre el registro
+  (`consultation-main`) y ambos ocupan el mismo ancho, sin columnas lado a lado.

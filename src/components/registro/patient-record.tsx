@@ -13,6 +13,12 @@ import { DataGroup, DataItem } from "@/components/ui/data-item";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import {
+  catalogLabel,
+  REPRODUCTIVE_LABELS,
+  SEX_LABELS,
+  SPECIES_LABELS,
+} from "@/features/registro/catalogs";
 import type { PatientContent } from "@/features/registro/schema";
 import { computeMissingFichaFields } from "@/features/registro/summaries";
 
@@ -58,10 +64,13 @@ export function PatientHeader({ content, lastVisitAt, consultationCount }: Patie
     <VStack className="gap-4">
       <Heading level={3}>Resumen</Heading>
       <DataGroup title="Identidad">
-        <DataItem label="Especie" value={content.species} />
+        <DataItem label="Especie" value={catalogLabel(SPECIES_LABELS, content.species)} />
         <DataItem label="Raza" value={content.breed} />
-        <DataItem label="Sexo" value={content.sex} />
-        <DataItem label="Estado reproductivo" value={content.reproductiveStatus} />
+        <DataItem label="Sexo" value={catalogLabel(SEX_LABELS, content.sex)} />
+        <DataItem
+          label="Estado reproductivo"
+          value={catalogLabel(REPRODUCTIVE_LABELS, content.reproductiveStatus)}
+        />
       </DataGroup>
       <DataGroup title="Edad y medidas">
         <DataItem label="Edad" value={ageLabel(content.birthDate, content.ageMonths)} />

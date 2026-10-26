@@ -17,10 +17,10 @@ const ANTECEDENTES = {
 const base = {
   ...emptyFichaFormValues,
   name: "Luna",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   sex: "hembra",
-  reproductiveStatus: "esterilizada",
+  reproductiveStatus: "esterilizado",
 };
 
 describe("ficha etológica (FR-001 ampliado, FR-110)", () => {

@@ -15,6 +15,7 @@ import {
 } from "@/features/registro/epicrisis-service";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { Database } from "@/lib/supabase/database.types";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -80,7 +81,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
       clinicId: ana.clinicId,
       ficha: {
         name: "Toby integración",
-        species: "perro",
+        species: "canino",
         breed: "Beagle",
         birthDate: "2020-01-15",
         ageMonths: 72,
@@ -96,7 +97,7 @@ describe.skipIf(!isLiveSupabase)("consulta y anamnesis contra Supabase viva", ()
         },
       },
       tutor: {
-        newTutor: { name: "Sr. Soto", phone: null, email: "soto@example.test" },
+        newTutor: { name: "Sr. Soto", rut: randomRut(), phone: null, email: "soto@example.test" },
       },
     });
     patientId = alta.record.id;

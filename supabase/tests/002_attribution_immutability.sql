@@ -40,7 +40,7 @@ set local role authenticated;
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values
   ('d2d2d2d2-0000-0000-0000-0000000000d1', 'c2c2c2c2-0000-0000-0000-0000000000c2',
-   'patient', '{"name":"Luna"}', 'draft'),
+   'patient', '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"esterilizado","tutorId":"t"}', 'draft'),
   ('d2d2d2d2-0000-0000-0000-0000000000d2', 'c2c2c2c2-0000-0000-0000-0000000000c2',
    'epicrisis', '{"summary":"borrador"}', 'draft');
 
@@ -112,7 +112,7 @@ select results_eq(
 );
 
 select lives_ok(
-  $$update public.clinical_records set content = '{"name":"Luna","weightKg":12}'
+  $$update public.clinical_records set content = '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"esterilizado","tutorId":"t","weightKg":12}'
     where id = 'd2d2d2d2-0000-0000-0000-0000000000d1'$$,
   'a colleague can update a shared draft record'
 );

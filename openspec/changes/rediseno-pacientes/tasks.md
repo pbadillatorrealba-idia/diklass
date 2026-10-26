@@ -58,6 +58,11 @@ es aceptación. Lo pendiente queda sin marcar.
   e2e web completo, 76/76 en `chromium` (workers=1), ejecutado con los casos de lista y
   breadcrumb ya incluidos.
 
+- [x] 4.4 Búsqueda de pacientes con tutor «nombre apellido» (migración 016, con la nota de
+  rendimiento de los joins), ids de la URL que no son UUID resueltos como «no encontrado»
+  (`isUuid`), «Registrar paciente» como `action` de `Screen`, y pruebas de `PatientsTable`,
+  `DataItem` y `isUuid`. Verificación: Biome, `tsc` y `bun test tests/unit/registro tests/unit/ui`.
+
 ## 5. Cierre
 
 - [ ] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y

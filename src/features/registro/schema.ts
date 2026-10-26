@@ -5,6 +5,8 @@ import {
   isValidAnswer,
   LEGACY_ANAMNESIS_FIELDS,
 } from "@/features/registro/anamnesis-catalog";
+import { REPRODUCTIVE_STATUSES, SEXES, SPECIES } from "@/features/registro/catalogs";
+import { normalizeRut } from "@/lib/rut";
 
 /**
  * Forma del contenido por entidad clínica (D2 del diseño del cambio).
@@ -125,7 +127,7 @@ const referrerSchema = z
 
 export const patientContentSchema = z.object({
   name: requiredTextSchema,
-  species: requiredTextSchema,
+  species: z.enum(SPECIES, { message: "Elige la especie." }),
   breed: requiredTextSchema,
   birthDate: isoDateSchema.nullish().transform((value) => value ?? null),
   ageMonths: z
@@ -138,8 +140,8 @@ export const patientContentSchema = z.object({
     .positive("El peso registrado debe ser positivo.")
     .nullish()
     .transform((value) => value ?? null),
-  sex: requiredTextSchema,
-  reproductiveStatus: requiredTextSchema,
+  sex: z.enum(SEXES, { message: "Elige el sexo." }),
+  reproductiveStatus: z.enum(REPRODUCTIVE_STATUSES, { message: "Elige el estado reproductivo." }),
   antecedentes: antecedentesSchema,
   tutorId: requiredTextSchema,
   // Hoja de etología clínica (FR-001 ampliado, FR-110): todo opcional, sin dato = null.
@@ -175,6 +177,18 @@ const contactSchema = z
 export const tutorContentSchema = z
   .object({
     name: requiredTextSchema,
+    // Forma canónica `12345678-5`; el dígito verificador se comprueba aquí y en la base (018).
+    rut: z
+      .string()
+      .trim()
+      .transform((value, ctx) => {
+        const rut = normalizeRut(value);
+        if (rut === null) {
+          ctx.addIssue({ code: "custom", message: "Registra un RUT válido (12.345.678-5)." });
+          return z.NEVER;
+        }
+        return rut;
+      }),
     phone: contactSchema,
     email: contactSchema,
     surname: optionalTextSchema,
@@ -186,7 +200,7 @@ export const tutorContentSchema = z
     message: "Registra al menos un medio de contacto del tutor.",
   });
 
-/** Contenido del tutor (FR-027): nombre y al menos un medio de contacto. */
+/** Contenido del tutor (FR-027): nombre, RUT y al menos un medio de contacto. */
 export type TutorContent = WithOptional<
   z.infer<typeof tutorContentSchema>,
   "surname" | "address" | "city" | "postalCode"

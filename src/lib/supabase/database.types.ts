@@ -548,6 +548,7 @@ export type Database = {
       }
       revoke_access_sessions: { Args: never; Returns: boolean }
       revoke_current_access_session: { Args: never; Returns: boolean }
+      rut_is_valid: { Args: { p_rut: string }; Returns: boolean }
       search_knowledge_fragments: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -585,6 +586,27 @@ export type Database = {
           total_count: number
           tutor_id: string
           tutor_name: string
+        }[]
+      }
+      search_tutors: {
+        Args: {
+          p_contact?: string
+          p_dir?: string
+          p_limit?: number
+          p_name?: string
+          p_offset?: number
+          p_sort?: string
+        }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          name: string
+          patient_count: number
+          phone: string
+          rut: string
+          surname: string
+          total_count: number
         }[]
       }
       start_access_session: { Args: never; Returns: Json }

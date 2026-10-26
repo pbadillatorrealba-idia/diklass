@@ -23,7 +23,7 @@ function rpcClient(result: { data: unknown; error: unknown }) {
 const row = {
   id: "p1",
   name: "Luna",
-  species: "Canino",
+  species: "canino",
   breed: "Labrador",
   tutor_id: "t1",
   tutor_name: "Ana",
@@ -41,6 +41,18 @@ describe("validDateOnly", () => {
 });
 
 describe("searchPatients", () => {
+  test("un tutorId que no es UUID da una página vacía sin llamar al RPC", async () => {
+    const { client, calls } = rpcClient({ data: [row], error: null });
+    const page = await searchPatients(client, {
+      tutorId: "abc",
+      sort: "name",
+      dir: "asc",
+      page: 1,
+    });
+    expect(page).toEqual({ rows: [], total: 0 });
+    expect(calls).toHaveLength(0);
+  });
+
   test("traduce filtros, orden y página a los argumentos del RPC", async () => {
     const { client, calls } = rpcClient({ data: [row], error: null });
     const page = await searchPatients(client, {
@@ -69,7 +81,7 @@ describe("searchPatients", () => {
     expect(page.rows[0]).toEqual({
       id: "p1",
       name: "Luna",
-      species: "Canino",
+      species: "canino",
       breed: "Labrador",
       tutorId: "t1",
       tutorName: "Ana",

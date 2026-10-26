@@ -16,6 +16,14 @@ export const SECTIONS = [
     md: "pets",
   },
   {
+    name: "(tutors)",
+    href: "/tutors",
+    label: "Tutores",
+    icon: "account-group-outline",
+    sf: "person.2",
+    md: "group",
+  },
+  {
     name: "(follow-up)",
     href: "/follow-up",
     label: "Seguimiento",
@@ -52,6 +60,9 @@ export type Section = (typeof SECTIONS)[number];
 
 /**
  * Barra inferior web: a 320 px solo caben 4 secciones con el nombre visible (D17). Configuración
- * se alcanza desde el avatar de la barra superior compacta.
+ * se alcanza desde el avatar de la barra superior compacta, y Tutores (administracion-tutores)
+ * desde el botón «Tutores» de Pacientes.
  */
-export const TABBAR_SECTIONS = SECTIONS.filter((section) => section.name !== "(settings)");
+export const TABBAR_SECTIONS = SECTIONS.filter(
+  (section) => section.name !== "(settings)" && section.name !== "(tutors)",
+);

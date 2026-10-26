@@ -4,6 +4,7 @@ import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento
 import type { FuenteContent } from "@/features/conocimiento/schema";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -38,13 +39,13 @@ function fuenteNueva(titulo: string, texto: string): FuenteContent {
 function fichaBase(nombre: string): Omit<PatientContent, "tutorId"> {
   return {
     name: nombre,
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 36,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -77,7 +78,14 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
 
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      tutor: { newTutor: { name: "Sra. Consulta", phone: "+56 9 1111 2222", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Consulta",
+          rut: randomRut(),
+          phone: "+56 9 1111 2222",
+          email: null,
+        },
+      },
       ficha: fichaBase("Luna Consulta"),
     });
     patientId = ficha.record.id;
@@ -180,7 +188,14 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
   test("el contexto de paciente solo admite un paciente de la clínica (Principio V · revisión de la PR #30)", async () => {
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      tutor: { newTutor: { name: "Sra. Contexto", phone: "+56 9 3333 4444", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Contexto",
+          rut: randomRut(),
+          phone: "+56 9 3333 4444",
+          email: null,
+        },
+      },
       ficha: fichaBase("Toby Contexto"),
     });
     await expect(

@@ -4,6 +4,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LinkText } from "@/components/ui/link-text";
 import { Text } from "@/components/ui/text";
+import { catalogLabel, SPECIES_LABELS } from "@/features/registro/catalogs";
 import type {
   PatientRow,
   PatientSortColumn,
@@ -122,7 +123,7 @@ export function PatientsTable({ dir, rows, sort, sortHref }: PatientsTableProps)
                 {row.name}
               </Text>
               <Text tone="muted">
-                {row.species} · {row.breed}
+                {catalogLabel(SPECIES_LABELS, row.species)} · {row.breed}
               </Text>
             </View>
             <View className="gap-1">
@@ -176,7 +177,7 @@ export function PatientsTable({ dir, rows, sort, sortHref }: PatientsTableProps)
             </Text>
           </View>
           <View className="w-1/6" role="cell">
-            <Text selectable>{row.species}</Text>
+            <Text selectable>{catalogLabel(SPECIES_LABELS, row.species)}</Text>
           </View>
           <View className="w-1/6" role="cell">
             <Text selectable>{row.breed}</Text>
