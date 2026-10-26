@@ -26,16 +26,6 @@ test.describe("auth web shell", () => {
     await expect(page.getByText(/registr/i)).toHaveCount(0);
   });
 
-  test("uses client-side validation before any credential request", async ({ page }) => {
-    await page.goto("/login");
-    const submit = page.getByRole("button", { name: "Iniciar sesión" });
-    await expect(submit).toBeEnabled();
-    await submit.click();
-    await expect(page.getByTestId("login-error")).toContainText(
-      "Revisa los campos marcados antes de continuar.",
-    );
-  });
-
   // T071: what an axe scan cannot check — focus movement and the error announcement.
   test("keyboard focus follows email, password, submit and a failure is announced", async ({
     page,
@@ -53,10 +43,15 @@ test.describe("auth web shell", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeFocused();
 
+    const credentialRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/auth/v1/token")) credentialRequests.push(request.url());
+    });
     await page.keyboard.press("Enter");
     const error = page.getByTestId("login-error");
     await expect(error).toContainText("Revisa los campos marcados antes de continuar.");
     await expect(error).toHaveAttribute("role", "alert");
+    expect(credentialRequests).toEqual([]);
   });
 
   test("denies a direct protected route without an authenticated session", async ({ page }) => {
