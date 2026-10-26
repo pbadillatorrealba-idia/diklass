@@ -65,23 +65,22 @@ y descontarse del ancho del contenido, que decide su composición por el ancho q
 
 ### Requirement: Hilos contextuales del panel
 
-El panel MUST ofrecer hilos según la pantalla: «Escucha» solo con una consulta abierta, «Conocimiento»
-en toda pantalla protegida salvo el inicio y «Asistente» siempre. El inicio MUST ofrecer solo
-«Asistente» (que ya cubre el conocimiento) y, con un único hilo, el panel MUST nombrarlo sin
-pestañas. Cambiar de pantalla MUST conservar el estado del panel y MUST mantener el hilo activo si
-sigue disponible, o pasar a «Conocimiento» si no (o al primero disponible si tampoco existe).
+El panel MUST ofrecer hilos según la pantalla: «Escucha» solo con una consulta abierta y «Asistente»
+siempre (su contenido es de `asistente-conversacional`). Con un único hilo, el panel MUST nombrarlo sin
+pestañas. Cambiar de pantalla MUST conservar el estado del panel y MUST mantener el hilo activo si sigue
+disponible, o pasar a «Asistente» si no.
 
-#### Scenario: el inicio solo ofrece «Asistente»
+#### Scenario: una pantalla sin consulta solo ofrece «Asistente»
 
 - **GIVEN** el veterinario en `/home`
 - **WHEN** ve el panel
-- **THEN** solo está el hilo «Asistente», sin pestañas ni «Conocimiento»
+- **THEN** solo está el hilo «Asistente», sin pestañas
 
 #### Scenario: hilo de escucha solo en consulta abierta
 
 - **GIVEN** el hilo «Escucha» activo en una consulta abierta
 - **WHEN** el veterinario navega a `/patients`
-- **THEN** el panel sigue abierto y muestra «Conocimiento», sin el hilo «Escucha»
+- **THEN** el panel sigue abierto y muestra «Asistente», sin el hilo «Escucha»
 
 ### Requirement: Escucha siempre visible
 
@@ -121,50 +120,6 @@ MUST crecer dentro del desplazamiento propio del panel.
 - **GIVEN** una consulta abierta a 1440 px con la sección 1 a la vista
 - **WHEN** el veterinario activa la escucha y llegan tramos y borradores
 - **THEN** la posición vertical y el ancho de los campos de la sección 1 no cambian
-
-### Requirement: Conocimiento en el panel
-
-El hilo «Conocimiento» MUST permitir consultar la base de conocimiento con el mismo contrato de
-respuesta, citas y avisos de cobertura que `/knowledge` (FR-007, FR-022, FR-023). Desde una consulta o
-una ficha MUST tomar al paciente como contexto (FR-026). La ruta `/knowledge` MUST conservarse.
-
-#### Scenario: pregunta con contexto del paciente
-
-- **GIVEN** una consulta abierta de un paciente
-- **WHEN** el veterinario pregunta en el hilo «Conocimiento»
-- **THEN** la respuesta lleva citas con fuente y fragmento y declara el paciente de contexto
-
-### Requirement: Hilo del asistente con consultas básicas
-
-El hilo «Asistente» MUST estar disponible en toda pantalla protegida y responder con reglas
-deterministas la fecha de hoy, los eventos agendados (sin fuente, que no hay y por qué) y los
-pacientes de hoy (consultas creadas ese día). Lo que no reconozca MUST consultarse a la base de
-conocimiento con el paciente de contexto (FR-005, FR-026). MUST NOT escribir en el registro, proponer
-cambios ni presentarse como agente, y su conversación MUST NOT sobrevivir a la sesión de acceso.
-
-#### Scenario: la fecha de hoy
-
-- **GIVEN** el hilo «Asistente» abierto
-- **WHEN** el veterinario pregunta «¿Qué día es hoy?»
-- **THEN** responde con el día de la semana y la fecha completa de hoy
-
-#### Scenario: sin eventos agendados
-
-- **GIVEN** que no existe una fuente de eventos
-- **WHEN** el veterinario pregunta «¿Qué eventos tengo agendados?»
-- **THEN** responde que no tiene eventos agendados y que la agenda aún no tiene fuente de eventos
-
-#### Scenario: pacientes de hoy
-
-- **GIVEN** consultas creadas hoy para dos pacientes
-- **WHEN** el veterinario pregunta «¿Cuáles son los pacientes de hoy?»
-- **THEN** lista a cada paciente una sola vez y omite los de otros días
-
-#### Scenario: pregunta de conocimiento
-
-- **GIVEN** una pregunta que no es fecha, agenda ni pacientes de hoy
-- **WHEN** el veterinario la envía desde el hilo «Asistente»
-- **THEN** la respuesta lleva citas con fuente y fragmento, igual que en «Conocimiento»
 
 ### Requirement: Las propuestas del agente exigen confirmación
 
