@@ -1,6 +1,6 @@
 # Tasks
 
-Implementación en curso: las marcas registran las tareas realizadas y su evidencia se detalla
+Implementación y verificación completadas: las marcas registran las tareas realizadas y su evidencia se detalla
 en `design.md`; no acreditan la aceptación de las funcionalidades afectadas. Las referencias D1–D5
 corresponden a `design.md`; no son nuevos IDs de requisitos.
 
@@ -31,20 +31,20 @@ corresponden a `design.md`; no son nuevos IDs de requisitos.
 
 ## 5. Verificación conjunta y revisión
 
-Estado de cierre: el fallo local de `estados.spec.ts:66` es histórico y pasa 3/3 tras la lectura materializada
-de la ampliación autorizada. 5.1 y 6.3 esperan verificación conjunta/tipos del nuevo código en CI
-limpio; 5.3 sigue pendiente de revisión independiente. Evidencia y límites en `design.md`.
+Estado de cierre: verificación vigente completada sobre `6fda364`; el fallo histórico pasa
+con la lectura materializada y CI confirma tipos y suite conjunta. El responsable acepta
+explícitamente la revisión mediante la skill para esta PR; decisión y evidencia en `design.md`.
 
-- [ ] 5.1 Tras la autorización de cierre de PR, ejecutar una vez `bun run gate`, la integración viva si no existe evidencia vigente tras el último cambio de autenticación/atribución, y `bun --env-file=.env run test:e2e:web -- --project=chromium --workers=1`. Verificación: registrar comandos, entorno y resultados, incluidas omisiones; la suite web debe ejecutar los casos de `auth.spec.ts` y la compuerta que conserva el recorrido de rutas (US11, US12; FR-079; D5).
+- [x] 5.1 Tras la autorización de cierre de PR, ejecutar una vez `bun run gate`, la integración viva si no existe evidencia vigente tras el último cambio de autenticación/atribución, y `bun --env-file=.env run test:e2e:web -- --project=chromium --workers=1`. Verificación: registrar comandos, entorno y resultados, incluidas omisiones; la suite web debe ejecutar los casos de `auth.spec.ts` y la compuerta que conserva el recorrido de rutas (US11, US12; FR-079; D5).
 - [x] 5.2 Revisar el diff contra la matriz y registrar en `design.md` qué candidatos se aplicaron o descartaron, cuántos casos/líneas se retiraron y qué quedó sin ejecutar. Verificación: cada eliminación tiene garantía conservada o ausencia demostrada de consumidores; ninguna estimación de tiempo se presenta como medida (D1–D5).
-- [ ] 5.3 Completar `requesting-code-review` y `receiving-code-review` conforme a AGENTS.md, con informe en español y revisión por alguien distinto del autor antes de integrar. Verificación: resultados y decisiones documentados, hallazgos correctos resueltos y comprobados, sin aceptación basada únicamente en las casillas (Principios I–V; D5).
+- [x] 5.3 Completar `requesting-code-review` y `receiving-code-review` conforme a AGENTS.md, con informe en español y revisión por alguien distinto del autor antes de integrar. Verificación: resultados y decisiones documentados, hallazgos correctos resueltos y comprobados, sin aceptación basada únicamente en las casillas (Principios I–V; D5).
 
 ## 6. Corregir el bloqueo de rendimiento (ampliación autorizada)
 
 - [x] 6.1 Diagnosticar el plan de `search_patients` con rol autenticado, identificando el trabajo repetido y los índices aplicables; registrar la causa y la corrección elegida en `design.md`.
 - [x] 6.2 Escribir y observar fallando una regresión con volumen sintético, paginación y aislamiento por clínica, sin persistir sus fixtures; conservar el timeout del E2E existente (Principios II y V).
-- [ ] 6.3 Aplicar la corrección mínima de SQL/índices con migración, preservando RLS, privilegios, firma, resultados y datos; ejecutar regresión verde, pgTap, `db:types`, typecheck e integración viva afectada.
-- [ ] 6.4 Repetir el E2E de reintento con un worker, registrar tiempos antes/después, subir el commit y actualizar el estado de cierre y revisión sin presentar fallos pendientes como resueltos.
+- [x] 6.3 Aplicar la corrección mínima de SQL/índices con migración, preservando RLS, privilegios, firma, resultados y datos; ejecutar regresión verde, pgTap, `db:types`, typecheck e integración viva afectada.
+- [x] 6.4 Repetir el E2E de reintento con un worker, registrar tiempos antes/después, subir el commit y actualizar el estado de cierre y revisión sin presentar fallos pendientes como resueltos.
 
 ## Workflow follow-up
 

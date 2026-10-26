@@ -47,3 +47,8 @@ Ninguna: no cambian requisitos, escenarios, umbrales ni IDs FR/US/SC. Se declara
 - Estado: plan propuesto, sin implementación ni aceptación. La auditoría se hizo sobre
   `317cd9a`, en `chore/auditoria-reduccion-tests`; los cambios sin commit del checkout original
   quedaron fuera. Se revalidarán los candidatos contra la base de integración antes de aplicar.
+
+## Estado al cierre
+
+Implementado y verificado; decisión de cierre y evidencia en `design.md`. La limpieza no
+constituye aceptación de las funcionalidades clínicas ni de la deuda nativa US12.

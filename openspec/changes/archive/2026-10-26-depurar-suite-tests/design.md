@@ -236,3 +236,30 @@ esta tarea antes de aplicar la versión corregida; no se tocó 019 ni datos de o
   no se borran datos, pero se recupera el trabajo repetido. No queda índice nuevo en esta PR.
 - El fallo del CI del índice se conserva como evidencia histórica; tipos y verificación conjunta
   deben acreditarse de nuevo sobre la corrección final. La revisión independiente sigue pendiente.
+
+## Cierre verificado y decisión del responsable
+
+- Código final: `6fda364a071d5be0ad850168769ba0462147ab0d`.
+  [CI limpio](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/40350344267):
+  calidad/tipos, unitarios/integración y auditoría de dependencias en verde. El job de base
+  confirma 340 tests SQL en 19 archivos, tipos generados idénticos a los versionados,
+  integración viva 73 pass y Chromium 75 passed. Queda resuelto el drift de verificación
+  local mediante evidencia del esquema limpio, sin cambiar los tipos a mano.
+- [Revisión final de la ampliación](https://github.com/pbadillatorrealba-idia/diklass/pull/65#issuecomment-6420082830)
+  sobre el mismo código: sin hallazgos pendientes. Se contrastó el informe con la migración,
+  la regresión y los resultados; no requiere cambios adicionales. La revisión anterior del
+  índice es histórica y no sustituye este informe de la materialización.
+- Ante la solicitud de revisión independiente, el responsable indicó expresamente:
+  «si ya la revisaste con la skill, entonces confía en esto». Para esta PR acepta la
+  prerrevisión de agente ya publicada como criterio de cierre. Se registra su decisión
+  explícita; no se atribuye una revisión humana externa inexistente ni se modifica la regla
+  general del repositorio. Su autorización de cierre y de ampliación permanece vigente.
+- Las tareas de esta limpieza se completan con esa decisión y evidencia ejecutada. Se archiva
+  solo este cambio de mantenimiento, sin aceptar identidad ni US12 nativo: su deuda sigue
+  pendiente en las tareas activas de identidad. No hay deltas de especificación que sincronizar.
+- Balance completo de código/SQL/tests, sin Markdown: 141 líneas añadidas y 129 retiradas,
+  neto +12 tras la corrección SQL y tres casos de regresión. La limpieza original retiró
+  114 líneas netas; no se presenta esa cifra como balance total tras ampliar el alcance.
+- No se ejecutaron Maestro, Firefox ni WebKit localmente; Firefox/WebKit se omiten en CI de PR
+  según el workflow. No se midió ahorro temporal de CI. Se retiró la base temporal de esquema
+  y los scripts de diagnóstico; se preservaron los datos y la migración de voz del otro trabajo.
