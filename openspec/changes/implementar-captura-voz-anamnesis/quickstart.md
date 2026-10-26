@@ -12,7 +12,7 @@
   worktrees hermanos: se reserva por hub («reservo stack» / «stack libre») y **no** se ejecuta
   `supabase stop`.
 - Para el SQL: clúster PostgreSQL 18 scratch con shims en `/tmp/verify-004/` (patrón del
-  [quickstart de 002](../../implementar-registro-clinico-longitudinal/quickstart.md)); no usa
+  [quickstart de 002](../archive/2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md)); no usa
   `supabase start` (evita colisiones de puertos con los worktrees hermanos).
 
 ## Compuertas locales

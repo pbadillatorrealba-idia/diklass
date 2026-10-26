@@ -53,7 +53,7 @@ de los requisitos compuestos ni las prohibiciones. Hallazgos:
   trazaba empezaba asumiendo una consulta abierta, siendo estructuralmente incapaz de verificar la
   prohibición; además su `Then` verificaba FR-025. Agregado US6/14.
 - **Contradicción del enunciado canónico**: FR-021 redefinía la procedencia como función del estado
-  de confirmación, contradiciendo a la especificación de [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) y dejando indefinido qué procedencia queda tras
+  de confirmación, contradiciendo a la especificación de [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md) y dejando indefinido qué procedencia queda tras
   confirmar. Reescrito separando ambos ejes, con escenario US6/9.
 - **Detalle de implementación en un MUST**: FR-015 prescribía ventanas de 30 segundos, que es el
   CÓMO. Reescrito sobre la necesidad real —revisabilidad durante la consulta— dejando la ventana
@@ -82,4 +82,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md). Dependencia externa: conversación clínica simulada.
+Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md). Dependencia externa: conversación clínica simulada.

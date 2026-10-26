@@ -3,7 +3,7 @@
 Convención: Rojo-Verde-Refactor obligatorio (Constitución II) — cada tarea de prueba se observa
 fallando por la razón prevista antes de la implementación que cubre. El SQL se verifica
 localmente en un clúster PostgreSQL 18 scratch con shims en `/tmp/verify-004/` (patrón del
-[quickstart de 002](../../implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
+[quickstart de 002](../archive/2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
 `database` de CI; la integración viva corre solo en CI (`SUPABASE_LIVE_TESTS=1`) y su corrida queda
 condicionada al requisito de integración R1 del diseño (tipos generados compartidos) — limitación
 declarada, no reducción de alcance. El `quickstart.md` de este cambio existe desde la fase de

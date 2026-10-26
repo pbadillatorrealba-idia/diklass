@@ -11,7 +11,7 @@ diseño se aprueba antes de `tasks.md`; su implementación sigue el Rojo-Verde-R
 
 **Restricción de esta ejecución**: sin Docker/Supabase local ni Playwright. El SQL se verifica en un
 clúster PostgreSQL scratch con shims en `/tmp/verify-004/` (patrón del
-[quickstart de 002](../implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
+[quickstart de 002](../archive/2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
 `database` de CI; la integración viva se ejecuta solo en CI (`SUPABASE_LIVE_TESTS=1`) y su corrida
 queda condicionada al requisito de integración R1. Es una limitación de verificación declarada, no
 una reducción de alcance.
@@ -339,7 +339,7 @@ se verifican con aserciones de tiempo/secuencia en las pruebas indicadas.
 |---|---|---|---|
 | R1 | Regenerar los tipos generados tras la migración 011: `supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts` (los tipos nuevos incluyen `listening_sessions` y `transcript_segments`) | `src/lib/supabase/database.types.ts` | La compuerta de CI «Generated database types match the migrations» queda en rojo en esta rama; la integración viva en CI queda tras ese paso. Mientras, `src/features/voz/db-types.ts` contiene el seam de tipado (un único `asVozClient`) con los tipos generados desde el clúster scratch, para que `bun run typecheck` quede limpio; se elimina al aplicar R1 |
 | R2 | Montar el modo de escucha en el workspace de consulta (una importación y `<ListenModeSection consultationId={…} />`) | `src/app/(protected)/consultations/[id].tsx` | El botón «Modo de escucha» no aparece en la app; el componente aislado y sus pruebas existen |
-| R3 | Actualizar la nota «Transiciones sin acción enumerada» del quickstart de 002: con el refinamiento de D6, el INSERT de `audio_fact` (borrador) también devuelve `null` | `openspec/changes/implementar-registro-clinico-longitudinal/quickstart.md` | Nota documental desactualizada (ninguna prueba la pinifica) |
+| R3 | Actualizar la nota «Transiciones sin acción enumerada» del quickstart de 002: con el refinamiento de D6, el INSERT de `audio_fact` (borrador) también devuelve `null` | `openspec/changes/archive/2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md` | Nota documental desactualizada (ninguna prueba la pinifica) |
 
 No se necesita tocar `src/features/registro/*` ni `src/lib/attribution/*`: se usan solo sus APIs
 públicas (`recordAnamnesisEntry`, `listAnamnesisEntries`, `getConsultation`, `createClinicalRecord`,
