@@ -246,7 +246,7 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
   });
 
   test("acepta el vocabulario canónico de procedencia y rechaza lo demás", () => {
-    for (const provenance of ["reportada", "inferida", "recuperada", "desconocida"]) {
+    for (const provenance of ["reportada", "inferida", "recuperada", "desconocida"] as const) {
       const entrada = anamnesisContentSchema.parse({
         ...anamnesisBase,
         field: "frecuencia",

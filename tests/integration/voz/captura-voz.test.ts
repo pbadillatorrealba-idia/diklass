@@ -144,7 +144,7 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
       expect(hecho.content.transcriptExcerpt.length).toBeGreaterThan(0);
       // SC-027 · US6-AC6: la traza apunta al tramo REAL que originó cada hecho.
       const tramoOrigen = tramos.find((tramo) => tramo.seq === hecho.content.segmentSeq)?.id;
-      expect(hecho.content.transcriptSegmentId).toBe(tramoOrigen);
+      expect(tramoOrigen).toBe(hecho.content.transcriptSegmentId);
     }
   });
 
