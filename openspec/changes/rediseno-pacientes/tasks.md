@@ -11,16 +11,21 @@ es aceptación. Lo pendiente queda sin marcar.
 - [x] 1.3 `src/features/registro/patient-search.ts` y `database.types.ts`; `tests/unit/registro/
   patient-search.test.ts` (mapeo de argumentos, fechas inválidas, propagación de error).
   Verificación: `bun test tests/unit/registro` en verde.
-- [ ] 1.4 Comprobar que `database.types.ts` (editado a mano) coincide con `bun run db:types`
-  formateado como en CI.
+- [x] 1.4 `database.types.ts` (editado a mano) coincide con `bun run db:types`. Verificación: tras
+  `supabase db reset --local` (migraciones 001–015), `gen types` con la CLI 2.122.0 y ambos
+  archivos pasados por `oxfmt`; solo difieren el ajuste de línea y el ruido de versión de la CLI
+  (`ComputedFields: never`, `NonNullable<Json>`, `Args: Record<PropertyKey, never>`, `vector`).
+  Tablas, columnas y firmas de funciones (incluida `search_patients`) son idénticas. El `diff -u`
+  byte a byte de CI queda por confirmar en la PR.
 
 ## 2. Interfaz de la lista y del tutor (FR-113–FR-116)
 
 - [x] 2.1 `patients-table` (tabla ↔ tarjetas) y `patients/index.tsx` con filtros, orden y página en
   la URL. Verificación: Biome y `tsc` limpios.
 - [x] 2.2 `tutors/[id].tsx` mínima. Verificación: Biome y `tsc` limpios.
-- [ ] 2.3 Verificar en navegador a 1280, 768 y 375 px, con axe claro/oscuro, y actualizar los e2e de
-  `accessibility.spec.ts` y `estados.spec.ts` que cubren la lista (`patient-item`, `patient-open`).
+- [x] 2.3 Verificado a 1280, 768 y 375 px con axe en claro y oscuro, y e2e de `accessibility.spec.ts`
+  y `estados.spec.ts` actualizados. Verificación: ambos en verde en `chromium` y `chromium-dark`
+  (workers=1); el caso de la lista crea sus propios pacientes con `prepararPaciente`.
 
 ## 3. Ficha por cards (FR-117, FR-118, FR-002, FR-044)
 
@@ -31,8 +36,12 @@ es aceptación. Lo pendiente queda sin marcar.
   Verificación: `bun test tests/unit/registro` en verde (164).
 - [x] 3.3 `patient-history` como línea de tiempo; retirados `ficha-summary` y
   `missing-fields-panel` y sus pruebas. Verificación: `tsc` limpio.
-- [ ] 3.4 Verificar en navegador la edición por card, el alta de antecedentes con Enter y los
-  estados de carga y error de la ficha.
+- [x] 3.4 Verificado en navegador (Chromium, export estático, 921 px de ancho): la edición por card
+  guarda y vuelve al resumen (peso 12.5 → 13 kg); el alta de antecedentes con Enter añade el ítem y
+  deja el campo abierto y vacío; con `clinical_records` bloqueado la ficha muestra el error con
+  «Reintentar», que recupera la ficha al quitar el bloqueo. «Cargando…» lo cubre `estados.spec.ts`.
+  Observado, no atribuido a este cambio: error de hidratación React #418 al cargar la ficha en el
+  export estático.
 
 - [x] 3.5 Resumen en grupos con «Alertas», `DataItem`/`DataGroup`/`Chip` en `ui/`, estados de
   la ficha con `QueryState` y `Callout`; `AGENTS.md` actualizado. Verificación: Biome, `tsc` y
@@ -44,14 +53,16 @@ es aceptación. Lo pendiente queda sin marcar.
   fuentes de conocimiento y en la consulta. Verificación: `tests/unit/ui/screen-title.test.tsx`.
 - [x] 4.3 Acción principal en barra al pie bajo 768 px y en nativo (`Screen`).
   Verificación: `tests/unit/ui/screen-title.test.tsx`.
-- [ ] 4.2 e2e: quitar la ficha del caso de «2 columnas» (hecho en `accessibility.spec.ts`),
-  reemplazar los `testID` de alta de antecedentes por `antecedent-open` en `caso-sintetico.ts`
-  (hecho) y **ejecutarlos** (workers=1). Añadir un caso del breadcrumb a 1280 px.
+- [x] 4.2 e2e: ficha fuera del caso de «2 columnas», `antecedent-open` en `caso-sintetico.ts` y caso
+  del breadcrumb a 1280 px (y solo «Volver» a 375 px) en `navegacion.spec.ts`. Verificación:
+  e2e web completo, 76/76 en `chromium` (workers=1).
 
 ## 5. Cierre
 
 - [ ] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y
   URL de CI. Hasta entonces este cambio no está aceptado.
+  Evidencia local (2026-10-26): Biome limpio; `tsc` limpio; unit 979/979; pgTap 310/310 tras
+  `db reset`; e2e web `chromium` 76/76. Falta la URL de CI (y Firefox/WebKit, que solo corren allí).
 - [x] 5.2 Notas de revisión de FR-044, FR-079, FR-083 y D12/D18 añadidas en
   `implementar-registro-clinico-longitudinal` y `sistema-visual`. Verificación: lectura de los
   textos. Queda pendiente D20/quickstart 12.9 (`FichaSummary`), que es evidencia histórica y no se
