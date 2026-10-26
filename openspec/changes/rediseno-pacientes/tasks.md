@@ -73,8 +73,15 @@ es aceptación. Lo pendiente queda sin marcar.
   dependencias, Calidad y tipos, Unit e integración, y pgTap + e2e web con Supabase: todos en verde;
   incluye el paso «tipos generados = migraciones», que confirma 1.4). Firefox/WebKit solo corren al
   hacer push a `main`.
-- [ ] 5.3 Diagnosticar el error de hidratación React #418 que aparece al cargar la ficha del paciente
-  en el export estático (observado en 3.4) y decidir si es anterior a este cambio.
+- [x] 5.3 Diagnóstico del error de hidratación React #418 (observado en 3.4). Verificación: sobre el
+  export estático (2026-10-26), la carga completa de cualquier ruta dinámica lo dispara una vez
+  (`/patients/[id]`, `/follow-up/[id]`, `/tutors/[id]`, `/consultations/[id]`,
+  `/knowledge/sources/[id]`) y ninguna ruta estática (`/patients`, `/home`, …). Los HTML
+  pre-renderizados de todas las rutas son idénticos y vacíos, y `follow-up/[id]` existe desde
+  sistema-visual 7.2 (2026-09-25): **es anterior a este cambio y general a las rutas dinámicas**, no
+  de la ficha. React recupera regenerando el árbol en el cliente; no hay efecto visible y el e2e
+  pasa. No se corrige aquí: la causa exacta (parámetros de ruta en el primer render del cliente)
+  queda sin aislar y merece su propio cambio si se quiere eliminar el aviso.
 - [x] 5.2 Notas de revisión de FR-044, FR-079, FR-083 y D12/D18 añadidas en
   `implementar-registro-clinico-longitudinal` y `sistema-visual`. Verificación: lectura de los
   textos. Queda pendiente D20/quickstart 12.9 (`FichaSummary`), que es evidencia histórica y no se
