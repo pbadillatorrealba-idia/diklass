@@ -31,9 +31,9 @@ corresponden a `design.md`; no son nuevos IDs de requisitos.
 
 ## 5. Verificación conjunta y revisión
 
-Estado de cierre: comandos ejecutados, pero 5.1 sigue pendiente por el fallo local reproducible
-de `estados.spec.ts:66` (diagnóstico en `design.md`); 5.3 sigue pendiente de revisión independiente.
-CI pasa, pero no sustituye la resolución de ese fallo.
+Estado de cierre: el fallo local de `estados.spec.ts:66` es histórico y pasa 3/3 tras la lectura materializada
+de la ampliación autorizada. 5.1 y 6.3 esperan verificación conjunta/tipos del nuevo código en CI
+limpio; 5.3 sigue pendiente de revisión independiente. Evidencia y límites en `design.md`.
 
 - [ ] 5.1 Tras la autorización de cierre de PR, ejecutar una vez `bun run gate`, la integración viva si no existe evidencia vigente tras el último cambio de autenticación/atribución, y `bun --env-file=.env run test:e2e:web -- --project=chromium --workers=1`. Verificación: registrar comandos, entorno y resultados, incluidas omisiones; la suite web debe ejecutar los casos de `auth.spec.ts` y la compuerta que conserva el recorrido de rutas (US11, US12; FR-079; D5).
 - [x] 5.2 Revisar el diff contra la matriz y registrar en `design.md` qué candidatos se aplicaron o descartaron, cuántos casos/líneas se retiraron y qué quedó sin ejecutar. Verificación: cada eliminación tiene garantía conservada o ausencia demostrada de consumidores; ninguna estimación de tiempo se presenta como medida (D1–D5).

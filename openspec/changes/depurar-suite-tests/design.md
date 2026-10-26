@@ -160,7 +160,7 @@ Sobre `8f43f160b36940c400932f7ea29a07c4d7ac9770`, tras autorización del respons
 - [CI de la implementación](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/40345123583): calidad/tipos, unitarios/integración, auditoría de dependencias y job de Supabase/web en verde. Su base efímera pasa 337 tests SQL en 19 archivos, integración viva (73 pass) y Chromium (75 passed). Firefox/WebKit se omiten en PR conforme al workflow; Maestro no se ejecutó localmente. CI verde no elimina el fallo local reproducido.
 - [Primera prerrevisión publicada](https://github.com/pbadillatorrealba-idia/diklass/pull/65#issuecomment-6419353501): sin hallazgos en los nueve candidatos. `receiving-code-review`: contrastado el informe, sin correcciones que aplicar. No consta revisión independiente en GitHub.
 
-Cierre bloqueado: 5.1 conserva el fallo web local y 5.3 requiere la revisión independiente. Resolver rendimiento de la RPC puede exigir migración o ampliar el alcance; D5 y AGENTS.md exigen consultar esa decisión al responsable. Este cambio no se archiva ni se declara aceptado mientras siga pendiente la resolución.
+Estado histórico al registrar `2976e8a`: cierre bloqueado; 5.1 conserva el fallo web local y 5.3 requiere la revisión independiente. Resolver rendimiento de la RPC puede exigir migración o ampliar el alcance; D5 y AGENTS.md exigen consultar esa decisión al responsable. Este cambio no se archiva ni se declara aceptado mientras siga pendiente la resolución.
 
 ## Ampliación autorizada: rendimiento de búsqueda de pacientes
 
@@ -178,7 +178,7 @@ rojo/verde y registrar tiempos comparables. No se añaden dependencias ni abstra
 afectada y caso web fallido, un worker, sin repetir todo por fase. Actualizar evidencia y PR.
 La revisión independiente y la aceptación siguen pendientes; no se descartan fallos del cierre.
 
-### Diagnóstico y corrección de la ampliación
+### Primera corrección de la ampliación (sustituida)
 
 - Plan real bajo `authenticated`, con `auto_explain` solo en la sesión de diagnóstico: la unión
   por `tutor.id::text` no usa la PK UUID. Repite lectura/RLS de 129 tutores por 775 pacientes,
@@ -207,3 +207,32 @@ La revisión independiente y la aceptación siguen pendientes; no se descartan f
 - Reversión de la corrección: eliminar únicamente el índice con `drop index
   public.clinical_records_tutor_text_id_idx` mediante una migración de reversión. No afecta datos;
   vuelve a permitir el plan lento, por lo que no resuelve el bloqueo de rendimiento.
+
+- Prerrevisión de la ampliación publicada sobre `df5e5cf`: [informe](https://github.com/pbadillatorrealba-idia/diklass/pull/65#issuecomment-6419909749). Sin hallazgos críticos/importantes; se verifica y corrige el menor documental sobre estado histórico frente al estado posterior al índice. `receiving-code-review`: la corrección coincide con el E2E 3/3 y mantiene pendientes CI/tipos y revisión independiente.
+
+### Corrección final: lectura de tutores materializada
+
+El [CI de `df5e5cf`](https://github.com/pbadillatorrealba-idia/diklass/actions/runs/40349022272)
+reprodujo el fallo de la regresión pese al índice: la solución anterior dependía del plan.
+Se clonó solo el esquema a una base temporal separada, sin datos compartidos. Allí se reprodujo
+con 1.000 pacientes/200 tutores: 8.006 ms, lectura de 202 tutores repetida 1.003 veces. Aunque
+usaba el índice, no había condición indexada por tutor y el plan de bajo volumen seguía
+anidando recorridos completos. No se aumentó el límite ni se prepararon estadísticas para ocultarlo.
+
+Se sustituye la migración 020, aún inédita en main, por `020_busqueda_pacientes_tutores.sql`:
+misma definición de la RPC de 016, con una CTE `tutors as materialized` y la unión a esa lectura.
+Esto evita repetir lectura/RLS de todos los tutores por paciente con independencia del plan,
+sin convertir IDs, cambiar comparaciones de texto, privilegios, políticas, filtros ni resultados.
+Se retira el índice innecesario. Localmente se revirtió únicamente el índice y registro 020 de
+esta tarea antes de aplicar la versión corregida; no se tocó 019 ni datos de otros trabajos.
+
+- Rojo/verde en el esquema temporal vacío: el mismo caso que fallaba a 8.006 ms pasa sin el
+  índice y conserva los 14 resultados, página y aislamiento. Los fixtures terminan en rollback.
+- Base compartida: pgTap completo 340 pass (19 archivos), integración focalizada 15 pass, E2E
+  antes fallido 3/3 satisfactorio con el mismo timeout. Llamadas directas: 375/397/391 ms con
+  1.421 pacientes; la base compartida siguió creciendo, por lo que no es una comparación de
+  tiempos con idénticos datos. El código de cliente y el export reutilizado no cambian.
+- Reversión: restaurar mediante una nueva migración la definición de `search_patients` de 016;
+  no se borran datos, pero se recupera el trabajo repetido. No queda índice nuevo en esta PR.
+- El fallo del CI del índice se conserva como evidencia histórica; tipos y verificación conjunta
+  deben acreditarse de nuevo sobre la corrección final. La revisión independiente sigue pendiente.
