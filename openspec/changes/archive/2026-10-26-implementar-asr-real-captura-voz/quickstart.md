@@ -54,7 +54,8 @@ el campo coincide con la salida de `supabase gen types --local` (comprobado), y 
   permiso, la grabación y el aviso reales no se han ejercido (tarea 7.3). Hay que confirmar allí que
   la parte `{uri,name,type}` del multipart sube bien, que storage-js sube el `ArrayBuffer` y que el
   archivo sigue disponible tras `release()`. **No se afirma soporte nativo
-  verificado.**
+  verificado.** Archivado el 2026-10-26 por decisión explícita del responsable con la tarea 7.3
+  abierta: archivar sincroniza la spec, no verifica ni acepta el soporte nativo.
 - **Retención y consentimiento del audio**: sin política (PoC sintético); sin UPDATE/DELETE del audio.
 - **Cuota por usuario** en la función (cualquier veterinario autenticado puede disparar transcripciones).
 - **Base legal / retención del proveedor** antes de cualquier uso con datos reales.
