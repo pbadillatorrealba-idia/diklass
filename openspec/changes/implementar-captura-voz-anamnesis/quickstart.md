@@ -186,3 +186,44 @@ Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.type
   el flujo real de permisos de micrófono no está verificado.
 - **Aceptación humana de SC-004/SC-016 sobre conversaciones reales**: aquí se miden sobre la
   conversación simulada de referencia (SC-004 y SC-016 medidos por test, no aceptados).
+
+## Segunda auditoría de tests (2026-10-26)
+
+Cambio de pruebas sobre `87a78d0`, implementado en `882f6b1` con corrección de tipos en `fdac68a`; no cambia código de producción,
+SQL, requisitos ni umbrales. Cuatro casos se fusionan conservando sus aserciones; se retira
+además el promedio unitario sobre operaciones vacías, cuya medición pasa al caso vivo
+existente. En los tres archivos unitarios afectados: **53 → 48 casos**; el archivo de
+integración conserva **8 casos**. Diff de tests: **66 líneas añadidas, 125 retiradas (−59)**.
+No se afirma ahorro de tiempo de CI.
+
+Verificación ejecutada desde el worktree aislado:
+
+- `bun install --frozen-lockfile`: dependencias instaladas sin modificar `bun.lock`.
+- Línea base de los tres archivos unitarios afectados: **53 pass / 0 fail**.
+- `bunx biome check` sobre los cuatro archivos de tests tocados: sin diagnósticos.
+- `SUPABASE_LIVE_TESTS=1 bun --env-file=/home/pablo/Projects/diklass/diklass/.env test tests/unit/registro/schema.test.ts tests/unit/voz/audio-fact-service.test.ts tests/unit/voz/listen-mode-controller.test.ts tests/integration/voz/captura-voz.test.ts`: **56 pass / 0 fail / 0 skip**, 204 aserciones, con Supabase local y cuentas sintéticas existentes.
+- Seis mutaciones temporales detectadas por fallo de expectativa: procesamiento aplazado
+  hasta terminar la captura, ausencia de `await`, cambio de procedencia parseada, traza errónea,
+  procedencia alterada al confirmar y demora de 2.100 ms solo en el primer tramo. Esta última
+  falla en el límite individual de 2.000 ms; el promedio de dos ventanas la habría ocultado.
+  Copias temporales retiradas, sin cambios en `src/`. Ejecución final verde después de ellas.
+- `git diff --check`: sin errores.
+- CI de `6304e43` detectó dos errores TS2769 en las nuevas aserciones. Se reprodujeron con
+  `bun run typecheck` local; `fdac68a` conserva el vocabulario como literales (`as const`) y
+  compara el ID opcional encontrado con el ID obligatorio del hecho. Tras corregir:
+  `bun run typecheck` sin errores y la misma selección de tests **56 pass / 0 fail / 0 skip**,
+  204 aserciones. Las expectativas siguen detectando una procedencia o traza incorrecta.
+- [PR #67](https://github.com/pbadillatorrealba-idia/diklass/pull/67), código y documentación
+  subidos en commits separados. [Ronda 1 de revisión](https://github.com/pbadillatorrealba-idia/diklass/pull/67#issuecomment-6420749315)
+  publicada: dos errores de tipos, ambos corregidos y comprobados. La revisión del HEAD
+  corregido se publica en esa PR; no se presenta el reporte anterior como revisión vigente.
+
+El caso vivo conserva borradores de los dos primeros tramos, su procedencia y la relación con
+los tramos persistidos; añade estados `processed` y exige hechos de ambas ventanas. El
+cronómetro incluye transcripción simulada, extracción, lecturas de contexto y escrituras
+reales, hasta resolver el tramo. Excluye preparación de fixtures y captura de 30 s.
+
+No se ejecutaron gate, pgTap, integración completa, Playwright ni Maestro.
+No cambian firmas públicas, producción, migraciones ni UI; solo se verificó el alcance tocado.
+La batería de cierre sigue pendiente de autorización conforme a AGENTS.md. La deuda 7.12/7.13
+permanece pendiente y esta limpieza no constituye aceptación de voz.
