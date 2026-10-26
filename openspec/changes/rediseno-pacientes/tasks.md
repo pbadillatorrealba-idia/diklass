@@ -65,10 +65,14 @@ es aceptación. Lo pendiente queda sin marcar.
 
 ## 5. Cierre
 
-- [ ] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y
-  URL de CI. Hasta entonces este cambio no está aceptado.
+- [x] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y
+  URL de CI.
   Evidencia local (2026-10-26), sobre el merge con `main` y migraciones 001–018: Biome y `tsc`
-  limpios; unit 1020/1020; pgTap 337/337; e2e web `chromium` 77/77. Falta la URL de CI (y Firefox/WebKit, que solo corren allí).
+  limpios; unit 1020/1020; pgTap 337/337; e2e web `chromium` 77/77.
+  CI: https://github.com/pbadillatorrealba-idia/diklass/actions/runs/40335037410 (Auditoría de
+  dependencias, Calidad y tipos, Unit e integración, y pgTap + e2e web con Supabase: todos en verde;
+  incluye el paso «tipos generados = migraciones», que confirma 1.4). Firefox/WebKit solo corren al
+  hacer push a `main`.
 - [ ] 5.3 Diagnosticar el error de hidratación React #418 que aparece al cargar la ficha del paciente
   en el export estático (observado en 3.4) y decidir si es anterior a este cambio.
 - [x] 5.2 Notas de revisión de FR-044, FR-079, FR-083 y D12/D18 añadidas en
