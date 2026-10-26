@@ -92,14 +92,16 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     const ruta = page.getByRole("navigation", { name: "Ruta" });
     await expect(ruta).toBeVisible({ timeout: 15_000 });
     await expect(ruta.getByTestId("screen-crumb-0")).toHaveText("Pacientes");
+    await expect(ruta.getByTestId("screen-back")).toHaveText(/\S/);
+    await expect(ruta.locator('[aria-current="page"]')).toBeVisible();
     await ruta.getByTestId("screen-back").click();
     await expect(page).toHaveURL(new RegExp(`/patients/${caso.patientId}$`));
 
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(`/consultations/${caso.openConsultationId}`);
-    await expect(page.getByTestId("screen-back").filter({ visible: true })).toBeVisible({
-      timeout: 15_000,
-    });
+    const volver = page.getByTestId("screen-back").filter({ visible: true });
+    await expect(volver).toBeVisible({ timeout: 15_000 });
+    await expect(volver).toContainText("Volver");
     await expect(page.getByRole("navigation", { name: "Ruta" })).toHaveCount(0);
   });
 

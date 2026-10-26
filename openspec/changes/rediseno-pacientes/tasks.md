@@ -24,7 +24,7 @@ es aceptación. Lo pendiente queda sin marcar.
   la URL. Verificación: Biome y `tsc` limpios.
 - [x] 2.2 `tutors/[id].tsx` mínima. Verificación: Biome y `tsc` limpios.
 - [x] 2.3 Verificado a 1280, 768 y 375 px con axe en claro y oscuro, y e2e de `accessibility.spec.ts`
-  y `estados.spec.ts` actualizados. Verificación: ambos en verde en `chromium` y `chromium-dark`
+  y `estados.spec.ts` actualizados (este último en `acafe4f`). Verificación: ambos en verde en `chromium` y `chromium-dark`
   (workers=1); el caso de la lista crea sus propios pacientes con `prepararPaciente`.
 
 ## 3. Ficha por cards (FR-117, FR-118, FR-002, FR-044)
@@ -55,7 +55,8 @@ es aceptación. Lo pendiente queda sin marcar.
   Verificación: `tests/unit/ui/screen-title.test.tsx`.
 - [x] 4.2 e2e: ficha fuera del caso de «2 columnas», `antecedent-open` en `caso-sintetico.ts` y caso
   del breadcrumb a 1280 px (y solo «Volver» a 375 px) en `navegacion.spec.ts`. Verificación:
-  e2e web completo, 76/76 en `chromium` (workers=1).
+  e2e web completo, 76/76 en `chromium` (workers=1), ejecutado con los casos de lista y
+  breadcrumb ya incluidos.
 
 ## 5. Cierre
 
@@ -63,6 +64,8 @@ es aceptación. Lo pendiente queda sin marcar.
   URL de CI. Hasta entonces este cambio no está aceptado.
   Evidencia local (2026-10-26): Biome limpio; `tsc` limpio; unit 979/979; pgTap 310/310 tras
   `db reset`; e2e web `chromium` 76/76. Falta la URL de CI (y Firefox/WebKit, que solo corren allí).
+- [ ] 5.3 Diagnosticar el error de hidratación React #418 que aparece al cargar la ficha del paciente
+  en el export estático (observado en 3.4) y decidir si es anterior a este cambio.
 - [x] 5.2 Notas de revisión de FR-044, FR-079, FR-083 y D12/D18 añadidas en
   `implementar-registro-clinico-longitudinal` y `sistema-visual`. Verificación: lectura de los
   textos. Queda pendiente D20/quickstart 12.9 (`FichaSummary`), que es evidencia histórica y no se
