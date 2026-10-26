@@ -433,8 +433,8 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   comparan contra la versión leída al empezar. Es una señal revisable (FR-032), nunca una
   escritura; el coste de releerla en cada tramo iba contra SC-028.
 - **Carrera de cierre con `FOR SHARE`** (revisión de la PR #29): pgTap no puede ejercer dos
-  sesiones; la serialización se verificó a mano con dos sesiones `psql` (evidencia en
-  `quickstart.md`) y no queda automatizada.
+  sesiones; la serialización se automatiza en `tests/integration/voz/carrera-cierre.test.ts`
+  (conexión directa que cierra sin confirmar y escritura por la API que debe esperar).
 - **Cierre de consulta por UPDATE directo**: el cierre de la consulta no está restringido a
   `approve_clinical_record` (pendiente 7.10 de la spec 002); los guardas de la 011 lo respetan
   igual, porque leen el estado vigente de la consulta.

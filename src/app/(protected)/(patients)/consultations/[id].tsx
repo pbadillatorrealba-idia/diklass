@@ -34,6 +34,7 @@ import { Screen } from "@/components/ui/screen";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { ListenModeSection } from "@/components/voz/listen-mode-section";
 import { flushDraft, useDraftPreserver } from "@/features/clinical/draft-preserver";
 import {
   type AnamnesisEntry,
@@ -654,6 +655,7 @@ export default function ConsultationScreen() {
             {/* Un solo eje vertical con las secciones numeradas del protocolo (D20). */}
             <VStack className="gap-6" testID="consultation-main">
               <FormSection active={activeSection === 1} number={1} title="Anamnesis">
+                {data.isClosed ? null : <ListenModeSection consultationId={id} />}
                 <AnamnesisSection
                   entries={anamnesisViews}
                   field={composerField}
