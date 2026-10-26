@@ -55,8 +55,8 @@ es aceptación. Lo pendiente queda sin marcar.
   Verificación: `tests/unit/ui/screen-title.test.tsx`.
 - [x] 4.2 e2e: ficha fuera del caso de «2 columnas», `antecedent-open` en `caso-sintetico.ts` y caso
   del breadcrumb a 1280 px (y solo «Volver» a 375 px) en `navegacion.spec.ts`. Verificación:
-  e2e web completo, 76/76 en `chromium` (workers=1), ejecutado con los casos de lista y
-  breadcrumb ya incluidos.
+  e2e web completo, 77/77 en `chromium` (workers=1), sobre el merge con `main`, con los casos de lista y
+  breadcrumb incluidos.
 
 - [x] 4.4 Búsqueda de pacientes con tutor «nombre apellido» (migración 016, con la nota de
   rendimiento de los joins), ids de la URL que no son UUID resueltos como «no encontrado»
@@ -67,8 +67,8 @@ es aceptación. Lo pendiente queda sin marcar.
 
 - [ ] 5.1 `bun run lint`, `tsc --noEmit`, unit, pgTap y e2e web completos; registrar evidencia y
   URL de CI. Hasta entonces este cambio no está aceptado.
-  Evidencia local (2026-10-26): Biome limpio; `tsc` limpio; unit 979/979; pgTap 310/310 tras
-  `db reset`; e2e web `chromium` 76/76. Falta la URL de CI (y Firefox/WebKit, que solo corren allí).
+  Evidencia local (2026-10-26), sobre el merge con `main` y migraciones 001–018: Biome y `tsc`
+  limpios; unit 1020/1020; pgTap 337/337; e2e web `chromium` 77/77. Falta la URL de CI (y Firefox/WebKit, que solo corren allí).
 - [ ] 5.3 Diagnosticar el error de hidratación React #418 que aparece al cargar la ficha del paciente
   en el export estático (observado en 3.4) y decidir si es anterior a este cambio.
 - [x] 5.2 Notas de revisión de FR-044, FR-079, FR-083 y D12/D18 añadidas en

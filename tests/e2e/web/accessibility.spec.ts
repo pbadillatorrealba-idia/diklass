@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
+import { randomRut } from "../../support/rut";
 import {
   provisionClinicalCase,
   type SyntheticCase,
@@ -325,18 +326,19 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     const { crear } = await prepararPaciente(page, "Lista E2E uno");
     const tutorId = await crear("tutor", {
       name: "Tutor lista E2E",
+      rut: randomRut(),
       phone: "+56 9 5550 0102",
       email: null,
     });
     await crear("patient", {
       name: "Lista E2E dos",
       species: "felino",
-      breed: null,
+      breed: "Siamés",
       birthDate: "2022-05-01",
       ageMonths: null,
       weightKg: 4,
       sex: "macho",
-      reproductiveStatus: "castrado",
+      reproductiveStatus: "esterilizado",
       antecedentes: {
         medicalHistory: [],
         preexistingDiseases: [],
