@@ -8,7 +8,7 @@ captura estructurada del resultado de las decisiones clínicas en el PoC de CDSS
 
 **Status**: Draft — pendiente de aceptación
 
-**Contexto de producto**: [Brief del PoC](../../../../../docs/brief-poc-cdss.md)
+**Contexto de producto**: [Brief del PoC](../../../docs/brief-poc-cdss.md)
 
 **Nota sobre identificadores**: FR/SC conservan su identidad global. Los requisitos transversales comparten ID y pueden especializarse por dominio sin contradecir la obligación canónica del brief.
 

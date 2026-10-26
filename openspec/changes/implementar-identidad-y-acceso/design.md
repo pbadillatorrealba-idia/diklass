@@ -32,7 +32,7 @@ dependencia inicial.
 Supabase Auth/PostgreSQL/RLS proporcionará autenticación, clínica compartida y enforcement del lado
 servidor. Los triggers de PostgreSQL fijarán el actor y el momento de cada mutación clínica. La
 implementación se limita a identidad, acceso y la infraestructura de atribución reusable; no
-implementa todavía las entidades completas de la especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) ni el ciclo de vida de cuentas.
+implementa todavía las entidades completas de la especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md) ni el ciclo de vida de cuentas.
 
 ## Technical Context
 

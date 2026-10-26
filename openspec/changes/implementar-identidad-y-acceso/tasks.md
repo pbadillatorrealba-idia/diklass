@@ -86,7 +86,7 @@ compartidos y que cada acción conserve actor y momento inmutables, incluyendo c
 
 **Independent Test**: Dos contextos autenticados crean/leen un registro clínico de prueba, intentan
 suplantar al actor y modificar atribución, y verifican el evento correctivo separado. La integración
-con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).
 
 ### Tests for User Story 12 (TDD: write first and observe failing)
 
@@ -103,7 +103,7 @@ con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [regis
 - [x] 4.8 T040 [US12] Add deterministic shared-clinic attribution fixture and verification query in `supabase/seed.sql` and `supabase/tests/fixtures/attribution.sql`
 - [x] 4.9 T041 [US12] Render actor, timestamp and immutable/correction states in `src/components/clinical/attribution-badge.tsx` and `src/components/clinical/correction-history.tsx`
 
-**Checkpoint (declaración histórica, no aceptación conjunta)**: US12 infrastructure is independently verified; domain screens from especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) can
+**Checkpoint (declaración histórica, no aceptación conjunta)**: US12 infrastructure is independently verified; domain screens from especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md) can
 reuse the contract without changing attribution rules.
 
 ---
@@ -128,7 +128,7 @@ reuse the contract without changing attribution rules.
 - **Foundational**: Depends on Setup and blocks all stories.
 - **US11**: Depends on Foundational; it is the MVP.
 - **US12**: Depends on Foundational and can be developed after US11 for the first integrated demo;
-  its domain verification completes with especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+  its domain verification completes with especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).
 - **Polish**: Depends on the desired story checkpoints.
 
 ### Parallel Opportunities
@@ -156,7 +156,7 @@ sequential even when its phase is otherwise parallelizable.
 ### Incremental Delivery
 
 1. Add US12 attribution infrastructure and verify it with synthetic records.
-2. Integrate Paciente/Consulta/Epicrisis when implementing especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) without changing the attribution
+2. Integrate Paciente/Consulta/Epicrisis when implementing especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md) without changing the attribution
    contract.
 3. Run all cross-cutting quality gates and native/web acceptance flows.
 

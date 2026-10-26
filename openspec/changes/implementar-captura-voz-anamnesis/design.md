@@ -11,7 +11,7 @@ diseño se aprueba antes de `tasks.md`; su implementación sigue el Rojo-Verde-R
 
 **Restricción de esta ejecución**: sin Docker/Supabase local ni Playwright. El SQL se verifica en un
 clúster PostgreSQL scratch con shims en `/tmp/verify-004/` (patrón del
-[quickstart de 002](../implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
+[quickstart de 002](../archive/2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md)) y en el job
 `database` de CI; la integración viva se ejecuta solo en CI (`SUPABASE_LIVE_TESTS=1`) y su corrida
 queda condicionada al requisito de integración R1. Es una limitación de verificación declarada, no
 una reducción de alcance.
