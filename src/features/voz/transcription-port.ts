@@ -11,14 +11,22 @@ import type { TranscriptQuality } from "@/features/voz/schema";
  * sin requisito).
  */
 
+/** Audio de una ventana (D2 del cambio implementar-asr-real-captura-voz): un archivo autocontenido. */
+export type AudioPayload = {
+  blob: Blob;
+  mimeType: string;
+  /** Extensión canónica: la ruta de Storage del tramo la usa (migración 019). */
+  extension: "webm" | "m4a";
+};
+
 /** Ventana de captura de ~30 s (D3 · brief §5): una unidad de transcripción incremental. */
 export type AudioWindow = {
   listenSessionId: string;
   seq: number;
   startedAt: string;
   durationMs: number;
-  /** Material de audio opaco: ausente en simulación; bytes/Blob en la extensión de micrófono. */
-  audio?: unknown;
+  /** Ausente en la captura simulada; el archivo de la ventana con el micrófono real. */
+  audio?: AudioPayload;
 };
 
 export type TranscriptResult = { text: string; quality: TranscriptQuality };

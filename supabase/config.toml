@@ -30,7 +30,10 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [storage]
-enabled = false
+enabled = true
+file_size_limit = "10MiB"
 
+[functions.transcribe-audio]
+verify_jwt = true
 [local_smtp]
 enabled = false

@@ -7,6 +7,7 @@ import { VStack } from "@/components/ui/vstack";
 import { DraftFactsPanel } from "@/components/voz/draft-facts-panel";
 import { ListenModeButton } from "@/components/voz/listen-mode-button";
 import { ListenStatusIndicator } from "@/components/voz/listen-status-indicator";
+import { RecordingNotice } from "@/components/voz/recording-notice";
 import { TranscriptReview } from "@/components/voz/transcript-review";
 import { toggleListenMode } from "@/features/voz/listen-mode-toggle";
 import { useListenMode } from "@/features/voz/use-listen-mode";
@@ -62,6 +63,7 @@ export function ListenModeSection({ consultationId }: ListenModeSectionProps) {
         />
         <ListenStatusIndicator state={modo.state} />
       </Box>
+      <RecordingNotice active={modo.modoReal && modo.state === "capturando"} />
       {submitError ? (
         <Callout testID="listen-mode-error" tone="error">
           {submitError}

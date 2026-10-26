@@ -28,6 +28,10 @@ Copia `.env.example` a `.env`. `.env` está en `.gitignore` y no se commitea.
 | `SUPABASE_SERVICE_ROLE_KEY` | Scripts de servidor, tests de integración y e2e | **No**: nunca como `EXPO_PUBLIC_*` |
 | `SUPABASE_LIVE_TESTS` | `bun run test:integration`: `1` activa las suites contra Supabase | — |
 | `CORPUS_VET_EMAIL` / `CORPUS_VET_PASSWORD` | `scripts/cargar-corpus-conocimiento.ts`: veterinario sintético que incorpora el corpus | **No**: nunca como `EXPO_PUBLIC_*` |
+| `EXPO_PUBLIC_VOZ_MODO` | `real` activa micrófono y transcripción reales en el modo de escucha; vacío usa el guion simulado | Sí |
+| `EXPO_PUBLIC_VOZ_VENTANA_MS` | Duración de cada ventana de captura (por defecto 30 000 ms); acortarla baja la latencia | Sí |
+| `OPENAI_API_KEY` | Solo en `supabase/functions/.env` (secreto de la función `transcribe-audio`) | **No**: nunca en `.env` del cliente ni como `EXPO_PUBLIC_*` |
+| `E2E_CLEAR_CACHE` | `1` limpia la caché de Metro en el export del e2e (al cambiar de modo de voz) | — |
 | `PLAYWRIGHT_BASE_URL` | Playwright (opcional) | — |
 
 Expo inlinea toda variable `EXPO_PUBLIC_*` en el bundle: cualquier valor con ese prefijo es público.
@@ -55,6 +59,22 @@ En `.env`, `EXPO_PUBLIC_SUPABASE_URL` y `SUPABASE_URL` toman `API_URL`,
 
 Después de tocar una migración, regenera los tipos y commitéalos: CI falla si
 `database.types.ts` no coincide con las migraciones.
+
+### Voz real (micrófono + transcripción)
+
+`bun run db:start` ya levanta Storage (el audio de cada tramo vive en el bucket privado
+`consultation-audio`). La transcripción usa la Edge Function `transcribe-audio` con OpenAI
+`gpt-transcribe`; su clave va solo en un secreto de la función:
+
+```bash
+cp supabase/functions/.env.example supabase/functions/.env   # ignorado por git; pon OPENAI_API_KEY
+supabase functions serve --env-file supabase/functions/.env  # sirve las funciones locales
+```
+
+Para usar la app con voz real, exporta `EXPO_PUBLIC_VOZ_MODO=real` (y limpia la caché de Metro). El
+navegador solo da micrófono en `localhost` o HTTPS. Sin esa variable el modo de escucha usa el guion
+simulado. Es un PoC con voces sintéticas: el audio sale a un tercero (OpenAI) y no hay política de
+retención ni consentimiento formal todavía.
 
 ### Veterinarios sintéticos
 

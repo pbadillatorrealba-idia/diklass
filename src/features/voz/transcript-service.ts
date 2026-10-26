@@ -19,8 +19,9 @@ type TranscriptSegmentRow = Database["public"]["Tables"]["transcript_segments"][
  * Cada tramo persiste con su marca de confiabilidad (`quality`): de los `insufficient` no se
  * derivan antecedentes (FR-031 · US6-AC7). `processing_state` hace explícito el estado del tramo
  * — `pending` hasta resolverse en `processed` o `discarded` —, de modo que una interrupción deja
- * todo tramo en estado definido y ninguno a medio procesar (FR-055 · US6-AC12). El audio nunca se
- * persiste (supuestos de la spec).
+ * todo tramo en estado definido y ninguno a medio procesar (FR-055 · US6-AC12). El audio, solo con
+ * el modo real, vive en Storage y el tramo guarda su ruta (`audio_path`, D4 del cambio
+ * implementar-asr-real-captura-voz).
  */
 
 export type ProcessingState = "pending" | "processed" | "discarded";
@@ -35,6 +36,8 @@ export type TranscriptSegmentEntry = {
   text: string;
   quality: "ok" | "insufficient";
   processingState: ProcessingState;
+  /** Ruta del audio en Storage (D4 del cambio implementar-asr-real-captura-voz); nulo en simulación. */
+  audioPath: string | null;
   createdAt: string;
 };
 
@@ -51,6 +54,7 @@ function aTramo(fila: TranscriptSegmentRow): TranscriptSegmentEntry {
     text: fila.text,
     quality: transcriptSegmentSchema.shape.quality.parse(fila.quality),
     processingState: transcriptSegmentSchema.shape.processingState.parse(fila.processing_state),
+    audioPath: fila.audio_path ?? null,
     createdAt: fila.created_at,
   };
   return tramo;
@@ -58,7 +62,9 @@ function aTramo(fila: TranscriptSegmentRow): TranscriptSegmentEntry {
 
 export async function saveTranscriptSegment(
   client: SupabaseClient<Database>,
-  input: Omit<TranscriptSegmentEntry, "id" | "processingState" | "createdAt">,
+  input: Omit<TranscriptSegmentEntry, "id" | "processingState" | "createdAt" | "audioPath"> & {
+    audioPath?: string;
+  },
 ): Promise<TranscriptSegmentEntry> {
   const requestId = makeRequestId();
   try {
@@ -73,6 +79,7 @@ export async function saveTranscriptSegment(
         ended_at: tramo.endedAt,
         text: tramo.text,
         quality: tramo.quality,
+        ...(input.audioPath ? { audio_path: input.audioPath } : {}),
       })
       .select()
       .single();

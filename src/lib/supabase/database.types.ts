@@ -411,6 +411,7 @@ export type Database = {
       }
       transcript_segments: {
         Row: {
+          audio_path: string | null
           clinic_id: string
           created_at: string
           ended_at: string
@@ -423,6 +424,7 @@ export type Database = {
           text: string
         }
         Insert: {
+          audio_path?: string | null
           clinic_id: string
           created_at?: string
           ended_at: string
@@ -435,6 +437,7 @@ export type Database = {
           text: string
         }
         Update: {
+          audio_path?: string | null
           clinic_id?: string
           created_at?: string
           ended_at?: string

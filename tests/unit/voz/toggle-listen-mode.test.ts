@@ -9,6 +9,7 @@ import type { ListenModeApi } from "@/features/voz/use-listen-mode";
 function apiFalso(state: ListenModeState, alLlamar: (nombre: string) => void): ListenModeApi {
   return {
     state,
+    modoReal: false,
     facts: [],
     segments: [],
     isBusy: false,
