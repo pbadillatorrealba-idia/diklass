@@ -30,7 +30,7 @@ posterior a los recortes ni una medición del ahorro de CI.
 - Reducir cantidad de casos como objetivo aislado, silenciar fallos o eliminar casos solo por
   antigüedad, tamaño del archivo o porque prueben código aparentemente sencillo.
 - Completar aquí el flujo clínico nativo de dos cuentas, introducir un framework de tests,
-  generalizar los clientes falsos o modificar migraciones, datos clínicos y contratos públicos.
+  generalizar los clientes falsos o modificar datos clínicos y contratos públicos. Las migraciones quedan limitadas a la corrección de rendimiento autorizada al cierre.
 
 ## Decisions
 
@@ -132,8 +132,7 @@ agente no sustituye la revisión por alguien distinto del autor exigida por la c
 
 ## Migration Plan
 
-Aplicar los grupos de tareas por separado tras la revisión y aprobación del plan. No hay
-migraciones de datos ni despliegue especial. Ante pérdida de una garantía, restaurar el recorte
+Aplicar los grupos de tareas por separado tras la revisión y aprobación del plan. La limpieza original no requiere migraciones de datos; la corrección de rendimiento puede añadir una migración SQL sin borrar datos ni cambiar contratos. Ante pérdida de una garantía, restaurar el recorte
 afectado desde Git y conservar la prueba hasta resolver la equivalencia; no añadir omisiones.
 
 ## Registro de implementación
@@ -162,3 +161,19 @@ Sobre `8f43f160b36940c400932f7ea29a07c4d7ac9770`, tras autorización del respons
 - [Primera prerrevisión publicada](https://github.com/pbadillatorrealba-idia/diklass/pull/65#issuecomment-6419353501): sin hallazgos en los nueve candidatos. `receiving-code-review`: contrastado el informe, sin correcciones que aplicar. No consta revisión independiente en GitHub.
 
 Cierre bloqueado: 5.1 conserva el fallo web local y 5.3 requiere la revisión independiente. Resolver rendimiento de la RPC puede exigir migración o ampliar el alcance; D5 y AGENTS.md exigen consultar esa decisión al responsable. Este cambio no se archiva ni se declara aceptado mientras siga pendiente la resolución.
+
+## Ampliación autorizada: rendimiento de búsqueda de pacientes
+
+El responsable autoriza investigar y corregir el bloqueo de 5.1 en la misma PR. La aprobación
+incluye la migración mínima que resulte del diagnóstico; no modifica resultados, requisitos,
+contratos públicos, RLS ni atribución. Se mantienen los 5.000 ms del E2E y los datos existentes.
+
+1. Obtener el plan real bajo rol autenticado y localizar el coste dominante, contrastando índices
+y políticas existentes. No optimizar por suposición ni cambiar privilegios para ganar tiempo.
+2. Añadir una regresión reproducible con volumen sintético acotado en una transacción que se
+revierte. Debe detectar la búsqueda lenta y conservar paginación y aislamiento por clínica.
+3. Aplicar la menor corrección de consulta/índice que conserve resultados y controles; comprobar
+rojo/verde y registrar tiempos comparables. No se añaden dependencias ni abstracciones.
+4. Verificar pgTap, tipos generados sin diferencias y typecheck si hay migración; integración viva
+afectada y caso web fallido, un worker, sin repetir todo por fase. Actualizar evidencia y PR.
+La revisión independiente y la aceptación siguen pendientes; no se descartan fallos del cierre.
