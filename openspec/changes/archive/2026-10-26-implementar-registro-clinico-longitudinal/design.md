@@ -2,7 +2,7 @@
 
 **Fecha**: 2026-09-22 | **Especificación**: [registro-clinico-longitudinal](specs/registro-clinico-longitudinal/spec.md)
 
-**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../implementar-identidad-y-acceso/design.md)
+**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../../implementar-identidad-y-acceso/design.md)
 implementada y mergeada (PRs #2–#5, #13). Este diseño se aprueba antes de `tasks.md`; su
 implementación sigue el Rojo-Verde-Refactor obligatorio.
 
@@ -34,7 +34,7 @@ La capa de identidad y atribución ya existe y está endurecida en `main`:
   de la sesión y emite `epicrisis_approved`.
 - Contrato de cliente en `src/lib/attribution/` (`createClinicalRecord`, guardas
   `ATTRIBUTION_CONTROL_FIELDS`, respuesta `ClinicalMutationResult`); su especificación vive en
-  [`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../implementar-identidad-y-acceso/contracts/clinical-attribution.md).
+  [`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../../implementar-identidad-y-acceso/contracts/clinical-attribution.md).
 - RLS exige sesión de acceso activa y clínica compartida; la política de actualización (T055)
   permite a cualquier veterinario activo de la clínica editar filas no aprobadas — premisa de
   amenaza de D5 —; los logs estructurados usan `log_server_event` en SQL y
@@ -250,7 +250,7 @@ Los servicios de `src/features/registro/` escriben solo vía `src/lib/attributio
 (`createClinicalRecord` y las extensiones `updateClinicalContent`, `approveClinicalRecord`,
 `createCorrectiveRecord`), que rechazan campos de control (`ATTRIBUTION_CONTROL_FIELDS`) y devuelven
 `ClinicalMutationResult` con la atribución real leída de la traza (contrato de
-[`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../implementar-identidad-y-acceso/contracts/clinical-attribution.md):
+[`../implementar-identidad-y-acceso/contracts/clinical-attribution.md`](../../implementar-identidad-y-acceso/contracts/clinical-attribution.md):
 respuesta verificable sin estado efímero de la UI).
 
 Tras un `UPDATE`, un evento de la traza anterior a `updated_at` describe otra escritura (el alta):

@@ -144,7 +144,7 @@ Cada requisito funcional se verifica mediante los escenarios de aceptación indi
 - **Spec 001 (identidad y acceso)**: aporta la identidad autenticada a la que se atribuye cada
   entrada de retroalimentación.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: FR-018
 

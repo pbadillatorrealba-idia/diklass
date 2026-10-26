@@ -1,8 +1,8 @@
-# Checklist de Calidad de Especificación: Base de conocimiento trazable
+# Checklist de Calidad de Especificación: Registro clínico longitudinal
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
-**Funcionalidad**: [spec.md](../specs/base-conocimiento-trazable/spec.md)
+**Funcionalidad**: [spec.md](../specs/registro-clinico-longitudinal/spec.md)
 
 > **Revisión documental histórica trasladada el 2026-09-16:** se conservan las 16 marcas originales y las notas de revisión. No son tareas de implementación, pruebas de la aplicación ni aceptación de la capacidad; la migración no ha vuelto a ejecutar estas revisiones. Las afirmaciones de iteraciones anteriores se leen en su contexto histórico.
 
@@ -37,7 +37,7 @@
 
 ### Recuento
 
-1 historia(s) · 13 escenarios · 14 requisitos funcionales · 6 criterios de éxito
+4 historia(s) · 20 escenarios · 13 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -49,24 +49,34 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Casos límite sin requisito**: cuatro casos prometían comportamiento que ningún FR exigía. Se
-  agregaron FR-051 (pregunta sin paciente seleccionado, el de mayor riesgo clínico), FR-052 (fuentes
-  contradictorias entre sí) y FR-053 (citas hacia fuentes retiradas); se eliminó el caso de consulta
-  ambigua por especulativo.
-- **Generalidad especulativa**: la cláusula de jurisdicción de FR-030 era un MUST que su propio
-  supuesto desactivaba. Eliminada por contradecir el Principio III de la constitución.
-- **Criterios no medibles**: SC-026 era FR-028 reetiquetado; SC-010 y SC-015 no definían conjunto de
-  evaluación ni muestra. Los tres reformulados.
+- **Escenario sin requisito**: US2/3 afirmaba que el sistema deduce antecedentes del texto libre;
+  ningún FR lo exigía y habría duplicado el extractor de la especificación de [captura de voz hacia anamnesis](../../../implementar-captura-voz-anamnesis/specs/captura-voz-anamnesis/spec.md). Reescrito: la procedencia la
+  asigna el veterinario, y esta spec no infiere nada.
+- **Dependencia hacia adelante**: FR-013 exigía presentar "tratamiento indicado, medicamentos,
+  evolución registrada", que solo producen las specs 007 y 005, mientras la 002 declaraba no
+  depender de nada. Acotado a lo que la 002 sí produce.
+- **Requisito no verificable**: FR-044 hablaba de "información clínica relevante", conjunto que el
+  brief tiene como pregunta abierta. Reformulado sobre los campos concretos de FR-001.
+- **Lenguaje normativo invertido**: FR-010 decía "Ninguna salida ... MUST incorporarse", que bajo
+  RFC-2119 es permisivo. Reescrito como MUST NOT.
+- **Casos límite sin requisito**: se agregó FR-045 (retomar consulta interrumpida) y se eliminaron
+  dos casos especulativos que ningún requisito respaldaba.
+- **Cobertura incompleta**: FR-001 no tenía escenario para consultar una ficha ni para medicamentos
+  actuales y antecedentes conductuales. Agregado US1/5.
+- **Criterio no medible**: SC-011 era el `Then` de un escenario reetiquetado. SC-013 no definía
+  muestra. Ambos reformulados con umbral.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
-**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que
-incorporar o retirar una fuente clínica altera el corpus del que dependen todas las afirmaciones del
-sistema, y que esas operaciones no tenían autorización ni atribución en ninguna spec — una tensión
-viva con el Principio V. Agregado FR-069, escenario US5/13 y la dependencia de la especificación de [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md). Las
-preguntas al asistente siguen siendo lectura y no requieren atribución.
+**Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
+(especificación de [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md)): FR-003 y FR-012 pasan a apoyarse en la identidad autenticada de la especificación de [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md); se eliminó el supuesto de usuario único. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
+entidad Observación clínica no llevaba autor, de modo que en una clínica compartida el contenido de
+la anamnesis heredaba la identidad de quien abrió la consulta en vez de la de quien lo escribió.
+FR-004 ahora atribuye cada antecedente, con escenario US2/6.
 
 ### Advertencia metodológica
 
@@ -76,4 +86,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md). Dependencia externa crítica: fuentes clínicas legalmente utilizables.
+Dependencias directas de construcción: [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md). La aceptación de los comportamientos compartidos de atribución se realiza conjuntamente con identidad; no crea una dependencia de construcción inversa.

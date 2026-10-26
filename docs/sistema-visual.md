@@ -1,7 +1,7 @@
 # Sistema visual
 
 Catálogo de reglas de UI de Diklass (identidad «Formulario en copias», D20). Es la versión
-estable de lo que justifica `openspec/changes/sistema-visual/design.md`; `AGENTS.md` conserva
+estable de lo que justifica `openspec/changes/archive/2026-10-26-sistema-visual/design.md`; `AGENTS.md` conserva
 solo las reglas que hacen fallar una guarda. Ante conflicto prevalecen la constitución, el brief
 y la spec de `sistema-visual`.
 

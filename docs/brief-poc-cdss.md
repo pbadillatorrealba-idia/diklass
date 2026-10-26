@@ -96,10 +96,10 @@ siguen el orden de construcción del PoC y no representan capacidades publicadas
 | Spec | Alcance | Depende de |
 |---|---|---|
 | [001 — Identidad y acceso](../openspec/changes/implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
-| [002 — Registro clínico longitudinal](../openspec/changes/implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
-| [003 — Base de conocimiento trazable](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
+| [002 — Registro clínico longitudinal](../openspec/specs/registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
+| [003 — Base de conocimiento trazable](../openspec/specs/base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
 | [004 — Captura de voz hacia anamnesis](../openspec/changes/implementar-captura-voz-anamnesis/specs/captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001, 002 |
-| [005 — Retroalimentación clínica](../openspec/changes/implementar-retroalimentacion-clinica/specs/retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
+| [005 — Retroalimentación clínica](../openspec/specs/retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
 | [006 — Asistencia clínica proactiva](../openspec/changes/implementar-asistencia-clinica-proactiva/specs/asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 003 |
 | [007 — Apoyo al tratamiento y farmacología](../openspec/changes/implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 003, 006 |
 
@@ -312,7 +312,7 @@ sobre datos agregados y herramientas educativas.
   con precisión suficiente. Afecta spec 003.
 - **R3 — Alucinaciones**: con qué frecuencia el sistema genera información clínica no respaldada.
   Afecta specs 002, 004, 005.
-  La obligación de [declarar la ausencia de respaldo documental y no presentar afirmaciones sin cita como respaldadas (FR-023)](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md#requirement-fr-023)
+  La obligación de [declarar la ausencia de respaldo documental y no presentar afirmaciones sin cita como respaldadas (FR-023)](../openspec/specs/base-conocimiento-trazable/spec.md#requirement-fr-023)
   aporta trazabilidad normativa a este riesgo, sin sustituir la lista de ámbitos afectada en el texto histórico.
 - **R4 — Captura mediante voz**: si la transcripción de conversaciones reales tiene calidad
   suficiente en ambientes clínicos. Afecta spec 004.

@@ -66,7 +66,7 @@ solo viven las reglas de trabajo.
 ## Sistema visual
 
 El catálogo completo (primitivas, texto, botones, ancho, desviaciones de `expo-native-ui`) está en
-[docs/sistema-visual.md](docs/sistema-visual.md); su justificación, en `openspec/changes/sistema-visual/`.
+[docs/sistema-visual.md](docs/sistema-visual.md); su justificación, en `openspec/changes/archive/2026-10-26-sistema-visual/`.
 Para cualquier UI nueva o modificada, estas reglas hacen fallar una guarda (`tema.test.ts`, axe):
 
 - **Color solo con tokens semánticos** de `src/global.css` (clases `bg-card`, `border-warning`…) o

@@ -1,8 +1,8 @@
-# Checklist de Calidad de Especificación: Registro clínico longitudinal
+# Checklist de Calidad de Especificación: Retroalimentación clínica
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
-**Funcionalidad**: [spec.md](../specs/registro-clinico-longitudinal/spec.md)
+**Funcionalidad**: [spec.md](../specs/retroalimentacion-clinica/spec.md)
 
 > **Revisión documental histórica trasladada el 2026-09-16:** se conservan las 16 marcas originales y las notas de revisión. No son tareas de implementación, pruebas de la aplicación ni aceptación de la capacidad; la migración no ha vuelto a ejecutar estas revisiones. Las afirmaciones de iteraciones anteriores se leen en su contexto histórico.
 
@@ -37,7 +37,7 @@
 
 ### Recuento
 
-4 historia(s) · 20 escenarios · 13 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 13 escenarios · 10 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -49,34 +49,28 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Escenario sin requisito**: US2/3 afirmaba que el sistema deduce antecedentes del texto libre;
-  ningún FR lo exigía y habría duplicado el extractor de la especificación de [captura de voz hacia anamnesis](../../implementar-captura-voz-anamnesis/specs/captura-voz-anamnesis/spec.md). Reescrito: la procedencia la
-  asigna el veterinario, y esta spec no infiere nada.
-- **Dependencia hacia adelante**: FR-013 exigía presentar "tratamiento indicado, medicamentos,
-  evolución registrada", que solo producen las specs 007 y 005, mientras la 002 declaraba no
-  depender de nada. Acotado a lo que la 002 sí produce.
-- **Requisito no verificable**: FR-044 hablaba de "información clínica relevante", conjunto que el
-  brief tiene como pregunta abierta. Reformulado sobre los campos concretos de FR-001.
-- **Lenguaje normativo invertido**: FR-010 decía "Ninguna salida ... MUST incorporarse", que bajo
-  RFC-2119 es permisivo. Reescrito como MUST NOT.
-- **Casos límite sin requisito**: se agregó FR-045 (retomar consulta interrumpida) y se eliminaron
-  dos casos especulativos que ningún requisito respaldaba.
-- **Cobertura incompleta**: FR-001 no tenía escenario para consultar una ficha ni para medicamentos
-  actuales y antecedentes conductuales. Agregado US1/5.
-- **Criterio no medible**: SC-011 era el `Then` de un escenario reetiquetado. SC-013 no definía
-  muestra. Ambos reformulados con umbral.
+- **Dependencia no declarada**: la entidad Tratamiento se describía como "definida en la especificación de [apoyo al tratamiento y farmacología](../../../implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md)"
+  mientras la sección Dependencias declaraba solo la 002. Redefinida como entidad propia e
+  independiente, de modo que la spec es construible con la 002 sola, como declara el brief.
+- **Requisito verificado a medias**: FR-018 enumera siete contenidos y la trazabilidad lo asignaba a
+  un escenario que solo verificaba la asociación a la consulta. "Tratamiento aplicado" y
+  "modificación del tratamiento" no tenían escenario alguno. Agregado US10/10.
+- **Casos límite sin requisito**: agregados FR-056 (varias entradas en orden cronológico) y FR-057
+  (consulta sin tratamiento indicado), con escenarios US10/11 y US10/12.
+- **Criterio sin sustento**: SC-037 medía tiempo sin que nada lo hiciera alcanzable. Vinculado a los
+  campos categóricos de FR-043.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
 **Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
-(especificación de [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md)): FR-003 y FR-012 pasan a apoyarse en la identidad autenticada de la especificación de [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md); se eliminó el supuesto de usuario único. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
+(especificación de [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md)): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
 
 **Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
-entidad Observación clínica no llevaba autor, de modo que en una clínica compartida el contenido de
-la anamnesis heredaba la identidad de quien abrió la consulta en vez de la de quien lo escribió.
-FR-004 ahora atribuye cada antecedente, con escenario US2/6.
+atribución de la retroalimentación se afirmaba solo en Supuestos y Dependencias, sin ningún
+requisito, escenario ni criterio que la verificara — a diferencia de las specs 001, 004 y 005, que
+sí enmendaron un requisito. Agregado FR-070, escenario US10/13 y SC-049.
 
 ### Advertencia metodológica
 
@@ -86,4 +80,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md). La aceptación de los comportamientos compartidos de atribución se realiza conjuntamente con identidad; no crea una dependencia de construcción inversa.
+Dependencias directas de construcción: [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../2026-10-26-implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).

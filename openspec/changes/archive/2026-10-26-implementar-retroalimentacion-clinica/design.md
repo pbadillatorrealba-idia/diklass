@@ -2,8 +2,8 @@
 
 **Fecha**: 2026-09-22 | **Especificación**: [retroalimentacion-clinica](specs/retroalimentacion-clinica/spec.md)
 
-**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../implementar-identidad-y-acceso/design.md)
-y [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/design.md) construidos
+**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../../implementar-identidad-y-acceso/design.md)
+y [registro clínico longitudinal](../2026-10-26-implementar-registro-clinico-longitudinal/design.md) construidos
 sobre su rama `feat/002-registro-clinico-longitudinal`, de la que esta rama parte y a la que se
 integra antes de implementar. Este diseño se aprueba antes de `tasks.md`; su implementación sigue el
 Rojo-Verde-Refactor obligatorio.
@@ -32,7 +32,7 @@ ella (ver [propuesta](proposal.md) para el porqué):
 - Contrato de cliente en `src/lib/attribution/clinical-mutations.ts`: `createClinicalRecord`,
   `createCorrectiveRecord` (registro adicional `corrective` con `supersedesEventId`), guardas
   `ATTRIBUTION_CONTROL_FIELDS` y respuesta `ClinicalMutationResult` con la atribución leída de la
-  traza ([contrato de atribución](../implementar-identidad-y-acceso/contracts/clinical-attribution.md)).
+  traza ([contrato de atribución](../../implementar-identidad-y-acceso/contracts/clinical-attribution.md)).
 - `src/features/registro/summaries.ts` expone `buildFollowUpSummary` (FR-013 de 002) **anticipado
   para absorber la evolución posterior (FR-042)**, y `effectiveEpicrisis` para la epicrisis efectiva.
   Son archivos compartidos de 002: este cambio los **lee y expone sus datos a su lado**, sin
@@ -49,7 +49,7 @@ Restricciones de esta rama que el diseño absorbe: **archivos compartidos prohib
 migración `012_retroalimentacion_clinica.sql`, suite pgTap `012_retroalimentacion_clinica.sql`
 (los huecos 010/011 de migraciones y 009/010 de tests están reservados a ramas hermanas);
 **sin Playwright** en esta tanda; verificación SQL local con clúster PostgreSQL scratch y shims en
-`/tmp/verify-005/` (patrón del [quickstart de 002](../implementar-registro-clinico-longitudinal/quickstart.md)),
+`/tmp/verify-005/` (patrón del [quickstart de 002](../2026-10-26-implementar-registro-clinico-longitudinal/quickstart.md)),
 nunca `supabase start` (las ramas hermanas compiten por puertos); las integraciones vivas se
 ejecutan en CI con `SUPABASE_LIVE_TESTS=1`.
 

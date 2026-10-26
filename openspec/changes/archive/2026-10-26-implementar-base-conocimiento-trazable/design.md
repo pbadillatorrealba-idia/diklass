@@ -2,8 +2,8 @@
 
 **Fecha**: 2026-09-22 | **Especificación**: [base-conocimiento-trazable](specs/base-conocimiento-trazable/spec.md)
 
-**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../implementar-identidad-y-acceso/design.md)
-y [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/design.md) como
+**Entrada**: propuesta y especificación del cambio; [identidad y acceso](../../implementar-identidad-y-acceso/design.md)
+y [registro clínico longitudinal](../2026-10-26-implementar-registro-clinico-longitudinal/design.md) como
 dependencias de construcción (001 ya está endurecida en `main`; 002 es la rama sobre la que se
 apila esta). Este diseño se aprueba antes de `tasks.md`; su implementación sigue el
 Rojo-Verde-Refactor obligatorio.
@@ -29,7 +29,7 @@ La plataforma que este cambio usa ya existe y está endurecida:
   (`getPatient`), `src/lib/attribution/types.ts` (`Attribution`, `ClinicalMutationResult`,
   `ATTRIBUTION_CONTROL_FIELDS`) y `src/lib/attribution/clinical-mutations.ts` (patrón de mutación
   con guardas y atribución releída). Ver
-  [contrato de atribución](../implementar-identidad-y-acceso/contracts/clinical-attribution.md).
+  [contrato de atribución](../../implementar-identidad-y-acceso/contracts/clinical-attribution.md).
 - Observabilidad existente: `logEvent`/`captureClientError` en TS y `log_server_event` + `request_id`
   en SQL (solo callable desde funciones *security definer*).
 
@@ -302,7 +302,7 @@ construye los segmentos de ficha reutilizando `PatientContent`, `computeMissingF
 («sin dato» ≠ negativo, FR-044 de 002 visible en el contexto) y el vocabulario `Provenance` de
 `src/features/registro/schema.ts` (cuyo valor `recuperada` existe exactamente para esta spec). Las
 mutaciones de corpus respetan el contrato de
-[atribución](../implementar-identidad-y-acceso/contracts/clinical-attribution.md): rechazan
+[atribución](../../implementar-identidad-y-acceso/contracts/clinical-attribution.md): rechazan
 `ATTRIBUTION_CONTROL_FIELDS` en la frontera y devuelven `ClinicalMutationResult` con la atribución
 releída de la fila (con `action: null`, D3), sin reimplementar guardas.
 

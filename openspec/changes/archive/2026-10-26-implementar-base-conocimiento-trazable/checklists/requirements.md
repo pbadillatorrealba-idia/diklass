@@ -1,8 +1,8 @@
-# Checklist de Calidad de Especificación: Retroalimentación clínica
+# Checklist de Calidad de Especificación: Base de conocimiento trazable
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de pasar a planificación
 **Creado**: 2026-09-09
-**Funcionalidad**: [spec.md](../specs/retroalimentacion-clinica/spec.md)
+**Funcionalidad**: [spec.md](../specs/base-conocimiento-trazable/spec.md)
 
 > **Revisión documental histórica trasladada el 2026-09-16:** se conservan las 16 marcas originales y las notas de revisión. No son tareas de implementación, pruebas de la aplicación ni aceptación de la capacidad; la migración no ha vuelto a ejecutar estas revisiones. Las afirmaciones de iteraciones anteriores se leen en su contexto histórico.
 
@@ -37,7 +37,7 @@
 
 ### Recuento
 
-1 historia(s) · 13 escenarios · 10 requisitos funcionales · 6 criterios de éxito
+1 historia(s) · 13 escenarios · 14 requisitos funcionales · 6 criterios de éxito
 
 ### Historial de validación
 
@@ -49,28 +49,24 @@ anterior y la refutó. El patrón de fallo era sistemático: la validación se h
 dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verificar la segunda cláusula
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
-- **Dependencia no declarada**: la entidad Tratamiento se describía como "definida en la especificación de [apoyo al tratamiento y farmacología](../../implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md)"
-  mientras la sección Dependencias declaraba solo la 002. Redefinida como entidad propia e
-  independiente, de modo que la spec es construible con la 002 sola, como declara el brief.
-- **Requisito verificado a medias**: FR-018 enumera siete contenidos y la trazabilidad lo asignaba a
-  un escenario que solo verificaba la asociación a la consulta. "Tratamiento aplicado" y
-  "modificación del tratamiento" no tenían escenario alguno. Agregado US10/10.
-- **Casos límite sin requisito**: agregados FR-056 (varias entradas en orden cronológico) y FR-057
-  (consulta sin tratamiento indicado), con escenarios US10/11 y US10/12.
-- **Criterio sin sustento**: SC-037 medía tiempo sin que nada lo hiciera alcanzable. Vinculado a los
-  campos categóricos de FR-043.
+- **Casos límite sin requisito**: cuatro casos prometían comportamiento que ningún FR exigía. Se
+  agregaron FR-051 (pregunta sin paciente seleccionado, el de mayor riesgo clínico), FR-052 (fuentes
+  contradictorias entre sí) y FR-053 (citas hacia fuentes retiradas); se eliminó el caso de consulta
+  ambigua por especulativo.
+- **Generalidad especulativa**: la cláusula de jurisdicción de FR-030 era un MUST que su propio
+  supuesto desactivaba. Eliminada por contradecir el Principio III de la constitución.
+- **Criterios no medibles**: SC-026 era FR-028 reetiquetado; SC-010 y SC-015 no definían conjunto de
+  evaluación ni muestra. Los tres reformulados.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
 existente, sin identificadores colisionantes, tabla canónica del brief coincidente con la realidad.
 
-**Iteración 4 — incorporación del sistema de usuarios.** El PoC pasó a incluir identidad y acceso
-(especificación de [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md)): se eliminó el supuesto de profesional único; la retroalimentación puede registrarla otro veterinario de la clínica. Revalidado el grafo de dependencias completo contra la tabla y las aristas del brief.
-
-**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que la
-atribución de la retroalimentación se afirmaba solo en Supuestos y Dependencias, sin ningún
-requisito, escenario ni criterio que la verificara — a diferencia de las specs 001, 004 y 005, que
-sí enmendaron un requisito. Agregado FR-070, escenario US10/13 y SC-049.
+**Iteración 5 — propagación del sistema de usuarios.** La revisión independiente detectó que
+incorporar o retirar una fuente clínica altera el corpus del que dependen todas las afirmaciones del
+sistema, y que esas operaciones no tenían autorización ni atribución en ninguna spec — una tensión
+viva con el Principio V. Agregado FR-069, escenario US5/13 y la dependencia de la especificación de [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md). Las
+preguntas al asistente siguen siendo lectura y no requieren atribución.
 
 ### Advertencia metodológica
 
@@ -80,4 +76,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+Dependencias directas de construcción: [identidad y acceso](../../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../2026-10-26-implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md). Dependencia externa crítica: fuentes clínicas legalmente utilizables.

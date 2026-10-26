@@ -12,7 +12,7 @@ validado por un profesional y reconozca la severidad clínica sin depender solo 
 **Status**: Draft — pendiente de aceptación. Parte de los requisitos ya están implementados en
 `feat/tema-visual` (se indica en cada uno); implementado no equivale a aceptado.
 
-**Contexto de producto**: [Brief del PoC](../../../../../docs/brief-poc-cdss.md) — "aplicación
+**Contexto de producto**: [Brief del PoC](../../../../../../docs/brief-poc-cdss.md) — "aplicación
 accesible desde computador y, de ser viable, móvil".
 
 **Nota sobre identificadores**: FR/SC/US continúan la numeración global (último FR-070, SC-049,
