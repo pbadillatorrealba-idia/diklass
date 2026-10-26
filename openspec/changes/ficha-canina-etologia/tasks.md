@@ -28,5 +28,7 @@
 
 ## 4. Cierre
 
-- [ ] 4.1 `bun run lint`, `tsc --noEmit`, unit, integración viva, e2e web (workers=1). Registrar
+- [x] 4.1 `bun run lint`, `tsc --noEmit`, unit, integración viva, e2e web (workers=1). Registrar
   evidencia y URLs de CI.
+  Evidencia (2026-10-26, sobre `main` 50704e3): lint y `tsc` en 0; unit 1020/1020; integración viva
+  74/74 (`SUPABASE_LIVE_TESTS=1`); e2e Chromium 77/77 (`--workers=1`).
