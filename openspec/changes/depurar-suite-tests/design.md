@@ -135,3 +135,9 @@ agente no sustituye la revisión por alguien distinto del autor exigida por la c
 Aplicar los grupos de tareas por separado tras la revisión y aprobación del plan. No hay
 migraciones de datos ni despliegue especial. Ante pérdida de una garantía, restaurar el recorte
 afectado desde Git y conservar la prueba hasta resolver la equivalencia; no añadir omisiones.
+
+## Registro de implementación
+
+- Base: `122ec6964f6325103928c986343c762b96f80678`. Plan aprobado mediante PR #63 e instrucción de implementación del responsable. Revalidados los nueve candidatos: sin cambios relevantes en su código desde la auditoría. Identidad sigue activa; sistema visual y ficha canina están archivados bajo `archive/2026-10-26-*`; su compatibilidad y garantías se conservan.
+- Preparación: `bun install --frozen-lockfile`; baseline focalizada de autenticación, almacenamiento, guardas de atribución, tema y tipografía: 370 tests, 0 fallos, 9 archivos. No equivale a gate ni a evidencia nativa.
+- Deuda US12 registrada como tarea pendiente en identidad antes de retirar el placeholder; T036 conserva su historia y T045/T063 siguen pendientes.

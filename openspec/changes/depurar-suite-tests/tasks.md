@@ -6,8 +6,8 @@ corresponden a `design.md`; no son nuevos IDs de requisitos.
 
 ## 1. Confirmar la base y conservar la trazabilidad
 
-- [ ] 1.1 Revisar y aprobar propuesta y diseño antes de aplicar; contrastar los nueve candidatos con la base de integración y localizar los cambios de identidad, sistema visual y ficha canina aunque hayan sido archivados. Verificación: registrar revisión, commit base y diferencias relevantes en `design.md` (Principios I y II; D1, D4).
-- [ ] 1.2 Registrar en `implementar-identidad-y-acceso/tasks.md` la deuda del flujo nativo real de dos cuentas para US12 y su criterio de evidencia en dispositivo, conforme a D2. Verificación: tarea pendiente explícita y referencias a T036/T045/T063 coherentes, sin declarar aceptación nativa ni cambiar requisitos (FR-063; US12; D2).
+- [x] 1.1 Revisar y aprobar propuesta y diseño antes de aplicar; contrastar los nueve candidatos con la base de integración y localizar los cambios de identidad, sistema visual y ficha canina aunque hayan sido archivados. Verificación: registrar revisión, commit base y diferencias relevantes en `design.md` (Principios I y II; D1, D4).
+- [x] 1.2 Registrar en `implementar-identidad-y-acceso/tasks.md` la deuda del flujo nativo real de dos cuentas para US12 y su criterio de evidencia en dispositivo, conforme a D2. Verificación: tarea pendiente explícita y referencias a T036/T045/T063 coherentes, sin declarar aceptación nativa ni cambiar requisitos (FR-063; US12; D2).
 
 ## 2. Retirar contratos antiguos y duplicados unitarios
 

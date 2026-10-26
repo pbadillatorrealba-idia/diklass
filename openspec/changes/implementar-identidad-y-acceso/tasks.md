@@ -236,3 +236,7 @@ sequential even when its phase is otherwise parallelizable.
 - [x] 9.9 T081 Handle the CORS preflight, restrict to `POST`, cap the body size and validate the payload with Zod in `supabase/functions/report-client-error` per Constitution IV (partial)
 - [x] 9.10 T082 Rate-limit `report-client-error` per caller IP with `public.consume_client_error_quota` in `supabase/migrations/007_client_error_quota.sql` (missing)
 - [x] 9.11 T083 Make `scripts/provision-veterinarians.ts` refuse non-local URLs without `--allow-remote`, match emails case-insensitively across every page and resync passwords on re-run, and drop the dead `clinical_records` insert from `supabase/seed.sql` (partial)
+
+## Deuda nativa identificada al depurar la suite
+
+- [ ] Implementar el flujo Maestro real de US12 con dos cuentas provisionadas: crear un registro como Ana, abrirlo como Bruno y comprobar visibilidad compartida, autoría original y rechazo de atribución manipulada. Ejecutar en dispositivo/build nativo y registrar plataforma, build, comando y resultado en `quickstart.md` (FR-063; SC-041/SC-042/SC-044). T036 es una marca histórica: el archivo que citaba solo comprobaba textos de login y no acreditaba US12. T045 y T063 permanecen pendientes; el smoke `auth.yaml` no sustituye esta evidencia.
