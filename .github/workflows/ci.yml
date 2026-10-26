@@ -182,6 +182,8 @@ jobs:
       # GHSA-vfj7-8cjw-p6xm (braces) and GHSA-86w9-cpqp-85rv (node-forge) have no published fixed
       # version yet; GHSA-rj75-hqrm-r3gf is postcss-selector-parser@6, pinned by tailwindcss@3.
       # All three are build/dev-toolchain only and never ship in the app bundle.
+      # GHSA-mrhx-c7xc-m3w5 (zod): the direct dependency is on the fixed 4.6.x; the remaining hit is
+      # the zod@3.25.76 pinned by @expo/cli, which has no 3.x fix and is build tooling only.
       - run: >
           bun audit
           --ignore GHSA-vcc3-ghjq-m6fr
@@ -191,3 +193,4 @@ jobs:
           --ignore GHSA-vfj7-8cjw-p6xm
           --ignore GHSA-86w9-cpqp-85rv
           --ignore GHSA-rj75-hqrm-r3gf
+          --ignore GHSA-mrhx-c7xc-m3w5
