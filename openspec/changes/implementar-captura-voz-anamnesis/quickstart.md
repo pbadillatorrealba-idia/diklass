@@ -193,7 +193,7 @@ Cambio de pruebas sobre `87a78d0`, implementado en `882f6b1` con corrección de 
 SQL, requisitos ni umbrales. Cuatro casos se fusionan conservando sus aserciones; se retira
 además el promedio unitario sobre operaciones vacías, cuya medición pasa al caso vivo
 existente. En los tres archivos unitarios afectados: **53 → 48 casos**; el archivo de
-integración conserva **8 casos**. Diff de tests: **64 líneas añadidas, 123 retiradas (−59)**.
+integración conserva **8 casos**. Diff de tests: **66 líneas añadidas, 125 retiradas (−59)**.
 No se afirma ahorro de tiempo de CI.
 
 Verificación ejecutada desde el worktree aislado:
