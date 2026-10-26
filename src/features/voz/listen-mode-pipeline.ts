@@ -9,6 +9,7 @@ import {
   createAudioFactDrafts,
   listAudioFacts,
 } from "@/features/voz/audio-fact-service";
+import { rutaAudio, subirAudio } from "@/features/voz/audio-storage";
 import {
   type ContextoContradicciones,
   esNegativo,
@@ -116,12 +117,21 @@ export function crearCargadorContexto(
   };
 }
 
-function guardarTramo(
+/**
+ * Guarda el tramo y, con audio real, lo conserva (D4): primero el tramo con su ruta —lo aceptan los
+ * guardas del servidor— y después el audio, que la política de Storage solo admite si el tramo ya
+ * existe. Si la subida falla el tramo se descarta y el error se propaga: nunca queda audio sin tramo
+ * ni un tramo `pending` sin su audio.
+ */
+async function guardarTramo(
   deps: TramoDeps,
   window: AudioWindow,
   result: TranscriptResult,
 ): Promise<TranscriptSegmentEntry> {
-  return saveTranscriptSegment(deps.client, {
+  const audioPath = window.audio
+    ? rutaAudio(deps.clinicId, window.listenSessionId, window.seq, window.audio.extension)
+    : undefined;
+  const tramo = await saveTranscriptSegment(deps.client, {
     listenSessionId: window.listenSessionId,
     clinicId: deps.clinicId,
     seq: window.seq,
@@ -129,7 +139,22 @@ function guardarTramo(
     endedAt: new Date(Date.parse(window.startedAt) + window.durationMs).toISOString(),
     text: result.text,
     quality: result.quality,
+    audioPath,
   });
+  if (window.audio && audioPath) {
+    try {
+      await subirAudio(deps.client, audioPath, window.audio);
+    } catch (error) {
+      await settleTranscriptSegment(deps.client, {
+        segmentId: tramo.id,
+        processingState: "discarded",
+        clearAudioPath: true,
+      }).catch(() => undefined);
+      deps.onWritten?.();
+      throw error;
+    }
+  }
+  return tramo;
 }
 
 /**

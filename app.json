@@ -85,6 +85,12 @@
           "imageWidth": 240,
           "backgroundColor": "#2D1E50"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Diklass usa el micrófono para transcribir la conversación de la consulta en el modo de escucha clínica."
+        }
       ]
     ],
     "experiments": {

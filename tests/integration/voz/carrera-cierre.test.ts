@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { SQL } from "bun";
-import { openConsultation } from "@/features/registro/consultation-service";
-import { createPatientFicha } from "@/features/registro/ficha-service";
 import { startListenSession } from "@/features/voz/listen-session-service";
-import { randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
+import { nuevaConsultaVoz } from "./consulta-voz";
 
 /**
  * Carrera de cierre de los guardas de la 011 (FR-014 · US6-AC14 · SC-027 · D8 · D10), antes
@@ -29,42 +27,6 @@ describe.skipIf(!isLiveSupabase)("carrera de cierre con FOR SHARE (integración 
   afterAll(async () => {
     await admin.close();
   });
-
-  async function nuevaConsulta(): Promise<string> {
-    const ficha = await createPatientFicha(ana.client, {
-      clinicId: ana.clinicId,
-      ficha: {
-        name: "Rocky Carrera",
-        species: "canino",
-        breed: "Mestizo",
-        birthDate: "2021-05-01",
-        ageMonths: 24,
-        weightKg: 12.4,
-        sex: "macho",
-        reproductiveStatus: "entero",
-        antecedentes: {
-          medicalHistory: [],
-          preexistingDiseases: [],
-          currentMedications: [],
-          knownAllergies: [],
-          behavioralHistory: [],
-        },
-      },
-      tutor: {
-        newTutor: {
-          name: "Sra. Carrera",
-          rut: randomRut(),
-          phone: "+56 9 5550 0098",
-          email: null,
-        },
-      },
-    });
-    const consulta = await openConsultation(ana.client, {
-      clinicId: ana.clinicId,
-      patientId: ficha.record.id,
-    });
-    return consulta.record.id;
-  }
 
   /** Espera a que alguna escritura quede bloqueada por un lock de fila (la B esperando a la A). */
   async function esperarBloqueo(): Promise<void> {
@@ -101,7 +63,7 @@ describe.skipIf(!isLiveSupabase)("carrera de cierre con FOR SHARE (integración 
   }
 
   test("activar la escucha mientras la consulta se cierra espera y falla con CONSULTATION_NOT_OPEN", async () => {
-    const consultationId = await nuevaConsulta();
+    const consultationId = await nuevaConsultaVoz(ana);
     const error = await carrera(
       (a) =>
         a`update public.clinical_records
@@ -118,7 +80,7 @@ describe.skipIf(!isLiveSupabase)("carrera de cierre con FOR SHARE (integración 
   });
 
   test("anexar un tramo mientras la consulta se cierra falla con CONSULTATION_NOT_OPEN", async () => {
-    const consultationId = await nuevaConsulta();
+    const consultationId = await nuevaConsultaVoz(ana);
     const sesión = await startListenSession(ana.client, { clinicId: ana.clinicId, consultationId });
     const error = await carrera(
       (a) =>
@@ -130,7 +92,7 @@ describe.skipIf(!isLiveSupabase)("carrera de cierre con FOR SHARE (integración 
   });
 
   test("anexar un tramo mientras la sesión se cierra falla con LISTENING_SESSION_NOT_ACTIVE", async () => {
-    const consultationId = await nuevaConsulta();
+    const consultationId = await nuevaConsultaVoz(ana);
     const sesión = await startListenSession(ana.client, { clinicId: ana.clinicId, consultationId });
     const error = await carrera(
       (a) => a`update public.listening_sessions set state = 'stopped' where id = ${sesión.id}`,

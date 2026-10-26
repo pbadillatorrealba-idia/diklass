@@ -3,7 +3,9 @@ project_id = "diklass"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+# `storage` no se expone por PostgREST: Storage va por /storage/v1, y listarlo aquí vuelca todo su
+# esquema en los tipos generados (database.types.ts).
+schemas = ["public", "graphql_public"]
 
 [db]
 port = 54322
@@ -30,7 +32,10 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [storage]
-enabled = false
+enabled = true
+file_size_limit = "10MiB"
 
+[functions.transcribe-audio]
+verify_jwt = true
 [local_smtp]
 enabled = false

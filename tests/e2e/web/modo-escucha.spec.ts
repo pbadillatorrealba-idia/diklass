@@ -3,6 +3,8 @@ import { prepararPaciente } from "./preparar-paciente";
 
 test.describe("modo de escucha web (captura de voz hacia anamnesis)", () => {
   test.beforeEach(() => {
+    // Con la app exportada en modo real corre modo-escucha-real.spec.ts (otro micrófono, otro guion).
+    test.skip(process.env.EXPO_PUBLIC_VOZ_MODO === "real", "App exportada con voz real.");
     test.skip(
       !SUPABASE_URL || !SUPABASE_ANON_KEY,
       "Requires a local Supabase instance with vet.ana@example.test provisioned.",
@@ -42,7 +44,7 @@ test.describe("modo de escucha web (captura de voz hacia anamnesis)", () => {
       ).toBeVisible();
 
       // Detener funciona en cualquier momento (US6-AC5), incluso con la captura ya agotada.
-      const detener = page.getByRole("button", { name: "Detener escucha" });
+      const detener = page.getByRole("button", { name: "Detener el modo de escucha clínica" });
       if (await detener.isVisible()) {
         await detener.click();
       }

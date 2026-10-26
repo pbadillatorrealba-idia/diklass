@@ -26,8 +26,12 @@ type Peticion = {
 };
 type Respuesta = { data: unknown; error: unknown };
 
-function clienteEnrutado(responder: (peticion: Peticion) => Respuesta) {
+function clienteEnrutado(
+  responder: (peticion: Peticion) => Respuesta,
+  falloSubida: { message: string } | null = null,
+) {
   const peticiones: Peticion[] = [];
+  const subidas: Array<{ bucket: string; path: string }> = [];
   let enVuelo = 0;
   let maxEnVuelo = 0;
   const from = (table: string) => {
@@ -72,9 +76,18 @@ function clienteEnrutado(responder: (peticion: Peticion) => Respuesta) {
     return builder;
   };
   const functions = { invoke: async () => ({ data: null, error: null }) };
+  const storage = {
+    from: (bucket: string) => ({
+      upload: async (path: string) => {
+        subidas.push({ bucket, path });
+        return { data: null, error: falloSubida };
+      },
+    }),
+  };
   return {
-    client: { from, functions } as unknown as SupabaseClient<Database>,
+    client: { from, functions, storage } as unknown as SupabaseClient<Database>,
     peticiones,
+    subidas,
     maxEnVuelo: () => maxEnVuelo,
   };
 }
@@ -242,6 +255,65 @@ describe("procesarTramo", () => {
     );
     await expect(procesarTramo(deps(client), ventana(0), conHechos)).rejects.toThrow("RLS");
     expect(resoluciones(peticiones)).toEqual(["discarded"]);
+  });
+});
+
+const conAudio = (seq: number): AudioWindow => ({
+  ...ventana(seq),
+  audio: {
+    data: new Uint8Array(32).buffer,
+    mimeType: "audio/webm",
+    extension: "webm",
+  },
+});
+
+const altasDeTramo = (peticiones: Peticion[]) =>
+  peticiones.filter(
+    (peticion) => peticion.table === "transcript_segments" && peticion.op === "insert",
+  );
+
+const payloadDelAltaDeTramo = (peticiones: Peticion[]) => {
+  const alta = altasDeTramo(peticiones)[0];
+  if (!alta) throw new Error("No se guardó ningún tramo");
+  return alta.payload as { audio_path?: string };
+};
+
+describe("audio conservado por tramo (D4)", () => {
+  test("guarda el tramo con su ruta de audio y DESPUÉS sube el audio a esa ruta", async () => {
+    const { client, peticiones, subidas } = clienteEnrutado(responderPorDefecto());
+    await procesarTramo(deps(client), conAudio(2), conHechos);
+    expect(payloadDelAltaDeTramo(peticiones).audio_path).toBe("clinica-1/sesion-1/2.webm");
+    expect(subidas).toEqual([{ bucket: "consultation-audio", path: "clinica-1/sesion-1/2.webm" }]);
+    expect(resoluciones(peticiones)).toEqual(["processed"]);
+  });
+
+  test("sin audio (modo simulado) no hay ruta ni subida", async () => {
+    const { client, peticiones, subidas } = clienteEnrutado(responderPorDefecto());
+    await procesarTramo(deps(client), ventana(0), conHechos);
+    expect(payloadDelAltaDeTramo(peticiones).audio_path).toBeUndefined();
+    expect(subidas).toHaveLength(0);
+  });
+
+  test("si la subida falla el tramo se descarta, no se derivan borradores y el error se propaga", async () => {
+    const { client, peticiones } = clienteEnrutado(responderPorDefecto(), {
+      message: "storage caído",
+    });
+    await expect(procesarTramo(deps(client), conAudio(0), conHechos)).rejects.toThrow(
+      /storage caído/,
+    );
+    expect(resoluciones(peticiones)).toEqual(["discarded"]);
+    // PR #66: el tramo descartado por fallo de subida no conserva un audio_path que apunta a nada.
+    const descarte = peticiones.find(
+      (peticion) => peticion.table === "transcript_segments" && peticion.op === "update",
+    );
+    expect(descarte?.payload).toEqual({ processing_state: "discarded", audio_path: null });
+    expect(altasDeHechos(peticiones)).toHaveLength(0);
+  });
+
+  test("un tramo interrumpido descartado también conserva su audio", async () => {
+    const { client, subidas } = clienteEnrutado(responderPorDefecto());
+    await resolverTramoInterrumpido(deps(client), conAudio(1), conHechos, "discarded");
+    expect(subidas).toEqual([{ bucket: "consultation-audio", path: "clinica-1/sesion-1/1.webm" }]);
   });
 });
 

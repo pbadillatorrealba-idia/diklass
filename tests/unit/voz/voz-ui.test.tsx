@@ -92,3 +92,20 @@ describe("ListenModeButton", () => {
     expect(button).toContain(`aria-pressed="${pressed}"`);
   });
 });
+
+// Cambio implementar-asr-real-captura-voz · D5: aviso de grabación y conservación del audio.
+describe("RecordingNotice", () => {
+  test("activo: avisa en texto que se graba y se conserva el audio", async () => {
+    const { RecordingNotice } = await import("@/components/voz/recording-notice");
+    const html = render(<RecordingNotice active />);
+    expect(html).toContain('data-testid="recording-notice"');
+    expect(html).toContain("Se está grabando y conservando el audio de esta conversación");
+    // El color nunca es la única señal: el Callout trae título y región `polite`.
+    expect(html).toContain('aria-live="polite"');
+  });
+
+  test("inactivo: no muestra nada", async () => {
+    const { RecordingNotice } = await import("@/components/voz/recording-notice");
+    expect(render(<RecordingNotice active={false} />)).toBe("");
+  });
+});

@@ -57,8 +57,8 @@ Solo el estado y las restricciones que condicionan el enfoque (la motivación vi
 
 **Non-Goals:**
 
-- Micrófono real, audio real y ASR real: extensiones documentadas, sin dependencias externas nuevas
-  (Principio III; contrato del orquestador).
+- Micrófono real, audio real y ASR real: fuera de este cambio, sin dependencias externas nuevas
+  (Principio III; contrato del orquestador). Los implementa `implementar-asr-real-captura-voz`.
 - Transcripción en tiempo real estricta, separación de hablantes, i18n (solo español), y
   retención/políticas de eliminación de transcripción o audio (discovery previo, según los
   supuestos de la spec).
@@ -111,8 +111,9 @@ determinista por número de ventana, con tramos marcados `insufficient` para eje
 Es una decisión dura y reversible: para cambiarla basta con implementar `TranscriptionPort` sobre
 un servicio real (p. ej. un ASR en la nube o local) e inyectarlo en `ListenModeSection` /
 `listen-mode-controller`; el resto del pipeline (extracción, borradores, confirmación) no cambia.
-El adaptador real queda como **extensión documentada, SIN implementar** y sin dependencias externas
-nuevas (Principio III: el PoC no requiere audio real).
+El adaptador real NO se construye aquí y este cambio no añade dependencias externas (Principio
+III: el PoC no requería audio real); lo implementa `implementar-asr-real-captura-voz`
+(`RemoteTranscriptionAdapter` sobre una Edge Function con OpenAI `gpt-transcribe`).
 
 *Alternativa rechazada*: adoptar ya un SDK de ASR (Whisper/Google/…) — añadiría una dependencia de
 ejecución externa, credenciales y latencia real sin un requisito que lo exija, y haría imposible la
@@ -127,9 +128,10 @@ de FR-054. Implementación por defecto `SyntheticCaptureSource`: emite ventanas 
 `unavailable` para ejercitar FR-054/US6-AC10 sin micrófono. El segmentador usa un reloj inyectado
 (`now()`) para que las pruebas de unidad controlen el tiempo real.
 
-*Extensión documentada (sin implementar)*: `MicrophoneCaptureSource` sobre `expo-audio`, que
-materializa `AudioWindow.audio` como bytes/Blob y traduce la denegación de permiso de micrófono a
-`available() = false`. Exigirá entonces justificar `expo-audio` como dependencia (Principio III).
+*Extensión, ya implementada por `implementar-asr-real-captura-voz`*: `MicrophoneCaptureSource`
+(`MediaRecorder` en web y `expo-audio` en nativo), que materializa `AudioWindow.audio` como un
+archivo y traduce la denegación de permiso de micrófono a `available() = false`; allí se justifica
+`expo-audio` como dependencia (Principio III).
 
 ### D4. Extracción determinista pura `extractClinicalFacts` y contradicciones como señal
 
@@ -296,14 +298,16 @@ El montaje en `src/app/(protected)/consultations/[id].tsx` (archivo compartido, 
 alcance) queda **documentado** como requisito de integración R2: una importación y
 `<ListenModeSection consultationId={consulta.id} />` en el workspace.
 
-### D10. Transcripción persistida por tramo, sin audio
+### D10. Transcripción persistida por tramo
 
 `public.transcript_segments` guarda cada tramo (`listening_session_id`, `seq`, `started_at`,
 `ended_at`, `text`, `quality: 'ok' | 'insufficient'`, `processing_state: 'pending' | 'processed' |
 'discarded'`, `clinic_id` para RLS). `processing_state` hace explícita la garantía de FR-055 ·
 US6-AC12: al interrumpir la captura a mitad de un tramo, el tramo parcial se marca `processed` o
 `discarded` de forma explícita y ningún tramo queda a medio procesar (aserción pgTap/integración).
-El audio **nunca** se persiste (supuestos de la spec: sin retención de audio como requisito).
+Este cambio no persiste audio (la entrada es simulada). Con micrófono real, la columna
+`audio_path` y el bucket `consultation-audio` los añade `implementar-asr-real-captura-voz`
+(migración 019), que reemplaza el «sin audio» de este apartado.
 
 Revisión de la PR #29 (hallazgos 1, 2 y 8):
 
@@ -350,7 +354,7 @@ públicas (`recordAnamnesisEntry`, `listAnamnesisEntries`, `getConsultation`, `c
 | Complejidad nueva | Justificación exigida por el requisito | Se elimina cuando |
 |---|---|---|
 | `TranscriptionPort` + `SimulatedTranscriptionAdapter` | FR-015 + contrato del orquestador (ASR determinista por defecto) | Nunca como seam; cambia la implementación al adoptar un ASR real (D2) |
-| `CaptureSource` + `SyntheticCaptureSource` | FR-014 · FR-054 (señal de indisponibilidad) sin micrófono real | Al implementar `MicrophoneCaptureSource` (D3) |
+| `CaptureSource` + `SyntheticCaptureSource` | FR-014 · FR-054 (señal de indisponibilidad) sin micrófono real | Ya no es el único origen: `MicrophoneCaptureSource` lo añadió `implementar-asr-real-captura-voz`; la fuente sintética se conserva para pruebas y CI |
 | `extractClinicalFacts` determinista | FR-016 con SC-004/SC-016 medibles sin dependencias externas | Si un requisito futuro exige un extractor externo (mismo seam que D2) |
 | `detectContradictions` | FR-032 (presentar la contradicción) | Nunca mientras la spec exija señalarla |
 | Trigger `guard_audio_fact_lifecycle` con aterrizaje de la anamnesis | FR-017 + FR-068 + SC-027/SC-048: confirmación atómica y atribución server-side sin funciones ejecutables nuevas (D5) | Nunca; es la única ruta de confirmación |
@@ -361,8 +365,8 @@ públicas (`recordAnamnesisEntry`, `listAnamnesisEntries`, `getConsultation`, `c
 | `createClinicalRecords` en `src/lib/attribution` | SC-028: un único INSERT atómico por tramo, con el guardia de atribución por payload | — |
 | Seam `src/features/voz/db-types.ts` | Tipos generados compartidos no editables (R1) | Al aplicar R1 |
 
-Dependencias de ejecución nuevas: **ninguna** (Principio III; micrófono y ASR real son extensiones
-documentadas). Capas arquitectónicas nuevas: **ninguna** (servicios sobre el patrón de
+Dependencias de ejecución nuevas: **ninguna** (Principio III; micrófono y ASR real los aporta
+`implementar-asr-real-captura-voz`, con su propia justificación). Capas arquitectónicas nuevas: **ninguna** (servicios sobre el patrón de
 `features/registro`, componentes sobre el patrón de `components/clinical`).
 
 ## Presupuestos de rendimiento (verificables antes de integrar)
@@ -389,8 +393,8 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   clúster scratch y CI; unidad local; integración viva en CI, condicionada por R1) observadas
   fallando por la razón prevista; evidencia incremental en `quickstart.md` desde la tarea 1.1.
 - **III (simplicidad/YAGNI)**: sin dependencias ni capas nuevas; complejidad justificada arriba;
-  «quién detuvo la escucha» y retención de audio/transcripción quedan fuera por no existir
-  requisito.
+  «quién detuvo la escucha» y la política de retención de audio/transcripción quedan fuera por no
+  existir requisito (el audio real y su conservación los añade `implementar-asr-real-captura-voz`).
 - **IV (observabilidad)**: servicios con `logEvent` + `requestId` y `captureClientError` en fallos;
   los triggers de la migración 011 siguen el patrón de los guards existentes (error normalizado que
   aborta la escritura, nunca silenciado); ninguna excepción silenciada.
@@ -416,8 +420,8 @@ por test sobre la conversación de referencia etiquetada (tarea 2.3); no son pre
   una conversación real degradaría las tasas. Mitigación: el seam de D2/D4 permite sustituir el
   extractor sin tocar el pipeline; el riesgo está declarado, no cubierto.
 - **FR-054 sin micrófono real**: la indisponibilidad se ejercita por la señal de `CaptureSource`;
-  el flujo real de permisos de micrófono queda como extensión documentada (D3) y no se afirma
-  verificado.
+  el flujo real de permisos de micrófono lo aborda `implementar-asr-real-captura-voz` (web
+  verificada en Chromium; nativo pendiente de prueba en dispositivo) y aquí no se afirma verificado.
 - **Contradicciones con heurística** (D4): falsos positivos/negativos posibles; solo se señala y el
   veterinario decide (FR-032), nunca se escribe por el sistema.
 - **Mención a un animal distinto del paciente**: la extracción puede proponer hechos de otro animal;

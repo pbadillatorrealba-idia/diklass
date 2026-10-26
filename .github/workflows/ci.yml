@@ -118,6 +118,14 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       # Includes tests/e2e/web/accessibility.spec.ts: the axe WCAG 2.2 AA gate.
       - run: bun run test:e2e:web -- --project=chromium
+      # Voice capture with the real (fake-device) microphone: the app is re-exported in real mode
+      # with short windows; the transcription function is intercepted, so no OpenAI key is needed.
+      - name: Web E2E with the real microphone (listen mode)
+        run: bun run test:e2e:web -- modo-escucha-real.spec.ts --project=chromium
+        env:
+          E2E_CLEAR_CACHE: "1"
+          EXPO_PUBLIC_VOZ_MODO: real
+          EXPO_PUBLIC_VOZ_VENTANA_MS: "2000"
 
   # Firefox and WebKit run only on push to main to keep pull-request feedback fast, per
   # plan.md's CI design; Chromium above still covers every pull request. One job and one

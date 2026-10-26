@@ -5,11 +5,23 @@ import type { TranscriptQuality } from "@/features/voz/schema";
  *
  * Implementación por defecto `SimulatedTranscriptionAdapter`, determinista sobre el guion de la
  * conversación de referencia (datos sintéticos; nada de audio real es requisito del PoC).
- * Extensión documentada, SIN implementar: un adaptador a un servicio real de ASR que materialice
- * `AudioWindow.audio` y devuelva texto + calidad; se inyecta en el controlador de escucha sin
- * tocar el resto del pipeline. Decisión dura reversible (Principio III: sin dependencias nuevas
- * sin requisito).
+ * La transcripción real es `RemoteTranscriptionAdapter` (`remote-transcription-adapter.ts`): envía
+ * `AudioWindow.audio` a la Edge Function `transcribe-audio` y devuelve texto + calidad; se inyecta
+ * en el controlador de escucha sin tocar el resto del pipeline (`listen-mode-inputs.ts` elige).
  */
+
+/**
+ * Audio de una ventana (D2 del cambio implementar-asr-real-captura-voz): un archivo autocontenido.
+ * `data` es un `ArrayBuffer`: storage-js sube vacío un `Blob` en React Native. Con grabación nativa
+ * `uri` apunta al archivo, porque el `FormData` de React Native solo sube partes `{ uri, name, type }`.
+ */
+export type AudioPayload = {
+  data: ArrayBuffer;
+  uri?: string;
+  mimeType: string;
+  /** Extensión canónica: la ruta de Storage del tramo la usa (migración 019). */
+  extension: "webm" | "m4a";
+};
 
 /** Ventana de captura de ~30 s (D3 · brief §5): una unidad de transcripción incremental. */
 export type AudioWindow = {
@@ -17,8 +29,8 @@ export type AudioWindow = {
   seq: number;
   startedAt: string;
   durationMs: number;
-  /** Material de audio opaco: ausente en simulación; bytes/Blob en la extensión de micrófono. */
-  audio?: unknown;
+  /** Ausente en la captura simulada; el archivo de la ventana con el micrófono real. */
+  audio?: AudioPayload;
 };
 
 export type TranscriptResult = { text: string; quality: TranscriptQuality };

@@ -6,9 +6,8 @@ import type { AudioWindow, GuiónConversación } from "@/features/voz/transcript
  * `available()` es la señal de indisponibilidad de FR-054: con la captura caída, la interfaz lo
  * indica con claridad y el registro manual de anamnesis queda expedito (US6-AC10). Implementación
  * por defecto `SyntheticCaptureSource` (fixtures sintéticos; el PoC no requiere audio real).
- * Extensión documentada, SIN implementar: `MicrophoneCaptureSource` sobre `expo-audio`, que
- * materializa `AudioWindow.audio` y traduce la denegación de permiso de micrófono a
- * `available() = false`.
+ * La captura real es `MicrophoneCaptureSource` (`microphone-capture-source.ts`), que materializa
+ * `AudioWindow.audio` y traduce la denegación de permiso de micrófono a `available() = false`.
  */
 
 export interface CaptureSource {

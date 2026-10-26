@@ -6,9 +6,8 @@ import {
   editAudioFactDraft,
   listAudioFacts,
 } from "@/features/voz/audio-fact-service";
-import { SyntheticCaptureSource } from "@/features/voz/capture-source";
-import { guionDemo } from "@/features/voz/guion-demo";
 import { ListenModeController, type ListenModeState } from "@/features/voz/listen-mode-controller";
+import { crearEntradas, MODO_REAL } from "@/features/voz/listen-mode-inputs";
 import {
   confirmarHecho,
   crearCargadorContexto,
@@ -23,21 +22,22 @@ import {
   listTranscriptSegments,
   type TranscriptSegmentEntry,
 } from "@/features/voz/transcript-service";
-import { SimulatedTranscriptionAdapter } from "@/features/voz/transcription-port";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 
 /**
  * Orquestación del modo de escucha clínica (D2 · D3 · D5 del diseño; FR-014 · FR-015 · FR-016 ·
- * FR-032 · SC-028): activa la sesión de escucha, recorre las ventanas con el adaptador simulado
- * por defecto, persiste cada tramo, extrae borradores con sus señales de contradicción y los
+ * FR-032 · SC-028): activa la sesión de escucha, recorre las ventanas con micrófono y ASR reales
+ * (`EXPO_PUBLIC_VOZ_MODO=real`) o con el guion simulado por defecto, persiste cada tramo, extrae borradores con sus señales de contradicción y los
  * deja confirmables antecedente por antecedente. La consulta abierta la exige el servidor
  * (011, US6-AC14) y la confirmación aterriza la anamnesis en el servidor (D5). La lógica vive en
  * `listen-mode-pipeline.ts` (probada con unitarias); este hook solo la conecta con la interfaz.
  */
 export type ListenModeApi = {
   state: ListenModeState;
+  /** Micrófono y transcripción reales (D1): la interfaz avisa de la grabación y su conservación. */
+  modoReal: boolean;
   facts: AudioFactEntry[];
   segments: TranscriptSegmentEntry[];
   isBusy: boolean;
@@ -90,8 +90,7 @@ export function useListenMode(consultationId: string): ListenModeApi {
       // FR-055 · US6-AC12: el tramo interrumpido se resuelve con su decisión explícita.
       settlePartialWindow: (window, result, decision) =>
         resolverTramoInterrumpido(deps, window, result, decision),
-      source: new SyntheticCaptureSource({ guion: guionDemo, listenSessionId: sesión.id }),
-      transcription: new SimulatedTranscriptionAdapter(guionDemo),
+      ...crearEntradas(MODO_REAL, supabase, sesión.id),
     });
     controllerRef.current = controller;
     // FR-025 · US6-AC5: la activación resuelve en cuanto la sesión existe; la captura corre en
@@ -156,6 +155,7 @@ export function useListenMode(consultationId: string): ListenModeApi {
 
   return {
     state,
+    modoReal: MODO_REAL,
     facts: factsQuery.data ?? [],
     segments: segmentsQuery.data ?? [],
     isBusy: busyFactId !== null,
