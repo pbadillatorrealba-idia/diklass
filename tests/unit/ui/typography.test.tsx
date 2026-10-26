@@ -16,6 +16,10 @@ describe("Text", () => {
     const cls = classOf(renderToStaticMarkup(<Text variant={variant}>x</Text>));
     for (const c of classes) expect(cls).toContain(c);
     expect(cls).toContain("font-sans");
+    if (variant === "label") {
+      expect(cls).not.toContain("uppercase");
+      expect(cls).not.toContain("font-mono");
+    }
   });
 
   // D20: los datos (número de consulta, fechas, pesos, dosis, códigos) van en mono con cifras
@@ -40,13 +44,6 @@ describe("Text", () => {
       ]),
     );
     expect(cls).not.toContain("text-foreground");
-  });
-
-  test("label no cambia con D20", () => {
-    const cls = classOf(renderToStaticMarkup(<Text variant="label">x</Text>));
-    expect(cls).toEqual(expect.arrayContaining(["text-sm", "font-medium"]));
-    expect(cls).not.toContain("uppercase");
-    expect(cls).not.toContain("font-mono");
   });
 
   test("por defecto es body con tono default", () => {
