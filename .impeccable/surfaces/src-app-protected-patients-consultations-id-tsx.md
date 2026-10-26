@@ -5,61 +5,51 @@ primary_target: "src/app/(protected)/(patients)/consultations/[id].tsx"
 related_targets: []
 ---
 
-## Scope
+# Surface brief: pantalla de consulta y shell de asistente
 
-Pantalla de Consulta (`consultations/[id]`), modo **Operate**. Primera superficie del mundo visual
-nuevo; el resto de la app lo hereda. Adaptativa: iOS, Android y web.
+Alcance: `src/app/(protected)/(patients)/consultations/[id].tsx` y el shell que la envuelve
+(`AppNavigation`), cambio OpenSpec `shell-asistente-tres-zonas`. Modo: **Operate**.
 
-## Audience and task
+## Task
 
-El veterinario, durante la consulta, con tutor y perro presentes. Registra la anamnesis con su
-procedencia, revisa lo que falta, considera los diferenciales, valida y firma la epicrisis. En la
-demo, los evaluadores tienen que ver en segundos qué sugirió el sistema y qué firmó el profesional.
-
-## Constraints
-
-Todo lo visual se puede reemplazar. Evitar lo frío-hospitalario y lo lúdico (sin patitas ni
-ilustraciones de perros). WCAG 2.2 AA en modo claro y oscuro. La navegación sigue a cada sistema
-operativo.
+El veterinario atiende una consulta con tutor y perro presentes. Completa la anamnesis (texto y voz),
+revisa y confirma los borradores que propone el sistema, consulta la base de conocimiento, registra
+diagnóstico y plan, y firma la epicrisis. Uso mixto: escritorio/notebook y tablet/móvil con el mismo
+peso. La captura de voz corre en ventanas de ~30–60 s mientras él mira al tutor, no la pantalla. La
+intención de producto es que la app llegue a ser agéntica: el asistente acompaña, pero solo propone.
 
 ## Direction contract
 
-THESIS: Lo sugerido es la copia amarilla y solo la firma del veterinario la vuelve original. Rechaza
-el tablero de tarjetas con panel de «Hallazgos IA», destellos y violeta.
+Seed key: 7da3da20 (surface, operate). Dealt 3 · 6 · 2; el usuario eligió la tercera
+(«hoja partida con margen de escucha») y después la extendió a toda la app: **shell de tres zonas**,
+navegación | contenido | panel de asistente. El mundo visual (DESIGN.md, «el formulario en copias») queda
+fijo; solo cambia la composición del shell.
 
-OWN-WORLD: Formulario clínico normalizado. La estructura preimpresa va en una sola tinta verde de
-formulario (reglas, recuadros, rótulos, números de campo) sobre papel frío casi blanco. Lo escrito
-por el veterinario va en tinta negra. Lo sugerido va en pliego canario y las correcciones en pliego
-rosa, con el renglón anterior tachado de una línea: los pliegos son el único color de superficie. La
-firma es un timbre de tampón índigo con nombre y hora. La procedencia se marca al margen con un
-código de una letra (R, I, F, ?) y siempre lleva forma además de color. Los estados salen de un solo
-enum que traduce una sola hoja de estilo.
-
-STORY: El veterinario recorre el formulario de arriba abajo y ve de dónde viene cada dato. Revisa en
-canario la epicrisis que redactó el sistema, ve cada corrección tachada junto a lo que reemplaza, y
-firma. Al firmar, la copia pasa a ser el original. Los diferenciales en canario llegan con 006.
-
-FIRST VIEWPORT: En web ancho, a la izquierda el encabezado del formulario: paciente, tutor, «Consulta
-n.º N», fecha en mono y la clave de procedencia siempre visible. Las secciones 1 Anamnesis,
-2 Diagnóstico y 3 Epicrisis y firma bajan por un solo eje vertical; la activa se marca con una banda.
-A la derecha, el resumen de seguimiento longitudinal. En compacto, una columna. «Firmar y cerrar
-consulta» queda al pie de la sección 3.
-
-FORM: Formulario en copias (formularios normalizados + lista de verificación de la OMS). Candidato 5
-de la lista ordenada. Seed key 76e472f6.
-
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
-
-Signature interaction: la firma. «Firmar y cerrar consulta» estampa el timbre (nombre + hora, FR-063) y el pliego
-canario vira a papel en un solo movimiento. Con Reduce Motion, el cambio es inmediato.
-
-## Resolved (design.md D20, 2026-09-30)
-
-- Rótulos preimpresos en Atkinson Hyperlegible Next (variante `rubric`); datos en Atkinson
-  Hyperlegible Mono (variante `data`).
-- Modo oscuro: pizarra con tinte verde; los pliegos pasan a tintes cálidos opacos verificados AA.
-- La información faltante y los diferenciales no son secciones de la consulta hasta 006.
+- **World**: una hoja de formulario con margen de anotaciones. El contenido de cada pantalla es el
+  formulario o la lista de siempre; a su derecha, un **panel de asistente** en el borde del shell, la
+  «cinta» de la consulta, donde viven los hilos: Escucha (tramos con sus borradores), Conocimiento
+  (respuestas con cita) y Asistente (reservado). El panel es del shell, no de la pantalla.
+- **First viewport** (≥ 1440 px): barra lateral, contenido (la consulta a una columna: encabezado,
+  contexto, 1·2·3) y panel acoplado de 360 px con el hilo activo. Entre 1024 y 1439 px el panel es un
+  riel de 56 px con el estado de escucha, que abre un cajón. Bajo 1024 px y en nativo, un dock al pie con
+  el estado y una hoja con el hilo. El formulario nunca se mueve por la escucha.
+- **Visitor path**: escuchar o escribir → ver aparecer tramos y borradores en el hilo con su fragmento →
+  Confirmar / Corregir / Descartar sin salir del lugar → el dato aterriza en su campo, a la vista y
+  marcado «Nuevo» con el código «I» → pasar a Diagnóstico → Epicrisis y firma. Preguntar a Conocimiento
+  desde el mismo panel, con el paciente de contexto ya fijado.
+- **Signature interaction**: el hilo único: cada tramo con sus borradores debajo, como un cuaderno de
+  escucha. Sin animación nueva (la única animación de autor sigue siendo la firma, FR-099): el
+  aterrizaje del borrador es una marca «Nuevo», no un movimiento.
+- **Cross-surface reach**: el mismo panel y los mismos hilos en toda pantalla protegida; contextual
+  (Escucha solo con consulta abierta, Conocimiento siempre, Asistente siempre). Reutilizable para el
+  seguimiento y la ficha.
+- **Honest risk**: un panel «agéntico» sin agente puede prometer lo que no existe; el hilo «Asistente»
+  declara su no disponibilidad y no simula respuestas. Además: el aviso de grabación nunca puede quedar
+  oculto (vive en el riel y en el dock), el dock compite con el teclado en móvil y la hoja modal necesita
+  foco atrapado explícito en web.
 
 ## Unresolved
 
-- Ninguno para esta superficie. Los valores finales de color los fija `tema.test.ts` (12.1).
+- Orden del hilo de escucha (más nuevo arriba o abajo) y desplazamiento al último tramo.
+- Ancho del panel expandido (360 px) frente a las pantallas más densas.
+- Verificación nativa en iOS y Android (sin dispositivo en esta máquina).
