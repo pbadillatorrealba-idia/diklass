@@ -369,7 +369,7 @@ documentadas). Capas arquitectónicas nuevas: **ninguna** (servicios sobre el pa
 
 | Operación | Presupuesto | Cómo se verifica |
 |---|---|---|
-| Procesar una ventana de 30 s (transcribir + extraer + persistir borradores) con el adaptador simulado | ≤ 2 s desde el cierre de la ventana; y SC-028: el tramo N queda reflejado en el borrador antes del cierre del tramo N+1 | aserción de tiempo y de orden de eventos con reloj falso en `tests/unit/voz/listen-mode-controller.test.ts` (tarea 3.3) e integración (5.1) |
+| Procesar una ventana de 30 s (transcribir + extraer + persistir borradores) con el adaptador simulado | ≤ 2 s desde el cierre de la ventana; y SC-028: el tramo N queda reflejado en el borrador antes del cierre del tramo N+1 | orden asíncrono en una única secuencia de eventos en `tests/unit/voz/listen-mode-controller.test.ts`; tiempo individual por ventana con adaptador simulado, extracción y persistencia reales en `tests/integration/voz/captura-voz.test.ts` (tarea 8.4), sin promedios ni reloj falso |
 | `extractClinicalFacts` sobre un tramo de ~30 s de habla | ≤ 300 ms de CPU | aserción de tiempo en `tests/unit/voz/extraction.test.ts` (tarea 2.3) |
 | `confirmAudioFact` (una UPDATE que aterriza la anamnesis en su misma transacción) | ≤ 2 s con red local | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
 | Listar borradores de una consulta (≤ 100 borradores, ≤ 10 tramos) | ≤ 2 s | aserción de tiempo en `tests/integration/voz` (tarea 5.1) |
@@ -451,3 +451,22 @@ default propuesto):
   (≈ 6 tramos, ≥ 10 antecedentes etiquetados, un tramo no confiable, una autocorrección y una
   mención a otro animal). *Default*: mantener ese guion mínimo; ampliarlo solo si la revisión pide
   más representatividad.
+
+## Segunda auditoría de tests (plan aprobado, 2026-10-26)
+
+El responsable autorizó las cuatro fusiones y dos correcciones de la auditoría posterior a
+la PR #65. La implementación de las tareas 8.1–8.5 conserva FR/US/SC y sus umbrales.
+El controlador actual compara índices de listas diferentes y su medición de tiempo usa
+operaciones simuladas vacías; ninguna de las dos pruebas acredita lo anunciado.
+
+La prueba de orden usará una secuencia compartida de apertura y fin asíncrono del procesamiento;
+debe detectar tanto procesar al final como omitir el `await`. El presupuesto por ventana se
+medirá en el caso vivo que ya comprueba borradores y traza: adaptador simulado, extracción,
+contexto y persistencia reales, desde el cierre sintético de cada ventana hasta completar
+`procesarTramo`. Se conserva el presupuesto separado de listado y no se promedian ventanas.
+La preparación de paciente/consulta/sesión y la captura de 30 s quedan fuera de la medición.
+
+Complejidad nueva: ninguna dependencia, script, helper de producción, migración ni contrato.
+Solo se ajustan pruebas y documentación. El contrato estático de `Icon` y los casos de
+interrupción, concurrencia, RLS y atribución se conservan. La evidencia de implementación se
+registrará después de verificar; la deuda 7.12/7.13 permanece pendiente.
