@@ -84,6 +84,25 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     });
   }
 
+  test("a 1280 px, la consulta muestra el breadcrumb Pacientes › ficha y a 375 px solo «Volver»", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/consultations/${caso.openConsultationId}`);
+    const ruta = page.getByRole("navigation", { name: "Ruta" });
+    await expect(ruta).toBeVisible({ timeout: 15_000 });
+    await expect(ruta.getByTestId("screen-crumb-0")).toHaveText("Pacientes");
+    await ruta.getByTestId("screen-back").click();
+    await expect(page).toHaveURL(new RegExp(`/patients/${caso.patientId}$`));
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto(`/consultations/${caso.openConsultationId}`);
+    await expect(page.getByTestId("screen-back").filter({ visible: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("navigation", { name: "Ruta" })).toHaveCount(0);
+  });
+
   test("«Volver» en un detalle abierto por URL directa lleva a la raíz de su sección", async ({
     page,
   }) => {
