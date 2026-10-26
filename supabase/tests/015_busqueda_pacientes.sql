@@ -2,7 +2,7 @@
 -- Patrón: supabase/tests/014_perfil_profesional.sql.
 
 begin;
-select plan(11);
+select plan(14);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -137,6 +137,38 @@ select is(
   3,
   'total_count es el total filtrado aunque la página tenga una fila'
 );
+
+-- Regresión: sin acceso indexado por id::text, la unión vuelve a evaluar la RLS de todos
+-- los tutores por cada paciente. Volumen acotado, aislado por clínica y revertido al terminar.
+reset role;
+set local session_replication_role = replica;
+insert into public.clinical_records (id, clinic_id, record_type, content, status, created_by)
+select md5('tutor-carga-' || n)::uuid, 'c15c15c1-0000-4000-8000-00000000000c', 'tutor',
+  jsonb_build_object('name', 'Tutor carga ' || n, 'rut', (10000000 + n)::text || '-' || dv),
+  'draft', 'a15a15a1-0000-4000-8000-00000000000a'
+from generate_series(1, 200) n
+cross join (select d::text as dv from generate_series(0, 9) d union all select 'K') digits
+where public.rut_is_valid((10000000 + n)::text || '-' || dv);
+
+insert into public.clinical_records (clinic_id, record_type, content, status, created_by)
+select 'c15c15c1-0000-4000-8000-00000000000c', 'patient',
+  jsonb_build_object('name', 'Carga ' || lpad(n::text, 4, '0'), 'species', 'canino',
+    'sex', 'hembra', 'reproductiveStatus', 'esterilizado', 'breed', 'Mestizo',
+    'tutorId', md5('tutor-carga-' || (1 + (n - 1) % 200))::uuid::text),
+  'draft', 'a15a15a1-0000-4000-8000-00000000000a'
+from generate_series(1, 1000) n;
+set local session_replication_role = origin;
+set local role authenticated;
+
+create temp table search_started as select clock_timestamp() as started;
+create temp table search_page as select * from public.search_patients();
+select ok(
+  (select clock_timestamp() - started < interval '5 seconds' from search_started),
+  'la búsqueda con 1000 pacientes y 200 tutores termina antes del límite web de 5 s'
+);
+select is((select count(*)::int from search_page), 25, 'la búsqueda con volumen conserva la página');
+select is((select max(total_count)::int from search_page), 1003,
+  'el total con volumen conserva el aislamiento por clínica');
 
 select * from finish();
 rollback;

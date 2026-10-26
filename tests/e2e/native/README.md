@@ -1,8 +1,13 @@
 # Maestro (e2e nativo)
 
-Los flujos de esta carpeta (`auth.yaml`, `attribution.yaml`) se ejecutan sobre un build nativo
-instalado. El `appId` es `com.diklass.app`, fijado en `app.json` (`ios.bundleIdentifier` y
+El smoke de acceso `auth.yaml` se ejecuta sobre un build nativo instalado. El `appId` es `com.diklass.app`, fijado en `app.json` (`ios.bundleIdentifier` y
 `android.package`).
+
+El antiguo `attribution.yaml` repetía textos del login y se retiró. El flujo real de US12
+con dos cuentas y atribución sigue pendiente en
+[las tareas de identidad](../../../openspec/changes/implementar-identidad-y-acceso/tasks.md).
+Este smoke no acredita atribución clínica. La comparación de los YAML fue estática; no se
+ejecutó Maestro durante esta limpieza.
 
 ## Local
 

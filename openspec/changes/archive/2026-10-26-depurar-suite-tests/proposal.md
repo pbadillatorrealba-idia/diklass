@@ -15,6 +15,7 @@ de navegador sin debilitar las garantías clínicas, de acceso ni de accesibilid
   aserciones sobre propiedades ausentes de esquemas o clientes falsos.
 - Retirar el flujo nativo duplicado de login llamado `attribution.yaml` y documentar la cobertura
   real de US12 como pendiente en el cambio activo de identidad antes de eliminarlo.
+- Corregir la lentitud de `search_patients` reproducida durante el cierre, mediante una migración mínima si el diagnóstico la requiere; preservar firma, resultados, RLS y atribución, sin aumentar el timeout ni borrar datos. Ampliación autorizada por el responsable tras el bloqueo de cierre.
 - Eliminar helpers, constantes y funciones sin consumidores confirmados en código, tests,
   fixtures, scripts, configuración y referencias dinámicas.
 - Registrar por recorte su justificación, cobertura conservada y verificación. No se fija una
@@ -39,10 +40,15 @@ Ninguna: no cambian requisitos, escenarios, umbrales ni IDs FR/US/SC. Se declara
   US12), sistema visual (FR-074, FR-079, FR-104), registro clínico y compatibilidad de anamnesis.
   Se mantienen las garantías del brief y la constitución aunque su aceptación esté pendiente.
 - Dependencias de construcción: las suites y los flujos existentes; no se añaden librerías,
-  scripts, servicios, migraciones ni contratos. Se mantienen los comandos actuales de CI.
+  scripts, servicios ni contratos. La ampliación de rendimiento permite una migración correctiva. Se mantienen los comandos actuales de CI.
 - Aceptación conjunta: esta limpieza no acepta identidad, registro ni las demás funcionalidades.
   La deuda nativa de US12 continúa en identidad y acceso; su ejecución real no se sustituye por
   un checklist documental.
 - Estado: plan propuesto, sin implementación ni aceptación. La auditoría se hizo sobre
   `317cd9a`, en `chore/auditoria-reduccion-tests`; los cambios sin commit del checkout original
   quedaron fuera. Se revalidarán los candidatos contra la base de integración antes de aplicar.
+
+## Estado al cierre
+
+Implementado y verificado; decisión de cierre y evidencia en `design.md`. La limpieza no
+constituye aceptación de las funcionalidades clínicas ni de la deuda nativa US12.

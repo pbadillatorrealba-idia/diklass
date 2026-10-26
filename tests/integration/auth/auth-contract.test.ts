@@ -28,7 +28,6 @@ describe("auth contract", () => {
 
     expect(result.user.id).toBe("vet-ana");
     expect(result.accessSessionId).toBe("access-session-1");
-    expect("signUp" in client.auth).toBe(false);
   });
 
   test("returns one public error for wrong password and unknown account", async () => {

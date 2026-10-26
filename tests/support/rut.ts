@@ -9,9 +9,6 @@ export function randomRut(): string {
   return `${body}-${rutCheckDigit(body)}`;
 }
 
-/** RUT fijo y válido para pruebas que no tocan la base. */
-export const SAMPLE_RUT = "12345678-5";
-
 /**
  * Contenido mínimo válido de un paciente para escribir directo en `clinical_records`: la base
  * exige catálogos y obligatorios (migración 018). `tutorId` es solo un texto no vacío.
