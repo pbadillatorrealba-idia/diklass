@@ -56,7 +56,7 @@ const contenidoBorrador = {
 };
 
 describe("createAudioFactDrafts", () => {
-  test("FR-016 · FR-017 · SC-005: las propuestas nacen borradores 'pending' con procedencia inferida", async () => {
+  test("FR-016 · FR-017 · SC-005 · SC-027: crea borradores pendientes, inferidos y trazables", async () => {
     const { client, calls } = fakeClient({
       "clinical_records:insert": [{ data: [fila(contenidoBorrador)], error: null }],
     });
@@ -68,16 +68,6 @@ describe("createAudioFactDrafts", () => {
       (call) => call.table === "clinical_records" && call.method === "insert",
     );
     expect(alta?.args[0]).toMatchObject([{ record_type: "audio_fact", status: "draft" }]);
-  });
-
-  test("SC-027 · US6-AC6: cada borrador conserva el fragmento de transcripción que lo originó", async () => {
-    const { client, calls } = fakeClient({
-      "clinical_records:insert": [{ data: [fila(contenidoBorrador)], error: null }],
-    });
-    await createAudioFactDrafts(client, { ...entrada, drafts: [propuesta] });
-    const alta = calls.find(
-      (call) => call.table === "clinical_records" && call.method === "insert",
-    );
     const contenido = z
       .array(z.object({ content: audioFactContentSchema }))
       .parse(alta?.args[0])[0]?.content;
@@ -131,20 +121,7 @@ describe("confirmAudioFact", () => {
     const resultado = await confirmAudioFact(client, "hecho-1");
     expect(resultado.fact.content.confirmationState).toBe("confirmed");
     expect(resultado.landedEntryId).toBe("anamnesis-7");
-  });
-
-  test("FR-021 · US6-AC9: confirmar no altera la procedencia inferida", async () => {
-    const confirmado = {
-      ...contenidoBorrador,
-      confirmationState: "confirmed",
-      anamnesisEntryId: "anamnesis-7",
-    };
-    const { client } = fakeClient({
-      "clinical_records:select": [{ data: fila(contenidoBorrador), error: null }],
-      "clinical_records:update": [{ data: fila(confirmado), error: null }],
-    });
-    const { fact } = await confirmAudioFact(client, "hecho-1");
-    expect(fact.content.provenance).toBe("inferida");
+    expect(resultado.fact.content.provenance).toBe("inferida");
   });
 
   test("SC-027: sin el id del aterrizaje en la respuesta hay una violación de la garantía del servidor", async () => {

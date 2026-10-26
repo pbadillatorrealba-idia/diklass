@@ -2,16 +2,20 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { listAnamnesisEntries } from "@/features/registro/anamnesis-service";
 import { openConsultation } from "@/features/registro/consultation-service";
 import { createPatientFicha, getPatient } from "@/features/registro/ficha-service";
-import {
-  confirmAudioFact,
-  createAudioFactDrafts,
-  listAudioFacts,
-} from "@/features/voz/audio-fact-service";
+import { confirmAudioFact, listAudioFacts } from "@/features/voz/audio-fact-service";
+import { SyntheticCaptureSource } from "@/features/voz/capture-source";
 import { type ContextoContradicciones, detectContradictions } from "@/features/voz/contradictions";
 import { extractClinicalFacts } from "@/features/voz/extraction";
 import { guionDemo } from "@/features/voz/guion-demo";
+import { ListenModeController } from "@/features/voz/listen-mode-controller";
+import { crearCargadorContexto, procesarTramo } from "@/features/voz/listen-mode-pipeline";
 import { startListenSession } from "@/features/voz/listen-session-service";
-import { saveTranscriptSegment, settleTranscriptSegment } from "@/features/voz/transcript-service";
+import {
+  listTranscriptSegments,
+  saveTranscriptSegment,
+  settleTranscriptSegment,
+} from "@/features/voz/transcript-service";
+import { SimulatedTranscriptionAdapter } from "@/features/voz/transcription-port";
 import { randomRut } from "../../support/rut";
 import {
   ANA,
@@ -97,60 +101,49 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
     ).rejects.toThrow(/consulta abierta/i);
   });
 
-  test("FR-016 · FR-017 · FR-055 · US6-AC11: los borradores de los primeros tramos se conservan con su fragmento", async () => {
-    const tramo0 = guionDemo.guion[0];
-    const tramo1 = guionDemo.guion[1];
-    if (!tramo0 || !tramo1) throw new Error("Faltan tramos del guion de demostración");
-    const guardado0 = await saveTranscriptSegment(ana.client, {
-      listenSessionId: sessionId,
-      clinicId: ana.clinicId,
-      seq: 0,
-      startedAt: new Date().toISOString(),
-      endedAt: new Date().toISOString(),
-      text: tramo0.transcripcion,
-      quality: tramo0.calidad,
-    });
-    const propuestas0 = extractClinicalFacts({
-      text: tramo0.transcripcion,
-      quality: tramo0.calidad,
-    });
-    await createAudioFactDrafts(ana.client, {
+  test("SC-028 · FR-016 · FR-017 · FR-055 · US6-AC11: cada tramo se persiste en ≤ 2 s y conserva sus borradores y traza", async () => {
+    const guion = { guion: guionDemo.guion.slice(0, 2) };
+    const adaptador = new SimulatedTranscriptionAdapter(guion);
+    const deps = {
+      client: ana.client,
       clinicId: ana.clinicId,
       consultationId,
-      transcriptSegmentId: guardado0.id,
-      segmentSeq: 0,
-      segmentText: tramo0.transcripcion,
-      drafts: propuestas0.map((propuesta) => ({ ...propuesta, contradiction: null })),
+      cargarContexto: crearCargadorContexto(ana.client, consultationId),
+    };
+    let cerradoEn = 0;
+    const procesados: number[] = [];
+    const controlador = new ListenModeController({
+      source: new SyntheticCaptureSource({ guion, listenSessionId: sessionId }),
+      transcription: {
+        transcribe: (window) => {
+          cerradoEn = performance.now();
+          return adaptador.transcribe(window);
+        },
+      },
+      processWindow: async (window, result) => {
+        await procesarTramo(deps, window, result);
+        expect(performance.now() - cerradoEn).toBeLessThanOrEqual(2_000);
+        procesados.push(window.seq);
+      },
     });
-    const guardado1 = await saveTranscriptSegment(ana.client, {
-      listenSessionId: sessionId,
-      clinicId: ana.clinicId,
-      seq: 1,
-      startedAt: new Date().toISOString(),
-      endedAt: new Date().toISOString(),
-      text: tramo1.transcripcion,
-      quality: tramo1.calidad,
-    });
-    await createAudioFactDrafts(ana.client, {
-      clinicId: ana.clinicId,
-      consultationId,
-      transcriptSegmentId: guardado1.id,
-      segmentSeq: 1,
-      segmentText: tramo1.transcripcion,
-      drafts: extractClinicalFacts({ text: tramo1.transcripcion, quality: tramo1.calidad }).map(
-        (propuesta) => ({ ...propuesta, contradiction: null }),
-      ),
-    });
+    await controlador.run();
+    expect(procesados).toEqual([0, 1]);
+    const tramos = await listTranscriptSegments(ana.client, sessionId);
+    expect(tramos.map((tramo) => [tramo.seq, tramo.processingState])).toEqual([
+      [0, "processed"],
+      [1, "processed"],
+    ]);
     const inicio = performance.now();
     const hechos = await listAudioFacts(ana.client, consultationId);
     expect(performance.now() - inicio).toBeLessThanOrEqual(2_000);
     expect(hechos.length).toBeGreaterThanOrEqual(2);
+    expect([...new Set(hechos.map((hecho) => hecho.content.segmentSeq))].sort()).toEqual([0, 1]);
     for (const hecho of hechos) {
       expect(hecho.content.confirmationState).toBe("pending");
       expect(hecho.content.provenance).toBe("inferida");
       expect(hecho.content.transcriptExcerpt.length).toBeGreaterThan(0);
       // SC-027 · US6-AC6: la traza apunta al tramo REAL que originó cada hecho.
-      const tramoOrigen = hecho.content.segmentSeq === 0 ? guardado0.id : guardado1.id;
+      const tramoOrigen = tramos.find((tramo) => tramo.seq === hecho.content.segmentSeq)?.id;
       expect(hecho.content.transcriptSegmentId).toBe(tramoOrigen);
     }
   });

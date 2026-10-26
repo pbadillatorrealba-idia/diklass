@@ -247,10 +247,12 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
 
   test("acepta el vocabulario canónico de procedencia y rechaza lo demás", () => {
     for (const provenance of ["reportada", "inferida", "recuperada", "desconocida"]) {
-      expect(
-        anamnesisContentSchema.safeParse({ ...anamnesisBase, field: "frecuencia", provenance })
-          .success,
-      ).toBe(true);
+      const entrada = anamnesisContentSchema.parse({
+        ...anamnesisBase,
+        field: "frecuencia",
+        provenance,
+      });
+      expect(entrada.provenance).toBe(provenance);
     }
     expect(
       anamnesisContentSchema.safeParse({
@@ -259,16 +261,6 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
         provenance: "confirmada",
       }).success,
     ).toBe(false);
-  });
-
-  test("acepta la procedencia recuperada de una fuente (FR-021 canónico)", () => {
-    const entrada = anamnesisContentSchema.parse({
-      ...anamnesisBase,
-      field: "tratamientos_anteriores",
-      provenance: "recuperada",
-    });
-
-    expect(entrada.provenance).toBe("recuperada");
   });
 
   test("rechaza un antecedente sin texto", () => {
