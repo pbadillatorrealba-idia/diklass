@@ -189,7 +189,7 @@ Solo se han tocado, de los archivos compartidos, `src/lib/supabase/database.type
 
 ## Segunda auditoría de tests (2026-10-26)
 
-Cambio de pruebas sobre `87a78d0`, implementado en `882f6b1`; no cambia código de producción,
+Cambio de pruebas sobre `87a78d0`, implementado en `882f6b1` con corrección de tipos en `fdac68a`; no cambia código de producción,
 SQL, requisitos ni umbrales. Cuatro casos se fusionan conservando sus aserciones; se retira
 además el promedio unitario sobre operaciones vacías, cuya medición pasa al caso vivo
 existente. En los tres archivos unitarios afectados: **53 → 48 casos**; el archivo de
@@ -208,13 +208,22 @@ Verificación ejecutada desde el worktree aislado:
   falla en el límite individual de 2.000 ms; el promedio de dos ventanas la habría ocultado.
   Copias temporales retiradas, sin cambios en `src/`. Ejecución final verde después de ellas.
 - `git diff --check`: sin errores.
+- CI de `6304e43` detectó dos errores TS2769 en las nuevas aserciones. Se reprodujeron con
+  `bun run typecheck` local; `fdac68a` conserva el vocabulario como literales (`as const`) y
+  compara el ID opcional encontrado con el ID obligatorio del hecho. Tras corregir:
+  `bun run typecheck` sin errores y la misma selección de tests **56 pass / 0 fail / 0 skip**,
+  204 aserciones. Las expectativas siguen detectando una procedencia o traza incorrecta.
+- [PR #67](https://github.com/pbadillatorrealba-idia/diklass/pull/67), código y documentación
+  subidos en commits separados. [Ronda 1 de revisión](https://github.com/pbadillatorrealba-idia/diklass/pull/67#issuecomment-6420749315)
+  publicada: dos errores de tipos, ambos corregidos y comprobados. La revisión del HEAD
+  corregido se publica en esa PR; no se presenta el reporte anterior como revisión vigente.
 
 El caso vivo conserva borradores de los dos primeros tramos, su procedencia y la relación con
 los tramos persistidos; añade estados `processed` y exige hechos de ambas ventanas. El
 cronómetro incluye transcripción simulada, extracción, lecturas de contexto y escrituras
 reales, hasta resolver el tramo. Excluye preparación de fixtures y captura de 30 s.
 
-No se ejecutaron gate, typecheck local, pgTap, integración completa, Playwright ni Maestro.
+No se ejecutaron gate, pgTap, integración completa, Playwright ni Maestro.
 No cambian firmas públicas, producción, migraciones ni UI; solo se verificó el alcance tocado.
 La batería de cierre sigue pendiente de autorización conforme a AGENTS.md. La deuda 7.12/7.13
 permanece pendiente y esta limpieza no constituye aceptación de voz.

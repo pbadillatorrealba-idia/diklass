@@ -468,5 +468,12 @@ La preparación de paciente/consulta/sesión y la captura de 30 s quedan fuera d
 
 Complejidad nueva: ninguna dependencia, script, helper de producción, migración ni contrato.
 Solo se ajustan pruebas y documentación. El contrato estático de `Icon` y los casos de
-interrupción, concurrencia, RLS y atribución se conservan. La evidencia de implementación se
-registrará después de verificar; la deuda 7.12/7.13 permanece pendiente.
+interrupción, concurrencia, RLS y atribución se conservan. La evidencia ejecutada está en la sección
+«Segunda auditoría de tests» de `quickstart.md`; la deuda 7.12/7.13 permanece pendiente.
+
+Verificación de esta fase: 56 tests focalizados satisfactorios, sin omisiones, con Supabase
+local; seis mutaciones detectadas en copias temporales retiradas; Biome de los cuatro tests
+y OpenSpec estricto válidos. CI detectó dos errores de tipos de las nuevas aserciones,
+reproducidos localmente y corregidos en `fdac68a`; `typecheck` y los mismos 56 tests pasan
+después del arreglo. La PR #67 conserva la revisión y el estado de CI, sin reemplazar
+la verificación de cierre ni la aceptación de voz.
