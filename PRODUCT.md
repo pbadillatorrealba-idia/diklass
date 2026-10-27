@@ -35,10 +35,11 @@ recuperación del historial.
 El asistente vive en un **panel a la derecha de toda pantalla protegida** (acoplado, riel y cajón en
 escritorio; cinta y hoja en móvil), con tres hilos: **Escucha** (la captura de voz con sus tramos y
 borradores, solo con una consulta abierta), **Conocimiento** (la consulta con citas) y **Asistente**.
-Lo implementado son los dos primeros. El tercero está **reservado y planificado, no implementado**: la
-visión es que la app llegue a ser agéntica —un agente que propone y el veterinario decide—, pero hoy no
-hay agente; el hilo lo declara y no simula respuestas. Cuando exista, solo propondrá: nada se escribe
-en el registro clínico sin la confirmación explícita del profesional.
+Los tres están implementados. El **Asistente** hoy responde consultas básicas por reglas (fecha, agenda y
+pacientes de hoy) y lo demás lo pregunta a la base de conocimiento; no es un agente. La visión es que la
+app llegue a ser agéntica —un agente que propone y el veterinario decide—, pero hoy no hay agente ni se
+simulan respuestas. Cuando exista, solo propondrá: nada se escribe en el registro clínico sin la
+confirmación explícita del profesional.
 
 El éxito del PoC es demostrar el flujo clínico completo y generar evidencia técnica y clínica para
 postular a fondos. Prioriza el flujo completo sobre la cobertura exhaustiva de conocimiento.

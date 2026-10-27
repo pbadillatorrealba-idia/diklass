@@ -131,6 +131,10 @@ export function useListenMode(
     controllerRef.current?.stop(decision);
   }, []);
 
+  // Salir de la consulta desmonta el hilo que muestra la grabación: la captura no puede seguir viva
+  // sin indicador («Escucha siempre visible»), así que se descarta el tramo en curso.
+  useEffect(() => () => controllerRef.current?.stop("discarded"), []);
+
   const confirmFact = useCallback(
     async (factId: string) => {
       setBusyFactId(factId);

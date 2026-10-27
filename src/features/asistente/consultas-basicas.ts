@@ -18,8 +18,22 @@ export function detectIntent(question: string): BasicIntent | null {
   if (/pacientes?\b.*\bhoy|(a quien|quienes?)\b.*\b(atiend|veo|vemos)/.test(q)) {
     return "pacientes-hoy";
   }
-  if (/evento|agenda|cita\b|citas\b|reunion/.test(q)) return "agenda";
-  if (/(que|cual)\b.*\b(dia|fecha)|fecha de hoy|dia es hoy/.test(q)) return "fecha";
+  // Con límite de palabra y forma de pregunta: «eventos adversos», «cita la fuente» o «dosis diaria»
+  // son preguntas clínicas y van a la base de conocimiento.
+  if (
+    /\bagenda\b|\b(eventos?|citas?|reuniones?)\b.*\b(tengo|hay|agendad[oa]s?|proximos?)\b|\b(tengo|hay|mis|proximos?)\b.*\b(eventos?|citas?|reuniones?)\b/.test(
+      q,
+    )
+  ) {
+    return "agenda";
+  }
+  if (
+    /\bque dia (es|sera|estamos)\b|\bcual es la fecha\b|\ba que fecha\b|\bfecha de hoy\b|\bdia es hoy\b/.test(
+      q,
+    )
+  ) {
+    return "fecha";
+  }
   return null;
 }
 

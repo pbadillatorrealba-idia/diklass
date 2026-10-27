@@ -16,7 +16,7 @@ cuando llegue el asistente; conviene darle a toda la app un lugar para él desde
   asistente** a la derecha. El panel es parte del shell, no una columna de la pantalla: el contenido
   de cada pantalla conserva su composición (la consulta sigue a una columna).
 - **Panel colapsable y contextual**, con su estado recordado por dispositivo:
-  - web ≥ 1440 px: acoplado y expandido (360 px), colapsable a un **riel** de 56 px;
+  - web ≥ 1440 px: acoplado y expandido (360 px por defecto, 280–560 px al arrastrar), colapsable a un **riel** de 56 px;
   - web 1024–1439 px: riel visible; el panel se abre como **cajón superpuesto** sin reflujo del
     contenido;
   - web < 1024 px y nativo: **dock** (cinta persistente al pie, sobre la barra de pestañas) y una
@@ -27,9 +27,9 @@ cuando llegue el asistente; conviene darle a toda la app un lugar para él desde
     `ListenModeSection` dentro de «1 Anamnesis», que deja de empujar el formulario.
   - **Conocimiento**: la consulta a la base de conocimiento con citas (hoy la pantalla `/knowledge`,
     que se conserva), con el paciente de contexto tomado de la pantalla.
-  - **Asistente**: espacio y estados reservados para un agente futuro (en espera, pensando,
-    propone, error). Mientras no exista agente declara que no está disponible y **no simula**
-    respuestas.
+  - **Asistente**: responde consultas básicas por reglas (fecha, agenda, pacientes de hoy) y consulta
+    la base de conocimiento; no es un agente y **no simula** respuestas. Los estados de un agente
+    futuro (en espera, pensando, propone, error) quedan para ese cambio.
 - **El agente solo propone**: toda propuesta se muestra como sugerencia (pliego canario con contorno
   ocre), no escribe en el registro clínico ni ejecuta nada sin Confirmar explícito, queda atribuida
   y con procedencia «Inferida» (FR-010 · FR-021 · FR-076).

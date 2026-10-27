@@ -50,7 +50,7 @@ async function pacientesDeHoy(now: Date) {
  * Hilo «Asistente» del panel (repetible en cualquier pantalla del shell): responde consultas
  * básicas —fecha, agenda, pacientes de hoy— y, lo que no reconoce, lo pregunta a la base de
  * conocimiento con el paciente de contexto (FR-005 · FR-026). No es un agente: no escribe en el
- * registro ni propone cambios; eso es un cambio futuro (`AgentThreadView`).
+ * registro ni propone cambios; eso es un cambio futuro (contrato `AgentProposal`).
  */
 export function AsistenteThread() {
   const clinicId = useSessionStore((state) => state.clinicId);
