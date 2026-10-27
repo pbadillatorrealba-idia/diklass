@@ -1,10 +1,11 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Message } from "@/features/asistente/chat-model";
+import { sinConsultas } from "../setup/sin-consultas";
 
-mock.module("@/features/conocimiento/consulta-service", () => ({ getQuery: async () => null }));
+await sinConsultas();
 const { MessageList } = await import("@/components/asistente/message-list");
 
 const render = (node: ReactNode) =>

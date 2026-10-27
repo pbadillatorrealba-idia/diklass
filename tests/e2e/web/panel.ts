@@ -9,7 +9,10 @@ import { readSupabaseSession, SUPABASE_ANON_KEY, SUPABASE_URL } from "./fixtures
 export async function abrirHilo(page: Page, id: string) {
   const pestana = page.getByTestId(`assistant-thread-${id}`);
   const riel = page.getByTestId(`assistant-rail-${id}`);
-  const unico = page.getByTestId("assistant-thread");
+  // El chat es el hilo de respaldo: siempre está, así que como único hilo ya está a la vista. Los
+  // demás (p. ej. «escucha») se registran después de montar la pantalla: hay que esperar su pestaña
+  // o su icono, no el contenedor, que aparece antes y haría volver sin abrir nada.
+  const unico = id === "asistente" ? page.getByTestId("assistant-thread") : pestana;
   await expect(pestana.or(riel).or(unico).first()).toBeVisible({ timeout: 15_000 });
   if (await pestana.isVisible()) {
     await pestana.click();

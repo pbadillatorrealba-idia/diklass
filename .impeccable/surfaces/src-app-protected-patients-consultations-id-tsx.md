@@ -27,8 +27,9 @@ fijo; solo cambia la composición del shell.
 
 - **World**: una hoja de formulario con margen de anotaciones. El contenido de cada pantalla es el
   formulario o la lista de siempre; a su derecha, un **panel de asistente** en el borde del shell, la
-  «cinta» de la consulta, donde viven los hilos: Escucha (tramos con sus borradores), Conocimiento
-  (respuestas con cita) y Asistente (reservado). El panel es del shell, no de la pantalla.
+  «cinta» de la consulta, donde viven los hilos: Escucha (tramos con sus borradores, solo con una consulta abierta) y Asistente (un
+  chat persistido con markdown, mensajes de voz y paciente de contexto; absorbió a Conocimiento). El panel
+  es del shell, no de la pantalla.
 - **First viewport** (≥ 1440 px): barra lateral, contenido (la consulta a una columna: encabezado,
   contexto, 1·2·3) y panel acoplado de 360 px con el hilo activo. Entre 1024 y 1439 px el panel es un
   riel de 56 px con el estado de escucha, que abre un cajón. Bajo 1024 px y en nativo, un dock al pie con

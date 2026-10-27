@@ -33,10 +33,13 @@ al diagnóstico diferencial, al tratamiento y al plan de seguimiento, epicrisis 
 recuperación del historial.
 
 El asistente vive en un **panel a la derecha de toda pantalla protegida** (acoplado, riel y cajón en
-escritorio; cinta y hoja en móvil), con tres hilos: **Escucha** (la captura de voz con sus tramos y
-borradores, solo con una consulta abierta), **Conocimiento** (la consulta con citas) y **Asistente**.
-Los tres están implementados. El **Asistente** hoy responde consultas básicas por reglas (fecha, agenda y
-pacientes de hoy) y lo demás lo pregunta a la base de conocimiento; no es un agente. La visión es que la
+escritorio; cinta y hoja en móvil), con dos hilos: **Escucha** (la captura de voz con sus tramos y
+borradores, solo con una consulta abierta) y **Asistente**, un chat. El chat conserva la conversación de
+cada veterinario (privada, con «Borrar conversación»), toma como contexto al paciente de la ficha o la
+consulta que tiene abierta, acepta mensajes de voz (el audio se transcribe con un proveedor externo, tras
+un aviso que se acepta la primera vez, y se conserva 90 días) y responde consultas básicas por reglas
+(fecha, agenda y pacientes de hoy); lo demás lo pregunta a la base de conocimiento, con sus citas y su
+respaldo registrado. No es un agente. La visión es que la
 app llegue a ser agéntica —un agente que propone y el veterinario decide—, pero hoy no hay agente ni se
 simulan respuestas. Cuando exista, solo propondrá: nada se escribe en el registro clínico sin la
 confirmación explícita del profesional.

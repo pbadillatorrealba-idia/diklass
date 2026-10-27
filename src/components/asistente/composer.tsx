@@ -46,8 +46,10 @@ export function Composer({
   };
 
   return (
-    <View className="flex-row items-end gap-2" testID="composer">
-      <Input className="flex-1">
+    // En columna: el campo ocupa todo el ancho (en el panel de 360 px, con el micrófono y «Enviar» en su
+    // misma fila quedaba de ~170 px) y las acciones van debajo, a la derecha.
+    <View className="gap-2" testID="composer">
+      <Input>
         <InputField
           accessibilityLabel="Mensaje al asistente"
           aria-label="Mensaje al asistente"
@@ -70,16 +72,18 @@ export function Composer({
           value={value}
         />
       </Input>
-      {actions}
-      {isResponding ? (
-        <Button onPress={onStop} testID="composer-stop" variant="outline">
-          <ButtonText>Detener</ButtonText>
-        </Button>
-      ) : (
-        <Button isDisabled={!canSend} onPress={send} testID="composer-send">
-          <ButtonText>Enviar</ButtonText>
-        </Button>
-      )}
+      <View className="flex-row items-center justify-end gap-2">
+        {actions}
+        {isResponding ? (
+          <Button onPress={onStop} testID="composer-stop" variant="outline">
+            <ButtonText>Detener</ButtonText>
+          </Button>
+        ) : (
+          <Button isDisabled={!canSend} onPress={send} testID="composer-send">
+            <ButtonText>Enviar</ButtonText>
+          </Button>
+        )}
+      </View>
     </View>
   );
 }
