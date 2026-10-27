@@ -43,6 +43,14 @@ bun run start -- -c
 bunx expo export --clear -p web     # al exportar
 ```
 
+## Servidor de desarrollo
+
+`bun run start`, `bun run web` (también `start:web`), `bun run android` y `bun run ios`
+seleccionan el primer puerto disponible entre **9701 y 9710**, empezando por 9701.
+Si todos están ocupados, el comando falla con un mensaje; no busca fuera del rango.
+La URL web habitual es `http://localhost:9701`; revisa la salida si hay otras instancias.
+Los comandos que pasan `--port` expresamente (como los e2e) mantienen ese puerto.
+
 ## Supabase local
 
 ```bash
