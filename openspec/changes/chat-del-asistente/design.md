@@ -176,10 +176,21 @@ externos llevan `rel="noopener"` y el destino visible. *Alternativas rechazadas*
 en nativo: `markdown-it` (también sin dependencias de runtime) o un tokenizador mínimo propio para el
 subconjunto usado.
 
-**Presupuesto de rendimiento** (Constitución, «Restricciones de Aplicación Web»): se mide en la pasada de
-la tarea 4.0, antes de cerrar este diseño, y los números medidos se escriben aquí: peso añadido máximo al
-bundle web (gzip) y tiempo de render de 50 mensajes con tablas y markdown. 4.1 y 8.3 verifican contra
-ellos. *Presupuesto: pendiente de la medición de 4.0; el diseño no se da por cerrado sin él.*
+**Presupuesto de rendimiento** (Constitución, «Restricciones de Aplicación Web»). Medido en la tarea 4.0
+(`marked` 18.1.2, sin dependencias propias, `bun audit` sin hallazgos sobre él):
+
+| Medida | Resultado | Presupuesto |
+|---|---|---|
+| Peso añadido al bundle web (`expo export`, entrada minificada, gzip) | +14,3 KB (804,7 → 819,0 KB; +50 KB sin comprimir) | ≤ +20 KB gzip |
+| Tokenizar 50 mensajes con encabezado, tabla, lista, cita, código, enlace, HTML e imagen | mediana 1,3–1,8 ms, p95 1,8–3,2 ms (Node y Bun, escritorio) | ≤ 16 ms en web (un cuadro) |
+| Primer pintado de 50 mensajes completos (React) | se mide en 4.1, con `MarkdownText` | ≤ 100 ms |
+| Metro nativo | `expo export` de iOS y Android compila (Hermes) y resuelve `marked` | sin cambios en la configuración de Metro |
+
+Tokenizar es barato; lo que decide es el render, que no se puede medir sin el renderizador. El tope
+nativo no se mide aquí (Hermes en un teléfono): se verifica en el dispositivo con la lista de 8.4.
+`marked` tokeniza HTML crudo como `html` y las imágenes como `image`, de modo que el renderizador los
+vuelve texto sin ejecutarlos. 4.1 y 8.3 verifican contra estos números; si el primer pintado supera el
+tope, el plan B (`markdown-it` o tokenizador mínimo) se evalúa antes de integrar.
 
 ### D10. Lista y composer
 
@@ -239,6 +250,7 @@ chat; las auditorías de conocimiento no se tocan).
 
 ## Open Questions
 
-- Ninguna bloqueante: las decisiones de producto están cerradas en `proposal.md`. Pendientes de medir:
-  presupuesto de rendimiento con `marked` (tarea 4.0, se escribe en D9) y comportamiento del teclado
-  nativo. Supuestos a confirmar con la prueba: 60 s hacia el proveedor y el tope en bytes para 2 min (D5).
+- Ninguna bloqueante: las decisiones de producto están cerradas en `proposal.md`. El presupuesto de
+  rendimiento está fijado en D9 (medido en 4.0); falta medir el primer pintado de 50 mensajes (4.1) y el
+  comportamiento del teclado nativo. Supuestos a confirmar con la prueba: 60 s hacia el proveedor y el
+  tope en bytes para 2 min (D5).
