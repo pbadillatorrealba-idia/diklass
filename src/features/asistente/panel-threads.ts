@@ -19,10 +19,24 @@ export type PanelThread = {
   status?: (variant: "rail" | "dock") => ReactNode;
   /** Cuántas cosas del hilo esperan la confirmación del veterinario (borradores, propuestas). */
   pending?: number;
+  /** Llegó una respuesta con el hilo fuera de vista: el riel y el dock lo marcan hasta abrirlo. */
+  unread?: boolean;
+  /**
+   * El panel envuelve el hilo en un desplazamiento propio (por defecto). Un hilo con su propia lista
+   * y su composer fijo al pie (el chat) lo apaga y gestiona su desplazamiento.
+   */
+  scroll?: boolean;
 };
 
 /** Hilo al que pasa el panel si el activo deja de estar disponible (spec «Hilos contextuales»). */
-export const FALLBACK_THREAD = "conocimiento";
+export const FALLBACK_THREAD = "asistente";
+
+/**
+ * `/knowledge` muestra el chat a pantalla completa: en esa pantalla el panel no ofrece un segundo
+ * chat (dos regiones `log` y dos composers con el mismo nombre, y cada respuesta se anunciaría dos
+ * veces). La colección de fuentes (`/knowledge/sources`) sí conserva el del panel.
+ */
+export const chatOwnsScreen = (pathname: string) => /^\/knowledge\/?$/.test(pathname);
 
 export type ThreadRegistryState = {
   // Un `Map` conserva el orden de la primera aparición de cada dueño.

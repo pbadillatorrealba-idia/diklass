@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
+import { type Page, request } from "@playwright/test";
 import { randomRut } from "../../support/rut";
 import {
   provisionClinicalCase,
@@ -7,8 +7,17 @@ import {
   type SyntheticScreen,
   syntheticScreens,
 } from "./caso-sintetico";
-import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
-import { abrirHilo } from "./panel";
+import {
+  ANA,
+  expect,
+  hasBackend,
+  readSupabaseSession,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+  submitLogin,
+  test,
+} from "./fixtures";
+import { abrirHilo, limpiarConversacion } from "./panel";
 import { prepararPaciente } from "./preparar-paciente";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -246,7 +255,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     // 1440 px: panel acoplado, con cada uno de sus hilos.
     await abrirConsulta(1440);
     await expect(page.getByTestId("assistant-panel")).toBeVisible();
-    for (const hilo of ["escucha", "conocimiento", "asistente"]) {
+    for (const hilo of ["escucha", "asistente"]) {
       await abrirHilo(page, hilo);
       await expectNoViolations(page);
     }
@@ -275,6 +284,86 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await expectNoViolations(page);
   });
 
+  // chat-del-asistente 8.1: el chat con mensajes (markdown), el error con «Reintentar» y la
+  // confirmación de borrar no tienen violaciones axe (WCAG 2.2 AA), en claro y oscuro según el proyecto.
+  test("el chat con mensajes, error y confirmación de borrado no tiene violaciones axe", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await limpiarConversacion(page);
+
+    const { accessToken, userId } = await readSupabaseSession(page);
+    const api = await request.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SUPABASE_ANON_KEY as string,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    try {
+      const perfil = await api.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
+      const clinicId = ((await perfil.json()) as Array<{ clinic_id: string }>)[0]?.clinic_id;
+      const sembrar = (role: string, text: string) =>
+        api.post("/rest/v1/assistant_messages", {
+          data: {
+            clinic_id: clinicId,
+            author_id: userId,
+            role,
+            status: "done",
+            parts: [{ type: "text", text }],
+          },
+        });
+      await sembrar("user", "¿Qué dosis uso de maropitant?");
+      await sembrar(
+        "assistant",
+        [
+          "## Resumen",
+          "",
+          "El paciente presenta **vómitos** y *letargo*.",
+          "",
+          "| Fármaco | Dosis |",
+          "|---|---|",
+          "| Maropitant | 1 mg/kg |",
+          "",
+          "- Ayuno 12 h",
+          "- Fluidos",
+          "",
+          "> Fuente: protocolo de manejo de vómito agudo",
+          "",
+          "```",
+          "meloxicam 0,1 mg/kg",
+          "```",
+          "",
+          "Ver [la guía](https://example.org/guia).",
+        ].join("\n"),
+      );
+      await page.reload();
+      const panel = page.getByTestId("assistant-panel");
+      await expect(panel.getByTestId("message-assistant")).toBeVisible({ timeout: 15_000 });
+      await expectNoViolations(page);
+
+      // Error al enviar: la persistencia falla y la pregunta queda con «Reintentar».
+      await page.route(/assistant_messages/, (route) =>
+        route.request().method() === "POST" ? route.abort() : route.continue(),
+      );
+      await panel.getByTestId("composer-input").fill("¿Qué eventos tengo agendados?");
+      await panel.getByTestId("composer-send").click();
+      await expect(panel.getByTestId("message-retry")).toBeVisible({ timeout: 15_000 });
+      await expectNoViolations(page);
+
+      // Confirmación de «Borrar conversación».
+      await panel.getByTestId("chat-clear").click();
+      await expect(panel.getByTestId("chat-clear-confirm")).toBeVisible();
+      await expectNoViolations(page);
+    } finally {
+      await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
+      await api.dispose();
+    }
+  });
+
   // shell-asistente-tres-zonas 2.3: el control del panel y sus hilos se alcanzan por teclado, con
   // foco visible.
   test("el panel acoplado se recorre por teclado con foco visible", async ({ page }) => {
@@ -283,11 +372,8 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/patients");
     await expect(page.getByTestId("assistant-panel")).toBeVisible({ timeout: 15_000 });
-    await walkKeyboard(page, [
-      "assistant-thread-conocimiento",
-      "assistant-thread-asistente",
-      "assistant-toggle",
-    ]);
+    // Con un solo hilo el panel no lleva pestañas: el control y el composer del chat.
+    await walkKeyboard(page, ["assistant-toggle", "composer-input"]);
   });
 
   // rediseno-pacientes: la consulta va en una sola columna, con el contexto antes del registro.

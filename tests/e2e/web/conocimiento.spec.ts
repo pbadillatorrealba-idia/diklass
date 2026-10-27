@@ -10,6 +10,7 @@ import {
   submitLogin,
   test,
 } from "./fixtures";
+import { limpiarConversacion } from "./panel";
 
 /**
  * Base de conocimiento en web (revisión de la PR #30). La navegación entre pantallas se hace
@@ -125,7 +126,9 @@ test.describe("base de conocimiento web", () => {
     }
   });
 
-  // Hallazgo 6: Enter no respetaba la consulta en curso y registraba dos filas append-only.
+  // Hallazgo 6: Enter no respetaba la consulta en curso y registraba dos filas append-only. En el
+  // chat, mientras responde, el composer ofrece «Detener» en lugar de «Enviar» y un segundo envío
+  // no se acepta; la consulta se registra una sola vez.
   test("pulsar Enter otra vez con la consulta en curso registra una sola consulta", async ({
     page,
   }) => {
@@ -137,30 +140,31 @@ test.describe("base de conocimiento web", () => {
         await new Promise((resolve) => setTimeout(resolve, 1_500));
         await route.continue();
       });
+      await limpiarConversacion(page);
       await page.goto("/knowledge");
-      await escribir(page, "Tu pregunta al asistente", pregunta);
-      const campo = page.getByLabel("Tu pregunta al asistente").filter({ visible: true });
-      await page.keyboard.press("Enter");
-      // En web, Enter quita el foco del campo: el veterinario vuelve a él y repite.
+      const chat = page.getByTestId("knowledge-chat");
+      const campo = chat.getByTestId("composer-input");
+      await expect(campo).toBeEditable({ timeout: 15_000 });
       await campo.click();
+      await page.keyboard.type(pregunta, { delay: 5 });
+      await page.keyboard.press("Enter");
+      // Respondiendo: se ofrece «Detener» y no «Enviar»; un segundo Enter con texto nuevo no envía.
+      await expect(chat.getByTestId("composer-stop")).toBeVisible();
+      await campo.click();
+      await page.keyboard.type(pregunta, { delay: 5 });
       await page.keyboard.press("Enter");
 
-      await expect(page.getByText(pregunta, { exact: true }).filter({ visible: true })).toHaveCount(
-        1,
-      );
-      // Enter con la pregunta ya vaciada tampoco dispara otra consulta ni un error.
-      await campo.click();
-      await page.keyboard.press("Enter");
-      await page.waitForTimeout(1_000);
+      await expect(chat.getByTestId("message-user")).toHaveCount(1, { timeout: 15_000 });
+      await expect(chat.getByTestId("message-user")).toContainText(pregunta);
+      // Espera la respuesta real (no el «Pensando…», que también es un mensaje del asistente).
+      await expect(chat.getByTestId("respuesta-conocimiento")).toBeVisible({ timeout: 15_000 });
+      await expect(chat.getByTestId("message-assistant")).toHaveCount(1);
+      await page.waitForTimeout(500);
 
       const registradas = await api.get(
         `/rest/v1/knowledge_queries?select=id&question=eq.${encodeURIComponent(pregunta)}`,
       );
       expect(await registradas.json()).toHaveLength(1);
-      await expect(page.getByText(pregunta, { exact: true }).filter({ visible: true })).toHaveCount(
-        1,
-      );
-      await expect(page.getByTestId("conocimiento-status")).toBeHidden();
     } finally {
       await api.dispose();
     }
@@ -173,9 +177,7 @@ test.describe("base de conocimiento web", () => {
     await page.getByTestId("home-knowledge").click();
 
     await expect(page).toHaveURL(/\/knowledge$/);
-    await expect(
-      page.getByLabel("Tu pregunta al asistente").filter({ visible: true }),
-    ).toBeVisible();
+    await expect(page.getByTestId("knowledge-chat").getByTestId("composer-input")).toBeVisible();
   });
 
   // Tarea 7.12: con la sesión de acceso caducada la RLS devuelve cero filas, no un error, y el
@@ -268,82 +270,6 @@ test.describe("base de conocimiento web", () => {
     } finally {
       await ana.dispose();
       await admin.dispose();
-    }
-  });
-
-  // sistema-visual FR-095 · US14-AC6 (design.md D19): con cientos de fichas, el contexto de
-  // paciente se elige buscando, no recorriendo una opción por ficha.
-  test("el contexto de paciente se busca sin tildes y anuncia las coincidencias", async ({
-    page,
-  }) => {
-    const api = await iniciarSesion(page);
-    const marca = Date.now();
-    const nombre = `Búho E2E ${marca}`;
-    try {
-      const session = await readSupabaseSession(page);
-      const perfil = await api.get(
-        `/rest/v1/veterinarians?select=clinic_id&id=eq.${session.userId}`,
-      );
-      const [ana] = (await perfil.json()) as Array<{ clinic_id: string }>;
-      if (!ana) throw new Error("Sin clinic_id para Ana.");
-      const crear = async (recordType: string, content: object) => {
-        const respuesta = await api.post("/rest/v1/clinical_records", {
-          data: { clinic_id: ana.clinic_id, record_type: recordType, content, status: "draft" },
-          headers: { Prefer: "return=representation" },
-        });
-        expect(respuesta.status()).toBe(201);
-        const [fila] = (await respuesta.json()) as Array<{ id: string }>;
-        if (!fila) throw new Error(`Sin fila de ${recordType}.`);
-        return fila.id;
-      };
-      const tutorId = await crear("tutor", {
-        name: `Tutor de ${nombre}`,
-        rut: randomRut(),
-        phone: null,
-        email: null,
-      });
-      const patientId = await crear("patient", {
-        name: nombre,
-        species: "canino",
-        breed: "Mestizo",
-        birthDate: null,
-        ageMonths: 24,
-        weightKg: null,
-        sex: "hembra",
-        reproductiveStatus: "entero",
-        antecedentes: {
-          medicalHistory: [],
-          preexistingDiseases: [],
-          currentMedications: [],
-          knownAllergies: [],
-          behavioralHistory: [],
-        },
-        tutorId,
-      });
-
-      await page.goto("/knowledge");
-      const grupo = page.getByRole("radiogroup", { name: "Contexto de paciente" });
-      await expect(grupo).toBeVisible({ timeout: 15_000 });
-      // Sin búsqueda: «Conocimiento general» y como máximo 8 fichas, con la lista ya cargada.
-      await page.waitForLoadState("networkidle");
-      expect(await grupo.getByRole("radio").count()).toBeLessThanOrEqual(9);
-
-      // La región viva existe antes de buscar: así el lector anuncia el cambio de texto (PR #38).
-      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText("");
-      await escribir(page, "Buscar paciente", `buho e2e ${marca}`);
-      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveText(
-        "1 paciente coincide",
-      );
-      await expect(page.getByTestId("selector-paciente-contexto-recuento")).toHaveAttribute(
-        "aria-live",
-        "polite",
-      );
-      await expect(grupo.getByRole("radio")).toHaveCount(2);
-      const opcion = page.getByTestId(`selector-paciente-contexto-${patientId}`);
-      await opcion.click();
-      await expect(opcion).toHaveAttribute("aria-checked", "true");
-    } finally {
-      await api.dispose();
     }
   });
 });

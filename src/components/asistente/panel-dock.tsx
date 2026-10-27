@@ -53,6 +53,13 @@ export function PanelDockView({ threads, activeId, onOpen, openRef }: PanelDockV
           {`${pending} por confirmar`}
         </Text>
       ) : null}
+      {threads.some((thread) => thread.unread) ? (
+        <View aria-live="polite" role="status">
+          <Text testID="panel-dock-unread" variant="strong">
+            Respuesta nueva
+          </Text>
+        </View>
+      ) : null}
       {/* El estado de la escucha ocupa su propia fila: su aviso completo no cabe junto al botón. */}
       {threads.map((thread) => (
         <Fragment key={thread.id}>{thread.status?.("dock")}</Fragment>

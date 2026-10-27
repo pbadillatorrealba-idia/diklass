@@ -1,33 +1,31 @@
 import { usePathname } from "expo-router";
-import { AsistenteThread } from "@/components/asistente/asistente-thread";
-import { ConocimientoThread } from "@/components/conocimiento/conocimiento-thread";
-import { usePanelThreads } from "@/features/asistente/panel-threads";
+import { ChatThread } from "@/components/asistente/chat-thread";
+import { chatOwnsScreen, usePanelThreads } from "@/features/asistente/panel-threads";
+import { useChatController } from "@/features/asistente/use-chat-controller";
 
 /**
- * Hilos que el propio shell ofrece en toda pantalla protegida (sistema-visual «Hilos contextuales
- * del panel» · design.md D3): «Asistente» (consultas básicas y conocimiento) y «Conocimiento». El
- * inicio solo ofrece «Asistente», que ya cubre el conocimiento, y por eso su panel no lleva
- * pestañas. Los hilos de una pantalla (p. ej. «Escucha») los declara la propia pantalla.
+ * Hilo que el propio shell ofrece en toda pantalla protegida (sistema-visual «Hilos contextuales del
+ * panel» · design.md D3): «Asistente», el chat, que también responde a la base de conocimiento. Los
+ * hilos de una pantalla (p. ej. «Escucha») los declara la propia pantalla. El controlador del chat vive
+ * aquí, siempre montado, para que una respuesta con el panel cerrado se registre y marque el no leído.
  */
 export function ShellThreads() {
-  const enInicio = usePathname() === "/home";
-  usePanelThreads([
-    ...(enInicio
+  const chat = useChatController();
+  // En /knowledge el chat ocupa la pantalla: el panel no ofrece otro.
+  const cedido = chatOwnsScreen(usePathname());
+  usePanelThreads(
+    cedido
       ? []
       : [
           {
-            id: "conocimiento",
-            label: "Conocimiento",
-            icon: "book-open-page-variant-outline",
-            element: <ConocimientoThread />,
+            id: "asistente",
+            label: "Asistente",
+            icon: "robot-outline",
+            element: <ChatThread chat={chat} />,
+            scroll: false,
+            unread: chat.unread,
           },
-        ]),
-    {
-      id: "asistente",
-      label: "Asistente",
-      icon: "robot-outline",
-      element: <AsistenteThread />,
-    },
-  ]);
+        ],
+  );
   return null;
 }

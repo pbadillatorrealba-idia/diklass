@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import type { Message } from "@/features/asistente/chat-model";
 import { useChatStore } from "@/features/asistente/chat-store";
+import { queryClient } from "@/lib/query/query-client";
 import { useSessionStore } from "@/stores/session-store";
 
 const pendiente = (over: Partial<Message> = {}): Message => ({
@@ -79,5 +80,15 @@ describe("sesión de acceso", () => {
     expect(store().drafts).toEqual({});
     expect(store().pending).toEqual([]);
     expect(store().unread).toBe(0);
+  });
+
+  test("la conversación cargada no queda en la caché al salir de la sesión", () => {
+    useSessionStore.setState({ accessState: "active" });
+    queryClient.setQueryData(["asistente", "mensajes", "vet-1"], { pages: [] });
+    queryClient.setQueryData(["registro", "patients"], []);
+    useSessionStore.setState({ accessState: "revoked" });
+    expect(queryClient.getQueryData(["asistente", "mensajes", "vet-1"])).toBeUndefined();
+    // Lo que no es del chat no se toca.
+    expect(queryClient.getQueryData<unknown[]>(["registro", "patients"])).toEqual([]);
   });
 });

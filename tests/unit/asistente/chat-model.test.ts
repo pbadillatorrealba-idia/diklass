@@ -3,7 +3,9 @@ import {
   canTransition,
   isPersistable,
   type Message,
+  mergeMessages,
   messageText,
+  newMessageId,
 } from "@/features/asistente/chat-model";
 
 const mensaje = (over: Partial<Message> = {}): Message => ({
@@ -85,5 +87,48 @@ describe("texto de un mensaje", () => {
 
   test("sin partes con texto es vacío", () => {
     expect(messageText(mensaje({ parts: [] }))).toBe("");
+  });
+});
+
+// Los ids de mensaje son la clave primaria uuid de `assistant_messages`.
+describe("newMessageId", () => {
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+  test("genera un uuid v4", () => {
+    expect(newMessageId()).toMatch(UUID);
+  });
+
+  test("sin crypto.randomUUID (Hermes) genera uno válido y distinto cada vez", () => {
+    const original = globalThis.crypto;
+    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true });
+    try {
+      const a = newMessageId();
+      const b = newMessageId();
+      expect(a).toMatch(UUID);
+      expect(a).not.toBe(b);
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: original, configurable: true });
+    }
+  });
+});
+
+// Entre persistir la pregunta y terminar el turno, el mismo mensaje está en la caché y en los pendientes.
+describe("mergeMessages", () => {
+  test("los pendientes van al final y no repiten un mensaje ya persistido", () => {
+    const persistidos = [mensaje({ id: "a" }), mensaje({ id: "u" })];
+    const pendientes = [
+      mensaje({ id: "u", status: "sending" }),
+      mensaje({ id: "p", status: "thinking" }),
+    ];
+    expect(mergeMessages(persistidos, pendientes).map((m) => [m.id, m.status])).toEqual([
+      ["a", "done"],
+      ["u", "done"],
+      ["p", "thinking"],
+    ]);
+  });
+
+  test("sin pendientes devuelve los persistidos", () => {
+    const persistidos = [mensaje({ id: "a" })];
+    expect(mergeMessages(persistidos, [])).toEqual(persistidos);
   });
 });

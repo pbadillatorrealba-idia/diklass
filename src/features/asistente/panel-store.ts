@@ -65,7 +65,7 @@ export type PanelState = {
   setWidth: (width: number) => void;
 };
 
-const DEFAULTS = { expanded: true, activeThread: "conocimiento", width: PANEL_WIDTH } as const;
+const DEFAULTS = { expanded: true, activeThread: "asistente", width: PANEL_WIDTH } as const;
 
 function read(
   storage: PanelStorage | null,

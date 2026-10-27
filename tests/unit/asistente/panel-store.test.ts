@@ -34,10 +34,10 @@ const throwing: PanelStorage = {
 
 // sistema-visual «Panel de asistente colapsable»: estado recordado por dispositivo y degradado.
 describe("estado del panel", () => {
-  test("empieza expandido y en «Conocimiento»", () => {
+  test("empieza expandido y en «Asistente»", () => {
     const store = createPanelStore(memoryStorage().storage);
     expect(store.getState().expanded).toBe(true);
-    expect(store.getState().activeThread).toBe("conocimiento");
+    expect(store.getState().activeThread).toBe("asistente");
   });
 
   test("lo guardado en el dispositivo se lee al crear el almacén", () => {
@@ -69,7 +69,7 @@ describe("estado del panel", () => {
   ])("un valor guardado inválido (%s) degrada a los valores por defecto", (_caso, raw) => {
     const store = createPanelStore(memoryStorage({ [PANEL_STORAGE_KEY]: raw }).storage);
     expect(store.getState().expanded).toBe(true);
-    expect(store.getState().activeThread).toBe("conocimiento");
+    expect(store.getState().activeThread).toBe("asistente");
   });
 
   test("un almacenamiento que lanza degrada y no impide cambiar el estado", () => {

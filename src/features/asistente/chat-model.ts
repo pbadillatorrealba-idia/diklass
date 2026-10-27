@@ -65,3 +65,22 @@ export function messageText(message: Message): string {
     .filter((texto) => texto !== "")
     .join("\n\n");
 }
+
+/** uuid v4 para el id de un mensaje; Hermes puede no traer `crypto.randomUUID`. */
+export function newMessageId(): string {
+  const nativo = globalThis.crypto?.randomUUID?.();
+  if (nativo) return nativo;
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = Math.floor(Math.random() * 16);
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+/** Persistidos y pendientes en orden; un pendiente ya persistido (misma id) no se repite. */
+export function mergeMessages(
+  persisted: readonly Message[],
+  pending: readonly Message[],
+): Message[] {
+  const ids = new Set(persisted.map((message) => message.id));
+  return [...persisted, ...pending.filter((message) => !ids.has(message.id))];
+}

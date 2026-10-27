@@ -161,7 +161,7 @@ contexto» y `conversation-store.patientId` pasa a derivarse del proveedor. La e
 la pinta la cabecera del chat; el nombre se lee de la ficha ya cargada, sin consulta extra. El mensaje
 guarda `patientId` al enviarse (el de ese instante, no el de la respuesta).
 
-Regla de dueño: **el último en montar gana, y al desmontar limpia solo quien lo fijó** (cada setter guarda
+Regla de dueño: **el último en enfocarse gana, y al salir limpia solo quien lo fijó** (sigue al foco de la pantalla, no a su montaje: navegar entre pestañas deja la pantalla montada) (cada setter guarda
 su propio id). Así, pasar de la ficha a una consulta del mismo paciente no parpadea, y una consulta con la
 ficha abierta en el panel anidado no se pisa. Una pregunta en vuelo al cambiar de pantalla sigue usando el
 paciente con que se envió.
@@ -197,7 +197,7 @@ tope, el plan B (`markdown-it` o tokenizador mínimo) se evalúa antes de integr
 ### D10. Lista y composer
 
 - Lista: en web, `ScrollView` con anclaje al final (observa el crecimiento del contenido y la distancia al
-  final); en nativo, `FlatList` sin virtualizar a propósito (50 mensajes por página). La decisión de
+  final); en nativo, el mismo `ScrollView` (se evaluó `FlatList`, pero no virtualiza a propósito —50 mensajes por página— y un solo componente evita dos implementaciones). La decisión de
   anclaje (¿cerca del final?, conteo de nuevos) es una **función pura compartida** por ambas
   implementaciones, con prueba unitaria, para que no diverjan. «Ir al final» se muestra si hay nuevos
   fuera de vista. Desplazamiento instantáneo.

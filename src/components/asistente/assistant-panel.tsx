@@ -128,23 +128,30 @@ export function PanelBody({
             <Fragment key={thread.id}>{thread.status?.("dock")}</Fragment>
           ))}
       </View>
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-4 p-4"
-        testID="assistant-thread"
-      >
-        {active ? (
-          active.element
-        ) : (
-          <Text tone="muted">Esta pantalla no ofrece hilos del asistente.</Text>
-        )}
-      </ScrollView>
+      {active && active.scroll === false ? (
+        // El hilo trae su propio desplazamiento (el chat: lista con el composer fijo al pie).
+        <View className="min-h-0 flex-1" testID="assistant-thread">
+          {active.element}
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="gap-4 p-4"
+          testID="assistant-thread"
+        >
+          {active ? (
+            active.element
+          ) : (
+            <Text tone="muted">Esta pantalla no ofrece hilos del asistente.</Text>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 /** Riel de 56 px: un icono por hilo y el control de expandir. */
-function Rail({
+export function Rail({
   covered,
   onOpen,
   threads,
@@ -192,6 +199,22 @@ function Rail({
             >
               <Text tone="primary" variant="nav">
                 {thread.pending}
+              </Text>
+            </View>
+          ) : null}
+          {thread.unread ? (
+            // Aviso de respuesta nueva: texto y borde, no solo color; sin sonido ni animación.
+            <View
+              accessibilityLabel={`Respuesta nueva en ${thread.label}`}
+              accessible
+              aria-label={`Respuesta nueva en ${thread.label}`}
+              aria-live="polite"
+              className="min-h-6 min-w-6 items-center justify-center rounded-sm border border-primary px-1"
+              role="status"
+              testID={`assistant-rail-unread-${thread.id}`}
+            >
+              <Text tone="primary" variant="nav">
+                Nuevo
               </Text>
             </View>
           ) : null}

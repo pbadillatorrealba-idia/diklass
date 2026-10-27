@@ -38,6 +38,7 @@
     "expo-secure-store": "~57.0.4",
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
+    "marked": "^18.1.2",
     "nativewind": "4.2.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

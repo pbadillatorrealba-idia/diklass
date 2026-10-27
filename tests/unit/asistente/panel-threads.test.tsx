@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  chatOwnsScreen,
   createThreadRegistry,
   FALLBACK_THREAD,
   resolveActiveThread,
@@ -45,12 +46,26 @@ describe("hilo activo", () => {
   });
 
   test("pasa a «Conocimiento» si ya no está disponible", () => {
-    expect(resolveActiveThread("escucha", ["conocimiento", "asistente"])).toBe(FALLBACK_THREAD);
-    expect(FALLBACK_THREAD).toBe("conocimiento");
+    expect(resolveActiveThread("escucha", ["asistente", "otro"])).toBe(FALLBACK_THREAD);
+    expect(FALLBACK_THREAD).toBe("asistente");
   });
 
   test("si tampoco está «Conocimiento», pasa al primero disponible", () => {
     expect(resolveActiveThread("escucha", ["asistente"])).toBe("asistente");
     expect(resolveActiveThread("escucha", [])).toBe(FALLBACK_THREAD);
+  });
+});
+
+// Hallazgo 3 de la revisión: /knowledge muestra el chat a pantalla completa, así que el panel no
+// ofrece un segundo chat (dos log, dos composers y cada respuesta anunciada dos veces).
+describe("chatOwnsScreen", () => {
+  test.each([
+    ["/knowledge", true],
+    ["/knowledge/", true],
+    ["/knowledge/sources", false],
+    ["/home", false],
+    ["/patients", false],
+  ])("%s → %s", (ruta, es) => {
+    expect(chatOwnsScreen(ruta)).toBe(es);
   });
 });
