@@ -607,6 +607,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      remove_assistant_audio: { Args: { p_message_id: string }; Returns: string }
       request_id: { Args: never; Returns: string }
       revoke_access_session: {
         Args: { p_session_id?: string }

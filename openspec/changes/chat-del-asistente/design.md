@@ -87,10 +87,11 @@ clínica append-only (más sensible y no permite el derecho a retirar la convers
 
 ### D4. Borrar la conversación
 
-Borrar objetos de Storage no se puede por SQL, así que el borrado lo orquesta una Edge Function
-(`delete-assistant-conversation`, JWT del autor) que elimina los objetos de su audio con la API de Storage
-—la misma lógica que la purga, extraída a `_shared`— y luego llama a la RPC `delete_assistant_conversation()`
-que borra las filas del autor. `knowledge_queries` no se toca (auditoría, FR-020); la confirmación lo dice.
+Borrar objetos de Storage no se puede por SQL, pero sí por la API de Storage con la política de borrado del
+autor sobre su propio prefijo (migración 023): el cliente lee las rutas de audio de sus mensajes, borra los
+objetos y luego llama a la RPC `delete_assistant_conversation()` que borra las filas. No hace falta una Edge
+Function para esto; la purga programada (D6) barre además los objetos que queden sin referencia.
+`knowledge_queries` no se toca (auditoría, FR-020); la confirmación lo dice.
 
 ### D5. Audio: grabador, bucket y función
 

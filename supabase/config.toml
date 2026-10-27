@@ -37,5 +37,8 @@ file_size_limit = "10MiB"
 
 [functions.transcribe-audio]
 verify_jwt = true
+
+[functions.transcribe-chat-audio]
+verify_jwt = true
 [local_smtp]
 enabled = false
