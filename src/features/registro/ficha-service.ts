@@ -247,6 +247,33 @@ export async function getPatient(
   }
 }
 
+/** Fichas de los pacientes dados, en una sola consulta (el home resuelve los de las consultas de hoy). */
+export async function listPatientsByIds(
+  client: SupabaseClient<Database>,
+  ids: readonly string[],
+): Promise<PatientEntry[]> {
+  if (ids.length === 0) return [];
+  const requestId = makeRequestId();
+  try {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("*")
+      .eq("record_type", "patient")
+      .in("id", [...ids]);
+    if (error) {
+      throw error;
+    }
+    return parseRows(data, patientContentSchema, "listPatientsByIds");
+  } catch (error) {
+    void captureClientError(client as unknown as ErrorReporterClient, {
+      error,
+      operation: "listPatientsByIds",
+      requestId,
+    });
+    throw error;
+  }
+}
+
 export async function listPatients(client: SupabaseClient<Database>): Promise<PatientEntry[]> {
   const requestId = makeRequestId();
   try {

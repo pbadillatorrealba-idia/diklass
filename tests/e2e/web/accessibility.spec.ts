@@ -166,7 +166,7 @@ test.describe("WCAG 2.2 AA gate", () => {
     test.skip(!hasBackend, "Requires local Supabase with the synthetic veterinarians provisioned.");
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expectNoViolations(page);
     // El workspace de consulta y el resto de pantallas del registro clínico se escanean
     // sobre un caso clínico sintético en el bloque de la tarea 5.1 (D12).
@@ -425,7 +425,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       const controles = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
           .filter((el) =>
-            /^(home-(patients|follow-up|knowledge)|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+            /^(home-start-consultation|home-consulta-.+|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
               el.dataset.testid ?? "",
             ),
           )
@@ -454,9 +454,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       expect.arrayContaining([
         "follow-up-open",
         "history-open",
-        "home-follow-up",
-        "home-knowledge",
-        "home-patients",
+        "home-start-consultation",
         "patient-open",
         "screen-back",
         "patients-register",
@@ -535,7 +533,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     const pares = [
-      { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
+      { url: "/home", izquierda: "home-today", derecha: "home-agenda" },
       { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
     ];
     for (const width of [1280, 375]) {

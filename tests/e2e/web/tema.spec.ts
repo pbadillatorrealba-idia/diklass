@@ -78,22 +78,34 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     }
   });
 
-  for (const width of [1280, 375]) {
-    test(`a ${width} px, Configuración queda a 1 activación desde una pantalla protegida`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 800 });
-      await page.goto("/patients");
-      await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
-      const entry =
-        width >= 1024
-          ? page.getByTestId("app-sidebar").getByRole("link", { name: "Configuración" })
-          : page.getByTestId("app-topbar").getByRole("link", { name: /Configuración/ });
-      await entry.click();
-      await expect(page).toHaveURL(/\/settings$/);
-      await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
-    });
-  }
+  test("a 1280 px, Configuración queda a 1 activación desde una pantalla protegida", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("app-sidebar").getByRole("link", { name: "Configuración" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
+  });
+
+  // En móvil, Configuración es la última pestaña de la barra inferior y reúne perfil, apariencia
+  // y «Cerrar sesión».
+  test("a 375 px, la pestaña Configuración muestra perfil, apariencia y cerrar sesión", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("app-tabbar").getByRole("link", { name: "Configuración" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
+    await expect(page.getByTestId("logout-button")).toBeVisible();
+    await page.getByTestId("settings-theme").getByRole("radio", { name: "Oscuro" }).click();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await page.getByTestId("settings-edit-profile").click();
+    await expect(page).toHaveURL(/\/settings\/profile$/);
+  });
 
   // Revisión de la PR #38 (WCAG 4.1.2): sin acciones por día, los días no son botones ni paradas
   // de Tab; solo se enfocan «Mes anterior» y «Mes siguiente».

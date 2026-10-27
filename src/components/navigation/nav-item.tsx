@@ -19,6 +19,8 @@ const VARIANTS = {
 export type NavItemProps = Omit<PressableProps, "children"> & {
   href?: string;
   icon: IconName;
+  /** Solo icono (la etiqueta pasa a ser el nombre accesible), para la pestaña de cuenta de la barra inferior. */
+  iconOnly?: boolean;
   isFocused?: boolean;
   label: string;
   ref?: Ref<View>;
@@ -34,6 +36,7 @@ export type NavItemProps = Omit<PressableProps, "children"> & {
 export function NavItem({
   href,
   icon,
+  iconOnly = false,
   isFocused = false,
   label,
   testID,
@@ -50,20 +53,23 @@ export function NavItem({
     <Pressable
       {...props}
       {...link}
+      accessibilityLabel={iconOnly ? label : props.accessibilityLabel}
       aria-current={isFocused ? "page" : undefined}
-      className={`relative ${styles.item} ${isFocused ? "bg-muted" : ""}`.trim()}
+      className={`relative ${styles.item} ${iconOnly ? "flex-none px-4" : ""} ${isFocused ? "bg-muted" : ""}`.trim()}
       role="link"
       testID={testID}
     >
       {isFocused ? <View className={styles.indicator} testID={`${testID}-indicator`} /> : null}
       <Icon decorative name={icon} tone={isFocused ? "primary" : "muted-foreground"} />
-      <Text
-        className={`${variant === "tabbar" ? "w-full text-center" : ""} ${isFocused ? "font-semibold" : ""}`.trim()}
-        tone={isFocused ? "default" : "muted"}
-        variant={styles.text}
-      >
-        {label}
-      </Text>
+      {iconOnly ? null : (
+        <Text
+          className={`${variant === "tabbar" ? "w-full text-center" : ""} ${isFocused ? "font-semibold" : ""}`.trim()}
+          tone={isFocused ? "default" : "muted"}
+          variant={styles.text}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }

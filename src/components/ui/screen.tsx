@@ -17,6 +17,8 @@ export type ScreenProps = PropsWithChildren<{
   testID?: string;
   /** Título de la pantalla: en web, `h1` + `<title>`; en nativo, la cabecera del `Stack`. */
   title?: string;
+  /** Línea breve sobre el `h1` (p. ej. «Hola,»). Solo en web: en nativo la cabecera lleva el título. */
+  pretitle?: string;
   /**
    * Acción principal de la pantalla: en web desde 768 px, en la línea del `h1`; en nativo y en
    * ventanas estrechas, en una barra fija al pie a todo el ancho.
@@ -106,7 +108,12 @@ function ScreenBottomBar({
 }
 
 /** En web, «‹ Volver a …» (o, desde `lg`, el breadcrumb) y el `h1`; en nativo, la cabecera. */
-function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "back" | "title">) {
+function ScreenHeading({
+  action,
+  back,
+  pretitle,
+  title,
+}: Pick<ScreenProps, "action" | "back" | "pretitle" | "title">) {
   const isWide = useWindowDimensions().width >= BREADCRUMB_FROM;
   if (process.env.EXPO_OS !== "web") return null;
   if (!(back || title || action)) return null;
@@ -143,7 +150,14 @@ function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "ba
       ) : null}
       {title || action ? (
         <View className="flex-row flex-wrap items-center justify-between gap-3">
-          {title ? <Heading level={1}>{title}</Heading> : <View />}
+          {title ? (
+            <View>
+              {pretitle ? <Text tone="muted">{pretitle}</Text> : null}
+              <Heading level={1}>{title}</Heading>
+            </View>
+          ) : (
+            <View />
+          )}
           {action}
         </View>
       ) : null}
@@ -162,6 +176,7 @@ export function Screen({
   children,
   dock: dockProp,
   className,
+  pretitle,
   testID,
   title,
   width = "content",
@@ -174,7 +189,12 @@ export function Screen({
       className={`w-full ${WIDTHS[width]} self-center gap-6 p-4 md:p-6 ${className ?? ""}`.trim()}
       testID={testID}
     >
-      <ScreenHeading action={actionBar ? null : action} back={back} title={title} />
+      <ScreenHeading
+        action={actionBar ? null : action}
+        back={back}
+        pretitle={pretitle}
+        title={title}
+      />
       {children}
     </View>
   );

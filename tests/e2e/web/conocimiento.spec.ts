@@ -168,12 +168,12 @@ test.describe("base de conocimiento web", () => {
       await api.dispose();
     }
   });
-  // RI-2: la base de conocimiento se alcanza desde el panel clínico, no solo por URL.
-  test("el panel clínico enlaza con la base de conocimiento", async ({ page }) => {
+  // RI-2: la base de conocimiento se alcanza desde la navegación, no solo por URL.
+  test("la navegación del inicio enlaza con la base de conocimiento", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 10_000 });
 
-    await page.getByTestId("home-knowledge").click();
+    await page.getByRole("link", { name: "Conocimiento" }).filter({ visible: true }).click();
 
     await expect(page).toHaveURL(/\/knowledge$/);
     await expect(page.getByTestId("knowledge-chat").getByTestId("composer-input")).toBeVisible();

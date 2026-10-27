@@ -68,9 +68,7 @@ test.describe("auth against the local backend", () => {
     const startedAt = Date.now();
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toHaveText(
-      `Sesión activa: ${ANA.displayName}`,
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(ANA.displayName);
     expect(Date.now() - startedAt).toBeLessThan(30_000);
   });
 
