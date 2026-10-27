@@ -41,14 +41,30 @@ que los registros de auditoría de las consultas de conocimiento (FR-020) perman
 
 Cada mensaje MUST tener autor (veterinario o asistente), hora, estado (enviando, pensando, listo o
 error) y partes (texto, respuesta de conocimiento, audio, propuesta). El usuario y el asistente MUST
-distinguirse por alineación y rótulo, no solo por color, sin burbujas: bloques `rounded-sm`. Un mensaje
-enviado MUST ser inmutable.
+distinguirse por alineación y rótulo, no solo por color, sin burbujas: bloques `rounded-sm`.
 
 #### Scenario: usuario y asistente se distinguen
 
 - **GIVEN** una pregunta y su respuesta
 - **WHEN** el veterinario lee la conversación
 - **THEN** su pregunta va alineada a la derecha y la respuesta lleva el rótulo «Asistente» con su hora
+
+### Requirement: Persistencia de mensajes terminales
+
+Solo los mensajes terminales (listo o error) MUST persistirse; «enviando» y «pensando» MUST vivir solo en
+la sesión. Un mensaje persistido MUST ser inmutable para el usuario: sin edición, salvo quitar su audio.
+
+#### Scenario: cerrar la pestaña con una respuesta pendiente
+
+- **GIVEN** una pregunta enviada cuya respuesta aún no llega
+- **WHEN** el veterinario cierra la pestaña y vuelve a abrir la conversación
+- **THEN** no quedan mensajes «enviando» ni «pensando» persistidos
+
+#### Scenario: un mensaje persistido no se edita
+
+- **GIVEN** un mensaje ya persistido
+- **WHEN** su autor intenta modificar su texto por la API
+- **THEN** la base lo rechaza
 
 ### Requirement: Acciones del mensaje
 
@@ -61,18 +77,43 @@ ofrecer «Eliminar audio». MUST NOT ofrecer editar ni regenerar.
 - **WHEN** el veterinario pulsa «Reintentar»
 - **THEN** se reenvía la misma pregunta sin duplicarla en la conversación
 
+#### Scenario: error de red al enviar texto
+
+- **GIVEN** un mensaje de texto enviado sin red
+- **WHEN** el envío falla
+- **THEN** el mensaje queda en error con «Reintentar» y no se persiste hasta que se reenvíe
+
+#### Scenario: copiar un mensaje
+
+- **GIVEN** una respuesta del asistente
+- **WHEN** el veterinario pulsa «Copiar»
+- **THEN** su texto queda en el portapapeles y se confirma con un aviso en una región de estado
+
 ### Requirement: Composer del chat
 
 El composer MUST ser un campo multilínea que crece hasta 6 líneas. En web, Enter MUST enviar y
 Shift+Enter insertar un salto de línea, sin enviar durante la composición IME. MUST deshabilitar el envío
 con el campo vacío, ofrecer «Detener» mientras el asistente responde y devolver el foco al campo tras
-enviar. El borrador MUST conservarse al cambiar de hilo.
+enviar. En nativo, Enter MUST insertar un salto de línea y el envío MUST ser solo con el botón «Enviar».
+El borrador MUST conservarse al cambiar de hilo.
 
 #### Scenario: teclas de envío
 
 - **GIVEN** texto escrito en el composer
 - **WHEN** el veterinario pulsa Shift+Enter y luego Enter
 - **THEN** el texto lleva un salto de línea, se envía y el campo queda vacío y enfocado
+
+#### Scenario: el borrador sobrevive al cambio de hilo
+
+- **GIVEN** texto sin enviar en el composer
+- **WHEN** el veterinario cambia de hilo y vuelve
+- **THEN** el texto sigue en el composer
+
+#### Scenario: detener una respuesta
+
+- **GIVEN** una respuesta en curso
+- **WHEN** el veterinario pulsa «Detener»
+- **THEN** la respuesta parcial se descarta, no se persiste y, si era una consulta de conocimiento ya lanzada, su registro de auditoría permanece
 
 ### Requirement: Lista de mensajes anclada
 
@@ -101,8 +142,8 @@ cambiar la interfaz.
 
 ### Requirement: Accesibilidad de la conversación
 
-La lista MUST ser un `role="log"` con nombre accesible y anuncio educado de los mensajes terminados. El
-cuerpo de una respuesta MUST NOT ser una región viva. Los avisos de estado («Pensando», «Respuesta
+La lista MUST ser un `role="log"` con nombre accesible y anuncio no interruptivo (`aria-live="polite"`) de
+los mensajes terminados nuevos; la carga inicial del historial MUST NOT anunciarse. El cuerpo de una respuesta MUST NOT ser una región viva. Los avisos de estado («Pensando», «Respuesta
 lista», errores) MUST ir en regiones separadas. Todo MUST ser operable con teclado y sin violaciones axe
 WCAG 2.2 AA en claro y oscuro.
 
@@ -111,6 +152,12 @@ WCAG 2.2 AA en claro y oscuro.
 - **GIVEN** una respuesta que llega al chat
 - **WHEN** el lector la anuncia
 - **THEN** la anuncia una sola vez, completa y no por fragmentos
+
+#### Scenario: la carga inicial no se anuncia
+
+- **GIVEN** una conversación con 50 mensajes
+- **WHEN** el veterinario abre el panel
+- **THEN** el lector de pantalla no los anuncia uno a uno
 
 ### Requirement: Consultas básicas
 
@@ -141,7 +188,7 @@ de la base de conocimiento (FR-005, FR-007, FR-022, FR-023) y MUST ofrecer «Ver
 El paciente de contexto MUST fijarlo la navegación: al abrir la ficha o una consulta de un paciente, y
 limpiarse al salir a una pantalla sin paciente. MUST mostrarse como etiqueta de solo lectura («Contexto:
 nombre»). MUST NOT existir un selector de pacientes en el chat ni en `/knowledge`. Cada mensaje MUST
-guardar el paciente con el que se respondió.
+guardar el paciente vigente al enviarse, no el de cuando llega la respuesta.
 
 #### Scenario: entrar a un paciente
 
@@ -154,6 +201,23 @@ guardar el paciente con el que se respondió.
 - **GIVEN** el contexto de Bruma
 - **WHEN** el veterinario vuelve al inicio
 - **THEN** la etiqueta desaparece y las preguntas siguientes no usan datos de Bruma
+
+### Requirement: Dueño y validez del contexto de paciente
+
+Si dos pantallas fijan el contexto, MUST valer el último en montarse, y al desmontarse MUST limpiar solo
+quien lo fijó. El paciente guardado en un mensaje MUST pertenecer a la clínica del autor.
+
+#### Scenario: cambiar de pantalla con una pregunta en vuelo
+
+- **GIVEN** una pregunta enviada con el contexto de Bruma y sin respuesta aún
+- **WHEN** el veterinario vuelve al inicio antes de que llegue
+- **THEN** la respuesta usa los datos de Bruma y el mensaje guarda a Bruma
+
+#### Scenario: paciente de otra clínica
+
+- **GIVEN** un cliente que intenta guardar un mensaje con el id de un paciente de otra clínica
+- **WHEN** se inserta
+- **THEN** la base lo rechaza
 
 ### Requirement: Markdown seguro
 
@@ -192,18 +256,42 @@ quedar deshabilitado, indicando por qué, mientras la escucha de consulta use el
 - **WHEN** el veterinario la detiene
 - **THEN** no se envía y se le indica que es demasiado corta
 
+#### Scenario: audio de más de 2 minutos
+
+- **GIVEN** una grabación que llega a 2 min
+- **WHEN** se alcanza el máximo
+- **THEN** la grabación se corta sola y pasa a revisión
+
+#### Scenario: sin permiso de micrófono
+
+- **GIVEN** un navegador o teléfono sin permiso o sin micrófono
+- **WHEN** el veterinario pulsa grabar
+- **THEN** se le dice que no hay acceso al micrófono y se le ofrece escribir
+
+#### Scenario: descartar una grabación
+
+- **GIVEN** una grabación en revisión
+- **WHEN** el veterinario pulsa «Descartar»
+- **THEN** el audio se descarta, no se sube y el composer queda como antes
+
 ### Requirement: Transcripción del audio del chat
 
-El audio MUST transcribirse en una función que exija solo un usuario autenticado de la clínica, sin sesión
-de escucha, con el mismo proveedor y los mismos límites de tiempo y tamaño que la transcripción de la
-escucha. Si la transcripción es insuficiente MUST decir «No se entendió» y ofrecer grabar de nuevo, sin
-responder.
+El audio MUST transcribirse en una función que exija solo un usuario autenticado de la clínica con acceso
+activo, sin sesión de escucha, con el mismo proveedor. El servidor MUST imponer el límite de 2 min por
+tamaño en bytes y tipo MIME, sin fiarse de la duración que declare el cliente. Si la transcripción es
+insuficiente MUST decir «No se entendió» y ofrecer grabar de nuevo, sin responder.
 
 #### Scenario: no se entendió
 
 - **GIVEN** un audio sin habla inteligible
 - **WHEN** se transcribe
 - **THEN** el mensaje dice «No se entendió», ofrece grabar de nuevo y el asistente no responde
+
+#### Scenario: audio demasiado grande
+
+- **GIVEN** un archivo que excede el tamaño máximo para 2 min, aunque declare una duración menor
+- **WHEN** se envía a transcribir
+- **THEN** el servidor lo rechaza
 
 ### Requirement: Conservación del audio por 90 días
 
@@ -224,6 +312,55 @@ MUST ser visible al grabar, con el plazo de conservación.
 - **WHEN** el veterinario pulsa «Eliminar audio» y confirma
 - **THEN** el audio se elimina y la transcripción permanece
 
+### Requirement: Acceso y purga del audio
+
+Solo su autor con acceso activo MUST poder leer un audio; el único otro acceso MUST ser el de la purga y
+el borrado, con credenciales de servicio. El audio de un veterinario que pierde el acceso o se da de baja
+MUST purgarse también. La purga programada MUST autenticarse con un secreto compartido, no con el JWT de
+un usuario, y MUST NOT dejar secretos en el repositorio ni en registros.
+
+#### Scenario: eliminar con la confirmación negada
+
+- **GIVEN** un mensaje con audio vigente
+- **WHEN** el veterinario pulsa «Eliminar audio» y cancela la confirmación
+- **THEN** el audio sigue disponible
+
+#### Scenario: reproducir un audio vencido
+
+- **GIVEN** un mensaje cuyo `audio_expires_at` ya pasó
+- **WHEN** el veterinario intenta reproducirlo
+- **THEN** no se emite ninguna URL firmada y el mensaje muestra «audio vencido» con su transcripción
+
+#### Scenario: purga de un veterinario dado de baja
+
+- **GIVEN** un veterinario sin acceso activo con audio guardado
+- **WHEN** corre la purga programada
+- **THEN** su audio se elimina aunque no haya vencido
+
+#### Scenario: purga sin secreto
+
+- **GIVEN** una llamada a la función de purga sin el secreto compartido
+- **WHEN** se invoca
+- **THEN** se rechaza y no se elimina nada
+
+#### Scenario: borrar la conversación con audio
+
+- **GIVEN** una conversación con mensajes de audio
+- **WHEN** el veterinario confirma «Borrar conversación»
+- **THEN** no quedan mensajes ni objetos de audio suyos, y si cancela la confirmación no se borra nada
+
+### Requirement: Registro estructurado del chat
+
+Las funciones de transcripción, purga y borrado MUST emitir registros estructurados con `requestId`, sin
+incluir audio ni transcripción, y la purga MUST registrar cuántos objetos eliminó y cuáles fallaron. Los
+errores del cliente en subida, transcripción y renderizado MUST reportarse al canal de errores de cliente.
+
+#### Scenario: purga con un fallo
+
+- **GIVEN** una corrida de purga en la que un objeto no se puede eliminar
+- **WHEN** termina
+- **THEN** el registro indica el total eliminado y el objeto que falló, sin silenciarlo
+
 ### Requirement: Aviso de respuesta nueva
 
 Si llega una respuesta con el panel cerrado (riel, dock o colapsado), el icono del asistente MUST mostrar
@@ -235,3 +372,9 @@ animación.
 - **GIVEN** una consulta en curso y el panel colapsado
 - **WHEN** llega la respuesta
 - **THEN** el riel muestra la marca de no leído hasta que el veterinario abre el asistente
+
+#### Scenario: respuesta con el dock en compacto
+
+- **GIVEN** una consulta en curso, el ancho compacto y el asistente fuera de vista
+- **WHEN** llega la respuesta
+- **THEN** el icono del asistente en el dock muestra la marca de no leído, anunciada con `role="status"`

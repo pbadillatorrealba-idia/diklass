@@ -13,7 +13,8 @@ anclada, partes de mensaje, estados) y no como un parche más.
 - **Chat con mensajes**: lista cronológica (lo más nuevo abajo, anclada al final, «Ir al final»), mensajes
   de usuario y de asistente con partes (texto en markdown, respuesta de conocimiento con citas, audio,
   propuesta del agente), estados (enviando, pensando, listo, error con «Reintentar») y acciones por mensaje
-  (copiar, reintentar, eliminar audio). Mensajes inmutables una vez enviados. Sin burbujas: bloques
+  (copiar, reintentar, eliminar audio). Solo se persisten los mensajes terminales y son inmutables para el
+  usuario (sin edición). Sin burbujas: bloques
   `rounded-sm`, según DESIGN.md.
 - **Composer** multilínea (Enter envía, Shift+Enter salto de línea), «Detener» mientras responde, foco que
   vuelve al campo.
@@ -47,20 +48,23 @@ anclada, partes de mensaje, estados) y no como un parche más.
 - `base-conocimiento-trazable`: FR-026 — el paciente de contexto lo fija la navegación y no un selector.
 
 Los requisitos de `shell-asistente-tres-zonas` que este cambio reemplaza («Conocimiento en el panel» y
-«Hilo del asistente con consultas básicas», y «Conocimiento» en «Hilos contextuales del panel») se
-movieron fuera de esa spec: viven aquí. La rama de la PR #70 sigue construyendo la pestaña
-«Conocimiento» y el asistente básico, de modo que #70 debe mergearse junto con este cambio o justo antes.
+«Hilo del asistente con consultas básicas», y «Conocimiento» en «Hilos contextuales del panel») se quedan
+en la spec de #70, que construye la pestaña «Conocimiento» y el asistente básico. **Orden decidido: #70 se
+mergea primero** y esta rama se rebasa sobre `main`; aquí se retiran con un delta REMOVED/MODIFIED de
+`sistema-visual` (archivo por crear con `/opsx:continue`: este cambio aún no lo tiene, ver tarea 9.2).
 
 ## Impact
 
 - **Base**: apilado sobre la PR #70 (`feat/shell-asistente-tres-zonas`); su PR base es esa rama hasta que se
-  mergee.
-- **Datos**: migración nueva (`assistant_messages`, bucket `assistant-audio`, RLS, vencimiento a 90 días) y
-  Edge Function `transcribe-chat-audio`; `database.types.ts` se regenera con `db:types`.
+  mergee #70, tras lo cual se rebasa sobre `main`.
+- **Datos**: migración nueva (`assistant_messages` con FK de paciente, bucket `assistant-audio`, RLS con
+  acceso activo, vencimiento a 90 días, `pg_cron`/`pg_net`) y Edge Functions `transcribe-chat-audio`,
+  `purge-chat-audio` (secreto compartido en Vault) y `delete-assistant-conversation`; `supabase/functions/_shared`
+  nuevo; `config.toml` con `verify_jwt` por función; `database.types.ts` se regenera con `db:types`.
 - **Código**: `src/components/asistente/*` (chat), `src/features/asistente/*` (modelo, almacén, puerto,
   respondedores, contexto), `src/features/voz/*` (reutiliza `WindowRecorder`), `knowledge/index.tsx` y
   `ConocimientoThread` (se retiran sus selectores), pantallas de ficha y consulta (contexto).
-- **Dependencias**: `marked` (sin dependencias propias).
+- **Dependencias**: `marked` (sin dependencias propias), con análisis de dependencias y plan B `markdown-it`.
 - **Docs**: DESIGN.md (mensajes, composer, audio), PRODUCT.md, brief de superficie, quickstart.
 - **No verificable aquí**: nativo (iOS/Android). La verificación es del veterinario/desarrollador en su
   teléfono con la lista de `quickstart.md`; sin su confirmación se declara pendiente.
