@@ -80,7 +80,8 @@ export function MessageItem({
         </Text>
       ) : null}
       {terminal ? (
-        <View className="flex-row flex-wrap gap-1">
+        // Las acciones del asistente se alinean con su texto (el botón fantasma lleva 12 px de relleno).
+        <View className={`flex-row flex-wrap gap-1 ${esUsuario ? "" : "-ml-3"}`.trim()}>
           {onCopy && texto !== "" ? (
             <Button onPress={() => onCopy(texto)} size="sm" testID="message-copy" variant="ghost">
               <ButtonText>Copiar</ButtonText>
