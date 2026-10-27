@@ -104,6 +104,7 @@ function List({ list }: { list: Tokens.List }) {
   return (
     <View className="gap-1" role="list">
       {list.items.map((item, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: los tokens de marked no traen id y la lista se rehace entera con cada texto
         <View className="flex-row gap-2" key={`${item.raw}-${index}`} role="listitem">
           <Text>{list.ordered ? `${Number(list.start || 1) + index}.` : "•"}</Text>
           <View className="min-w-0 flex-1 gap-1">
@@ -154,12 +155,15 @@ function Blocks({ tokens }: { tokens: Token[] }): ReactNode {
           <View key={key} role="table">
             <View className="flex-row" role="row">
               {table.header.map((cell, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: celdas sin id; la tabla se rehace entera con cada texto
                 <Cell cell={cell} header key={`h-${i}`} />
               ))}
             </View>
             {table.rows.map((row, r) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: filas sin id; la tabla se rehace entera con cada texto
               <View className="flex-row" key={`r-${r}`} role="row">
                 {row.map((cell, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: celdas sin id; la tabla se rehace entera con cada texto
                   <Cell cell={cell} key={`c-${r}-${i}`} />
                 ))}
               </View>

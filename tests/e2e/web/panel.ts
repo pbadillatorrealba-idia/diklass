@@ -39,3 +39,35 @@ export async function limpiarConversacion(page: Page) {
   }
   await page.reload();
 }
+
+/**
+ * Deja aceptado el aviso de primer uso de la voz (el audio va a un proveedor externo) para quien tiene
+ * la sesión abierta en `page`, o lo retira con `aceptado: false`. Retirarlo exige el service role: el
+ * cliente solo puede aceptar, no editar ni borrar.
+ */
+export async function consentimientoDeVoz(page: Page, aceptado: boolean) {
+  const { accessToken, userId } = await readSupabaseSession(page);
+  const claveDeServicio = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const api = await request.newContext({
+    baseURL: SUPABASE_URL,
+    extraHTTPHeaders: {
+      apikey: SUPABASE_ANON_KEY as string,
+      Authorization: `Bearer ${aceptado ? accessToken : claveDeServicio}`,
+      "Content-Type": "application/json",
+    },
+  });
+  try {
+    if (aceptado) {
+      await api.post("/rest/v1/assistant_voice_consent?on_conflict=author_id", {
+        data: { version: "v1" },
+        headers: { Prefer: "resolution=ignore-duplicates" },
+      });
+    } else {
+      await api.delete(`/rest/v1/assistant_voice_consent?author_id=eq.${userId}`, {
+        headers: { apikey: claveDeServicio },
+      });
+    }
+  } finally {
+    await api.dispose();
+  }
+}

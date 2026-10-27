@@ -15,7 +15,7 @@ import {
   submitLogin,
   test,
 } from "./fixtures";
-import { abrirHilo, limpiarConversacion } from "./panel";
+import { abrirHilo, consentimientoDeVoz, limpiarConversacion } from "./panel";
 import { prepararPaciente } from "./preparar-paciente";
 
 // asistente-conversacional «Grabar, revisar y enviar audio», «Transcripción del audio del chat» y
@@ -93,6 +93,9 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     await limpiarConversacion(page);
+    // El aviso de primer uso ya está aceptado (se prueba aparte).
+    await consentimientoDeVoz(page, true);
+    await page.reload();
     const { accessToken } = await readSupabaseSession(page);
     api = await apiRequest.newContext({
       baseURL: SUPABASE_URL,
@@ -161,6 +164,93 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
         new Date(fila?.created_at ?? 0).getTime()) /
       86_400_000;
     expect(Math.round(dias)).toBe(90);
+  });
+
+  // Aviso de primer uso con aceptación: el audio y su transcripción van a un proveedor externo.
+  test("la primera vez pide aceptar el aviso del proveedor externo antes de grabar", async ({
+    page,
+  }) => {
+    await consentimientoDeVoz(page, false);
+    await page.reload();
+    await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
+
+    await panel(page).getByTestId("voice-record").click();
+    const aviso = panel(page).getByRole("alertdialog", { name: "Aviso antes de grabar" });
+    await expect(aviso).toBeVisible();
+    await expect(aviso).toContainText("proveedor externo");
+    await expect(aviso).toContainText("OpenAI");
+    await expect(aviso).toContainText("90 días");
+    // No empezó a grabar y el foco entra en «Cancelar».
+    await expect(panel(page).getByTestId("voice-panel")).toHaveCount(0);
+    await expect(panel(page).getByTestId("voice-consent-cancel")).toBeFocused();
+
+    await panel(page).getByTestId("voice-consent-cancel").click();
+    await expect(panel(page).getByTestId("voice-consent")).toHaveCount(0);
+    await expect(panel(page).getByTestId("voice-panel")).toHaveCount(0);
+
+    // Aceptar guarda el consentimiento (autor y momento los fija el servidor) y empieza a grabar.
+    await panel(page).getByTestId("voice-record").click();
+    await panel(page).getByTestId("voice-consent-accept").click();
+    await expect(panel(page).getByTestId("voice-panel")).toContainText(
+      "Grabando y conservando audio",
+    );
+    const filas = await api.get("/rest/v1/assistant_voice_consent?select=version");
+    expect(await filas.json()).toEqual([{ version: "v1" }]);
+    await panel(page).getByTestId("voice-cancel").click();
+
+    // La segunda vez ya no pregunta.
+    await panel(page).getByTestId("voice-record").click();
+    await expect(panel(page).getByTestId("voice-consent")).toHaveCount(0);
+    await expect(panel(page).getByTestId("voice-panel")).toBeVisible();
+    await panel(page).getByTestId("voice-cancel").click();
+  });
+
+  // WCAG 2.4.3: el panel se desmonta con cada acción y el foco no debe perderse.
+  test("el foco va a «Enviar» al revisar y vuelve al botón de grabar al terminar", async ({
+    page,
+  }) => {
+    await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
+    await grabar(page, 1500);
+    await expect(panel(page).getByTestId("voice-send")).toBeFocused();
+    await panel(page).getByTestId("voice-discard").click();
+    await expect(panel(page).getByTestId("voice-record")).toBeFocused();
+
+    await panel(page).getByTestId("voice-record").click();
+    await panel(page).getByTestId("voice-cancel").click();
+    await expect(panel(page).getByTestId("voice-record")).toBeFocused();
+  });
+
+  test("la región de estado existe siempre y anuncia el inicio y el fin de la grabación", async ({
+    page,
+  }) => {
+    await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
+    const vivo = panel(page).getByTestId("voice-status");
+    await expect(vivo).toBeAttached();
+    await expect(vivo).toHaveText("");
+    await panel(page).getByTestId("voice-record").click();
+    await expect(vivo).toHaveText("Grabando y conservando audio");
+    await page.waitForTimeout(1500);
+    await panel(page).getByTestId("voice-stop").click();
+    await expect(vivo).toContainText("Grabación detenida");
+  });
+
+  test("con una respuesta en curso, enviar el audio avisa y no lo pierde", async ({ page }) => {
+    await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
+    await page.route("**/rest/v1/rpc/search_knowledge_fragments", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await route.continue();
+    });
+    await panel(page)
+      .getByTestId("composer-input")
+      .fill(`¿Protocolo de prueba ocupado ${Date.now()}?`);
+    await panel(page).getByTestId("composer-send").click();
+    await expect(panel(page).getByTestId("composer-stop")).toBeVisible();
+
+    await grabar(page, 1500);
+    await panel(page).getByTestId("voice-send").click();
+    await expect(panel(page).getByTestId("voice-notice")).toContainText("respuesta en curso");
+    // El audio sigue en revisión para enviarlo cuando termine.
+    await expect(panel(page).getByTestId("voice-send")).toBeVisible();
   });
 
   test("una grabación de menos de 1 s no se envía y se avisa", async ({ page }) => {
@@ -276,6 +366,16 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
     await sinViolaciones(page);
     await panel(page).getByTestId("audio-remove-no").click();
 
+    // Aviso de primer uso (el audio va a un proveedor externo).
+    await consentimientoDeVoz(page, false);
+    await page.reload();
+    await panel(page).getByTestId("voice-record").click();
+    await expect(panel(page).getByTestId("voice-consent")).toBeVisible();
+    await sinViolaciones(page);
+    await panel(page).getByTestId("voice-consent-cancel").click();
+    await consentimientoDeVoz(page, true);
+    await page.reload();
+
     // Aviso (grabación demasiado corta).
     await panel(page).getByTestId("voice-record").click();
     await panel(page).getByTestId("voice-stop").click();
@@ -306,6 +406,7 @@ test.describe("un solo micrófono: la escucha de la consulta y el chat", () => {
   }) => {
     const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E un micrófono");
     try {
+      await consentimientoDeVoz(page, true);
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(`/consultations/${consultationId}`);

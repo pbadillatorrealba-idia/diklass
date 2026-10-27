@@ -274,6 +274,32 @@ quedar deshabilitado, indicando por qué, mientras la escucha de consulta use el
 - **WHEN** el veterinario pulsa «Descartar»
 - **THEN** el audio se descarta, no se sube y el composer queda como antes
 
+### Requirement: Aviso de primer uso del audio
+
+Antes de la primera grabación, el veterinario MUST aceptar un aviso que diga que su audio y su
+transcripción se envían a un proveedor externo para transcribirse, cuánto se conserva y que puede
+eliminarlo. La aceptación MUST persistirse por veterinario con la versión del aviso, fijando el servidor
+el autor y el momento; si el aviso cambia de versión, MUST pedirse de nuevo. Sin aceptación MUST NOT
+grabarse.
+
+#### Scenario: la primera vez
+
+- **GIVEN** un veterinario que nunca aceptó el aviso
+- **WHEN** pulsa grabar
+- **THEN** ve el aviso con el proveedor externo y los 90 días, no empieza a grabar y, al aceptar, graba
+
+#### Scenario: la segunda vez
+
+- **GIVEN** un veterinario que ya aceptó la versión vigente
+- **WHEN** pulsa grabar
+- **THEN** empieza a grabar sin pedirlo de nuevo
+
+#### Scenario: rechazar el aviso
+
+- **GIVEN** el aviso abierto
+- **WHEN** el veterinario cancela
+- **THEN** no se graba nada y el foco vuelve al botón de grabar
+
 ### Requirement: Transcripción del audio del chat
 
 El audio MUST transcribirse en una función que exija solo un usuario autenticado de la clínica con acceso

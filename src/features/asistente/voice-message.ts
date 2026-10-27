@@ -10,7 +10,7 @@ import type { WindowRecorder } from "@/features/voz/window-recorder";
 export const MIN_VOICE_MS = 1000;
 export const MAX_VOICE_MS = 120_000;
 
-export type VoiceNotice = "too-short" | "unavailable" | "blocked" | "not-understood";
+export type VoiceNotice = "too-short" | "unavailable" | "blocked" | "not-understood" | "busy";
 
 export type VoiceState =
   | { kind: "idle" }
@@ -35,6 +35,9 @@ export class VoiceMessageMachine {
     notice: this.#notice,
   };
   #timer: unknown = null;
+  /** Reentrada: `start` y `stop` esperan al micrófono, y una segunda llamada en ese lapso se ignora. */
+  #busy: "starting" | "stopping" | null = null;
+  #disposed = false;
   readonly #listeners = new Set<(state: VoiceState) => void>();
 
   constructor(private readonly deps: VoiceMessageDeps) {}
@@ -72,25 +75,35 @@ export class VoiceMessageMachine {
   }
 
   async start() {
-    if (this.#state.kind !== "idle") return;
-    if (this.deps.isBlocked() !== null) {
-      this.#set(this.#state, "blocked");
-      return;
-    }
-    // FR-054: sin permiso o dispositivo se dice y se ofrece escribir; nunca se queda a medias.
-    if (!(await this.deps.recorder.available())) {
-      this.#set(this.#state, "unavailable");
-      return;
-    }
+    if (this.#disposed || this.#busy !== null || this.#state.kind !== "idle") return;
+    this.#busy = "starting";
     try {
-      await this.deps.recorder.start();
-    } catch {
-      this.deps.recorder.release();
-      this.#set(this.#state, "unavailable");
-      return;
+      if (this.deps.isBlocked() !== null) {
+        this.#set(this.#state, "blocked");
+        return;
+      }
+      // FR-054: sin permiso o dispositivo se dice y se ofrece escribir; nunca se queda a medias.
+      if (!(await this.deps.recorder.available())) {
+        if (!this.#disposed) this.#set(this.#state, "unavailable");
+        return;
+      }
+      try {
+        await this.deps.recorder.start();
+      } catch {
+        this.deps.recorder.release();
+        if (!this.#disposed) this.#set(this.#state, "unavailable");
+        return;
+      }
+      // Se desmontó mientras se abría el micrófono: se libera de inmediato, no queda abierto.
+      if (this.#disposed) {
+        this.deps.recorder.release();
+        return;
+      }
+      this.#timer = this.deps.setTimer(() => void this.#finish(true), MAX_VOICE_MS);
+      this.#set({ kind: "recording", startedAt: this.deps.now() }, null);
+    } finally {
+      this.#busy = null;
     }
-    this.#timer = this.deps.setTimer(() => void this.#finish(true), MAX_VOICE_MS);
-    this.#set({ kind: "recording", startedAt: this.deps.now() }, null);
   }
 
   /** «Detener»: termina la grabación y pasa a revisión (o la descarta si dura menos de 1 s). */
@@ -137,6 +150,7 @@ export class VoiceMessageMachine {
 
   /** Libera el micrófono y el temporizador (al desmontar). */
   dispose() {
+    this.#disposed = true;
     this.#clearTimer();
     this.deps.recorder.release();
     this.#listeners.clear();
@@ -144,23 +158,33 @@ export class VoiceMessageMachine {
 
   async #finish(autoStopped: boolean) {
     const state = this.#state;
-    if (state.kind !== "recording") return;
-    this.#clearTimer();
-    // La duración nunca pasa del máximo aunque el temporizador llegue tarde.
-    const durationMs = Math.min(this.deps.now() - state.startedAt, MAX_VOICE_MS);
-    let payload: AudioPayload;
+    // Detener a mano y el corte automático pueden coincidir: solo uno llama a `recorder.stop()`.
+    if (state.kind !== "recording" || this.#busy !== null) return;
+    this.#busy = "stopping";
     try {
-      payload = await this.deps.recorder.stop();
-    } catch {
-      this.deps.recorder.release();
-      this.#set({ kind: "idle" }, "unavailable");
-      return;
+      this.#clearTimer();
+      // La duración nunca pasa del máximo aunque el temporizador llegue tarde.
+      const durationMs = Math.min(this.deps.now() - state.startedAt, MAX_VOICE_MS);
+      let payload: AudioPayload;
+      try {
+        payload = await this.deps.recorder.stop();
+      } catch {
+        this.deps.recorder.release();
+        this.#set({ kind: "idle" }, "unavailable");
+        return;
+      }
+      if (this.#disposed) {
+        this.deps.recorder.release();
+        return;
+      }
+      if (durationMs < MIN_VOICE_MS) {
+        this.#set({ kind: "idle" }, "too-short");
+        return;
+      }
+      this.#set({ kind: "review", payload, durationMs, autoStopped }, null);
+    } finally {
+      this.#busy = null;
     }
-    if (durationMs < MIN_VOICE_MS) {
-      this.#set({ kind: "idle" }, "too-short");
-      return;
-    }
-    this.#set({ kind: "review", payload, durationMs, autoStopped }, null);
   }
 
   #clearTimer() {

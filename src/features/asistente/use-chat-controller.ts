@@ -1,4 +1,4 @@
-import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef } from "react";
 import { Share } from "react-native";
 import { useAgendaEvents } from "@/features/agenda/use-agenda-events";
@@ -30,6 +30,7 @@ import {
 import { createTurnGate } from "@/features/asistente/turn-gate";
 import { conversationQueryKey, useConversation } from "@/features/asistente/use-conversation";
 import { useVoiceMessage } from "@/features/asistente/use-voice-message";
+import { acceptVoiceConsent, hasVoiceConsent } from "@/features/asistente/voice-consent";
 import {
   borrarAudioChat,
   firmarAudioChat,
@@ -85,6 +86,18 @@ export function useChatController() {
   const patientId = useConversationStore((state) => state.patientId);
   const patientName = useConversationStore((state) => state.patientName);
   const voice = useVoiceMessage();
+  // Consentimiento de la primera grabación (el audio va a un proveedor externo). La clave empieza por
+  // «asistente»: se elimina de la caché al cerrar sesión.
+  const consent = useQuery({
+    enabled: veterinarianId !== null,
+    queryFn: () => hasVoiceConsent(supabase),
+    queryKey: ["asistente", "voz-consentimiento", veterinarianId],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const acceptConsent = useCallback(async () => {
+    await acceptVoiceConsent(supabase);
+    queryClient.setQueryData(["asistente", "voz-consentimiento", veterinarianId], true);
+  }, [queryClient, veterinarianId]);
   const events = useAgendaEvents();
   const eventsRef = useRef(events);
   eventsRef.current = events;
@@ -212,7 +225,11 @@ export function useChatController() {
    */
   const sendVoice = useCallback(async (): Promise<boolean> => {
     const turn = clinicId && veterinarianId ? gate.begin() : null;
-    if (!turn) return false;
+    if (!turn) {
+      // Hay una respuesta en curso: el audio sigue en revisión y se avisa, no se pierde en silencio.
+      voice.showNotice("busy");
+      return false;
+    }
     const envio = voice.beginSend();
     if (!envio || !clinicId || !veterinarianId) {
       turn.end();
@@ -325,6 +342,13 @@ export function useChatController() {
     clear,
     copy: copyText,
     voice,
+    voiceConsent: {
+      status: (consent.data === true ? "accepted" : consent.isLoading ? "loading" : "needed") as
+        | "accepted"
+        | "loading"
+        | "needed",
+      accept: acceptConsent,
+    },
     sendVoice,
     removeAudio,
     playAudio,

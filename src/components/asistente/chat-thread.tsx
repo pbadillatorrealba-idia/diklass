@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Composer } from "@/components/asistente/composer";
 import { MessageList } from "@/components/asistente/message-list";
-import { VoiceButton, VoicePanel } from "@/components/asistente/voice-controls";
+import { VoiceButton, VoiceConsentDialog, VoicePanel } from "@/components/asistente/voice-controls";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useChatStore } from "@/features/asistente/chat-store";
@@ -17,6 +17,8 @@ const SUGERENCIAS = [
 
 const THREAD_ID = "asistente";
 
+const asHtml = (node: View | null) => node as unknown as HTMLElement | null;
+
 /**
  * Hilo «Asistente» como chat (asistente-conversacional · design.md D10 · D12): la lista de mensajes
  * anclada, el composer fijo al pie y «Borrar conversación» con su confirmación. Que el hilo esté
@@ -29,10 +31,24 @@ export function ChatThread({ chat }: { chat: ChatController }) {
   const [confirming, setConfirming] = useState(false);
   // «Eliminar audio» pide confirmación (asistente-conversacional «Conservación del audio por 90 días»).
   const [audioToRemove, setAudioToRemove] = useState<string | null>(null);
+  // Aviso de primer uso: se pide antes de la primera grabación (el audio va a un proveedor externo).
+  const [consentOpen, setConsentOpen] = useState(false);
+  const empezarVoz = () => {
+    if (chat.voiceConsent.status === "accepted") void chat.voice.start();
+    else if (chat.voiceConsent.status === "needed") setConsentOpen(true);
+  };
+  const aceptarVoz = async () => {
+    try {
+      await chat.voiceConsent.accept();
+      setConsentOpen(false);
+      void chat.voice.start();
+    } catch {
+      setStatus("No se pudo registrar tu aceptación. Inténtalo de nuevo.");
+    }
+  };
   // Foco de la confirmación (acción destructiva): entra en «Cancelar» y vuelve al disparador al cerrar.
   const clearRef = useRef<View>(null);
   const cancelRef = useRef<View>(null);
-  const asHtml = (node: View | null) => node as unknown as HTMLElement | null;
   useEffect(() => {
     if (confirming) asHtml(cancelRef.current)?.focus?.({ preventScroll: true });
   }, [confirming]);
@@ -203,9 +219,15 @@ export function ChatThread({ chat }: { chat: ChatController }) {
       />
 
       <View className="gap-2 border-t border-border p-3">
+        {consentOpen ? (
+          <VoiceConsentDialog
+            onAccept={() => void aceptarVoz()}
+            onCancel={() => setConsentOpen(false)}
+          />
+        ) : null}
         <VoicePanel onSend={() => void chat.sendVoice()} voice={chat.voice} />
         <Composer
-          actions={<VoiceButton voice={chat.voice} />}
+          actions={<VoiceButton onPress={empezarVoz} voice={chat.voice} />}
           isResponding={chat.isResponding}
           onChangeText={(text) => setDraft(THREAD_ID, text)}
           onSend={(text) => {

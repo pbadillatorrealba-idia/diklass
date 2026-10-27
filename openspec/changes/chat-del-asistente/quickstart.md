@@ -42,3 +42,18 @@ pero ya es ilegible (la lectura no firma URL tras `audio_expires_at`).
 En local se prueba el handler directamente (`tests/unit/asistente/purge-chat-audio-handler.test.ts`) y la
 lógica SQL con pgTAP (`supabase/tests/011_purga_audio_asistente.sql`); lo programado se verifica en el
 entorno remoto.
+
+## Operación de la purga y del audio
+
+- **Rotar el secreto:** generar uno nuevo, `supabase secrets set PURGE_CHAT_AUDIO_SECRET=<nuevo>` y, en
+  Vault, `select vault.update_secret((select id from vault.secrets where name = 'purge_chat_audio_secret'),
+  '<nuevo>')`. Hasta que coincidan las dos copias la purga responde 401 (y lo registra una vez por minuto).
+- **Comprobar que el cron corre en el entorno remoto:** `select * from cron.job_run_details where jobid =
+  (select jobid from cron.job where jobname = 'purge-chat-audio') order by start_time desc limit 5;` y el
+  registro `purge_chat_audio_done` de la función; si aparece `"truncated": true` hay más de 20 tandas
+  pendientes y se vuelve a invocar a mano.
+- **Cambiar el aviso de primer uso:** subir `VOICE_CONSENT_VERSION` en `src/features/asistente/voice-consent.ts`
+  (los veterinarios lo aceptan de nuevo).
+- **Declarado:** la duración de la URL firmada la elige el cliente (la app pide 60 s; un cliente modificado
+  podría pedir más para su propio audio, que muere cuando la purga borra el objeto); «dado de baja» es solo
+  `banned_until` de Auth; sin sniffing de bytes del audio.

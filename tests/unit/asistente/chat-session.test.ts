@@ -144,9 +144,9 @@ describe("startTurn", () => {
     const control = new AbortController();
     const { deps, persistidos } = setup({
       responder: {
+        // biome-ignore lint/correctness/useYield: el respondedor respeta la señal y no emite
         async *respond() {
           control.abort();
-          // el respondedor respeta la señal y no emite
         },
       },
     });
@@ -226,7 +226,6 @@ describe("startTurn", () => {
     let fallar: () => void = () => {};
     const { deps, errores } = setup({
       responder: {
-        // biome-ignore lint/correctness/useYield: simula una red que falla después de «Detener»
         async *respond() {
           await new Promise<void>((_, reject) => {
             fallar = () => reject(new Error("sin red"));

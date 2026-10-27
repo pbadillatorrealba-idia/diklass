@@ -114,6 +114,11 @@ Function para esto; la purga programada (D6) barre además los objetos que quede
   la duración que declara el cliente solo es informativa, no un control. El tiempo hacia el proveedor sube
   de 20 s a 60 s para el chat, porque 2 min de audio con 20 s daría `TRANSCRIPTION_TIMEOUT` frecuentes;
   una prueba del handler cubre el tope y el tiempo. Se prueban ambos contenedores (webm y mp4).
+- **Primer uso**: el audio y su transcripción van a un proveedor externo, así que antes de la primera
+  grabación se muestra un aviso que el veterinario acepta; se guarda por autor con la versión del aviso en
+  `assistant_voice_consent` (el servidor fija el autor y el momento). Una versión nueva lo vuelve a pedir.
+- **Cuota y abuso**: `consume_assistant_audio_quota` (20 transcripciones en 10 min por usuario) y un tope de
+  100 objetos por autor en el bucket; el acceso y la cuota se comprueban antes de leer el cuerpo.
 - **Flujo de envío**: el mensaje pendiente vive en el almacén efímero (`sending`); se sube el audio, se
   transcribe y, solo entonces, se inserta **un único** mensaje de usuario terminal con la transcripción, y
   el asistente responde sobre ella. Si falla la subida o la transcripción, el pendiente queda en `error`

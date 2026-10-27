@@ -166,7 +166,7 @@ export async function startTurnWithMessage(deps: ChatDeps, user: Message, signal
 /** «Reintentar»: reenvía la misma pregunta (mismo id) sin duplicarla en la conversación. */
 export async function retryTurn(deps: ChatDeps, messageId: string, signal: AbortSignal) {
   const user = deps.getPending().find((m) => m.id === messageId);
-  if (!user || user.role !== "user" || user.status !== "error") return;
+  if (user?.role !== "user" || user.status !== "error") return;
   deps.store.setPendingStatus(messageId, "sending");
   await run(deps, { ...user, status: "sending" }, signal);
 }

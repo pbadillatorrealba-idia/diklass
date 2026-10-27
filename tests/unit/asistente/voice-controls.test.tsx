@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { VoiceButton, VoicePanel } from "@/components/asistente/voice-controls";
+import { VoiceButton, VoiceConsentDialog, VoicePanel } from "@/components/asistente/voice-controls";
 import type { VoiceNotice, VoiceState } from "@/features/asistente/voice-message";
 
 const PAYLOAD = { data: new ArrayBuffer(8), mimeType: "audio/webm", extension: "webm" as const };
@@ -27,7 +27,9 @@ const etiqueta = (html: string, testID: string) =>
 const panel = (v: ReturnType<typeof api>, onSend = noop) =>
   renderToStaticMarkup(<VoicePanel onSend={onSend} voice={v as never} />);
 const boton = (v: ReturnType<typeof api>) =>
-  renderToStaticMarkup(<VoiceButton voice={v as never} />);
+  renderToStaticMarkup(<VoiceButton onPress={noop} voice={v as never} />);
+const vivo = (html: string) =>
+  html.match(/<div[^>]*voice-status[^>]*>(.*?)<\/div><\/div>/)?.[1] ?? "";
 
 // asistente-conversacional «Grabar, revisar y enviar audio» y «Conservación del audio por 90 días»
 // (design.md D5 · tarea 7.4).
@@ -67,8 +69,12 @@ describe("VoicePanel · motivo del bloqueo y avisos", () => {
     expect(html).toContain('data-testid="voice-blocked"');
   });
 
-  test("libre y en reposo no pinta nada", () => {
-    expect(panel(api())).toBe("");
+  test("libre y en reposo solo existe la región de estado, vacía (para que se anuncie al llenarse)", () => {
+    const html = panel(api());
+    expect(html).toContain('data-testid="voice-status"');
+    expect(html).not.toContain('data-testid="voice-panel"');
+    expect(html).not.toContain('data-testid="voice-notice"');
+    expect(vivo(html).replace(/<[^>]*>/g, "")).toBe("");
   });
 
   test.each([
@@ -78,7 +84,8 @@ describe("VoicePanel · motivo del bloqueo y avisos", () => {
     const html = panel(api({ kind: "idle" }, { notice }));
     expect(html).toContain(texto);
     expect(html).toContain('data-testid="voice-notice"');
-    expect(html).toContain('role="status"');
+    // El aviso se anuncia por la región de estado, que existe siempre.
+    expect(vivo(html)).toContain(texto);
   });
 
   test("sin permiso ofrece escribir (FR-054)", () => {
@@ -108,18 +115,18 @@ describe("VoicePanel · grabando", () => {
     expect(html).toContain('data-testid="voice-stop"');
   });
 
-  test("el tiempo no está en una región viva: no se anuncia cada segundo", () => {
+  test("el tiempo no está en la región viva: no se anuncia cada segundo", () => {
     const html = panel(grabando);
-    const inicio = html.indexOf('data-testid="voice-elapsed"');
-    const antes = html.slice(Math.max(0, inicio - 400), inicio);
-    expect(antes).not.toContain("aria-live");
-    expect(html).toContain('data-testid="voice-status"');
+    expect(vivo(html)).not.toContain("00:07");
+    expect(vivo(html)).toContain("Grabando");
+    expect(etiqueta(html, "voice-status")).toContain('role="status"');
   });
 
-  test("solo el inicio de la grabación se anuncia, en una región de estado", () => {
+  test("solo el inicio se anuncia: el panel visible no es una región viva", () => {
     const html = panel(grabando);
-    expect(etiqueta(html, "voice-status")).toContain('role="status"');
-    expect(html).toContain("Grabando");
+    const visible = html.slice(html.indexOf('data-testid="voice-panel"'));
+    expect(visible).not.toContain('role="status"');
+    expect(visible).not.toContain("aria-live");
   });
 });
 
@@ -146,10 +153,44 @@ describe("VoicePanel · revisión y envío", () => {
     expect(html).toContain("2 minutos");
   });
 
+  test("un turno ocupado se avisa en la revisión sin perder el audio", () => {
+    const html = panel(
+      api(
+        { kind: "review", payload: PAYLOAD, durationMs: 5000, autoStopped: false },
+        { notice: "busy" },
+      ),
+    );
+    expect(html).toContain("respuesta en curso");
+    expect(html).toContain('data-testid="voice-send"');
+  });
+
   test("enviando: lo dice y no permite descartar ni enviar otra vez", () => {
     const html = panel(api({ kind: "sending", payload: PAYLOAD, durationMs: 5000 }));
     expect(html).toContain("Enviando audio…");
     expect(html).not.toContain('data-testid="voice-send"');
     expect(html).not.toContain('data-testid="voice-discard"');
+  });
+});
+
+// Aviso de primer uso con aceptación (el audio va a un proveedor externo).
+describe("VoiceConsentDialog", () => {
+  const dialogo = renderToStaticMarkup(<VoiceConsentDialog onAccept={noop} onCancel={noop} />);
+
+  test("dice que el audio y su transcripción van a un proveedor externo y cuánto se conserva", () => {
+    expect(dialogo).toContain("proveedor externo");
+    expect(dialogo).toContain("OpenAI");
+    expect(dialogo).toContain("90 días");
+  });
+
+  test("es un diálogo con nombre accesible y dos salidas", () => {
+    expect(dialogo).toContain('role="alertdialog"');
+    expect(dialogo).toContain('aria-label="Aviso antes de grabar"');
+    expect(dialogo).toContain('data-testid="voice-consent-accept"');
+    expect(dialogo).toContain('data-testid="voice-consent-cancel"');
+  });
+
+  test("recuerda que se puede eliminar el audio y que conviene no grabar datos innecesarios", () => {
+    expect(dialogo).toContain("eliminar");
+    expect(dialogo).toContain("No grabes");
   });
 });

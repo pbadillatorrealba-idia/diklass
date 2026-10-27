@@ -78,6 +78,40 @@ describe("borrarAudioChat", () => {
     expect(llamadas).toEqual([]);
   });
 
+  // `storage.remove` devuelve `{ error }` en vez de lanzar: sin mirarlo, un borrado fallido pasaba en silencio.
+  test("un error devuelto por Storage (sin lanzar) se reporta y no se propaga", async () => {
+    const errores: unknown[] = [];
+    const cliente = {
+      storage: {
+        from: () => ({ remove: async () => ({ data: null, error: { message: "denied" } }) }),
+      },
+    } as never;
+    await expect(borrarAudioChat(cliente, ["x"], (e) => errores.push(e))).resolves.toBeUndefined();
+    expect(errores).toHaveLength(1);
+  });
+
+  test("una excepción de red también se reporta", async () => {
+    const errores: unknown[] = [];
+    const cliente = {
+      storage: {
+        from: () => ({
+          remove: async () => {
+            throw new Error("red caída");
+          },
+        }),
+      },
+    } as never;
+    await borrarAudioChat(cliente, ["x"], (e) => errores.push(e));
+    expect(errores).toHaveLength(1);
+  });
+
+  test("un borrado correcto no reporta nada", async () => {
+    const errores: unknown[] = [];
+    const { cliente } = storageFalso();
+    await borrarAudioChat(cliente, ["x"], (e) => errores.push(e));
+    expect(errores).toEqual([]);
+  });
+
   test("es de mejor esfuerzo: un fallo no se propaga (la purga barre lo que quede)", async () => {
     const cliente = {
       storage: {

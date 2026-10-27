@@ -266,4 +266,105 @@ describe("VoiceMessageMachine", () => {
     expect(h.machine.getNotice()).toBe("not-understood");
     expect(h.machine.getState().kind).toBe("idle");
   });
+
+  // Hallazgo 3 de la revisión: la guarda de «idle» se evaluaba antes de los `await`.
+  describe("reentrada y carreras", () => {
+    function conRetraso() {
+      const llamadas = { available: 0, start: 0, stop: 0, release: 0 };
+      let liberarStart: () => void = () => {};
+      let ahora = 1_000_000;
+      let disparar: (() => void) | null = null;
+      const recorder: WindowRecorder = {
+        available: async () => {
+          llamadas.available++;
+          return true;
+        },
+        start: () =>
+          new Promise<void>((resolve) => {
+            llamadas.start++;
+            liberarStart = resolve;
+          }),
+        stop: async () => {
+          llamadas.stop++;
+          return PAYLOAD;
+        },
+        release: () => {
+          llamadas.release++;
+        },
+      };
+      const machine = new VoiceMessageMachine({
+        recorder,
+        now: () => ahora,
+        isBlocked: () => null,
+        setTimer: (fn) => {
+          disparar = fn;
+          return 1;
+        },
+        clearTimer: () => {
+          disparar = null;
+        },
+      });
+      return {
+        machine,
+        llamadas,
+        liberarStart: () => liberarStart(),
+        avanzar: (ms: number) => {
+          ahora += ms;
+        },
+        vencer: () => disparar?.(),
+        hayTemporizador: () => disparar !== null,
+      };
+    }
+
+    test("dos start() seguidos abren una sola grabación", async () => {
+      const h = conRetraso();
+      const a = h.machine.start();
+      const b = h.machine.start();
+      await Promise.resolve();
+      await Promise.resolve();
+      h.liberarStart();
+      await Promise.all([a, b]);
+      expect(h.llamadas.start).toBe(1);
+      expect(h.machine.getState().kind).toBe("recording");
+    });
+
+    test("dispose durante un start pendiente no deja el micrófono abierto ni un temporizador", async () => {
+      const h = conRetraso();
+      const inicio = h.machine.start();
+      await Promise.resolve();
+      await Promise.resolve();
+      h.machine.dispose();
+      h.liberarStart();
+      await inicio;
+      expect(h.machine.getState().kind).toBe("idle");
+      expect(h.hayTemporizador()).toBe(false);
+      // Se liberó después de que `start` terminara (si no, el micrófono quedaría abierto).
+      expect(h.llamadas.release).toBeGreaterThanOrEqual(2);
+    });
+
+    test("detener a la vez que se corta solo a los 2 min llama una sola vez a recorder.stop", async () => {
+      const h = conRetraso();
+      const inicio = h.machine.start();
+      await Promise.resolve();
+      await Promise.resolve();
+      h.liberarStart();
+      await inicio;
+      h.avanzar(MAX_VOICE_MS);
+      const manual = h.machine.stop();
+      h.vencer(); // el temporizador dispara a la vez
+      await manual;
+      await Promise.resolve();
+      expect(h.llamadas.stop).toBe(1);
+      expect(h.machine.getState().kind).toBe("review");
+      expect(h.machine.getNotice()).toBeNull();
+    });
+
+    test("después de dispose ya no se puede empezar", async () => {
+      const h = conRetraso();
+      h.machine.dispose();
+      await h.machine.start();
+      expect(h.llamadas.start).toBe(0);
+      expect(h.machine.getState().kind).toBe("idle");
+    });
+  });
 });

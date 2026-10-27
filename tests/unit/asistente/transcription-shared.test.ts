@@ -27,7 +27,8 @@ describe("transcribeWithOpenAI", () => {
     const form = visto.init?.body as FormData;
     expect(form.get("model")).toBe("gpt-transcribe");
     expect(form.get("language")).toBe("es");
-    expect((visto.init?.headers as Record<string, string>).Authorization).toBe("Bearer clave");
+    const cabeceras = visto.init?.headers as Record<string, string> | undefined;
+    expect(cabeceras?.Authorization).toBe("Bearer clave");
   });
 
   test("sin credencial falla antes de llamar", async () => {

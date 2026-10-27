@@ -1,5 +1,4 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
-import { randomRut } from "../../support/rut";
 import {
   ANA,
   expect,

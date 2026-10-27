@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { TranscribeClient } from "@/features/voz/remote-transcription-adapter";
 import type { AudioPayload } from "@/features/voz/transcription-port";
+import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
+import { errorReporter } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
 /**
@@ -33,19 +35,30 @@ export async function subirAudioChat(
   }
 }
 
+const reportarBorrado = (error: unknown) =>
+  void captureClientError(errorReporter, {
+    error,
+    operation: "borrarAudioChat",
+    requestId: makeRequestId(),
+  });
+
 /**
  * Borra objetos de audio. De mejor esfuerzo: si falla, el mensaje ya no apunta al objeto y la purga
  * programada barre lo que quede sin referencia, así que un fallo no debe tumbar la acción del usuario.
+ * Pero no pasa en silencio: `storage.remove` devuelve `{ error }` en vez de lanzar, y ambos casos se
+ * reportan (Constitución IV).
  */
 export async function borrarAudioChat(
   client: SupabaseClient<Database>,
   paths: readonly string[],
+  onError: (error: unknown) => void = reportarBorrado,
 ): Promise<void> {
   if (paths.length === 0) return;
   try {
-    await client.storage.from(CHAT_AUDIO_BUCKET).remove([...paths]);
-  } catch {
-    // Lo recoge la purga.
+    const { error } = await client.storage.from(CHAT_AUDIO_BUCKET).remove([...paths]);
+    if (error) onError(error);
+  } catch (error) {
+    onError(error);
   }
 }
 

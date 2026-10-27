@@ -57,6 +57,7 @@ export function MessageItem({
         {message.parts.map((part, index) => (
           <PartView
             ctx={{ role: message.role, onConfirmProposal, onPlayAudio }}
+            // biome-ignore lint/suspicious/noArrayIndexKey: las partes de un mensaje no traen id y su orden es fijo
             key={`${part.type}-${index}`}
             part={part}
           />

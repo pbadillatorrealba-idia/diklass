@@ -71,7 +71,7 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
     test.each([
       [
         "otra ruta de la misma persona",
-        (id: string, v: LiveVeterinarian) => ruta(v, crypto.randomUUID()),
+        (_id: string, v: LiveVeterinarian) => ruta(v, crypto.randomUUID()),
       ],
       ["la ruta de otro autor", (id: string, _v: LiveVeterinarian) => ruta(bruno, id)],
       ["una extensión no permitida", (id: string, v: LiveVeterinarian) => ruta(v, id, "mp3")],
