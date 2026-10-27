@@ -154,8 +154,9 @@ antes de la respuesta. Si el usuario confirma:
    `bun run test:e2e:web -- --project=chromium`.
 2. **Si hay cambios de UI:** `impeccable` (`critique` o `audit`) antes de la revisión.
 3. **`requesting-code-review`** sobre la rama; publica el reporte en español en la PR, como exige
-   la plantilla. Es una prerrevisión de agente: la revisión por alguien distinto del autor que
-   exige la constitución sigue siendo obligatoria.
+   la plantilla. Incluye la sección «Sobreingeniería» (criterio de ponytail: qué borrar, qué
+   reutilizar, qué ya cubre la plataforma). Es una prerrevisión de agente: la revisión por alguien
+   distinto del autor que exige la constitución sigue siendo obligatoria.
 4. **`receiving-code-review`:** aplica los comentarios, sugerencias y nitpicks que sean
    correctos técnicamente, verificando cada uno antes de implementarlo. Sin hallazgos: anótalo y
    sigue.
@@ -182,8 +183,10 @@ antes de la respuesta. Si el usuario confirma:
   - `security-best-practices` / `security-threat-model`: cuando se pida explícitamente una
     revisión de seguridad o un modelo de amenazas.
   - `playwright`: para automatizar el navegador desde terminal (depurar flujos de UI, capturas).
-  - `frontend-design` y las `expo-*` que quedan (`expo-native-ui`, `expo-router`,
-    `expo-design-system`): al crear UI nueva; `impeccable` es para evaluarla y pulirla.
+  - `expo-native-ui` y `expo-router`: al crear UI nueva; `impeccable` es para evaluarla y pulirla.
+    `sistema-visual` es el sistema de diseño del repo y manda sobre ambas; no se usan
+    `frontend-design` ni `expo-design-system` (retiradas; si el plugin `expo` global ofrece su
+    propia `expo-design-system`, tampoco aplica).
   - `impeccable`: asesora, no dicta. La identidad visual (D20) es la de `sistema-visual`, el
     brief y la constitución; `DESIGN.md`, `PRODUCT.md` y `.impeccable/` la describen y están
     subordinados a ellos. Un cambio de identidad se propone por OpenSpec, nunca con un comando
@@ -204,6 +207,31 @@ antes de la respuesta. Si el usuario confirma:
     - Ningún resultado puede violar las reglas de «Sistema visual» ni `tema.test.ts`.
   - `using-git-worktrees`: cuando un cambio necesita aislarse del espacio de trabajo actual.
   - `openspec-*`: flujo de propuestas, aplicación, sincronización y archivo de cambios.
+
+## Ponytail
+
+Ponytail (plugin global, modo `full`) gobierna **cuánto** se escribe: la menor solución que
+funciona. No decide **qué** se hace ni **qué** se verifica. Precedencia ante conflicto:
+constitución > este archivo > cambio OpenSpec > ponytail.
+
+- **Lo que ponytail no puede recortar:** requisitos y criterios del cambio activo (cuentan como
+  «pedido explícito»), los IDs FR/US/SC, validación en fronteras de confianza, fallo cerrado,
+  accesibilidad, RLS y la verificación que exige la constitución.
+- **`openspec-propose` y `openspec-update-change`:** no propongas capacidades ni requisitos que
+  nadie pidió; `design.md` solo cuando hay una decisión real con alternativas; tareas mínimas y
+  verificables. Ponytail acota el alcance, nunca la presencia de un artefacto exigido.
+- **`openspec-apply-change`:** cada tarea se implementa con el mínimo código que la cumple; no
+  añadas nada fuera de la tarea. Una simplificación con techo conocido lleva un comentario
+  `ponytail:` con el límite y cómo mejorarla. Ese comentario no sustituye a la deuda de tests,
+  que sigue registrándose como tarea (ver «openspec/changes/ frente a openspec/specs/»).
+- **`openspec-explore`, `-sync-specs` y `-archive-change`:** ponytail no interviene.
+- **`test-driven-development` sigue vigente** para toda funcionalidad y corrección; ponytail solo
+  fija el tamaño: el test fallido más pequeño que prueba el comportamiento, sin una suite por
+  función. La excepción de ponytail para «one-liners triviales» no aplica en este repo.
+- **`systematic-debugging` + ponytail:** primero la causa raíz con el proceso de la skill; el
+  arreglo es la corrección más pequeña en el punto por el que pasan todos los llamadores.
+- **Revisión:** la sección «Sobreingeniería» de `requesting-code-review` es la única pasada de
+  ponytail en el cierre de una PR; no lances además `ponytail-review` ni `simplify`.
 
 ## Idioma
 
