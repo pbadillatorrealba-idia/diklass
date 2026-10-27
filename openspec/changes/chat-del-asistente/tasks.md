@@ -26,8 +26,8 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 - [x] 4.1 Con el presupuesto de 4.0 fijado, en rojo `markdown-text.test.tsx` y luego `MarkdownText` (énfasis, listas, tablas, código, citas; HTML e imágenes como texto; enlaces `http(s)`/internos, externos con `rel="noopener"` y destino visible). Verificación: prueba verde, `tema.test.ts` verde y dentro del presupuesto de D9.
 - [x] 4.2 En rojo y luego `MessageItem` y el registro de partes (texto, conocimiento con «Ver respaldo registrado», audio, propuesta), con rótulo, hora, estados y acciones (copiar, reintentar, eliminar audio). Sin burbujas. Verificación: pruebas por parte y por estado.
 - [x] 4.3 En rojo y luego `Composer` (multilínea 1–6 líneas, Enter/Shift+Enter con guarda IME solo en web, en nativo envío solo con el botón, «Detener», foco tras enviar, envío deshabilitado vacío). Verificación: prueba de teclas con eventos IME simulados y e2e.
-- [ ] 4.4 En rojo y luego `MessageList` anclada al final con «Ir al final» y conteo de nuevos; la lógica de anclaje como función pura compartida por la lista web (`ScrollView`) y la nativa (`FlatList`); `role="log"` que no anuncia la carga inicial; «Pensando…» en `role="status"`. Verificación: prueba unitaria de la función de anclaje, e2e «no arrastra a quien lee» y axe.
-- [ ] 4.5 En rojo y luego el aviso de no leído en el riel y el dock. Verificación: e2e con el panel colapsado.
+- [x] 4.4 En rojo y luego `MessageList` anclada al final con «Ir al final» y conteo de nuevos; la lógica de anclaje como función pura compartida por la lista web (`ScrollView`) y la nativa (`FlatList`); `role="log"` que no anuncia la carga inicial; «Pensando…» en `role="status"`. Verificación: prueba unitaria de la función de anclaje, e2e «no arrastra a quien lee» y axe.
+- [x] 4.5 En rojo y luego el aviso de no leído en el riel y el dock. Verificación: e2e con el panel colapsado.
 - [ ] 4.6 Reemplazar `AsistenteThread` por `ChatThread` en el panel y en la hoja; migrar el contenido de `asistente-store`. Verificación: e2e de `panel-asistente` adaptados.
 
 ## 5. Contexto de paciente automático (D8)

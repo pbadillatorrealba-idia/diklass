@@ -19,6 +19,8 @@ export type PanelThread = {
   status?: (variant: "rail" | "dock") => ReactNode;
   /** Cuántas cosas del hilo esperan la confirmación del veterinario (borradores, propuestas). */
   pending?: number;
+  /** Llegó una respuesta con el hilo fuera de vista: el riel y el dock lo marcan hasta abrirlo. */
+  unread?: boolean;
 };
 
 /** Hilo al que pasa el panel si el activo deja de estar disponible (spec «Hilos contextuales»). */
