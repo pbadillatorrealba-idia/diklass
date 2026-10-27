@@ -27,14 +27,16 @@ aceptación. Especificación y diseño deben aprobarse antes de ejecutar estas t
   escribir, veterinarios vacíos/de clínicas distintas, remoto bloqueado, carga parcial, versión
   distinta, manifiesto ausente, repetición completa y registros alterados (FR-132; US20-AC9/AC10).
   Verificación: pruebas fallan por la limitación concreta y no por configuración ausente.
-- [ ] 2.2 Ampliar el cargador con prevalidación, mapeo por claves, operaciones clínicas existentes,
-  manifiesto local progresivo ignorado por Git y verificación de grafo/contenido/eventos (FR-129,
-  FR-130, FR-132). Verificación: pruebas 2.1 pasan; un error intermedio da salida no cero sin reset,
-  y una segunda ejecución completa no crea ningún registro adicional.
-- [ ] 2.3 Escribir y observar fallar integración viva focalizada de las ocho consultas, tres epicrisis
+- [ ] 2.2 Escribir y observar fallar integración viva focalizada de las ocho consultas, tres epicrisis
   aprobadas, un borrador, seis retroalimentaciones incluida correctiva, epicrisis correctiva,
   atribución cruzada y recuperación longitudinal (FR-129/FR-130/FR-132; US20-AC3/AC5/AC10).
-  Verificación: rojo documentado, posterior verde con Supabase local aislado; comparar originales.
+  Verificación: rojo documentado antes de ejecutar 2.3; las ocho consultas y los estados esperados
+  todavía no se cargan, y el fallo no se debe a credenciales o configuración ausentes.
+- [ ] 2.3 Ampliar el cargador con prevalidación, mapeo por claves, operaciones clínicas existentes,
+  manifiesto local progresivo ignorado por Git y verificación de grafo/contenido/eventos (FR-129,
+  FR-130, FR-132). Verificación: pruebas 2.1 y 2.2 en verde con Supabase local aislado, comparando
+  originales; un error intermedio da salida no cero sin reset, y una segunda ejecución completa
+  no crea ningún registro adicional.
 - [ ] 2.4 Documentar carga completa/parcial/antigua, ubicación del manifiesto, cronología simulada
   frente a fechas reales, y reconstrucción explícita de base desechable (FR-132). Verificación:
   ningún camino reinicia automáticamente la base; el ejemplo permite seguir una entrada desde
@@ -42,16 +44,19 @@ aceptación. Especificación y diseño deben aprobarse antes de ejecutar estas t
 
 ## 3. Vigencia y CI ligera
 
-- [ ] 3.1 Escribir pruebas de deriva de esquema/catálogo, fuente modificada, alta/baja de archivo
+- [ ] 3.1 Escribir pruebas de deriva de esquema/catálogo, checkout limpio sin PDF, alta/baja de archivo
   vigilado, spec cambiada y revisión compatible justificada; observar rojo (FR-131; US20-AC7/AC8).
   Verificación: el fallo nombra contrato/clave afectados y no se resuelve únicamente renovando huellas.
+  La ausencia o modificación de PDF no participa del control ni falla; las huellas documentales
+  de la inspección inicial no se recalculan (decisión del usuario; US20-AC8).
 - [ ] 3.2 Implementar comprobación de huellas e inventario, cobertura y revisiones motivadas; exponer
   un comando focalizado de comprobación en `package.json` (FR-129/FR-131). Verificación: 3.1 en verde,
   comprobación sin credenciales ni DB y medición ≤10 s / 256 MiB RSS tras instalación.
 - [ ] 3.3 Añadir workflow ligero separado para dataset y contratos/documentos vigilados, incluidas
   modificaciones solo OpenSpec; documentar cómo extender vigilancia al crear capacidades (FR-131).
   Verificación: comprobar filtros para un cambio de spec, un catálogo y una adición de migración;
-  el trabajo ligero no arranca Supabase ni modifica datos y el cambio solo documental no lanza gate.
+  el trabajo ligero no arranca Supabase ni modifica datos, no requiere PDF ni credenciales para
+  obtenerlos y el cambio solo documental no lanza gate.
 
 ## 4. Integración y aceptación
 

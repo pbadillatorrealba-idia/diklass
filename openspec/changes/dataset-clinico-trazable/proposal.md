@@ -22,6 +22,8 @@ requisitos hasta cada dato cargado y su prueba.
 - Detectar cambios en esquemas, catálogos, servicios, migraciones y especificaciones mediante una
   comprobación ligera de vigencia. Todo cambio relevante exige adaptar el dataset o justificar
   documentalmente por qué sigue cubriendo el comportamiento. No generar datos clínicos automáticamente.
+- No verificar los PDF, ni localmente ni en CI. Sus rutas, páginas y hashes documentan únicamente
+  la inspección inicial; el control de vigencia solo usa contratos y metadatos versionados.
 - Validar el conjunto completo antes de escribir; distinguir carga completa, parcial y versión
   desactualizada. Una carga parcial nunca se informa como éxito.
 

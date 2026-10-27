@@ -95,6 +95,8 @@ huellas por sí solo MUST NOT acreditar cobertura ni aceptación clínica.
 - **THEN** se acepta la vigencia solo si esquema, cobertura y pruebas siguen pasando.
 - **THEN** un PR que solo modifica especificaciones o documentación clínica vigilada ejecuta este
   control ligero, sin arrancar la batería completa ni Supabase.
+- **THEN** un checkout limpio sin `data/docs/` ejecuta el mismo control: los PDF no se verifican
+  ni localmente ni en CI, y sus hashes se conservan solo como referencia histórica de la inspección.
 
 ### Requirement: FR-132 Carga verificable y no destructiva
 

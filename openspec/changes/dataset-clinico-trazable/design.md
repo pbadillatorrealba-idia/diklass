@@ -50,6 +50,11 @@ inventadas se describen como relatos sintéticos. El origen estructural «formul
 no implica que ese documento respalde el relato. `recuperada` solo se ejercita si hay una fuente
 documental y fragmento reales del corpus; no es necesario fabricar esa procedencia en este cambio.
 
+Por decisión del usuario, no se verifican los PDF ni localmente ni en CI. Las rutas, páginas y
+SHA-256 son evidencia histórica de la inspección inicial, no una dependencia ejecutable ni una
+garantía de vigencia documental. `data/` está ignorado por Git y no se distribuye a CI. Un checkout
+limpio sin esos archivos permite validar íntegramente el contrato versionado del dataset.
+
 ### D3 — Dos historias longitudinales dentro de ocho consultas
 
 Tres consultas cerradas, cinco abiertas (una con epicrisis en borrador), seis retroalimentaciones
@@ -86,9 +91,10 @@ pruebas ni a revisar casos. Los cambios puramente internos pueden requerir confi
 se acepta ese coste pequeño frente a una integración semántica nueva con el parser de OpenSpec.
 
 La CI actual omite Markdown y `openspec/**`; por eso un workflow ligero separado ejecutará solo
-esta verificación para contratos, dataset, fuentes y documentación clínica vigilados, incluidas
+esta verificación para contratos, dataset y documentación clínica versionada vigilados, incluidas
 specs. Usa Bun sin Supabase. La CI general conserva su tratamiento de cambios solo documentales.
 Documentar el inventario de vigilancia y su ampliación al crear capacidades clínicas nuevas.
+No vigilar rutas PDF, recalcular sus hashes ni introducir credenciales para obtenerlos.
 
 ### D5 — Prevalidación y carga fail-closed
 
@@ -127,8 +133,8 @@ editoriales, sin añadir dosis nuevas ni presentar planes como recomendaciones d
   clínico amplía la matriz y el inventario; no prometer detección automática de toda decisión de producto.
 - Fallo a mitad de carga → manifiesto parcial y salida no cero; reconstrucción local deliberada.
 - Reset borra toda la base local → no ejecutarlo en la comprobación de vigencia ni automáticamente.
-- Fuente eliminada o contrato archivado → revisar rutas/huellas conservando la referencia histórica
-  al cambio que originó cada entrada.
+- PDF local modificado o eliminado → no se detecta ni bloquea; su referencia conserva el carácter
+  histórico. Un contrato versionado archivado sí exige revisar rutas/huellas y mantener su origen.
 - Cronología auditada concentrada en la carga → no acreditar pruebas de intervalos o agendas
   históricas; fuera de alcance alterar contratos para permitir backdating.
 

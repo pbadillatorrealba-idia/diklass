@@ -9,6 +9,8 @@ preparará después de aprobar especificación y diseño.
 
 Inspección mediante extracción de texto con `pdftotext -layout`; páginas contadas desde 1.
 No se verificó visualmente la maquetación de los PDF. No contienen expedientes cumplimentados.
+Las huellas siguientes documentan esa inspección inicial. Por decisión del usuario no habrá
+verificación de PDF, ni local ni en CI; un cambio o ausencia de estos archivos no bloquea el dataset.
 
 | ID | Ruta local | SHA-256 | Uso autorizado en esta propuesta |
 |---|---|---|---|
