@@ -70,7 +70,9 @@ veterinarians, role, parts jsonb, status ('done'|'error'), patient_id uuid null 
 audio_path text null, audio_expires_at timestamptz null, created_at)`. `patient_id` lleva FK y el mismo
 trigger guardián de clínica que `knowledge_queries` (010), para que un cliente no guarde el id de un
 paciente de otra clínica. RLS: solo el autor, dentro de su clínica **y con acceso activo**
-(`is_active_access(auth.uid())`, como la 019), lee, inserta y borra.
+(`is_active_access(auth.uid())`, como la 019), lee e inserta. El cliente no tiene DELETE (invariante de
+pgTAP 003: `authenticated` no borra de ninguna tabla de `public`): el borrado va por la RPC
+`delete_assistant_conversation()` (`SECURITY DEFINER`, acotada a `auth.uid()` con acceso activo).
 
 **Solo se persisten mensajes terminales** (`done` o `error`). `sending` y `thinking` viven en el almacén
 efímero, de modo que un cierre de pestaña no deja filas huérfanas y no hay UPDATE de cliente. «Inmutable»

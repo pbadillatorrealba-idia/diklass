@@ -78,6 +78,68 @@ export type Database = {
           },
         ]
       }
+      assistant_messages: {
+        Row: {
+          audio_expires_at: string | null
+          audio_path: string | null
+          author_id: string
+          clinic_id: string
+          created_at: string
+          id: string
+          parts: NonNullable<Json>
+          patient_id: string | null
+          role: string
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          author_id?: string
+          clinic_id: string
+          created_at?: string
+          id?: string
+          parts: NonNullable<Json>
+          patient_id?: string | null
+          role: string
+          status: string
+        }
+        Update: {
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          author_id?: string
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          parts?: NonNullable<Json>
+          patient_id?: string | null
+          role?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_audit_events: {
         Row: {
           action: string
@@ -523,6 +585,7 @@ export type Database = {
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
+      delete_assistant_conversation: { Args: never; Returns: number }
       insert_clinical_audit_event: {
         Args: {
           p_action: string
