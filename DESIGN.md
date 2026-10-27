@@ -372,6 +372,28 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Callout:** renglón impreso con reglas de 1 px arriba y abajo en el tono del estado, superficie del tono, icono con nombre y texto en `foreground`; 8 × 12 px de padding. Nunca una caja flotante ni un toast.
 - **Severity Badge:** escala única de cuatro niveles sin tokens propios: leve (info), moderado (warning), grave (destructive-surface, nombre en semibold) y crítico (relleno `destructive`, texto `destructive-foreground`). Icono, nombre y una barra de cuatro segmentos con tantos llenos como su posición.
 
+## Primitivas y convenciones de código
+
+- **Primitivas** (`src/components/ui/`): `Screen` (con `title` y `back`; nunca `Head` suelto); `ScreenList`
+  para listas no acotadas (`FlatList` único contenedor; nunca `.map` en un `ScrollView`); `QueryState`
+  para datos que se cargan (cargando > error con «Reintentar» > vacío > contenido); `Card`; `Callout`
+  (un renglón dentro de su sección, nunca toast); `Chip`; `Icon` (`label` o `decorative`, obligatorio);
+  `Avatar` (decorativo: el nombre va al lado); `DataItem`/`DataGroup` para leer la ficha y `Field` solo
+  en el formulario clínico; `ProvenanceMark` en todo dato con procedencia (FR-097); `MonthCalendar`
+  como único punto de uso de `react-native-calendars`.
+- **Texto:** `Text variant="body|caption|label|strong"` y `Heading level`; nunca `text-sm`/`text-xs`
+  sueltos. `data` (mono, cifras tabulares) para números, fechas, pesos, dosis y códigos.
+- **Navegación:** todo cambio de ruta es `<Link href asChild>` con `Button` o `LinkText` (en web, un
+  `<a href>`; la compuerta axe falla con rol `button`); `router.push` solo tras una operación.
+- **Botones:** `primary` para la acción principal; `outline` para secundarias y acciones por fila;
+  `ghost` para terciarias; `destructive` solo para detener algo en curso.
+- **Ancho:** `width="wide"` (1200 px) para consulta, listas, Inicio, Configuración y ficha; `content`
+  (720 px) para formularios y lectura larga.
+- **Datos clínicos:** `selectable` en ficha, anamnesis, citas y resúmenes; no en etiquetas ni botones.
+- **Tema y código:** `useThemePreference()` y `useColorScheme()` de `src/theme/use-color-scheme.ts`,
+  nunca el de `react-native`; `process.env.EXPO_OS` en lugar de `Platform.OS`; `use` de React 19 en
+  lugar de `useContext`; `CONTINUOUS_CURVE` en superficies con radio (`tema.test.ts` falla con lo antiguo).
+
 ## Do's and Don'ts
 
 ### Do:

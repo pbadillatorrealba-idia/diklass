@@ -134,12 +134,12 @@ dentro del worktree `ln -s ../../../node_modules node_modules` y `ln -s ../../..
 ## Skills de agentes
 
 - `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
-  Codex y Oh My Pi. Toda alta, baja o edición se aplica en ambos en el mismo commit; solo difiere
-  la invocación (`/` frente a `$`).
+  Codex y Oh My Pi. Toda alta, baja o edición se aplica en ambos en el mismo commit; difiere la
+  invocación (`/` frente a `$`) y los subagentes de `impeccable`, que solo existen en `.claude/agents/`.
 - `security-best-practices` y `security-threat-model`: solo cuando se pidan expresamente.
 - UI: `expo-native-ui` y `expo-router` para crearla; `impeccable` y sus estándares son la autoridad
-  visual (`DESIGN.md`, `PRODUCT.md` y `.impeccable/`), que hacen cumplir `tema.test.ts` y la
-  compuerta axe. No se usan `frontend-design` ni `expo-design-system` (ni la del plugin `expo`).
+  visual (`DESIGN.md`, `PRODUCT.md` y `.impeccable/`, que hacen cumplir `tema.test.ts` y la compuerta
+  axe), subordinada a la constitución y al brief; un cambio de identidad se propone por OpenSpec. No se usan `frontend-design` ni `expo-design-system` (ni la del plugin `expo`).
 - Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; `bolder`,
   `colorize`, `overdrive`, `delight`, `typeset` y `shape` solo con confirmación del usuario y paso
   por OpenSpec. Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`)

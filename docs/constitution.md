@@ -146,8 +146,6 @@ complejidad se elimina.
 
 ## Registro de enmiendas
 
-El detalle está en el historial de git.
-
 - 2026-09-10 — v1.3.0 (MENOR): Expo SDK 56 → 57 (regresión de memoria de Hermes V1 en SDK 56).
 - 2026-09-16 — v1.3.1 (PARCHE): secuencia normativa en el perfil core de OpenSpec; guía de agentes.
 - 2026-10-27 — v1.4.0 (MENOR): sin versiones exactas de Bun y Playwright; Firefox y WebKit se
