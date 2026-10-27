@@ -195,8 +195,12 @@ antes de la respuesta. Si el usuario confirma:
       `DESIGN.md`). Se usa en el cierre de una PR que toque UI.
     - Con confirmación del usuario y paso por OpenSpec: `bolder`, `colorize`, `overdrive`,
       `delight`, `typeset` y `shape` de una identidad nueva.
-    - Sus subagentes (`.claude/agents/`: `impeccable-finish-reviewer`, `-documenter`,
-      `-asset-producer`, `-manual-edit-applier`) solo se invocan desde esta skill.
+    - Sus subagentes (`.claude/agents/`: `impeccable-finish-reviewer` y `-documenter`) solo se
+      invocan desde esta skill. Se retiraron `-asset-producer` y `-manual-edit-applier`, el modo
+      `live` y los datos de fuentes; también los comandos `quieter`, `distill`, `layout`, `adapt`,
+      `clarify`, `optimize`, `extract`, `onboard` y `craft`. Para recuperarlos, regenera la skill
+      desde `pbakaus/impeccable`.
+    - Solo se usa la copia del repo: el plugin global `impeccable` está desinstalado.
     - El hook de `.codex/hooks.json` revisa los cambios de UI tras cada edición; es informativo
       y no sustituye a `bun run gate`. Es **opt-in**: solo corre si el binario ya está en
       `.agents/skills/impeccable/scripts/bin/` (ignorado por git) y nunca lo descarga. Instalarlo
