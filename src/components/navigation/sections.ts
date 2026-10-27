@@ -59,8 +59,10 @@ export const SECTIONS = [
 export type Section = (typeof SECTIONS)[number];
 
 /**
- * Barra inferior web: las clínicas más Configuración, que en móvil es la cuenta (perfil,
+ * Barra inferior web: Inicio, Pacientes, Conocimiento y Configuración, que en móvil es la cuenta (perfil,
  * apariencia y sesión). Tutores (administracion-tutores) se alcanza desde el botón «Tutores» de
  * Pacientes.
  */
-export const TABBAR_SECTIONS = SECTIONS.filter((section) => section.name !== "(tutors)");
+export const TABBAR_SECTIONS = SECTIONS.filter(
+  (section) => section.name !== "(tutors)" && section.name !== "(follow-up)",
+);

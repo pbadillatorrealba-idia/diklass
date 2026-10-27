@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 const stackOptions =
   (globalThis as { __stackScreenOptions?: unknown[] }).__stackScreenOptions ?? [];
 
-import { Screen } from "@/components/ui/screen";
+import { Screen, ScreenList } from "@/components/ui/screen";
 
 const ORIGINAL_OS = process.env.EXPO_OS;
 
@@ -107,5 +107,43 @@ describe("Screen action", () => {
   test("en web estrecho y en nativo la acción va en la barra al pie", async () => {
     expect(await render("web", 375)).toContain("screen-action-bar");
     expect(await render("ios", 1280)).toContain("screen-action-bar");
+  });
+});
+
+// La marca debe pertenecer al desplazamiento, también cuando la pantalla no tiene título.
+describe("Marca dentro del contenido", () => {
+  test.each([false, true])("ScreenList=%s incluye una sola marca antes del título", (list) => {
+    process.env.EXPO_OS = "web";
+    const html = renderToStaticMarkup(
+      list ? (
+        <ScreenList
+          data={[]}
+          empty={<span>Sin resultados</span>}
+          renderItem={() => null}
+          testID="marca-lista"
+          title="Pacientes"
+        />
+      ) : (
+        <Screen testID="marca-pantalla" title="Pacientes" />
+      ),
+    );
+    const logo = html.indexOf('aria-label="Diklass"');
+    expect(logo).toBeGreaterThan(
+      html.indexOf(`data-testid="${list ? "marca-lista" : "marca-pantalla-scroll"}"`),
+    );
+    expect(logo).toBeLessThan(html.indexOf('aria-level="1"'));
+    expect(html.match(/aria-label="Diklass"/g)).toHaveLength(1);
+  });
+
+  test("incluye la marca aunque no haya título", () => {
+    process.env.EXPO_OS = "web";
+    expect(renderToStaticMarkup(<Screen />)).toContain('aria-label="Diklass"');
+  });
+
+  test("conserva la cabecera nativa sin añadir una marca", () => {
+    process.env.EXPO_OS = "ios";
+    expect(renderToStaticMarkup(<Screen title="Pacientes" />)).not.toContain(
+      'aria-label="Diklass"',
+    );
   });
 });

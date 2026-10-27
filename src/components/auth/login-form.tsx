@@ -87,7 +87,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         className="w-full md:max-w-form md:overflow-hidden md:rounded-sm md:border md:border-border md:bg-card"
         style={CONTINUOUS_CURVE}
       >
-        <VStack className="gap-6 md:p-4">
+        <VStack className="gap-6 md:p-4 web:md:pb-8">
           {/* Solo para lectores de pantalla: la marca la pone `Logo`, que no es un encabezado. */}
           <Heading
             level={1}

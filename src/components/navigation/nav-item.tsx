@@ -10,7 +10,7 @@ const VARIANTS = {
     text: "body",
   },
   tabbar: {
-    item: "min-h-touch min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2",
+    item: "min-h-touch min-w-0 flex-1 items-center justify-center gap-1 py-2",
     indicator: "absolute left-4 right-4 top-0 h-1 rounded-sm bg-primary",
     text: "nav",
   },

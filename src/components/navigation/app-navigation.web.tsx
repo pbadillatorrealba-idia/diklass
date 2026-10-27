@@ -19,7 +19,7 @@ const CONTENT_ID = "contenido";
 /**
  * Navegación global en web (FR-082 · FR-093 · design.md D12/D17). El `TabList` oculto solo
  * define las rutas; los disparadores visibles están en la barra lateral (desde `lg`, 5
- * secciones) o en la barra superior compacta más la inferior (por debajo de `lg`, con las 4
+ * secciones) o en la barra inferior (por debajo de `lg`, con las 3
  * clínicas más Configuración, que en móvil es la cuenta). A la derecha, el panel de asistente (acoplado,
  * riel o cajón desde 1024 px). El orden del DOM coincide con el visual en cada ancho.
  */
@@ -33,7 +33,6 @@ export function AppNavigation() {
       <TabTrigger asChild key={section.name} name={section.name}>
         <NavItem
           icon={section.icon}
-          iconOnly={variant === "tabbar" && section.name === "(settings)"}
           label={section.label}
           testID={`nav-${variant}-${section.href.slice(1)}`}
           variant={variant}
@@ -52,13 +51,6 @@ export function AppNavigation() {
           label="Ir al asistente"
           targetId={ASSISTANT_ID}
         />
-        <View
-          className="flex-row items-center justify-between border-b border-border bg-card px-4 py-1 lg:hidden"
-          testID="app-topbar"
-        >
-          {/* Marca, no encabezado: el `h1` de la pantalla va primero en el orden de títulos. */}
-          <Logo size="sm" />
-        </View>
         <View
           aria-label="Secciones"
           className="hidden w-sidebar gap-6 border-r border-border bg-card p-4 lg:flex"

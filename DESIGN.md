@@ -425,3 +425,30 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Don't** convertir un aviso en caja flotante o temporal; es un renglón dentro de su sección.
 - **Don't** presentar el hilo de escucha como una conversación con el sistema: sin burbujas, sin hablantes, sin respuestas simuladas.
 - **Don't** añadir ilustraciones de perros, patitas ni gris clínico sin tinta.
+
+
+### Marca en web compacta
+
+Bajo 1024 px no hay barra superior de marca. Todas las pantallas protegidas muestran el logo
+pequeño (20 px), centrado y con 8 px adicionales de espacio superior al inicio de su contenido desplazable, antes del título y del retroceso.
+No lleva fondo propio ni borde. Desde 1024 px la marca permanece solo en la barra lateral.
+El login conserva su marca existente; las cabeceras nativas conservan su comportamiento.
+Decisión aprobada por el usuario e implementación: `marca-movil-sin-barra`; aceptación visual
+registrada en sus tareas, sin implicar verificación nativa.
+
+
+### Configuración y centrado del acceso
+
+Configuración conserva Perfil, Apariencia y Sesión en una sola columna a cualquier ancho,
+con 24 px entre tarjetas; aprovecha el ancho `wide` sin dividir el contenido en columnas.
+En el acceso web de escritorio, la tarjeta está centrada en ambos ejes cuando cabe en pantalla,
+con 32 px de espacio interior bajo el botón. El selector de tema no desplaza su centro;
+el desplazamiento permite acceder a todo el formulario en ventanas bajas.
+
+En web compacta, la barra inferior contiene Inicio, Pacientes, Conocimiento y Configuración,
+todos con el nombre visible debajo del icono.
+Seguimiento se conserva en escritorio y en las rutas existentes, pero se retira de esa barra.
+
+El título puede ajustarse al ancho con texto ampliado. En Perfil, avatar y datos pasan a filas
+separadas cuando no caben juntos. Cerrar sesión muestra «Cerrando sesión…», estado ocupado y
+botón deshabilitado mientras espera, tanto en Configuración como en la barra lateral.

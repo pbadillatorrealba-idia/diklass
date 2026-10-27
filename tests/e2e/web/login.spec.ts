@@ -3,6 +3,20 @@ import { ANA, expect, hasBackend, test } from "./fixtures";
 // sistema-visual FR-089 · FR-090 · SC-057 (design.md D16): acceso que los gestores de contraseñas
 // pueden guardar y rellenar, en una tarjeta con «Mostrar contraseña».
 test.describe("acceso compatible con gestores de contraseñas", () => {
+  test("la tarjeta queda centrada en escritorio y separa el botón del borde inferior", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/login");
+    await expect(page.getByTestId("login-submit")).toBeEnabled();
+    const card = await page.locator("form > div").boundingBox();
+    const button = await page.getByTestId("login-submit").boundingBox();
+    if (!card || !button) throw new Error("Falta la tarjeta o el botón de acceso");
+    expect(Math.abs(card.x + card.width / 2 - 640)).toBeLessThanOrEqual(1);
+    expect(Math.abs(card.y + card.height / 2 - 400)).toBeLessThanOrEqual(1);
+    expect(card.y + card.height - button.y - button.height).toBeGreaterThanOrEqual(32);
+  });
+
   test("los campos viven en un form con name y autocomplete de credenciales", async ({ page }) => {
     await page.goto("/login");
     const form = page.locator("form");

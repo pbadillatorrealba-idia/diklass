@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDock } from "@/features/asistente/panel-dock";
 import { useContentWidth } from "@/features/asistente/use-content-width";
 import { Heading } from "./heading";
+import { Logo } from "./logo";
 import { Text } from "./text";
 
 const WIDTHS = { content: "max-w-content", wide: "max-w-wide" } as const;
@@ -116,10 +117,12 @@ function ScreenHeading({
 }: Pick<ScreenProps, "action" | "back" | "pretitle" | "title">) {
   const isWide = useWindowDimensions().width >= BREADCRUMB_FROM;
   if (process.env.EXPO_OS !== "web") return null;
-  if (!(back || title || action)) return null;
   const crumbs = back ? (back.crumbs ?? [{ href: back.href, label: back.label }]) : [];
   return (
     <View className="gap-2">
+      <View className="mb-4 items-center pt-2 lg:hidden" testID="screen-brand">
+        <Logo size="sm" />
+      </View>
       {back && isWide ? (
         <View role="navigation" aria-label="Ruta" className="flex-row flex-wrap gap-2">
           {crumbs.map((crumb, index) => (
@@ -151,7 +154,7 @@ function ScreenHeading({
       {title || action ? (
         <View className="flex-row flex-wrap items-center justify-between gap-3">
           {title ? (
-            <View>
+            <View className="min-w-0 shrink">
               {pretitle ? <Text tone="muted">{pretitle}</Text> : null}
               <Heading level={1}>{title}</Heading>
             </View>

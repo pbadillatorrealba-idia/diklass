@@ -24,12 +24,11 @@ export default function LoginScreen() {
           // FR-088 (revisión de la PR #38): en iOS el teclado no tapa «Iniciar sesión».
           automaticallyAdjustKeyboardInsets
           // Formulario centrado en vertical: solo esta pantalla lo necesita, así que no va en `Screen`.
-          contentContainerClassName="grow gap-6 p-4 md:p-6"
+          contentContainerClassName="grow gap-6 p-4 md:p-6 web:md:py-20"
           keyboardShouldPersistTaps="handled"
         >
-          {/* Escritorio: esquina superior derecha. Móvil: bajo la tarjeta y con etiqueta, a mano del pulgar.
-            Ambos en el flujo del scroll, no flotando: respetan el área segura y el teclado. */}
-          <View className="hidden w-full flex-row justify-end md:flex">
+          {/* El espacio vertical simétrico reserva el selector sin desplazar el centro de la tarjeta. */}
+          <View className="hidden w-full flex-row justify-end md:flex web:absolute web:right-6 web:top-6 web:w-auto">
             <ThemeToggle />
           </View>
           <View className="w-full flex-1 justify-center gap-4 md:items-center">
