@@ -36,7 +36,9 @@ using (
   )
 );
 
--- Cuántos objetos de audio tiene el autor bajo su prefijo. SECURITY DEFINER: una política de
+-- Cuántos objetos de audio subió el autor bajo su prefijo en las últimas 24 horas. Solo cuenta la
+-- ventana reciente: los audios vigentes con mensaje se conservan 90 días y no deben agotar el tope de
+-- quien usa la voz con normalidad; el tope frena a quien sube en masa. SECURITY DEFINER: una política de
 -- `storage.objects` que consultara la propia tabla recursaría con sus políticas de lectura.
 create or replace function public.assistant_audio_object_count()
 returns integer
@@ -47,14 +49,14 @@ set search_path = public, extensions
 as $$
   select count(*)::integer from storage.objects object
    where object.bucket_id = 'assistant-audio'
-     and (storage.foldername(object.name))[1] = public.current_clinic_id()::text
-     and (storage.foldername(object.name))[2] = auth.uid()::text;
+     and object.name like (public.current_clinic_id()::text || '/' || auth.uid()::text || '/%')
+     and object.created_at > timezone('utc', now()) - interval '24 hours';
 $$;
 
 grant execute on function public.assistant_audio_object_count() to authenticated;
 
--- Subida: bajo el prefijo del autor y con un tope de objetos (el audio se sube antes de insertar el
--- mensaje; sin tope, un usuario podría llenar el bucket con archivos de 5 MiB hasta la purga de 1 día).
+-- Subida: bajo el prefijo del autor y con un tope de 100 subidas por día (el audio se sube antes de
+-- insertar el mensaje; sin tope, un usuario podría llenar el bucket con archivos de 5 MiB).
 create policy "asistente audio: el autor sube bajo su prefijo"
 on storage.objects for insert to authenticated
 with check (
@@ -159,8 +161,11 @@ create index assistant_audio_usage_idx on public.assistant_audio_usage (author_i
 alter table public.assistant_audio_usage enable row level security;
 revoke all on public.assistant_audio_usage from anon, authenticated;
 
+-- Devuelve 'ok', 'consent_required' (sin aviso de primer uso aceptado: el audio no se envía a un tercero
+-- sin constancia), 'rate_limited' o 'no_access'. El candado serializa las peticiones paralelas del
+-- mismo usuario: sin él, dos llamadas simultáneas podrían pasar de 20.
 create or replace function public.consume_assistant_audio_quota()
-returns boolean
+returns text
 language plpgsql
 security definer
 set search_path = public, extensions
@@ -169,17 +174,21 @@ declare
   v_usados integer;
 begin
   if auth.uid() is null or not public.is_active_access(auth.uid()) then
-    return false;
+    return 'no_access';
   end if;
+  if not exists (select 1 from public.assistant_voice_consent where author_id = auth.uid()) then
+    return 'consent_required';
+  end if;
+  perform pg_advisory_xact_lock(hashtext(auth.uid()::text));
   delete from public.assistant_audio_usage
    where author_id = auth.uid() and used_at < timezone('utc', now()) - interval '1 day';
   select count(*) into v_usados from public.assistant_audio_usage
    where author_id = auth.uid() and used_at > timezone('utc', now()) - interval '10 minutes';
   if v_usados >= 20 then
-    return false;
+    return 'rate_limited';
   end if;
   insert into public.assistant_audio_usage (author_id) values (auth.uid());
-  return true;
+  return 'ok';
 end;
 $$;
 
@@ -188,10 +197,13 @@ grant execute on function public.consume_assistant_audio_quota() to authenticate
 -- Consentimiento de la primera grabación: el audio y su transcripción se envían a un proveedor externo
 -- para transcribirse, así que el veterinario lo acepta antes de poder grabar. Una fila por autor; el
 -- cliente solo declara la versión del aviso aceptado (el autor y el momento los fija el servidor).
+-- La llave es (autor, versión): al subir la versión del aviso se acepta de nuevo sin chocar con la fila
+-- anterior, que se conserva como constancia de lo aceptado antes.
 create table public.assistant_voice_consent (
-  author_id uuid primary key default auth.uid() references public.veterinarians(id),
+  author_id uuid not null default auth.uid() references public.veterinarians(id),
   accepted_at timestamptz not null default timezone('utc', now()),
-  version text not null check (length(version) between 1 and 20)
+  version text not null check (length(version) between 1 and 20),
+  primary key (author_id, version)
 );
 alter table public.assistant_voice_consent enable row level security;
 revoke all on public.assistant_voice_consent from anon, authenticated;

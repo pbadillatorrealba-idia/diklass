@@ -84,19 +84,23 @@ export async function handlePurgeChatAudio(
   const inicio = Date.now();
   try {
     const tanda = deps.batchSize ?? 500;
+    // Conjuntos: un mensaje que sigue fallando reaparece en cada tanda y no debe contarse otra vez.
+    const vistos = new Set<string>();
     const fallidos = new Set<string>();
-    let due = 0;
-    let removed = 0;
+    const quitados = new Set<string>();
     let truncated = false;
     // Varias tandas: con más de un lote pendiente se repite hasta vaciar (con tope).
     for (let ronda = 0; ronda < MAX_TANDAS; ronda += 1) {
       const lote = await deps.listDue();
       if (lote.length === 0) break;
-      due += lote.length;
+      for (const d of lote) vistos.add(d.message_id);
       const { failed } = await deps.removeObjects(lote.map((d) => d.audio_path));
       const fallidas = new Set(failed);
       const ok = lote.filter((d) => !fallidas.has(d.audio_path));
-      removed += ok.length;
+      for (const d of ok) {
+        quitados.add(d.message_id);
+        fallidos.delete(d.message_id);
+      }
       for (const d of lote) if (fallidas.has(d.audio_path)) fallidos.add(d.message_id);
       // Solo se marcan los que se pudieron borrar: los demás se reintentan en la siguiente corrida.
       if (ok.length > 0) await deps.markPurged(ok.map((d) => d.message_id));
@@ -105,15 +109,25 @@ export async function handlePurgeChatAudio(
       if (ronda === MAX_TANDAS - 1) truncated = true; // quedaba más: se avisa, no se pospone en silencio
     }
     const failedMessageIds = [...fallidos];
+    const due = vistos.size;
+    const removed = quitados.size;
 
-    const orphans = await deps.listOrphans();
+    // Los huérfanos también van en tandas y también avisan si no alcanzó.
     let orphansRemoved = 0;
-    let failedOrphanPaths: string[] = [];
-    if (orphans.length > 0) {
-      const { failed } = await deps.removeObjects(orphans);
-      orphansRemoved = orphans.length - failed.length;
-      failedOrphanPaths = failed.slice(0, MAX_RUTAS_FALLIDAS);
+    const failedOrphans = new Set<string>();
+    for (let ronda = 0; ronda < MAX_TANDAS; ronda += 1) {
+      const lote = await deps.listOrphans();
+      if (lote.length === 0) break;
+      const { failed } = await deps.removeObjects(lote);
+      const fallidas = new Set(failed);
+      const ok = lote.filter((ruta) => !fallidas.has(ruta));
+      orphansRemoved += ok.length;
+      for (const ruta of fallidas) failedOrphans.add(ruta);
+      if (lote.length < tanda) break;
+      if (ok.length === 0) break;
+      if (ronda === MAX_TANDAS - 1) truncated = true;
     }
+    const failedOrphanPaths = [...failedOrphans].slice(0, MAX_RUTAS_FALLIDAS);
 
     const resumen = {
       due,

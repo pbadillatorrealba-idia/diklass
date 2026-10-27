@@ -1,7 +1,7 @@
 -- Purga del audio del chat (cambio chat-del-asistente, D6 · tarea 7.6a): qué se purga y quién puede
 -- pedirlo. Corre como `postgres`: siembra mensajes y objetos que la API no dejaría sembrar.
 begin;
-select plan(15);
+select plan(17);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -104,6 +104,28 @@ select results_eq(
 
 select has_index('public', 'assistant_messages', 'assistant_messages_audio_path_idx',
   'la lectura y la purga buscan por ruta con un índice, no recorriendo la tabla');
+
+-- Tope de subidas: solo cuenta lo subido en las últimas 24 h bajo el prefijo del autor (los audios
+-- vigentes de hace semanas no deben agotarlo).
+insert into storage.objects (bucket_id, name, created_at)
+values
+  ('assistant-audio', '99999999-9999-4000-8000-000000000009/a9a9a9a9-0000-4000-8000-00000000000a/antiguo-1.webm',
+   timezone('utc', now()) - interval '10 days'),
+  ('assistant-audio', '99999999-9999-4000-8000-000000000009/a9a9a9a9-0000-4000-8000-00000000000a/antiguo-2.webm',
+   timezone('utc', now()) - interval '3 days'),
+  ('assistant-audio', '99999999-9999-4000-8000-000000000009/a9a9a9a9-0000-4000-8000-00000000000a/reciente-1.webm',
+   timezone('utc', now()) - interval '2 hours'),
+  ('assistant-audio', '99999999-9999-4000-8000-000000000009/b9b9b9b9-0000-4000-8000-00000000000b/de-otro.webm',
+   timezone('utc', now()));
+select set_config('request.jwt.claims', '{"sub":"a9a9a9a9-0000-4000-8000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.assistant_audio_object_count(), 2,
+  'cuenta lo subido en las últimas 24 h bajo el prefijo del autor (los antiguos y los de otro autor no cuentan)');
+reset role;
+select ok(
+  pg_get_functiondef('public.assistant_audio_object_count()'::regprocedure) like '%like%',
+  'el conteo busca por prefijo con like, no recorriendo foldername() de todo el bucket'
+);
 
 -- Quién puede pedirlo: solo el service role.
 set local role authenticated;

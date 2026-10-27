@@ -161,7 +161,7 @@ export type Database = {
           {
             foreignKeyName: "assistant_voice_consent_author_id_fkey"
             columns: ["author_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "veterinarians"
             referencedColumns: ["id"]
           },
@@ -610,7 +610,7 @@ export type Database = {
         Returns: boolean
       }
       assistant_audio_object_count: { Args: never; Returns: number }
-      consume_assistant_audio_quota: { Args: never; Returns: boolean }
+      consume_assistant_audio_quota: { Args: never; Returns: string }
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }

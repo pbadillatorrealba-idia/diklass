@@ -23,13 +23,18 @@ import {
 export const MAX_CHAT_AUDIO_BYTES = 5 * 1024 * 1024;
 const MARGEN_MULTIPART_BYTES = 64 * 1024;
 
+export type QuotaStatus = "ok" | "rate_limited" | "consent_required" | "unavailable";
+
 export type TranscribeChatDependencies = {
   log: (line: string) => void;
   randomId: () => string;
   /** El solicitante está autenticado y tiene acceso activo en su clínica; sin sesión de escucha. */
   canTranscribe: (authorization: string) => Promise<boolean>;
-  /** Cuota de transcripciones del usuario (evita gastar la del proveedor); `false` = agotada. */
-  consumeQuota: (authorization: string) => Promise<boolean>;
+  /**
+   * Cuota de transcripciones del usuario (evita gastar la del proveedor) y constancia del aviso de
+   * primer uso aceptado: `ok`, `rate_limited` (429), `consent_required` (403) o `unavailable` (503).
+   */
+  consumeQuota: (authorization: string) => Promise<QuotaStatus>;
   /** Devuelve el texto transcrito; lanza TranscriptionTimeoutError al exceder el tiempo máximo. */
   transcribe: (audio: Blob) => Promise<string>;
 };
@@ -108,13 +113,16 @@ export async function handleTranscribeChatAudio(
   }
   if (!permitido) return fallo("FORBIDDEN", 403);
 
-  let conCuota = false;
+  let cuota: QuotaStatus = "unavailable";
   try {
-    conCuota = await deps.consumeQuota(authorization);
+    cuota = await deps.consumeQuota(authorization);
   } catch {
-    conCuota = false;
+    cuota = "unavailable";
   }
-  if (!conCuota) return fallo("RATE_LIMITED", 429);
+  // Un error de infraestructura no es «demasiadas peticiones»: es un 503 que el cliente puede reintentar.
+  if (cuota === "consent_required") return fallo("CONSENT_REQUIRED", 403);
+  if (cuota === "rate_limited") return fallo("RATE_LIMITED", 429);
+  if (cuota !== "ok") return fallo("QUOTA_UNAVAILABLE", 503);
 
   const bytes = await readCapped(request, MAX_CHAT_AUDIO_BYTES + MARGEN_MULTIPART_BYTES);
   if (bytes === null) return fallo("PAYLOAD_TOO_LARGE", 413);

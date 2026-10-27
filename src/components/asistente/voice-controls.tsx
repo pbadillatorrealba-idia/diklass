@@ -45,13 +45,17 @@ const asHtml = (node: unknown) => node as HTMLElement | null;
  * quedaría perdido (WCAG 2.4.3).
  */
 export function VoiceButton({
+  buttonRef,
   onPress,
   voice,
 }: {
+  /** Referencia del botón para devolverle el foco desde fuera (p. ej. al cancelar el aviso de primer uso). */
+  buttonRef?: React.RefObject<View | null>;
   onPress: () => void;
   voice: Pick<Voice, "state" | "blockedReason">;
 }) {
-  const ref = useRef<View>(null);
+  const propia = useRef<View>(null);
+  const ref = buttonRef ?? propia;
   const previous = useRef(voice.state.kind);
   const ocupado = voice.state.kind !== "idle" || voice.blockedReason !== null;
 
@@ -60,7 +64,7 @@ export function VoiceButton({
       restoreFocus(() => asHtml(ref.current));
     }
     previous.current = voice.state.kind;
-  }, [voice.state.kind]);
+  }, [voice.state.kind, ref]);
 
   return (
     <Button
@@ -127,7 +131,13 @@ export function VoiceConsentDialog({
   );
 }
 
-function ReviewPlayer({ payload }: { payload: AudioPayload }) {
+function ReviewPlayer({
+  payload,
+  playRef,
+}: {
+  payload: AudioPayload;
+  playRef?: React.RefObject<View | null>;
+}) {
   const playback = useRef<AudioPlayback | null>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -150,7 +160,7 @@ function ReviewPlayer({ payload }: { payload: AudioPayload }) {
   };
 
   return (
-    <Button onPress={toggle} size="sm" testID="voice-play" variant="outline">
+    <Button onPress={toggle} ref={playRef} size="sm" testID="voice-play" variant="outline">
       <ButtonText>{playing ? "Pausar" : "Reproducir"}</ButtonText>
     </Button>
   );
@@ -177,14 +187,16 @@ function liveText(voice: Voice): string {
  * (reproducir, Descartar, Enviar) y avisos. El aviso de grabación y conservación es texto, no solo
  * color. Una región de estado SIEMPRE montada —vacía y luego poblada, porque varios lectores no
  * anuncian regiones que nacen con texto— anuncia solo el inicio y el fin; el tiempo queda fuera de
- * ella para no anunciar cada segundo. Al pasar a revisión el foco va a «Enviar».
+ * ella para no anunciar cada segundo. Al pasar a revisión el foco va a «Reproducir».
  */
 export function VoicePanel({ voice, onSend }: { voice: Voice; onSend: () => void }) {
   const { state, notice, blockedReason } = voice;
-  const sendRef = useRef<View>(null);
+  // Al entrar a revisión el foco va a «Reproducir», no a «Enviar»: un Enter de más no enviaría el audio a
+  // un tercero sin querer.
+  const playRef = useRef<View>(null);
 
   useEffect(() => {
-    if (state.kind === "review") asHtml(sendRef.current)?.focus?.({ preventScroll: true });
+    if (state.kind === "review") asHtml(playRef.current)?.focus?.({ preventScroll: true });
   }, [state.kind]);
 
   const region = (
@@ -259,11 +271,11 @@ export function VoicePanel({ voice, onSend }: { voice: Voice; onSend: () => void
             </Text>
           ) : null}
           <View className="flex-row flex-wrap gap-2">
-            <ReviewPlayer payload={state.payload} />
+            <ReviewPlayer payload={state.payload} playRef={playRef} />
             <Button onPress={voice.discard} size="sm" testID="voice-discard" variant="outline">
               <ButtonText>Descartar</ButtonText>
             </Button>
-            <Button onPress={onSend} ref={sendRef} size="sm" testID="voice-send">
+            <Button onPress={onSend} size="sm" testID="voice-send">
               <ButtonText>Enviar</ButtonText>
             </Button>
           </View>

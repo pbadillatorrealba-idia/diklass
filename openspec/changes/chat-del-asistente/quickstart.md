@@ -53,7 +53,7 @@ entorno remoto.
   registro `purge_chat_audio_done` de la función; si aparece `"truncated": true` hay más de 20 tandas
   pendientes y se vuelve a invocar a mano.
 - **Cambiar el aviso de primer uso:** subir `VOICE_CONSENT_VERSION` en `src/features/asistente/voice-consent.ts`
-  (los veterinarios lo aceptan de nuevo).
+  (los veterinarios lo aceptan de nuevo; la llave `(autor, versión)` conserva la aceptación anterior como constancia).
 - **Declarado:** la duración de la URL firmada la elige el cliente (la app pide 60 s; un cliente modificado
   podría pedir más para su propio audio, que muere cuando la purga borra el objeto); «dado de baja» es solo
   `banned_until` de Auth; sin sniffing de bytes del audio.

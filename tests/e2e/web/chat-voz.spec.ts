@@ -187,6 +187,8 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
     await panel(page).getByTestId("voice-consent-cancel").click();
     await expect(panel(page).getByTestId("voice-consent")).toHaveCount(0);
     await expect(panel(page).getByTestId("voice-panel")).toHaveCount(0);
+    // «Rechazar el aviso»: el foco vuelve al botón de grabar.
+    await expect(panel(page).getByTestId("voice-record")).toBeFocused();
 
     // Aceptar guarda el consentimiento (autor y momento los fija el servidor) y empieza a grabar.
     await panel(page).getByTestId("voice-record").click();
@@ -205,13 +207,39 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
     await panel(page).getByTestId("voice-cancel").click();
   });
 
+  // Un error al cargar el consentimiento no deja un bucle de aviso: se dice y se reintenta.
+  test("si falla la comprobación del aviso, lo dice y reintenta en lugar de repetir el diálogo", async ({
+    page,
+  }) => {
+    let fallar = true;
+    await page.route("**/rest/v1/assistant_voice_consent*", (route) =>
+      fallar && route.request().method() === "GET"
+        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+        : route.continue(),
+    );
+    await page.reload();
+    await expect(panel(page).getByTestId("voice-record")).toBeEnabled({ timeout: 15_000 });
+    await page.waitForTimeout(1000); // la comprobación falla y pasa a «error»
+    await panel(page).getByTestId("voice-record").click();
+    await expect(panel(page)).toContainText("No se pudo comprobar tu aceptación");
+    await expect(panel(page).getByTestId("voice-consent")).toHaveCount(0);
+
+    // Pulsar de nuevo reintenta la comprobación; con el servidor sano, el siguiente toque ya graba.
+    fallar = false;
+    await panel(page).getByTestId("voice-record").click();
+    await page.waitForTimeout(1000);
+    await panel(page).getByTestId("voice-record").click();
+    await expect(panel(page).getByTestId("voice-panel")).toBeVisible({ timeout: 15_000 });
+    await panel(page).getByTestId("voice-cancel").click();
+  });
+
   // WCAG 2.4.3: el panel se desmonta con cada acción y el foco no debe perderse.
-  test("el foco va a «Enviar» al revisar y vuelve al botón de grabar al terminar", async ({
+  test("el foco va a «Reproducir» al revisar (no a «Enviar») y vuelve al botón de grabar al terminar", async ({
     page,
   }) => {
     await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
     await grabar(page, 1500);
-    await expect(panel(page).getByTestId("voice-send")).toBeFocused();
+    await expect(panel(page).getByTestId("voice-play")).toBeFocused();
     await panel(page).getByTestId("voice-discard").click();
     await expect(panel(page).getByTestId("voice-record")).toBeFocused();
 
@@ -346,6 +374,9 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
   // chat-del-asistente 8.1: grabando, revisión, aviso y un mensaje con audio no tienen violaciones axe.
   test("los estados de voz no tienen violaciones axe (WCAG 2.2 AA)", async ({ page }) => {
     await simular(page, { text: "¿Qué día es hoy?", quality: "ok" });
+    // El título del documento lo pone la pantalla al hidratar: sin esperarlo, axe (`document-title`) corre antes.
+    await expect(page).toHaveTitle(/Diklass/);
+    await expect(panel(page).getByTestId("composer-input")).toBeVisible();
     await sinViolaciones(page);
 
     await panel(page).getByTestId("voice-record").click();

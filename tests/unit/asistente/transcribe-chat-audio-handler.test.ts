@@ -8,11 +8,12 @@ import {
 const URL_FUNCION = "http://localhost:54321/functions/v1/transcribe-chat-audio";
 const CLAVE_SECRETA = "sk-test-secreta-no-debe-filtrarse";
 
-type Opciones = { autoriza?: boolean; cuota?: boolean; texto?: string; falla?: Error };
+type EstadoCuota = "ok" | "rate_limited" | "consent_required" | "unavailable";
+type Opciones = { autoriza?: boolean; cuota?: EstadoCuota; texto?: string; falla?: Error };
 
 function harness({
   autoriza = true,
-  cuota = true,
+  cuota = "ok",
   texto = "Dosis de meloxicam en perros",
   falla,
 }: Opciones = {}) {
@@ -223,6 +224,9 @@ describe("transcribe-chat-audio · handler", () => {
   // Hallazgo 4 de la revisión: el acceso y la cuota se comprueban ANTES de leer el cuerpo (la clave anónima
   // pasa `verify_jwt`) y el tope vale también sin Content-Length (chunked).
   describe("acceso, cuota y cuerpo", () => {
+    const handlePeticion = (h: ReturnType<typeof harness>) =>
+      handleTranscribeChatAudio(peticion(), h.deps);
+
     const sinLeer = () => {
       let leido = false;
       const real = peticion();
@@ -250,13 +254,40 @@ describe("transcribe-chat-audio · handler", () => {
     });
 
     test("sin cuota (demasiadas transcripciones) responde 429 sin leer el cuerpo ni llamar al proveedor", async () => {
-      const h = harness({ cuota: false });
+      const h = harness({ cuota: "rate_limited" });
       const { request, fueLeido } = sinLeer();
       const res = await handleTranscribeChatAudio(request, h.deps);
       expect(res.status).toBe(429);
       expect(await res.json()).toMatchObject({ code: "RATE_LIMITED" });
       expect(fueLeido()).toBe(false);
       expect(h.llamadas.transcribir).toBe(0);
+    });
+
+    test("sin el aviso de primer uso aceptado responde 403 CONSENT_REQUIRED sin leer el cuerpo", async () => {
+      const h = harness({ cuota: "consent_required" });
+      const { request, fueLeido } = sinLeer();
+      const res = await handleTranscribeChatAudio(request, h.deps);
+      expect(res.status).toBe(403);
+      expect(await res.json()).toMatchObject({ code: "CONSENT_REQUIRED" });
+      expect(fueLeido()).toBe(false);
+      expect(h.llamadas.transcribir).toBe(0);
+    });
+
+    // Un error de infraestructura no es «demasiadas peticiones»: es un 503 que el cliente puede reintentar.
+    test("un fallo al comprobar la cuota responde 503 y no 429", async () => {
+      const h = harness({ cuota: "unavailable" });
+      const res = await handlePeticion(h);
+      expect(res.status).toBe(503);
+      expect(await res.json()).toMatchObject({ code: "QUOTA_UNAVAILABLE" });
+      expect(h.llamadas.transcribir).toBe(0);
+    });
+
+    test("si la RPC de cuota lanza, también es 503", async () => {
+      const h = harness();
+      h.deps.consumeQuota = async () => {
+        throw new Error("base caída");
+      };
+      expect((await handleTranscribeChatAudio(peticion(), h.deps)).status).toBe(503);
     });
 
     test("la cuota solo se consume si hay acceso", async () => {

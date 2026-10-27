@@ -92,6 +92,8 @@ export function useChatController() {
     enabled: veterinarianId !== null,
     queryFn: () => hasVoiceConsent(supabase),
     queryKey: ["asistente", "voz-consentimiento", veterinarianId],
+    // Sin reintento automático: un error se dice y el usuario reintenta él (no se queda «cargando»).
+    retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
   const acceptConsent = useCallback(async () => {
@@ -343,11 +345,17 @@ export function useChatController() {
     copy: copyText,
     voice,
     voiceConsent: {
-      status: (consent.data === true ? "accepted" : consent.isLoading ? "loading" : "needed") as
-        | "accepted"
-        | "loading"
-        | "needed",
+      // Un error de carga es un estado propio (con reintento): tratarlo como «needed» dejaba al usuario
+      // en un bucle de aviso que no puede resolver.
+      status: (consent.data === true
+        ? "accepted"
+        : consent.isError
+          ? "error"
+          : consent.isLoading
+            ? "loading"
+            : "needed") as "accepted" | "error" | "loading" | "needed",
       accept: acceptConsent,
+      retry: () => void consent.refetch(),
     },
     sendVoice,
     removeAudio,

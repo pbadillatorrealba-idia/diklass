@@ -33,9 +33,22 @@ export function ChatThread({ chat }: { chat: ChatController }) {
   const [audioToRemove, setAudioToRemove] = useState<string | null>(null);
   // Aviso de primer uso: se pide antes de la primera grabación (el audio va a un proveedor externo).
   const [consentOpen, setConsentOpen] = useState(false);
+  const recordRef = useRef<View>(null);
   const empezarVoz = () => {
-    if (chat.voiceConsent.status === "accepted") void chat.voice.start();
-    else if (chat.voiceConsent.status === "needed") setConsentOpen(true);
+    const { status, retry } = chat.voiceConsent;
+    if (status === "accepted") void chat.voice.start();
+    else if (status === "needed") setConsentOpen(true);
+    else if (status === "error") {
+      setStatus(
+        "No se pudo comprobar tu aceptación del aviso de voz. Se está reintentando; vuelve a intentarlo.",
+      );
+      retry();
+    }
+  };
+  const cancelarAviso = () => {
+    setConsentOpen(false);
+    // El diálogo se desmonta: el foco vuelve al botón de grabar (el escenario «rechazar el aviso»).
+    restoreFocus(() => asHtml(recordRef.current));
   };
   const aceptarVoz = async () => {
     try {
@@ -220,14 +233,11 @@ export function ChatThread({ chat }: { chat: ChatController }) {
 
       <View className="gap-2 border-t border-border p-3">
         {consentOpen ? (
-          <VoiceConsentDialog
-            onAccept={() => void aceptarVoz()}
-            onCancel={() => setConsentOpen(false)}
-          />
+          <VoiceConsentDialog onAccept={() => void aceptarVoz()} onCancel={cancelarAviso} />
         ) : null}
         <VoicePanel onSend={() => void chat.sendVoice()} voice={chat.voice} />
         <Composer
-          actions={<VoiceButton onPress={empezarVoz} voice={chat.voice} />}
+          actions={<VoiceButton buttonRef={recordRef} onPress={empezarVoz} voice={chat.voice} />}
           isResponding={chat.isResponding}
           onChangeText={(text) => setDraft(THREAD_ID, text)}
           onSend={(text) => {

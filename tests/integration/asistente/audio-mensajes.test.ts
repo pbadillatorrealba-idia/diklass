@@ -314,6 +314,26 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       expect(conFecha.error).not.toBeNull();
     });
 
+    // Subir la versión del aviso lo pide de nuevo sin chocar con la fila anterior.
+    test("aceptar una versión nueva del aviso no choca con la anterior", async () => {
+      const { error } = await bruno.client
+        .from("assistant_voice_consent")
+        .insert({ version: "v2" });
+      expect(error).toBeNull();
+      const { data } = await bruno.client
+        .from("assistant_voice_consent")
+        .select("version")
+        .order("version");
+      expect(data?.map((f) => f.version)).toEqual(["v1", "v2"]);
+      const repetida = await bruno.client.from("assistant_voice_consent").insert({ version: "v2" });
+      expect(repetida.error).not.toBeNull();
+      await adminClient()
+        .from("assistant_voice_consent")
+        .delete()
+        .eq("author_id", bruno.userId)
+        .eq("version", "v2");
+    });
+
     test("otro veterinario no ve el consentimiento ajeno", async () => {
       const { data } = await ana.client
         .from("assistant_voice_consent")
@@ -336,22 +356,51 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
     });
   });
 
-  // Cuota de transcripciones: un usuario activo no debe poder gastar la cuota del proveedor.
+  // Cuota de transcripciones: un usuario activo no debe poder gastar la cuota del proveedor, y el audio no
+  // se envía a un tercero sin constancia del aviso de primer uso.
   describe("cuota de transcripciones", () => {
+    const limpiar = async (vet: LiveVeterinarian) => {
+      await adminClient().from("assistant_audio_usage").delete().eq("author_id", vet.userId);
+    };
+
     test("permite 20 y la 21 se rechaza", async () => {
       const veterinaria = await signedInVeterinarian(ANA);
-      const resultados: boolean[] = [];
+      await adminClient()
+        .from("assistant_voice_consent")
+        .upsert({ author_id: veterinaria.userId, version: "v1" });
+      await limpiar(veterinaria);
+      const resultados: unknown[] = [];
       for (let i = 0; i < 21; i++) {
         const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota");
-        resultados.push(data === true);
+        resultados.push(data);
       }
-      expect(resultados.filter(Boolean)).toHaveLength(20);
-      expect(resultados[20]).toBe(false);
-      // Limpieza: la cuota es del servicio, el cliente no tiene acceso a la tabla.
+      expect(resultados.filter((r) => r === "ok")).toHaveLength(20);
+      expect(resultados[20]).toBe("rate_limited");
+      await limpiar(veterinaria);
+    });
+
+    test("las peticiones paralelas del mismo usuario tampoco pasan de 20", async () => {
+      const veterinaria = await signedInVeterinarian(ANA);
       await adminClient()
-        .from("assistant_audio_usage")
-        .delete()
-        .eq("author_id", veterinaria.userId);
+        .from("assistant_voice_consent")
+        .upsert({ author_id: veterinaria.userId, version: "v1" });
+      await limpiar(veterinaria);
+      const resultados = await Promise.all(
+        Array.from({ length: 30 }, () => veterinaria.client.rpc("consume_assistant_audio_quota")),
+      );
+      expect(resultados.filter((r) => r.data === "ok")).toHaveLength(20);
+      await limpiar(veterinaria);
+    });
+
+    test("sin el aviso de primer uso aceptado no hay cuota", async () => {
+      const veterinaria = await signedInVeterinarian(BRUNO);
+      const admin = adminClient();
+      await admin.from("assistant_voice_consent").delete().eq("author_id", veterinaria.userId);
+      const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota");
+      expect(data).toBe("consent_required");
+      await admin
+        .from("assistant_voice_consent")
+        .insert({ author_id: veterinaria.userId, version: "v1" });
     });
 
     test("sin sesión de acceso activa no hay cuota", async () => {
@@ -360,7 +409,7 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
         p_session_id: sinSesion.accessSessionId,
       });
       const { data } = await sinSesion.client.rpc("consume_assistant_audio_quota");
-      expect(data).toBe(false);
+      expect(data).toBe("no_access");
     });
   });
 });

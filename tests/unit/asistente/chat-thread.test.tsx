@@ -45,7 +45,7 @@ const chat = (over: Record<string, unknown> = {}) =>
       discard: () => {},
       dismissNotice: () => {},
     },
-    voiceConsent: { status: "accepted", accept: async () => {} },
+    voiceConsent: { status: "accepted", accept: async () => {}, retry: () => {} },
     sendVoice: async () => true,
     removeAudio: async () => {},
     playAudio: async () => null,

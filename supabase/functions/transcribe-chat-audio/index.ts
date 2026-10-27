@@ -40,8 +40,11 @@ Deno.serve((request) =>
           auth: { persistSession: false, autoRefreshToken: false },
         },
       );
-      const { data } = await user.rpc("consume_assistant_audio_quota");
-      return data === true;
+      const { data, error } = await user.rpc("consume_assistant_audio_quota");
+      if (error) return "unavailable";
+      if (data === "ok" || data === "rate_limited" || data === "consent_required") return data;
+      // `no_access` ya lo atrapó `canTranscribe`; cualquier otra cosa es un estado inesperado.
+      return "unavailable";
     },
     transcribe: (audio) =>
       transcribeWithOpenAI({ audio, apiKey: OPENAI_API_KEY, timeoutMs: TIEMPO_MAXIMO_MS }),

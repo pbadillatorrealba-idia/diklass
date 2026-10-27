@@ -9,6 +9,7 @@ const URL_FUNCION = "http://localhost:54321/functions/v1/purge-chat-audio";
 
 type Cfg = {
   tandas?: Array<Array<{ message_id: string; audio_path: string }>>;
+  huerfanosTandas?: string[][];
   vencidos?: Array<{ message_id: string; audio_path: string }>;
   huerfanos?: string[];
   fallanRutas?: string[];
@@ -19,12 +20,14 @@ const reloj = { valor: 1_000_000 };
 
 function harness({
   tandas,
+  huerfanosTandas,
   vencidos = [],
   huerfanos = [],
   fallanRutas = [],
   listaFalla = false,
 }: Cfg = {}) {
   const cola = tandas ? [...tandas] : [vencidos];
+  const colaHuerfanos = huerfanosTandas ? [...huerfanosTandas] : [huerfanos];
   const lineas: string[] = [];
   const llamadas = { borrados: [] as string[][], marcados: [] as string[][], listas: 0 };
   const deps: PurgeDependencies = {
@@ -40,7 +43,7 @@ function harness({
       if (listaFalla) throw new Error("base caída");
       return cola.shift() ?? [];
     },
-    listOrphans: async () => huerfanos,
+    listOrphans: async () => colaHuerfanos.shift() ?? [],
     removeObjects: async (rutas) => {
       llamadas.borrados.push([...rutas]);
       return { failed: rutas.filter((r) => fallanRutas.includes(r)) };
@@ -234,5 +237,36 @@ describe("purge-chat-audio · handler", () => {
       .map((l) => JSON.parse(l));
     expect(rechazos).toHaveLength(2);
     expect(rechazos[1].suppressed).toBe(4);
+  });
+
+  // Los fallos persistentes reaparecen en cada tanda: se cuentan una sola vez, no inflan `due`.
+  test("un mensaje que sigue fallando entre tandas se cuenta una sola vez", async () => {
+    const f = (n: number) => ({ message_id: `m${n}`, audio_path: `c/a/m${n}.webm` });
+    const h = harness({
+      tandas: [[f(1), f(2)], [f(1), f(3)], []],
+      fallanRutas: ["c/a/m1.webm"],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ due: 3, removed: 2, failed: 1 });
+  });
+
+  // Los huérfanos también van en tandas y avisan si no alcanzó (antes: una sola tanda de 500 en silencio).
+  test("los huérfanos se purgan en varias tandas", async () => {
+    const h = harness({
+      huerfanosTandas: [
+        ["c/a/h1.webm", "c/a/h2.webm"],
+        ["c/a/h3.webm", "c/a/h4.webm"],
+        ["c/a/h5.webm"],
+      ],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ orphans: 5, truncated: false });
+  });
+
+  test("si quedan huérfanos al llegar al tope de tandas avisa «truncated»", async () => {
+    const llena = ["c/a/h1.webm", "c/a/h2.webm"];
+    const h = harness({ huerfanosTandas: Array.from({ length: 30 }, () => llena) });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(((await res.json()) as { truncated: boolean }).truncated).toBe(true);
   });
 });

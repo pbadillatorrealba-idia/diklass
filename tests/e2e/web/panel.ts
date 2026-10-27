@@ -58,7 +58,7 @@ export async function consentimientoDeVoz(page: Page, aceptado: boolean) {
   });
   try {
     if (aceptado) {
-      await api.post("/rest/v1/assistant_voice_consent?on_conflict=author_id", {
+      await api.post("/rest/v1/assistant_voice_consent?on_conflict=author_id,version", {
         data: { version: "v1" },
         headers: { Prefer: "resolution=ignore-duplicates" },
       });
