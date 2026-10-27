@@ -275,8 +275,14 @@ export function VoicePanel({ voice, onSend }: { voice: Voice; onSend: () => void
             <Button onPress={voice.discard} size="sm" testID="voice-discard" variant="outline">
               <ButtonText>Descartar</ButtonText>
             </Button>
-            <Button onPress={onSend} size="sm" testID="voice-send">
-              <ButtonText>Enviar</ButtonText>
+            <Button
+              accessibilityLabel="Enviar el mensaje de voz"
+              aria-label="Enviar el mensaje de voz"
+              onPress={onSend}
+              size="sm"
+              testID="voice-send"
+            >
+              <ButtonText>Enviar audio</ButtonText>
             </Button>
           </View>
         </View>

@@ -298,16 +298,18 @@ gestión robusta de pacientes, base de conocimiento ampliada, integración con f
 controles de privacidad, analítica básica y experiencia móvil consolidada.
 
 **Visión agéntica (evolución, no alcance del PoC)**: la interfaz del asistente se ha dispuesto como un
-panel presente en toda pantalla (hilos de escucha, de conocimiento y del asistente) para que, más
+panel presente en toda pantalla (hilos de escucha y del asistente, un chat que absorbe la consulta de conocimiento) para que, más
 adelante, un agente acompañe al veterinario. El principio no cambia: **el agente propone, el
 veterinario decide**. Toda propuesta se presenta como sugerencia con su origen y procedencia
 «Inferida», no escribe en el registro clínico ni ejecuta ninguna acción sin confirmación explícita, y la
 confirmación queda atribuida a quien la hizo (FR-010, FR-021, FR-063, FR-076). El agente real —modelo,
 herramientas, seguridad y la revisión de la decisión de conocimiento extractivo (HD1)— **no está
-implementado** y es un cambio futuro aparte; hoy el panel solo aloja la captura de voz y la consulta
-de conocimiento, y el hilo del asistente responde consultas básicas por reglas (fecha, agenda, pacientes de hoy) y consulta la base de conocimiento, sin ser un agente. Esta visión no altera el
-alcance del PoC: la interacción con el asistente sigue siendo por texto (spec 003) y la voz, solo
-captura de la conversación (spec 004).
+implementado** y es un cambio futuro aparte; hoy el panel aloja la captura de voz de la consulta y un
+chat persistido (con contexto automático de paciente) que responde consultas básicas por reglas (fecha,
+agenda, pacientes de hoy) y consulta la base de conocimiento, sin ser un agente. La interacción con el
+asistente sigue siendo por texto (spec 003) y se admite además un mensaje de voz en el chat, que se
+transcribe con un proveedor externo tras un aviso aceptado por el veterinario y se conserva 90 días
+(cambio `chat-del-asistente`); la voz de la consulta sigue siendo solo captura de la conversación (spec 004).
 
 La autenticación y el soporte de múltiples veterinarios se adelantaron a la Fase 1: sin identidad
 verificada, la atribución de responsabilidad clínica que el PoC debe validar no es demostrable.

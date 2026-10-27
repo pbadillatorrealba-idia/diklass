@@ -78,6 +78,29 @@ export type Database = {
           },
         ]
       }
+      assistant_audio_usage: {
+        Row: {
+          author_id: string
+          used_at: string
+        }
+        Insert: {
+          author_id: string
+          used_at?: string
+        }
+        Update: {
+          author_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_audio_usage_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_messages: {
         Row: {
           audio_expires_at: string | null
@@ -86,12 +109,11 @@ export type Database = {
           clinic_id: string
           created_at: string
           id: string
-          parts: NonNullable<Json>
+          parts: Json
           patient_id: string | null
           role: string
           status: string
         }
-        ComputedFields: never
         Insert: {
           audio_expires_at?: string | null
           audio_path?: string | null
@@ -99,7 +121,7 @@ export type Database = {
           clinic_id: string
           created_at?: string
           id?: string
-          parts: NonNullable<Json>
+          parts: Json
           patient_id?: string | null
           role: string
           status: string
@@ -111,7 +133,7 @@ export type Database = {
           clinic_id?: string
           created_at?: string
           id?: string
-          parts?: NonNullable<Json>
+          parts?: Json
           patient_id?: string | null
           role?: string
           status?: string
@@ -146,7 +168,6 @@ export type Database = {
           author_id: string
           version: string
         }
-        ComputedFields: never
         Insert: {
           accepted_at?: string
           author_id?: string
@@ -596,6 +617,24 @@ export type Database = {
     }
     Functions: {
       approve_clinical_record: { Args: { p_record_id: string }; Returns: Json }
+      assistant_audio_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          audio_path: string
+          message_id: string
+        }[]
+      }
+      assistant_audio_mark_purged: {
+        Args: { p_message_ids: string[] }
+        Returns: number
+      }
+      assistant_audio_object_count: { Args: never; Returns: number }
+      assistant_audio_orphans: {
+        Args: { p_limit?: number }
+        Returns: {
+          name: string
+        }[]
+      }
       clinical_record_action: {
         Args: {
           p_content?: Json
@@ -605,12 +644,11 @@ export type Database = {
         }
         Returns: string
       }
+      consume_assistant_audio_quota: { Args: never; Returns: string }
       consume_client_error_quota: {
         Args: { p_bucket_key: string; p_limit?: number }
         Returns: boolean
       }
-      assistant_audio_object_count: { Args: never; Returns: number }
-      consume_assistant_audio_quota: { Args: never; Returns: string }
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
@@ -636,7 +674,10 @@ export type Database = {
         }
         Returns: undefined
       }
-      remove_assistant_audio: { Args: { p_message_id: string }; Returns: string }
+      remove_assistant_audio: {
+        Args: { p_message_id: string }
+        Returns: string
+      }
       request_id: { Args: never; Returns: string }
       revoke_access_session: {
         Args: { p_session_id?: string }

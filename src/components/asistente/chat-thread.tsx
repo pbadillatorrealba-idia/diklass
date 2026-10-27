@@ -101,13 +101,14 @@ export function ChatThread({ chat }: { chat: ChatController }) {
 
   return (
     <View className="min-h-0 flex-1" testID="chat-thread">
-      <View className="flex-row items-center justify-between gap-2 px-3 pt-2">
-        <Text className="flex-1" tone="muted" variant="caption">
+      <View className="gap-1 px-3 pt-2">
+        <Text tone="muted" variant="caption">
           Pregunta por la fecha, tu agenda o los pacientes de hoy; lo demás lo busco en la base de
           conocimiento. No escribo en el registro clínico.
         </Text>
         {chat.messages.length > 0 ? (
           <Button
+            className="self-end"
             onPress={() => setConfirming(true)}
             ref={clearRef}
             size="sm"
