@@ -1,45 +1,55 @@
 # AGENTS.md
 
 Guía común para agentes (Claude, Codex, Oh My Pi u otros) que trabajan en este repositorio.
-Este archivo está subordinado a `docs/constitution.md`, que prevalece ante cualquier conflicto.
-El arranque del entorno está en [README.md](README.md) y el detalle en [SETUP.md](SETUP.md); aquí
-solo viven las reglas de trabajo.
+Está subordinada a `docs/constitution.md`, que prevalece ante cualquier conflicto. El arranque del
+entorno está en [README.md](README.md) y [SETUP.md](SETUP.md); aquí solo viven las reglas de trabajo.
 
 ## Antes de trabajar
 
-1. Lee el cambio seleccionado bajo `openspec/changes/` (proposal, specs y, si existen, design y
-   tasks) antes de tocar código o artefactos.
-2. Lee `docs/constitution.md` (autoridad normativa) y `docs/brief-poc-cdss.md` (producto) cuando
-   el cambio toque principios, producto, seguridad o datos clínicos, o ante cualquier duda; en un
-   ajuste local basta con el cambio y las reglas de este archivo.
-3. Comprueba que las dependencias locales coinciden con `bun.lock`
-   (`bun install --frozen-lockfile`). Un `node_modules` desfasado produce errores de herramientas
-   (por ejemplo, un esquema de `biome.json` que el CLI instalado no reconoce) que no son del código.
+1. En una funcionalidad, lee el cambio seleccionado bajo `openspec/changes/` (proposal, specs y,
+   si existen, design y tasks) antes de tocar código o artefactos.
+2. Lee las secciones relevantes de `docs/constitution.md` y `docs/brief-poc-cdss.md` cuando el
+   cambio toque principios, producto, seguridad o datos clínicos; en un ajuste local basta con el
+   cambio y este archivo.
+3. Instala con `bun install --frozen-lockfile`: un `node_modules` desfasado produce errores de
+   herramientas que no son del código.
 
-## openspec/changes/ frente a openspec/specs/
+## Carriles de trabajo
 
-- `openspec/changes/`: propuestas activas. Cada cambio contiene su proposal, los deltas de
-  especificación y, cuando correspondan, design y tasks. El contenido vive aquí hasta que se
-  acepta y sincroniza.
-- `openspec/specs/`: capacidades ya aceptadas y sincronizadas (se actualiza solo con el sync de
-  OpenSpec, nunca a mano).
-- La deuda de tests (casos pendientes o cobertura que falta) se registra como tareas de un cambio
-  OpenSpec activo, no como TODOs sueltos en el código ni en comentarios. Omitir un test para
-  obtener verde sigue prohibido; solo se admiten omisiones condicionadas al entorno, como las
-  suites vivas que requieren Supabase.
+La constitución exime de especificación completa a los errores y a las tareas triviales; todo
+lo demás sigue el flujo completo. Elige el carril más corto que corresponda:
+
+| Carril | Cuándo | Qué se hace |
+|---|---|---|
+| Trivial | Typos, formato, actualización de dependencias | Rama, commit y PR; sin cambio OpenSpec ni prerrevisión; revisión por otra persona y CI. |
+| Corrección de error | El código no cumple lo que ya dice la spec | Test de regresión que falle (Principio II), el arreglo mínimo y cierre de PR; sin cambio OpenSpec. |
+| Funcionalidad | Comportamiento nuevo o que cambia | Cambio OpenSpec completo (`propose` → `apply` → `archive`) y cierre de PR. |
+
+Si un arreglo cambia el comportamiento previsto, deja de ser un error y es una funcionalidad.
+
+## OpenSpec
+
+- `openspec/changes/` son las propuestas activas; `openspec/specs/` son las capacidades aceptadas y
+  solo se actualiza con el sync de OpenSpec, nunca a mano.
+- `design.md` es breve por defecto (orientación: ~1.500 palabras); uno más extenso se justifica con la
+  complejidad que registra (Principio III).
+- La deuda de tests se registra como tareas de un cambio activo, no como TODOs en el código. Solo
+  se admiten omisiones condicionadas al entorno, como las suites vivas que requieren Supabase.
 
 ## Reglas
 
 - Conserva los IDs globales de requisitos (FR-NNN), historias (US) y criterios (SC) en todo
   artefacto; no los renumeres ni reutilices IDs retirados.
-- No interpretes las marcas de tareas, checklists ni estados documentales como aceptación
-  demostrada.
-- No archives un cambio antes de completar la verificación que exige la constitución; los
-  checklists acreditan revisión documental, no implementación.
+- Las marcas de tareas, los checklists y los estados documentales acreditan revisión documental,
+  no aceptación demostrada ni implementación. No archives un cambio sin la verificación que exige
+  la constitución.
 - Diferencia pendiente / implementado / aceptado en cada afirmación que escribas.
-- Commits `tipo(ámbito): resumen` en español y ramas `tipo/descripcion`; las PR usan la plantilla
-  de `.github/PULL_REQUEST_TEMPLATE.md`.
+- Commits `tipo(ámbito): resumen` y ramas `tipo/descripcion`; las PR usan la plantilla de
+  `.github/PULL_REQUEST_TEMPLATE.md`.
+- Los artefactos se escriben en español; los encabezados y las palabras clave de OpenSpec (MUST,
+  MUST NOT, Requirement, Scenario, GIVEN/WHEN/THEN) permanecen en inglés.
 - No edites a mano `src/lib/supabase/database.types.ts` (usa `db:types`), `bun.lock` ni `.env`.
+- No añadas scripts ni dependencias sin justificarlos conforme al Principio III.
 
 ## Seguridad y secretos
 
@@ -49,168 +59,126 @@ solo viven las reglas de trabajo.
 - **Los atajos de desarrollo son explícitos.** Todo bypass (saltar un control, apuntar a un
   entorno remoto, sembrar datos) se activa a propósito con un flag o variable dedicada, avisa por
   consola cuando está activo y, si vive en el cliente, depende además de `__DEV__`. Ningún bypass
-  se configura en un entorno accesible desde internet. Ejemplo de fallo cerrado:
+  se configura en un entorno accesible desde internet. Ejemplo:
   `provision:veterinarians` rechaza cualquier Supabase no local salvo que se pase `--allow-remote`.
-- **Ningún secreto en el bundle.** Expo inlinea toda variable `EXPO_PUBLIC_*` en el código del
-  cliente, así que solo pueden llevar valores públicos (URL de Supabase y anon key). La
+- **Ningún secreto en el bundle.** Expo inlinea toda variable `EXPO_PUBLIC_*` en el cliente, así
+  que solo puede llevar valores públicos (URL de Supabase y anon key). La
   `SUPABASE_SERVICE_ROLE_KEY` y cualquier clave de proveedor viven únicamente en scripts de
-  servidor, en Edge Functions (`supabase/functions/`) y en los tests que preparan datos.
+  servidor, en Edge Functions (`supabase/functions/`) y en los tests que preparan datos. Al
+  cambiar una `EXPO_PUBLIC_*`, limpia la caché de Metro (ver `SETUP.md`).
 - **`.env` nunca se commitea** ni se copian sus valores en issues, PRs, logs o artefactos. Toda
-  variable nueva se añade a `.env.example` con un valor de ejemplo no sensible y se documenta en
+  variable nueva va a `.env.example` con un valor de ejemplo no sensible y se documenta en
   `SETUP.md`.
-- **Los reportes de seguridad no se commitean.** Las skills `security-best-practices` y
-  `security-threat-model` escriben sus informes fuera del repositorio (por ejemplo, en un
-  directorio temporal), en español, y se comparten solo por el canal que indique el responsable.
-- **Tras cambiar cualquier `EXPO_PUBLIC_*`, limpia la caché de Metro** (detalle en `SETUP.md`).
+- **Los reportes de seguridad no se commitean.** `security-best-practices` y
+  `security-threat-model` escriben sus informes fuera del repositorio, en español, y se comparten
+  solo por el canal que indique el responsable.
 
 ## Sistema visual
 
-El catálogo completo (primitivas, texto, botones, ancho, desviaciones de `expo-native-ui`) está en
-[docs/sistema-visual.md](docs/sistema-visual.md); su justificación, en `openspec/changes/archive/2026-10-26-sistema-visual/`.
-Para cualquier UI nueva o modificada, estas reglas hacen fallar una guarda (`tema.test.ts`, axe):
-
-- **Color solo con tokens semánticos** de `src/global.css` (clases `bg-card`, `border-warning`…) o
-  `useThemeColors()` de `src/theme/colors.ts`. Nunca hex, `rgb()`, paleta fija de Tailwind,
-  escalas numeradas (`text-warning-700`), `text-foreground/70` ni tintes `/N` salvo `scrim`.
-  Un token nuevo va en `global.css` (también en los bloques `:root.light`/`:root.dark`), en
-  `colors.ts` y en `tema.test.ts` con su par de contraste AA. `stamp` debe distinguirse de
-  `primary` (ΔE*ab ≥ 10, FR-104) y la paleta de marca fija sus valores (FR-103).
-- **Texto** con `Text`/`Heading`; sin `text-xs` ni `text-sm` sueltos.
-- **Layout:** `rounded-sm` (nunca `rounded-lg|xl|2xl`), sin `border-l-[2-8]`, espaciado de la
-  escala y dimensiones con nombre (`max-w-content`, `min-h-touch`), nunca valores `[…]`.
-- **Código:** `process.env.EXPO_OS` y no `Platform.OS`; `use` de React 19 y no `useContext`;
-  `useColorScheme()` de `src/theme/use-color-scheme.ts`, no el de `react-native`.
-- **Navegación:** `<Link href asChild>` con `Button` o `LinkText`; `router.push` solo tras una
-  operación. La compuerta axe falla si un control de navegación tiene rol `button`.
-- **El color nunca es la única señal:** todo estado lleva texto o icono con nombre.
-- **Primitivas obligatorias:** `Screen`, `ScreenList` (nunca `.map` en un `ScrollView`),
-  `QueryState` y `ProvenanceMark` para todo dato con procedencia (FR-097).
+Antes de crear o modificar UI, lee [docs/sistema-visual.md](docs/sistema-visual.md): sus reglas las
+hacen cumplir `tema.test.ts` y la compuerta axe, y su justificación está en
+`openspec/changes/archive/2026-10-26-sistema-visual/`. Ningún resultado de una skill puede
+violarlas.
 
 ## Comandos
 
-Usa los scripts ya definidos en `package.json` (Bun es el runtime y package manager; la versión
-queda fijada en `.bun-version`). Las filas que no invocan un script de `package.json`
-(`bun install`, `bunx biome`, `supabase test db`) son comandos directos de la herramienta:
+Bun es el runtime y package manager (versión en `.bun-version`). Los scripts completos están en
+`package.json`; estos son los del flujo de trabajo:
 
-| Comando | Descripción | En CI |
-|---|---|---|
-| `bun install --frozen-lockfile` | Instala exactamente lo que fija `bun.lock`. | Sí |
-| `bun run start` | Servidor de desarrollo de Expo (Metro). | — |
-| `bun run android` / `bun run ios` | Expo abriendo el emulador o simulador correspondiente. | — |
-| `bun run web` | Expo en el navegador. | — |
-| `bun run typecheck` | `tsc --noEmit` sobre todo el proyecto. | Sí |
-| `bun run lint` | `biome check .` en local. | — |
-| `bunx biome ci --error-on-warnings .` | Biome en modo CI: los warnings también fallan. | Sí |
-| `bun run gate` | `biome ci`, `tsc` y todos los tests, en secuencia y con tope de 3 GB si hay systemd. **Es la batería pesada**: `--changed` solo acota Biome, no `tsc` ni los tests. Se usa al cerrar la PR (ver «Cierre de una PR»). | — |
-| `bun run db:start` | `supabase start` sin los servicios que no usan los e2e (realtime, storage, studio, analytics…). Ahorra ~300 MB de RAM. | Sí |
-| `bun run test:e2e:smoke` | Solo `login` y `navegacion` en Chromium: iteración rápida. | — |
-| `bun run format` | Formatea con Biome. | — |
-| `bun run test` | Tests unitarios y de integración (`bun test`). Sin Supabase, las suites vivas se omiten. | Sí |
-| `bun run test:integration` | Solo integración; con `SUPABASE_LIVE_TESTS=1` y Supabase local ejecuta las suites vivas. | Sí |
-| `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. | Sí |
-| `bun run db:types` | Regenera `src/lib/supabase/database.types.ts` desde el Supabase local. CI falla si difiere de las migraciones. | Sí (diff) |
-| `bun run provision:veterinarians` | Provisiona veterinarios sintéticos en el Supabase local. | Sí |
-| `bun --env-file=.env run test:e2e:web` | Playwright con gate WCAG 2.2 AA. Sin `--env-file` los escenarios con backend se omiten en silencio. Local: un worker y Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit); más detalle en `SETUP.md`. | Sí (Chromium en cada PR; Firefox y WebKit solo en `main`) |
-| `bun run test:e2e:native` | Maestro sobre un build nativo instalado. | Workflow `native-e2e.yml`: `main`, nightly y a demanda (Maestro Cloud) |
+| Comando | Descripción |
+|---|---|
+| `bun run typecheck` | `tsc --noEmit` sobre todo el proyecto. |
+| `bunx biome ci --error-on-warnings .` | Biome en modo CI: los warnings también fallan. |
+| `bun run gate` | `biome ci`, `tsc` y todos los tests, en secuencia y con tope de 3 GB si hay systemd. **Es la batería pesada**: `--changed` solo acota Biome. |
+| `bun run test` | Tests unitarios y de integración. Sin Supabase, las suites vivas se omiten. |
+| `bun run test:integration` | Solo integración; con `SUPABASE_LIVE_TESTS=1` y Supabase local ejecuta las suites vivas. |
+| `bun run db:start` | `supabase start` sin los servicios que no usan los e2e (ahorra ~300 MB de RAM). |
+| `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. |
+| `bun run db:types` | Regenera `src/lib/supabase/database.types.ts`; CI falla si difiere de las migraciones. |
+| `bun run test:e2e:smoke` | Solo `login` y `navegacion` en Chromium: iteración rápida. |
+| `bun --env-file=.env run test:e2e:web` | Playwright con gate WCAG 2.2 AA. Sin `--env-file` los escenarios con backend se omiten en silencio. Local: un worker y Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit). CI: Chromium en cada PR; Firefox y WebKit solo en `main`. |
+| `bun run test:e2e:native` | Maestro sobre un build nativo; CI en `native-e2e.yml` (`main`, nightly y a demanda). |
 
-Qué ejecutar y cuándo: ver «Desarrollo ligero» y «Cierre de una PR». La definición completa de CI
-está en `.github/workflows/ci.yml`; en cambios que solo tocan `**.md`, `docs/**` u `openspec/**`
-CI no corre y no hay nada que ejecutar.
-
-No añadas scripts ni dependencias sin justificarlos conforme al Principio III de la constitución.
+La definición completa de CI está en `.github/workflows/ci.yml`; en cambios que solo tocan
+`**.md`, `docs/**` u `openspec/**` CI no corre y no hay nada que ejecutar.
 
 ## Desarrollo ligero
 
-La máquina de desarrollo tiene poca RAM: mientras se desarrolla, se ejecuta lo mínimo que valida
-el cambio, y la batería completa se reserva para el cierre de la PR.
+La máquina de desarrollo tiene poca RAM: mientras se desarrolla se ejecuta lo mínimo que valida el
+cambio y la batería completa se reserva para el cierre de la PR. Los e2e y las exportaciones corren
+de uno en uno, con un solo worker.
 
-- **Durante el desarrollo** (cada iteración y cada commit):
-  - Biome solo sobre lo tocado: `bunx biome check --write <rutas>`.
-  - Tests: el archivo o directorio afectado (`bun test <ruta>`); si cambian `src/theme/` o las
-    clases de UI, también `tests/unit/theme/tema.test.ts`.
-  - `bun run typecheck` solo si cambian tipos o firmas públicas.
-  - E2E: como mucho `bun run test:e2e:smoke`, y solo si el cambio toca login o navegación.
-- **Lo pesado** (`bun run gate`, `bun run test`, Playwright completo) se ejecuta únicamente
-  cuando: (1) se cierra la PR; (2) el cambio toca `supabase/migrations/` o `database.types.ts`
-  (basta `supabase test db`, `db:types` y `bun run typecheck`, sin gate completo); (3) toca
-  `src/lib/supabase/`, autenticación o atribución (añade `SUPABASE_LIVE_TESTS=1 bun run test:integration`); (4) un fallo de CI no se
-  reproduce con un test focalizado; (5) el usuario lo pide.
-- Los e2e y las exportaciones se ejecutan de uno en uno, con un solo worker.
-- Ejemplos: un ajuste en un `Button` de `src/components/ui/` → Biome sobre el archivo y
-  `tema.test.ts`; una migración con RLS → Biome, `supabase test db` y `db:types`; una función en
-  `src/features/<x>` sin cambiar tipos públicos → `bun test` de ese directorio y Biome.
-- Al declarar algo terminado, di qué se ejecutó y qué no. «Verificado» solo cubre lo ejecutado;
-  `verification-before-completion` aplica a ese alcance.
+| Cambio | Durante el desarrollo | Al cerrar la PR |
+|---|---|---|
+| Código en `src/` | `bunx biome check --write <rutas>` y `bun test <ruta>`; `bun run typecheck` solo si cambian tipos o firmas públicas | `bun run gate` |
+| `src/theme/` o clases de UI | lo anterior y `tests/unit/theme/tema.test.ts` | `gate` y `bun run test:e2e:web -- --project=chromium` |
+| Login o navegación | como mucho `bun run test:e2e:smoke` | `gate` y `test:e2e:web` |
+| `supabase/migrations/` o `database.types.ts` | Biome, `supabase test db`, `db:types` y `typecheck`, sin gate completo | `gate`, `supabase test db` y `db:types` |
+| `src/lib/supabase/`, autenticación o atribución | lo de «Código» y `SUPABASE_LIVE_TESTS=1 bun run test:integration` | `gate` y `SUPABASE_LIVE_TESTS=1 bun run test:integration` |
+| Solo `**.md`, `docs/**` u `openspec/**` | nada | nada |
+
+Lo pesado (`gate`, `test`, Playwright completo) se ejecuta solo al cerrar la PR, cuando la tabla lo
+indica, si un fallo de CI no se reproduce con un test focalizado, o si el usuario lo pide. Al
+declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
 
 ## Cierre de una PR
 
-Al terminar el trabajo, haz **una sola pregunta**: «¿Cierro la PR?». No ejecutes nada pesado
-antes de la respuesta. Si el usuario confirma:
+Al terminar el trabajo, si el usuario no pidió abrir ni cerrar la PR, haz **una sola pregunta**:
+«¿Cierro la PR?». Si ya la pidió, sigue sin preguntar. No ejecutes nada pesado antes de la
+confirmación.
 
-1. **Verificación, una vez.** Solo docs/openspec: ninguna (CI no corre), pero los pasos 3 a 6
-   aplican igual. Código: `bun run gate`;
-   con migraciones, además `supabase test db` y `db:types`; con autenticación o atribución,
-   `SUPABASE_LIVE_TESTS=1 bun run test:integration`; con UI o navegación,
-   `bun run test:e2e:web -- --project=chromium`.
-2. **Si hay cambios de UI:** `impeccable` (`critique` o `audit`) antes de la revisión.
-3. **`requesting-code-review`** sobre la rama; publica el reporte en español en la PR, como exige
-   la plantilla. Incluye la sección «Sobreingeniería» (criterio de ponytail: qué borrar, qué
-   reutilizar, qué ya cubre la plataforma). Es una prerrevisión de agente: la revisión por alguien
-   distinto del autor que exige la constitución sigue siendo obligatoria.
-4. **`receiving-code-review`:** aplica los comentarios, sugerencias y nitpicks que sean
-   correctos técnicamente, verificando cada uno antes de implementarlo. Sin hallazgos: anótalo y
-   sigue.
-5. **Pregunta al usuario siempre que haya una decisión difícil:** sugerencias contradictorias
-   entre sí o con la constitución, cambios de alcance o de diseño, hallazgos que exigen tocar
-   migraciones o contratos, o una sugerencia que no se comparte. No decidas esos casos en
-   silencio ni ignores un hallazgo sin decirlo.
+1. **Verificación, una vez**, según la columna «Al cerrar la PR» de «Desarrollo ligero».
+2. **Si hay cambios de UI:** `impeccable` (`critique` o `audit`) antes de la prerrevisión.
+3. **`requesting-code-review`** sobre la rama, **en paralelo con el paso 1** (el revisor no consume
+   RAM); publica el reporte en español en la PR, como exige la plantilla, con la sección
+   «Sobreingeniería» (criterio de ponytail). Se omite en el carril trivial y en cambios que solo
+   tocan `**.md`, `docs/**` u `openspec/**` sin alterar requisitos. Es una prerrevisión de agente:
+   la revisión por alguien distinto del autor que exige la constitución sigue siendo obligatoria.
+4. **`receiving-code-review`:** aplica los comentarios que sean correctos técnicamente,
+   verificando cada uno antes de implementarlo. Sin hallazgos: anótalo y sigue.
+5. **Pregunta al usuario ante una decisión difícil:** sugerencias contradictorias entre sí o con la
+   constitución, cambios de alcance o de diseño, hallazgos que exigen tocar migraciones o
+   contratos, o una sugerencia que no se comparte. No las decidas en silencio ni ignores un
+   hallazgo sin decirlo.
 6. **Máximo 2 rondas** de revisión; si aún quedan hallazgos, para y pregunta. Repite la
    verificación solo sobre lo cambiado y resume qué se aplicó, qué se descartó y por qué.
+
+## Worktrees
+
+- Todos los worktrees viven en `.claude/worktrees/<nombre>` (ignorado por git). Créalos con
+  `EnterWorktree` o con `git worktree add .claude/worktrees/<nombre> -b tipo/descripcion origin/main`;
+  si la herramienta nombra la rama `worktree-<nombre>`, renómbrala a `tipo/descripcion` antes del
+  primer push.
+- No crees worktrees fuera del repo (por ejemplo `~/.omp/wt/`). Si una herramienta exige otra ruta,
+  crea el worktree allí y enlázalo desde `.claude/worktrees/<nombre>` con `ln -s`.
+- Un worktree no hereda `node_modules` ni `.env`. Si la rama no cambia dependencias, enlázalos en
+  vez de reinstalar: `ln -s ../../../node_modules node_modules` y `ln -s ../../../.env .env`
+  (ambos ignorados por git, symlink incluido). Nunca ejecutes `bun install` en un worktree enlazado.
+- Al integrar la rama, elimina el worktree (`git worktree remove .claude/worktrees/<nombre>`).
 
 ## Skills de agentes
 
 - `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
   Codex y Oh My Pi. Cualquier alta, baja o edición se aplica en ambos directorios en el mismo
-  commit. Las skills `openspec-*` e `impeccable` se generan por herramienta y pueden diferir entre ambos
-  (invocación `/` frente a `$`, y `agents/` solo en `.agents`): esas diferencias son intencionadas.
-- Uso esperado:
-  - `test-driven-development`: al implementar cualquier funcionalidad o corrección.
-  - `systematic-debugging`: ante un bug, un test roto o un comportamiento inesperado, antes de
-    proponer un arreglo.
-  - `verification-before-completion`: antes de declarar algo terminado, hacer commit o abrir un PR,
-    con el alcance de «Desarrollo ligero».
-  - `requesting-code-review` / `receiving-code-review`: en el flujo de «Cierre de una PR».
-  - `security-best-practices` / `security-threat-model`: cuando se pida explícitamente una
-    revisión de seguridad o un modelo de amenazas.
-  - `playwright`: para automatizar el navegador desde terminal (depurar flujos de UI, capturas).
-  - `expo-native-ui` y `expo-router`: al crear UI nueva; `impeccable` es para evaluarla y pulirla.
-    `sistema-visual` es el sistema de diseño del repo y manda sobre ambas; no se usan
-    `frontend-design` ni `expo-design-system` (retiradas; si el plugin `expo` global ofrece su
-    propia `expo-design-system`, tampoco aplica).
-  - `impeccable`: asesora, no dicta. La identidad visual (D20) es la de `sistema-visual`, el
-    brief y la constitución; `DESIGN.md`, `PRODUCT.md` y `.impeccable/` la describen y están
-    subordinados a ellos. Un cambio de identidad se propone por OpenSpec, nunca con un comando
-    de impeccable.
-    - Permitido: `critique`, `audit`, `polish`, `harden` y `document` (este solo para actualizar
-      `DESIGN.md`). Se usa en el cierre de una PR que toque UI.
-    - Con confirmación del usuario y paso por OpenSpec: `bolder`, `colorize`, `overdrive`,
-      `delight`, `typeset` y `shape` de una identidad nueva.
-    - Sus subagentes (`.claude/agents/`: `impeccable-finish-reviewer` y `-documenter`) solo se
-      invocan desde esta skill. Se retiraron `-asset-producer` y `-manual-edit-applier`, el modo
-      `live` y los datos de fuentes; también los comandos `quieter`, `distill`, `layout`, `adapt`,
-      `clarify`, `optimize`, `extract`, `onboard` y `craft`. Para recuperarlos, regenera la skill
-      desde `pbakaus/impeccable`.
-    - Solo se usa la copia del repo: el plugin global `impeccable` está desinstalado.
-    - El hook de `.codex/hooks.json` revisa los cambios de UI tras cada edición; es informativo
-      y no sustituye a `bun run gate`. Es **opt-in**: solo corre si el binario ya está en
-      `.agents/skills/impeccable/scripts/bin/` (ignorado por git) y nunca lo descarga. Instalarlo
-      es una decisión explícita: `scripts/impeccable context` lo baja de
-      `github.com/pbakaus/impeccable` (releases) y verifica su sha256 contra un archivo del mismo
-      origen; es código de terceros que se ejecuta localmente. No hay hook de cierre de turno versionado; los hooks de
-      Claude son configuración local (`.claude/settings.local.json`, ignorado por git).
-    - Ningún resultado puede violar las reglas de «Sistema visual» ni `tema.test.ts`.
-  - `using-git-worktrees`: cuando un cambio necesita aislarse del espacio de trabajo actual.
-  - `openspec-*`: flujo de propuestas, aplicación, sincronización y archivo de cambios.
+  commit. Las diferencias de `openspec-*` e `impeccable` (invocación `/` frente a `$`, y `agents/`
+  solo en `.agents`) son intencionadas.
+- `security-best-practices` y `security-threat-model`: solo cuando se pidan expresamente.
+- UI: `expo-native-ui` y `expo-router` para crearla; `impeccable` para evaluarla y pulirla.
+  `sistema-visual` manda sobre ellas. No se usan `frontend-design` ni `expo-design-system` (ni la
+  `expo-design-system` del plugin `expo` global).
+- `impeccable` asesora, no dicta. La identidad visual es la de `sistema-visual`, el brief y la
+  constitución; `DESIGN.md`, `PRODUCT.md` y `.impeccable/` la describen y están subordinados a ellos.
+  Un cambio de identidad se propone por OpenSpec, nunca con un comando de impeccable.
+  - Permitido: `critique`, `audit`, `polish`, `harden` y `document` (este solo para actualizar
+    `DESIGN.md`).
+  - Con confirmación del usuario y paso por OpenSpec: `bolder`, `colorize`, `overdrive`, `delight`,
+    `typeset` y `shape` de una identidad nueva.
+  - Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`) solo se
+    invocan desde esta skill. Solo se usa la copia del repo, no el plugin global.
+  - El hook de `.codex/hooks.json` es informativo (no sustituye a `bun run gate`) y opt-in: solo
+    corre si el binario ya está en `.agents/skills/impeccable/scripts/bin/` (ignorado por git).
+    Instalarlo es una decisión explícita: es código de terceros; `scripts/impeccable context` lo
+    descarga de `github.com/pbakaus/impeccable` y verifica su sha256.
 
 ## Ponytail
 
@@ -231,9 +199,3 @@ constitución > este archivo > cambio OpenSpec > ponytail.
   «one-liners triviales» no aplica aquí.
 - **Revisión:** la sección «Sobreingeniería» de `requesting-code-review` es la única pasada de
   ponytail al cerrar una PR; no lances además `ponytail-review` ni `simplify`.
-
-## Idioma
-
-El contenido de los artefactos se escribe en español; los encabezados y las palabras clave
-estructurales de OpenSpec (MUST, MUST NOT, Requirement, Scenario, GIVEN/WHEN/THEN) permanecen en
-inglés.

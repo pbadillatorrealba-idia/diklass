@@ -4,17 +4,11 @@ context: |
   Proyecto: PoC de CDSS veterinario canino con datos sintéticos, una clínica única compartida,
   apoyo a la decisión profesional y evidencia trazable. No es un sistema de decisión clínica
   definitiva automática.
-  Stack vigente: el fijado en docs/constitution.md (TypeScript con Bun 1.4.0 como runtime y
-  package manager, Expo SDK 57 sobre React Native con Expo Router para iOS, Android y web,
-  gluestack-ui v3, Supabase Auth/PostgreSQL con Row Level Security, TanStack Query, Zustand,
-  TanStack Form, Zod; Biome, tsc --noEmit, Bun test, Playwright 1.61.0, Maestro y GitHub Actions).
-  Antes de trabajar en cualquier cambio, leer los dos documentos de gobierno:
-  docs/constitution.md (autoridad normativa) y docs/brief-poc-cdss.md (documento canónico de
-  producto).
-  Diferenciar siempre lo pendiente, lo implementado y lo aceptado; el estado documental no
-  constituye aceptación.
-  Idioma: español. Mantener los encabezados y las palabras clave estructurales de OpenSpec
-  (MUST, MUST NOT, Requirement, Scenario, GIVEN/WHEN/THEN) en inglés.
+  Stack y principios: docs/constitution.md (autoridad normativa); producto: docs/brief-poc-cdss.md;
+  reglas de trabajo: AGENTS.md. Lee de ellos solo las secciones relevantes al cambio.
+  Diferenciar siempre lo pendiente, lo implementado y lo aceptado.
+  Idioma: español, con los encabezados y palabras clave de OpenSpec (MUST, MUST NOT, Requirement,
+  Scenario, GIVEN/WHEN/THEN) en inglés.
 
 rules:
   proposal:
