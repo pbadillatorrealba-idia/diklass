@@ -20,9 +20,11 @@ se verificará con el CLI fijado del repositorio; no asumir overrides de version
 ## Goals / Non-Goals
 
 **Goals:** reutilizar contenido editorial sin compartir filas, proteger el demo y hacer verificable
-el ciclo de limpieza. Ejecutar una sola instancia de testing y un worker por disponibilidad de RAM.
+el ciclo de limpieza de integración viva y e2e web. Ejecutar una sola instancia de testing y un
+worker por disponibilidad de RAM. Maestro Cloud y los e2e nativos conservan su flujo actual,
+incluido su backend remoto sintético; quedan fuera por decisión del usuario.
 
-**Non-Goals:** backend remoto de testing, nueva clínica/tenancy del producto, permisos de borrado
+**Non-Goals:** modificar el backend remoto nativo, nueva clínica/tenancy del producto, permisos de borrado
 en la aplicación, sincronización entre bases, framework genérico de factories o un servicio nuevo.
 No renombrar cadenas que sean intencionadamente el objeto de una prueba de validación.
 
@@ -78,10 +80,22 @@ sin cargar todos los pacientes. Los nombres visibles permanecen naturales; UUID 
 intento evitan colisiones. Los selectores usan el paciente creado o su URL/ID para resolver homónimos.
 Cambiar helpers primero y luego sus consumidores; preservar pruebas de orden, búsqueda y duplicados.
 
-Un registro común de recursos anota de inmediato cada ID creado y su tipo/dependencias, asociado
-a ejecución, test e intento. El setup también queda dentro de `try/finally`. Playwright usa fixture
-con `await use`; Bun usa teardown equivalente. No confiar únicamente en un `afterAll` que pierde
-los IDs cuando falla la preparación.
+Antes de enviar una mutación, persistir en el registro local su intención asociada a ejecución,
+test e intento y su criterio exacto de recuperación. Reservar UUID cuando el camino actual admita
+ID del cliente; en UI o Auth con ID del servidor, reservar RUT/correo exacto exclusivo o un padre
+ya propio que permita enumerar inequívocamente sus hijos. Storage usa una ruta exacta reservada.
+La intención debe quedar durable antes de escribir; el ID devuelto la completa, no la inicia.
+
+Reconciliar respuesta perdida o interrupción consultando esas identidades exactas y dependencias
+del caso, registrar los IDs encontrados y verificar propiedad antes de limpiar. No inferir
+propiedad por nombre, prefijo ni intervalo temporal. Inventariar el criterio para cada operación;
+si no puede recuperarse sin ambigüedad con el contrato actual, no despacharla hasta resolverlo,
+y consultar al usuario si requiere cambiar ese contrato. Probar específicamente confirmación
+servidor seguida de respuesta perdida y de interrupción antes de completar el registro.
+
+El setup también queda dentro de `try/finally`; Playwright usa fixture con `await use` y Bun
+teardown equivalente. No confiar únicamente en `afterAll`. Mantener registro de recursos
+indirectos: eventos, access_sessions, fragmentos materializados, cuotas y objetos de storage.
 
 ### D4 — Teardown privado y acotado
 
@@ -96,6 +110,13 @@ Storage no participa de la transacción SQL: registrar objetos al crearlos y lim
 por API administrativa, guardando residuos si falla una parte. Los recursos de auth/consentimiento
 compartidos tienen baseline y restauración explícita; no borrar cuentas de veterinarios provisionadas
 que no sean propiedad del test. Fuentes/corpus compartidos tampoco son propiedad de cada caso.
+
+`delete_assistant_conversation` elimina todos los mensajes del autor, no solo los del fixture.
+Los casos que ejercitan esa RPC usan cuentas exclusivas del caso/intento, cuyo correo se registra
+como intención antes de provisionar; verificar conversación vacía antes del test. Conservar las
+pruebas funcionales del borrado y mensajes centinela de otro autor. Los helpers de preparación
+no vacían conversaciones ni consentimientos de cuentas compartidas; usan la cuenta del caso o
+limpieza privada por IDs propios. Las cuentas exclusivas y sus recursos también se reconcilian.
 
 Verificar ausencia de recursos del test y preservación de centinelas. La limpieza fallida hace
 fallar la suite y se reporta junto al fallo original. Un archivo de ejecución ignorado por Git

@@ -1,13 +1,14 @@
 ## Purpose
 
-Ejecutar integración y e2e con datos del dataset compartido en un destino de pruebas explícito,
+Ejecutar integración y e2e web con datos del dataset compartido en un destino de pruebas explícito,
 con creación atribuida y eliminación acotada, sin contaminar desarrollo ni demostración.
+Maestro Cloud y los e2e nativos conservan su flujo actual y quedan fuera de esta entrega.
 
 ## ADDED Requirements
 
 ### Requirement: FR-133 Plantillas compartidas en tests
 
-Los tests de integración y e2e MUST reutilizar nombres y hogares del dataset vigente, conservando
+Los tests de integración y e2e web MUST reutilizar nombres y hogares del dataset vigente, conservando
 claves y recursos exclusivos por ejecución, prueba e intento. MUST NOT depender de filas del demo
 previamente cargadas ni añadir etiquetas técnicas a los nombres visibles. Las pruebas de datos
 inválidos y límites MUST conservar sus fixtures específicos.
@@ -36,10 +37,10 @@ fallback ni admitir un destino remoto en este cambio.
 
 ### Requirement: FR-135 Limpieza acotada y verificable
 
-Cada fixture persistente MUST registrar sus recursos al crearlos y eliminarlos en teardown,
-también ante fallo de setup o aserción. La limpieza privilegiada MUST limitarse al destino de
-testing y a IDs de su ejecución, incluidas dependencias y storage. MUST NOT ampliar permisos del
-producto, desactivar triggers ni borrar globalmente por nombre, tipo o clínica.
+Cada fixture MUST persistir intención y criterio exacto de recuperación antes de escribir,
+reconciliar sus IDs y eliminarlos en teardown, también ante fallo de setup o aserción. La limpieza
+privilegiada MUST limitarse a testing e IDs propios, incluidas dependencias y storage. MUST NOT
+ampliar permisos del producto, desactivar triggers ni borrar globalmente por nombre, tipo o clínica.
 
 #### Scenario: US21-AC3 Fallo parcial y residuos
 
@@ -47,6 +48,11 @@ producto, desactivar triggers ni borrar globalmente por nombre, tipo o clínica.
 - **WHEN** falla una aserción o una creación posterior
 - **THEN** el teardown elimina los recursos ya registrados y verifica su ausencia, conserva el fallo
   original y reporta cualquier fallo adicional de limpieza.
+- **GIVEN** una escritura confirmada cuya respuesta se pierde o un proceso terminado antes de
+  registrar el ID devuelto
+- **WHEN** se reconcilia la intención persistida previamente
+- **THEN** se recupera el recurso por UUID reservado o identidad exacta exclusiva de ese intento,
+  se registran sus IDs y dependencias y se limpian tras verificar propiedad, sin depender de la respuesta.
 - **GIVEN** una interrupción que impide ejecutar teardown
 - **WHEN** se inicia otra ejecución o se solicita recuperación
 - **THEN** se informan residuos identificables y solo se limpian tras verificar mismo destino y
@@ -58,6 +64,9 @@ producto, desactivar triggers ni borrar globalmente por nombre, tipo o clínica.
 - **WHEN** se limpia uno de los conjuntos
 - **THEN** el otro y los centinelas permanecen intactos y los permisos normales siguen rechazando
   DELETE de registros clínicos y auditoría.
+- **THEN** los tests de RPC que borran conversaciones completas usan autores exclusivos del caso,
+  comprueban su baseline vacío y preservan mensajes centinela de autores ajenos; ningún setup usa
+  esos borrados para vaciar las cuentas compartidas de veterinarios.
 
 ### Requirement: FR-136 Ejecución aislada y trazabilidad
 

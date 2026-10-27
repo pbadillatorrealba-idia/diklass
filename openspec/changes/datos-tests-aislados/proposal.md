@@ -2,7 +2,7 @@
 
 ## Why
 
-Los e2e incluyen nombres como «Luna Caso Sintético» y «Tutor de…», y las suites vivas dejan filas:
+Los e2e web incluyen nombres como «Luna Caso Sintético» y «Tutor de…», y las suites vivas dejan filas:
 la CI reinicia la base entre integración y e2e para evitar contaminación. Se necesita reutilizar
 los nombres y relaciones del dataset, aislar el backend de pruebas y limpiar lo creado incluso
 cuando falla una prueba, conservando las restricciones de la aplicación.
@@ -10,7 +10,7 @@ cuando falla una prueba, conservando las restricciones de la aplicación.
 ## What Changes
 
 - Usar plantillas del dataset de `dataset-clinico-trazable` en los helpers compartidos de
-  integración/e2e; nombres visibles naturales y claves/UUID/RUT exclusivos por ejecución.
+  integración/e2e web; nombres visibles naturales y claves/UUID/RUT exclusivos por ejecución.
   Conservar fixtures deliberadamente inválidos, homónimos y casos límite de pruebas unitarias.
 - Configuración de backend de pruebas explícita y sobrescribible, separada de `.env` de desarrollo;
   app exportada, helpers y limpieza deben apuntar al mismo destino antes de escribir.
@@ -20,6 +20,10 @@ cuando falla una prueba, conservando las restricciones de la aplicación.
   registrados por ejecución. No conceder DELETE a la app ni añadir un RPC público de limpieza.
 - Teardown ante éxito/fallo, registro local de residuos si se interrumpe el proceso y rechazo de
   limpieza sobre desarrollo, demo o remoto. Una prueba que solicita backend no se omite en silencio.
+- Persistir la intención antes de escribir y reconciliar recursos si se pierde la respuesta;
+  aislar por cuenta de prueba las operaciones de chat que borran toda la conversación de un autor.
+- Por decisión del usuario, Maestro Cloud y sus e2e nativos quedan fuera de esta entrega y
+  conservan su backend remoto sintético y su flujo actual.
 
 ## Capabilities
 
@@ -41,7 +45,7 @@ la destrucción se limita a una instancia de pruebas desechable identificada exp
 - `playwright.config.ts`, `scripts/e2e-web-server.sh`, runner de tests, `package.json`, CI,
   `.env.example` y `SETUP.md`; nunca editar `.env` ni exponer secretos en `EXPO_PUBLIC_*`.
 - Construcción: dataset aprobado e implementado, servicios y esquema actual de Supabase.
-  Aceptación conjunta con integración/e2e: comprobar aislamiento, limpieza y que el demo permanece intacto.
+  Aceptación conjunta con integración/e2e web: comprobar aislamiento, limpieza y que el demo permanece intacto.
 - Sin nuevas dependencias ni cambios de permisos o migraciones del producto. Si la limpieza
   necesitara alterar contratos o migraciones, detenerse y presentar esa decisión al usuario.
 
