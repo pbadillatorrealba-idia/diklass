@@ -218,7 +218,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # JavaScript / Expo project
-node_modules/
+# Sin barra final: también debe ignorar un symlink node_modules (ver AGENTS.md, «Worktrees»)
+node_modules
 .expo/
 web-build/
 coverage/
@@ -253,6 +254,9 @@ security_best_practices_report.md
 .github/skills/
 .github/agents/
 .github/hooks/
+
+# Worktrees de agentes (AGENTS.md, «Worktrees»)
+.claude/worktrees/
 
 # Binario de impeccable (16 MB por espejo): solo se instala a propósito (ver AGENTS.md)
 .claude/skills/impeccable/scripts/bin/
