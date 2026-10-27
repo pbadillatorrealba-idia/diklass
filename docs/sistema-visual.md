@@ -11,7 +11,10 @@ Reglas para cualquier UI nueva o modificada:
   (`bg-card`, `text-muted-foreground`, `border-warning`…). `src/theme/colors.ts` es su espejo
   para props que no aceptan `className` (`useThemeColors()`). Un token nuevo va en ambos y en
   `tests/unit/theme/tema.test.ts` con su par de contraste AA. Nunca hex, `rgb()`, paleta fija de
-  Tailwind ni escalas numeradas de gluestack (`text-warning-700`): la guarda de ese test falla.
+  Tailwind, escalas numeradas de gluestack (`text-warning-700`) ni tintes `/N`: solo `scrim` admite
+  opacidad y el resto de superficies son tokens opacos (`*-surface`); la guarda de ese test falla.
+  `stamp` debe distinguirse de `primary` (ΔE*ab ≥ 10, FR-104) y la paleta de marca fija sus
+  valores (FR-103).
   Identidad «Formulario en copias» (D20): el color de superficie se concentra en los pliegos
   (`suggested-surface` para lo sugerido, `correction-surface` para lo corregido); el resto es tinta
   (`primary` preimpresa, `foreground` del veterinario) sobre papel (`card`). `stamp` solo pinta el

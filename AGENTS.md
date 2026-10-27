@@ -25,7 +25,8 @@ lo demás sigue el flujo completo. Elige el carril más corto que corresponda:
 | Corrección de error | El código no cumple lo que ya dice la spec | Test de regresión que falle (Principio II), el arreglo mínimo y cierre de PR; sin cambio OpenSpec. |
 | Funcionalidad | Comportamiento nuevo o que cambia | Cambio OpenSpec completo (`propose` → `apply` → `archive`) y cierre de PR. |
 
-Si un arreglo cambia el comportamiento previsto, deja de ser un error y es una funcionalidad.
+Si un arreglo o una actualización cambia el comportamiento previsto, deja de ser trivial o un error
+y es una funcionalidad.
 
 ## OpenSpec
 
@@ -153,7 +154,8 @@ confirmación.
   crea el worktree allí y enlázalo desde `.claude/worktrees/<nombre>` con `ln -s`.
 - Un worktree no hereda `node_modules` ni `.env`. Si la rama no cambia dependencias, enlázalos en
   vez de reinstalar: `ln -s ../../../node_modules node_modules` y `ln -s ../../../.env .env`
-  (ambos ignorados por git, symlink incluido). Nunca ejecutes `bun install` en un worktree enlazado.
+  (ambos ignorados por git, symlink incluido). Ejecútalos dentro del worktree y, si este vive fuera
+  del repo, usa rutas absolutas. Nunca ejecutes `bun install` en un worktree enlazado.
 - Al integrar la rama, elimina el worktree (`git worktree remove .claude/worktrees/<nombre>`).
 
 ## Skills de agentes
