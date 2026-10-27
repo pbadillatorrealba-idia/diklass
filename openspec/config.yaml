@@ -4,19 +4,14 @@ context: |
   Proyecto: PoC de CDSS veterinario canino con datos sintéticos, una clínica única compartida,
   apoyo a la decisión profesional y evidencia trazable. No es un sistema de decisión clínica
   definitiva automática.
-  Stack y principios: docs/constitution.md (autoridad normativa); producto: docs/brief-poc-cdss.md;
-  reglas de trabajo: AGENTS.md. Lee de ellos solo las secciones relevantes al cambio.
-  Diferenciar siempre lo pendiente, lo implementado y lo aceptado.
-  Idioma: español, con los encabezados y palabras clave de OpenSpec (MUST, MUST NOT, Requirement,
-  Scenario, GIVEN/WHEN/THEN) en inglés.
+  Normas: docs/constitution.md; producto: docs/brief-poc-cdss.md; reglas de trabajo, idioma e IDs:
+  AGENTS.md. Lee de ellos solo las secciones relevantes al cambio.
 
 rules:
   proposal:
     - Identificar la capability afectada y sus dependencias de construcción; separar explícitamente
       las condiciones de aceptación conjunta.
   specs:
-    - Conservar los requisitos funcionales (FR), criterios de éxito (SC) e historias (US) con sus
-      IDs globales, incluidas las especializaciones transversales de un mismo ID por dominio.
     - Preservar íntegras las sentencias MUST/MUST NOT, los escenarios y los umbrales; ninguna
       decisión clínica definitiva automática.
   design:

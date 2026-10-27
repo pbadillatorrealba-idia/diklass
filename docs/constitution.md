@@ -123,9 +123,8 @@ análisis de vulnerabilidades en dependencias— DEBEN pasar antes de que conclu
 tubería en rojo no se anula con la aprobación de un revisor.
 
 El desarrollo asistido por agentes se somete a las mismas compuertas que el trabajo escrito por
-personas. La guía común de agentes vive en `AGENTS.md`, en la raíz del repositorio, y la entrada
-específica de Claude en `CLAUDE.md`; ambos archivos describen cómo trabajar en esta base de código
-y nunca prevalecen sobre las reglas de esta constitución.
+personas; `AGENTS.md` y `CLAUDE.md` describen cómo trabajar y nunca prevalecen sobre esta
+constitución.
 
 ## Gobernanza
 
@@ -147,15 +146,11 @@ complejidad se elimina.
 
 ## Registro de enmiendas
 
-- 2026-09-10 — v1.3.0 (MENOR): stack fijado de Expo SDK 56 a SDK 57. Evita una regresión conocida de
-  memoria de Hermes V1 en SDK 56; la decisión ya estaba documentada en el diseño de Identidad y
-  acceso.
-- 2026-09-16 — v1.3.1 (PARCHE): secuencia normativa expresada en el perfil core de OpenSpec, destinos
-  operativos movidos a `design.md` y guía de agentes declarada en `AGENTS.md` y `CLAUDE.md`.
-- 2026-10-27 — v1.4.0 (MENOR): las versiones exactas de Bun y Playwright salen del texto y las fijan
-  los archivos de configuración; la verificación en Firefox y WebKit pasa a la suite de la rama
-  principal (Chromium en cada cambio), como ya ejecuta el CI; se elimina el párrafo histórico de
-  Hermes (queda en este registro) y se compacta el flujo de trabajo. No deja código fuera de
-  cumplimiento.
+El detalle está en el historial de git.
+
+- 2026-09-10 — v1.3.0 (MENOR): Expo SDK 56 → 57 (regresión de memoria de Hermes V1 en SDK 56).
+- 2026-09-16 — v1.3.1 (PARCHE): secuencia normativa en el perfil core de OpenSpec; guía de agentes.
+- 2026-10-27 — v1.4.0 (MENOR): sin versiones exactas de Bun y Playwright; Firefox y WebKit se
+  verifican en la rama principal (Chromium en cada cambio); flujo compactado.
 
 **Versión**: 1.4.0 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-10-27

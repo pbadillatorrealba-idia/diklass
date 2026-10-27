@@ -16,17 +16,15 @@ entorno está en [README.md](README.md) y [SETUP.md](SETUP.md); aquí solo viven
 
 ## Carriles de trabajo
 
-La constitución exime de especificación completa a los errores y a las tareas triviales; todo
-lo demás sigue el flujo completo. Elige el carril más corto que corresponda:
+El carril más corto que corresponda (la constitución exime de especificación completa a los errores
+y a las tareas triviales). Si un arreglo o una actualización cambia el comportamiento previsto, es
+una funcionalidad.
 
 | Carril | Cuándo | Qué se hace |
 |---|---|---|
 | Trivial | Typos, formato, actualización de dependencias | Rama, commit y PR; sin cambio OpenSpec ni prerrevisión; revisión por otra persona y CI. |
 | Corrección de error | El código no cumple lo que ya dice la spec | Test de regresión que falle (Principio II), el arreglo mínimo y cierre de PR; sin cambio OpenSpec. |
 | Funcionalidad | Comportamiento nuevo o que cambia | Cambio OpenSpec completo (`propose` → `apply` → `archive`) y cierre de PR. |
-
-Si un arreglo o una actualización cambia el comportamiento previsto, deja de ser trivial o un error
-y es una funcionalidad.
 
 ## OpenSpec
 
@@ -40,46 +38,29 @@ y es una funcionalidad.
 ## Reglas
 
 - Conserva los IDs globales de requisitos (FR-NNN), historias (US) y criterios (SC) en todo
-  artefacto; no los renumeres ni reutilices IDs retirados.
+  artefacto, incluidas sus especializaciones por dominio; no los renumeres ni reutilices IDs retirados.
 - Las marcas de tareas, los checklists y los estados documentales acreditan revisión documental,
-  no aceptación demostrada ni implementación. No archives un cambio sin la verificación que exige
-  la constitución.
-- Diferencia pendiente / implementado / aceptado en cada afirmación que escribas.
+  no aceptación demostrada ni implementación. Diferencia pendiente / implementado / aceptado en cada
+  afirmación que escribas.
 - Commits `tipo(ámbito): resumen` y ramas `tipo/descripcion`; las PR usan la plantilla de
   `.github/PULL_REQUEST_TEMPLATE.md`.
 - Los artefactos se escriben en español; los encabezados y las palabras clave de OpenSpec (MUST,
   MUST NOT, Requirement, Scenario, GIVEN/WHEN/THEN) permanecen en inglés.
 - No edites a mano `src/lib/supabase/database.types.ts` (usa `db:types`), `bun.lock` ni `.env`.
-- No añadas scripts ni dependencias sin justificarlos conforme al Principio III.
 
 ## Seguridad y secretos
 
-- **Falla cerrado.** Si falta configuración de autenticación, de RLS o de entorno, el sistema niega
-  el acceso o se detiene con un error explícito; nunca queda abierto por omisión. Una variable
-  olvidada en un despliegue no puede traducirse en datos clínicos expuestos.
-- **Los atajos de desarrollo son explícitos.** Todo bypass (saltar un control, apuntar a un
-  entorno remoto, sembrar datos) se activa a propósito con un flag o variable dedicada, avisa por
-  consola cuando está activo y, si vive en el cliente, depende además de `__DEV__`. Ningún bypass
-  se configura en un entorno accesible desde internet. Ejemplo:
-  `provision:veterinarians` rechaza cualquier Supabase no local salvo que se pase `--allow-remote`.
-- **Ningún secreto en el bundle.** Expo inlinea toda variable `EXPO_PUBLIC_*` en el cliente, así
-  que solo puede llevar valores públicos (URL de Supabase y anon key). La
-  `SUPABASE_SERVICE_ROLE_KEY` y cualquier clave de proveedor viven únicamente en scripts de
-  servidor, en Edge Functions (`supabase/functions/`) y en los tests que preparan datos. Al
-  cambiar una `EXPO_PUBLIC_*`, limpia la caché de Metro (ver `SETUP.md`).
-- **`.env` nunca se commitea** ni se copian sus valores en issues, PRs, logs o artefactos. Toda
-  variable nueva va a `.env.example` con un valor de ejemplo no sensible y se documenta en
-  `SETUP.md`.
-- **Los reportes de seguridad no se commitean.** `security-best-practices` y
-  `security-threat-model` escriben sus informes fuera del repositorio, en español, y se comparten
-  solo por el canal que indique el responsable.
+Los principios (falla cerrado, secretos) están en la constitución; aquí lo operativo:
 
-## Sistema visual
-
-Antes de crear o modificar UI, lee [docs/sistema-visual.md](docs/sistema-visual.md): sus reglas las
-hacen cumplir `tema.test.ts` y la compuerta axe, y su justificación está en
-`openspec/changes/archive/2026-10-26-sistema-visual/`. Ningún resultado de una skill puede
-violarlas.
+- Todo bypass de desarrollo se activa a propósito con un flag, avisa por consola y, en el cliente,
+  depende de `__DEV__`; p. ej. `provision:veterinarians` rechaza un Supabase no local sin `--allow-remote`.
+- Solo valores públicos en `EXPO_PUBLIC_*` (Expo los inlinea en el bundle); `SUPABASE_SERVICE_ROLE_KEY`
+  y claves de proveedor solo en scripts de servidor, Edge Functions y tests. Al cambiar una
+  `EXPO_PUBLIC_*`, limpia la caché de Metro (ver `SETUP.md`).
+- `.env` nunca se commitea ni se copian sus valores en issues, PRs, logs o artefactos; toda variable
+  nueva va a `.env.example` con un valor no sensible y a `SETUP.md`.
+- Los reportes de `security-best-practices` y `security-threat-model` no se commitean: se escriben
+  fuera del repositorio, en español.
 
 ## Comandos
 
@@ -106,8 +87,9 @@ La definición completa de CI está en `.github/workflows/ci.yml`; en cambios qu
 ## Desarrollo ligero
 
 La máquina de desarrollo tiene poca RAM: mientras se desarrolla se ejecuta lo mínimo que valida el
-cambio y la batería completa se reserva para el cierre de la PR. Los e2e y las exportaciones corren
-de uno en uno, con un solo worker.
+cambio; la batería pesada (`gate`, `test`, Playwright completo) se reserva para el cierre de la PR,
+para un fallo de CI que no se reproduzca con un test focalizado o para cuando el usuario lo pida. Los
+e2e y las exportaciones corren de uno en uno, con un solo worker.
 
 | Cambio | Durante el desarrollo | Al cerrar la PR |
 |---|---|---|
@@ -118,9 +100,7 @@ de uno en uno, con un solo worker.
 | `src/lib/supabase/`, autenticación o atribución | lo de «Código» y `SUPABASE_LIVE_TESTS=1 bun run test:integration` | `gate` y `SUPABASE_LIVE_TESTS=1 bun run test:integration` |
 | Solo `**.md`, `docs/**` u `openspec/**` | nada | nada |
 
-Lo pesado (`gate`, `test`, Playwright completo) se ejecuta solo al cerrar la PR, cuando la tabla lo
-indica, si un fallo de CI no se reproduce con un test focalizado, o si el usuario lo pide. Al
-declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
+Al declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
 
 ## Cierre de una PR
 
@@ -146,57 +126,34 @@ confirmación.
 
 ## Worktrees
 
-- Todos los worktrees viven en `.claude/worktrees/<nombre>` (ignorado por git). Créalos con
-  `EnterWorktree` o con `git worktree add .claude/worktrees/<nombre> -b tipo/descripcion origin/main`;
-  si la herramienta nombra la rama `worktree-<nombre>`, renómbrala a `tipo/descripcion` antes del
-  primer push.
-- No crees worktrees fuera del repo (por ejemplo `~/.omp/wt/`). Si una herramienta exige otra ruta,
-  crea el worktree allí y enlázalo desde `.claude/worktrees/<nombre>` con `ln -s`.
-- Un worktree no hereda `node_modules` ni `.env`. Si la rama no cambia dependencias, enlázalos en
-  vez de reinstalar: `ln -s ../../../node_modules node_modules` y `ln -s ../../../.env .env`
-  (ambos ignorados por git, symlink incluido). Ejecútalos dentro del worktree y, si este vive fuera
-  del repo, usa rutas absolutas. Nunca ejecutes `bun install` en un worktree enlazado.
-- Al integrar la rama, elimina el worktree (`git worktree remove .claude/worktrees/<nombre>`).
+Viven en `.claude/worktrees/<nombre>` (ignorado por git), no fuera del repo. Rama `tipo/descripcion`
+(renombra `worktree-<nombre>` antes del primer push). Si no cambian dependencias, enlaza desde
+dentro del worktree `ln -s ../../../node_modules node_modules` y `ln -s ../../../.env .env`; nunca
+`bun install` en uno enlazado. Al integrar la rama, `git worktree remove .claude/worktrees/<nombre>`.
 
 ## Skills de agentes
 
 - `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
-  Codex y Oh My Pi. Cualquier alta, baja o edición se aplica en ambos directorios en el mismo
-  commit. Las diferencias de `openspec-*` e `impeccable` (invocación `/` frente a `$`, y `agents/`
-  solo en `.agents`) son intencionadas.
+  Codex y Oh My Pi. Toda alta, baja o edición se aplica en ambos en el mismo commit; solo difiere
+  la invocación (`/` frente a `$`).
 - `security-best-practices` y `security-threat-model`: solo cuando se pidan expresamente.
-- UI: `expo-native-ui` y `expo-router` para crearla; `impeccable` para evaluarla y pulirla.
-  `sistema-visual` manda sobre ellas. No se usan `frontend-design` ni `expo-design-system` (ni la
-  `expo-design-system` del plugin `expo` global).
-- `impeccable` asesora, no dicta. La identidad visual es la de `sistema-visual`, el brief y la
-  constitución; `DESIGN.md`, `PRODUCT.md` y `.impeccable/` la describen y están subordinados a ellos.
-  Un cambio de identidad se propone por OpenSpec, nunca con un comando de impeccable.
-  - Permitido: `critique`, `audit`, `polish`, `harden` y `document` (este solo para actualizar
-    `DESIGN.md`).
-  - Con confirmación del usuario y paso por OpenSpec: `bolder`, `colorize`, `overdrive`, `delight`,
-    `typeset` y `shape` de una identidad nueva.
-  - Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`) solo se
-    invocan desde esta skill. Solo se usa la copia del repo, no el plugin global.
-  - El hook de `.codex/hooks.json` es informativo (no sustituye a `bun run gate`) y opt-in: solo
-    corre si el binario ya está en `.agents/skills/impeccable/scripts/bin/` (ignorado por git).
-    Instalarlo es una decisión explícita: es código de terceros; `scripts/impeccable context` lo
-    descarga de `github.com/pbakaus/impeccable` y verifica su sha256.
+- UI: `expo-native-ui` y `expo-router` para crearla; `impeccable` y sus estándares son la autoridad
+  visual (`DESIGN.md`, `PRODUCT.md` y `.impeccable/`), que hacen cumplir `tema.test.ts` y la
+  compuerta axe. No se usan `frontend-design` ni `expo-design-system` (ni la del plugin `expo`).
+- Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; `bolder`,
+  `colorize`, `overdrive`, `delight`, `typeset` y `shape` solo con confirmación del usuario y paso
+  por OpenSpec. Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`)
+  se invocan solo desde esa skill; se usa la copia del repo, no el plugin global.
 
 ## Ponytail
 
-Ponytail (plugin global, modo `full`) gobierna **cuánto** se escribe: la menor solución que
-funciona. No decide **qué** se hace ni **qué** se verifica. Precedencia ante conflicto:
-constitución > este archivo > cambio OpenSpec > ponytail.
+Ponytail (plugin global, modo `full`) fija **cuánto** se escribe, no **qué** se hace ni **qué** se
+verifica. Precedencia: constitución > este archivo > cambio OpenSpec > ponytail.
 
-- **Lo que ponytail no puede recortar:** requisitos y criterios del cambio activo (cuentan como
-  «pedido explícito»), los IDs FR/US/SC, validación en fronteras de confianza, fallo cerrado,
-  accesibilidad, RLS y la verificación que exige la constitución.
-- **OpenSpec:** en `propose` y `update-change` no propongas lo que nadie pidió y deja `design.md`
-  para decisiones reales (ponytail acota el alcance, nunca quita un artefacto exigido); en
-  `apply-change`, el mínimo código por tarea. Una simplificación con techo conocido lleva un
-  comentario `ponytail:`, que no sustituye a la deuda de tests (sigue siendo una tarea). No
-  interviene en `explore`, `sync-specs` ni `archive-change`.
-- **`test-driven-development` sigue vigente** para toda funcionalidad y corrección; ponytail solo
-  fija el tamaño (el test fallido más pequeño). Su excepción para «one-liners triviales» no aplica.
-- **Revisión:** la sección «Sobreingeniería» de `requesting-code-review` es la única pasada de
-  ponytail al cerrar una PR; no lances además `ponytail-review` ni `simplify`.
+- No recorta requisitos ni criterios del cambio activo, IDs FR/US/SC, validación en fronteras de
+  confianza, fallo cerrado, accesibilidad, RLS ni la verificación que exige la constitución; el TDD
+  sigue vigente (su excepción para «one-liners» no aplica).
+- Una simplificación con techo conocido lleva un comentario `ponytail:`, que no sustituye a la deuda
+  de tests (sigue siendo una tarea). No interviene en `explore`, `sync-specs` ni `archive-change`.
+- La sección «Sobreingeniería» de `requesting-code-review` es la única pasada de ponytail al cerrar
+  una PR; no lances además `ponytail-review` ni `simplify`.
