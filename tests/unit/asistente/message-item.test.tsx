@@ -1,12 +1,16 @@
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, describe, expect, mock, test } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Message } from "@/features/asistente/chat-model";
 
+const real = await import("@/features/conocimiento/consulta-service");
 mock.module("@/features/conocimiento/consulta-service", () => ({
+  ...real,
   getQuery: async () => null,
 }));
+// mock.module vive en todo el proceso: se restaura para no filtrar el getQuery falso a otros archivos.
+afterAll(() => mock.module("@/features/conocimiento/consulta-service", () => real));
 const { MessageItem } = await import("@/components/asistente/message-item");
 
 const render = (node: ReactNode) =>
