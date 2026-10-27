@@ -60,7 +60,7 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 ## 9. Docs y reconciliación de specs
 
 - [ ] 9.1 `DESIGN.md` (mensaje, composer, audio, marca de no leído como composición, sin tokens nuevos), `PRODUCT.md`, brief de superficie de `impeccable` y `docs/brief-poc-cdss.md` (el cambio altera la interacción con el asistente —voz y persistencia—, así que se actualiza antes de implementar, no «si cambia»). Verificación: coherentes con lo construido.
-- [ ] 9.2 Crear (con `/opsx:continue`) el delta REMOVED/MODIFIED de `sistema-visual` en `specs/sistema-visual/spec.md` de este cambio, que retira «Conocimiento en el panel» y «Hilo del asistente con consultas básicas» y quita «Conocimiento» de «Hilos contextuales del panel», porque esos requisitos se quedan en la spec de #70 (1.1). Verificación: `openspec validate shell-asistente-tres-zonas --strict` y `openspec validate chat-del-asistente --strict`.
+- [ ] 9.2 El delta MODIFIED/REMOVED de `sistema-visual` (`specs/sistema-visual/spec.md`, ya escrito) retira «Conocimiento en el panel» y «Hilo del asistente con consultas básicas» y quita «Conocimiento» de «Hilos contextuales del panel», porque esos requisitos se quedan en la spec de #70 (1.1); `openspec archive` solo lo acepta tras archivar #70. Verificación: `openspec validate shell-asistente-tres-zonas --strict` y `openspec validate chat-del-asistente --strict`.
 - [ ] 9.3 `quickstart.md` con evidencia, desviaciones y pendientes declarados.
 
 ## Workflow follow-up

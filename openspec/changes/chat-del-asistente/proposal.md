@@ -51,7 +51,7 @@ Los requisitos de `shell-asistente-tres-zonas` que este cambio reemplaza («Cono
 «Hilo del asistente con consultas básicas», y «Conocimiento» en «Hilos contextuales del panel») se quedan
 en la spec de #70, que construye la pestaña «Conocimiento» y el asistente básico. **Orden decidido: #70 se
 mergea primero** y esta rama se rebasa sobre `main`; aquí se retiran con un delta REMOVED/MODIFIED de
-`sistema-visual` (archivo por crear con `/opsx:continue`: este cambio aún no lo tiene, ver tarea 9.2).
+`sistema-visual` (`specs/sistema-visual/spec.md`, que solo se puede archivar tras archivar #70; ver tarea 9.2).
 
 ## Impact
 
