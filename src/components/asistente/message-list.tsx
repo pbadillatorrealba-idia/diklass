@@ -12,6 +12,7 @@ import {
   unseenLabel,
 } from "@/features/asistente/anchor";
 import type { Message } from "@/features/asistente/chat-model";
+import { nextStatusText } from "@/features/asistente/live-status";
 
 export type MessageListProps = Pick<
   MessageItemProps,
@@ -53,6 +54,33 @@ export function MessageList({
   useEffect(() => {
     if (!isLoading) setAnnounce(true);
   }, [isLoading]);
+
+  // «Cargar anteriores» antepone hasta 50 mensajes: no se anuncian (no son mensajes nuevos). La región
+  // se apaga al pedirlos y vuelve poco después de que lleguen.
+  const [quiet, setQuiet] = useState(false);
+  useEffect(() => {
+    if (!quiet || isLoadingOlder) return;
+    const id = setTimeout(() => setQuiet(false), 600);
+    return () => clearTimeout(id);
+  }, [quiet, isLoadingOlder]);
+
+  // Región de estado aparte de la lista: «Pensando…» y «Respuesta lista», una sola vez.
+  const thinking = messages.some((message) => message.status === "thinking");
+  const last = messages.at(-1);
+  const finished = last?.role === "assistant" && last.status === "done";
+  const [statusText, setStatusText] = useState("");
+  const wasThinking = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: solo reacciona al cambio de `thinking`.
+  useEffect(() => {
+    const next = nextStatusText(wasThinking.current, thinking, finished);
+    wasThinking.current = thinking;
+    if (next !== null) setStatusText(next);
+  }, [thinking]);
+  useEffect(() => {
+    if (statusText !== "Respuesta lista") return;
+    const id = setTimeout(() => setStatusText(""), 4000);
+    return () => clearTimeout(id);
+  }, [statusText]);
 
   /** Posición real de la vista: en web, del propio nodo (RNW no emite todos los eventos de scroll). */
   const live = () => {
@@ -99,7 +127,7 @@ export function MessageList({
     <View className="relative flex-1">
       <ScrollView
         aria-label="Conversación con el asistente"
-        aria-live={announce ? "polite" : "off"}
+        aria-live={announce && !quiet ? "polite" : "off"}
         className="flex-1"
         contentContainerClassName="gap-4 p-4"
         onContentSizeChange={(_width, height) => {
@@ -142,7 +170,10 @@ export function MessageList({
           <Button
             className="self-center"
             isDisabled={isLoadingOlder}
-            onPress={onLoadOlder}
+            onPress={() => {
+              setQuiet(true);
+              onLoadOlder();
+            }}
             size="sm"
             testID="load-older"
             variant="outline"
@@ -157,6 +188,15 @@ export function MessageList({
           <MessageItem key={message.id} message={message} {...itemProps} />
         ))}
       </ScrollView>
+      {/* Existe siempre y se rellena: así el lector anuncia el cambio. Solo para lectores. */}
+      <View
+        aria-live="polite"
+        role="status"
+        style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", opacity: 0 }}
+        testID="chat-status"
+      >
+        <Text>{statusText}</Text>
+      </View>
       {anchor.unseen > 0 ? (
         <View className="absolute bottom-2 self-center" testID="go-to-end">
           <Button onPress={goToEnd} size="sm" variant="outline">

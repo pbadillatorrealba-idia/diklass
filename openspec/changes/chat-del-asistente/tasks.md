@@ -67,3 +67,9 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 
 - Archivar `shell-asistente-tres-zonas` y luego este cambio.
 - Cambio futuro aparte: **agente real** (LLM, herramientas, seguridad, revisión de HD1), editar/regenerar, menciones por nombre y varias conversaciones.
+
+## Revisión de agente de la PR #76 (ronda 1)
+
+Aplicado: el marcador «Pensando…» vive hasta terminar de persistir y `send` devuelve si se aceptó (el borrador no se pierde); «Detener» corta al instante y descarta la respuesta tardía; reintentar reutiliza la respuesta ya obtenida (no duplica la auditoría de `knowledge_queries`); filtro de enlaces internos endurecido (`/\evil.com`, tabulaciones); `/knowledge` muestra el chat y el panel no ofrece otro; región de estado («Pensando…», «Respuesta lista») aparte de la lista y región viva apagada al cargar anteriores; foco y nombre de la confirmación de borrado; guarda de `clinicId` nulo, `clear` con un turno en vuelo, `refetchOnWindowFocus: false`, `copyText` con aviso, caché de la conversación fuera de memoria al cerrar sesión.
+
+Pendiente, declarado: recuperar el texto de la pregunta al reautenticar tras una sesión expirada; pruebas del controlador y del hook de contexto con `@testing-library/react` (dependencia de desarrollo nueva); `role="status"` de no leído insertado ya con contenido; altura fija de `/knowledge` con teclado virtual; el no leído depende de que el panel desmonte el hilo al colapsar.

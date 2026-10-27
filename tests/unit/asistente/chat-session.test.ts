@@ -31,6 +31,7 @@ function setup(over: Partial<ChatDeps> = {}) {
       addUnread: () => store().addUnread(),
     },
     getPending: () => store().pending,
+    answers: new Map(),
     history: () => [],
     now: () => new Date("2026-10-27T15:00:00.000Z"),
     newId: () => `id-${++ids}`,
@@ -171,5 +172,95 @@ describe("startTurn", () => {
     });
     await startTurn(deps, { text: "hola", patientId: null }, senal());
     expect(auth()).toBe(1);
+  });
+
+  // Hallazgo 1 de la revisión: el marcador seguía visible solo hasta la respuesta, y el composer
+  // ofrecía «Enviar» mientras se hacían los INSERT; el texto enviado entonces se perdía.
+  test("el marcador «Pensando…» se mantiene mientras se persiste (el composer sigue en «Detener»)", async () => {
+    let duranteLaPersistencia: Message[] = [];
+    const { deps } = setup({
+      persist: async () => {
+        duranteLaPersistencia = [...store().pending];
+      },
+    });
+    await startTurn(deps, { text: "hola", patientId: null }, senal());
+    expect(duranteLaPersistencia.some((m) => m.status === "thinking")).toBe(true);
+    expect(store().pending).toEqual([]);
+  });
+
+  // Hallazgo 5: «Detener» debe cortar al instante aunque la red tarde; la consulta ya lanzada sigue
+  // auditada (FR-020) pero su respuesta tardía se descarta.
+  test("«Detener» corta de inmediato una respuesta lenta y descarta la tardía", async () => {
+    const control = new AbortController();
+    let liberar: () => void = () => {};
+    const { deps, persistidos } = setup({
+      responder: {
+        async *respond() {
+          await new Promise<void>((resolve) => {
+            liberar = resolve;
+          });
+          yield { type: "ready", parts: [{ type: "text", text: "tarde" }] };
+        },
+      },
+    });
+    const turno = startTurn(deps, { text: "hola", patientId: null }, control.signal);
+    await Promise.resolve();
+    control.abort();
+    await turno; // no espera a la red
+    expect(persistidos.map((m) => m.role)).toEqual(["user"]);
+    expect(store().pending).toEqual([]);
+
+    liberar();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(persistidos.map((m) => m.role)).toEqual(["user"]);
+    expect(store().unread).toBe(0);
+  });
+
+  test("un fallo tardío tras «Detener» no deja un error ni una excepción sin manejar", async () => {
+    const control = new AbortController();
+    let fallar: () => void = () => {};
+    const { deps, errores } = setup({
+      responder: {
+        // biome-ignore lint/correctness/useYield: simula una red que falla después de «Detener»
+        async *respond() {
+          await new Promise<void>((_, reject) => {
+            fallar = () => reject(new Error("sin red"));
+          });
+        },
+      },
+    });
+    const turno = startTurn(deps, { text: "hola", patientId: null }, control.signal);
+    await Promise.resolve();
+    control.abort();
+    await turno;
+    fallar();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(store().pending).toEqual([]);
+    expect(errores).toEqual([]);
+  });
+
+  // Reintentar tras un fallo del primer INSERT no debe volver a consultar (duplicaría la fila de
+  // auditoría de `knowledge_queries`).
+  test("«Reintentar» tras un fallo de persistencia reutiliza la respuesta ya obtenida", async () => {
+    let consultas = 0;
+    let fallaPersistir = true;
+    const { deps, persistidos } = setup({
+      responder: {
+        async *respond() {
+          consultas++;
+          yield { type: "ready", parts: [{ type: "text", text: "respuesta" }] };
+        },
+      },
+      persist: async (message) => {
+        if (fallaPersistir) throw new Error("RLS");
+        persistidos.push(message);
+      },
+    });
+    await startTurn(deps, { text: "hola", patientId: null }, senal());
+    const id = store().pending.find((m) => m.role === "user")?.id ?? "";
+    fallaPersistir = false;
+    await retryTurn(deps, id, senal());
+    expect(consultas).toBe(1);
+    expect(persistidos.map((m) => m.role)).toEqual(["user", "assistant"]);
   });
 });

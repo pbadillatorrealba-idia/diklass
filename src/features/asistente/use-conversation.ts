@@ -16,6 +16,8 @@ export function useConversation() {
   const veterinarianId = useSessionStore((state) => state.veterinarianId);
   const query = useInfiniteQuery({
     enabled: veterinarianId !== null,
+    // Un refetch al volver a la ventana podría pisar un mensaje recién persistido (`setQueryData`).
+    refetchOnWindowFocus: false,
     queryKey: conversationQueryKey(veterinarianId),
     initialPageParam: undefined as Cursor | undefined,
     queryFn: ({ pageParam }) => listMessages(supabase, pageParam),

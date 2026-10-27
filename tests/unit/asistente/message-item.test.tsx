@@ -81,10 +81,16 @@ describe("MessageItem", () => {
     expect(html.toLowerCase()).not.toContain("regenerar");
   });
 
-  test("«Pensando…» es texto estático en una región de estado", () => {
+  test("«Pensando…» es texto estático y solo visual: la región de estado de la lista lo anuncia", () => {
     const html = render(<MessageItem message={base({ status: "thinking", parts: [] })} />);
     expect(html).toContain("Pensando…");
-    expect(html).toContain('role="status"');
+    expect(html).not.toContain('role="status"');
+    expect(html).toContain('aria-hidden="true"');
+  });
+
+  test("el error se anuncia como alerta", () => {
+    const html = render(<MessageItem message={base({ role: "user", status: "error" })} />);
+    expect(html).toContain('role="alert"');
   });
 
   test("«Enviando…» mientras el mensaje del usuario no es terminal", () => {

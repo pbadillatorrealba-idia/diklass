@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { canTransition, type Message, type MessageStatus } from "@/features/asistente/chat-model";
+import { queryClient } from "@/lib/query/query-client";
 import { useSessionStore } from "@/stores/session-store";
 
 /**
@@ -53,5 +54,7 @@ export const useChatStore = create<ChatState>()((set) => ({
 useSessionStore.subscribe((estado, anterior) => {
   if (anterior.accessState === "active" && estado.accessState !== "active") {
     useChatStore.getState().reset();
+    // La conversación es privada: no queda en memoria al cerrar la sesión (la clave ya lleva al autor).
+    queryClient.removeQueries({ queryKey: ["asistente"] });
   }
 });

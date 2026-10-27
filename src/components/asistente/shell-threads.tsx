@@ -1,5 +1,6 @@
+import { usePathname } from "expo-router";
 import { ChatThread } from "@/components/asistente/chat-thread";
-import { usePanelThreads } from "@/features/asistente/panel-threads";
+import { chatOwnsScreen, usePanelThreads } from "@/features/asistente/panel-threads";
 import { useChatController } from "@/features/asistente/use-chat-controller";
 
 /**
@@ -10,15 +11,21 @@ import { useChatController } from "@/features/asistente/use-chat-controller";
  */
 export function ShellThreads() {
   const chat = useChatController();
-  usePanelThreads([
-    {
-      id: "asistente",
-      label: "Asistente",
-      icon: "robot-outline",
-      element: <ChatThread chat={chat} />,
-      scroll: false,
-      unread: chat.unread,
-    },
-  ]);
+  // En /knowledge el chat ocupa la pantalla: el panel no ofrece otro.
+  const cedido = chatOwnsScreen(usePathname());
+  usePanelThreads(
+    cedido
+      ? []
+      : [
+          {
+            id: "asistente",
+            label: "Asistente",
+            icon: "robot-outline",
+            element: <ChatThread chat={chat} />,
+            scroll: false,
+            unread: chat.unread,
+          },
+        ],
+  );
   return null;
 }

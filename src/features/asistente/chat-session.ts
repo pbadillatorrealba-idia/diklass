@@ -18,6 +18,11 @@ export type ChatDeps = {
     addUnread: () => void;
   };
   getPending: () => readonly Message[];
+  /**
+   * Respuestas ya obtenidas por pregunta (id): si persistir falla y se reintenta, no se vuelve a
+   * consultar (una consulta de conocimiento duplicaría su fila de auditoría, FR-020).
+   */
+  answers: Map<string, Part[]>;
   history: () => readonly Message[];
   now: () => Date;
   newId: () => string;
@@ -28,6 +33,14 @@ export type ChatDeps = {
 
 const textOf = (message: Message) =>
   message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n");
+
+/** Resuelve `"aborted"` cuando se pulsa «Detener», sin esperar a la red. */
+function whenAborted(signal: AbortSignal): Promise<"aborted"> {
+  return new Promise((resolve) => {
+    if (signal.aborted) resolve("aborted");
+    else signal.addEventListener("abort", () => resolve("aborted"), { once: true });
+  });
+}
 
 async function run(deps: ChatDeps, user: Message, signal: AbortSignal) {
   const { store } = deps;
@@ -43,20 +56,42 @@ async function run(deps: ChatDeps, user: Message, signal: AbortSignal) {
   });
   let userPersisted = false;
   try {
-    let parts: Part[] | null = null;
-    for await (const event of deps.responder.respond(
-      deps.history(),
-      { text: textOf(user), patientId: user.patientId },
-      signal,
-    )) {
-      if (event.type === "ready") parts = event.parts;
+    // La respuesta ya obtenida en un intento anterior se reutiliza: no se vuelve a consultar.
+    let parts: Part[] | null = deps.answers.get(user.id) ?? null;
+    if (parts === null) {
+      const obtener = (async () => {
+        let ready: Part[] | null = null;
+        for await (const event of deps.responder.respond(
+          deps.history(),
+          { text: textOf(user), patientId: user.patientId },
+          signal,
+        )) {
+          if (event.type === "ready") ready = event.parts;
+        }
+        return ready;
+      })();
+      // «Detener» corta al instante, aunque la red tarde: la consulta ya lanzada sigue auditada, pero
+      // su respuesta (o su fallo) tardíos se descartan.
+      const primero = await Promise.race([obtener, whenAborted(signal)]);
+      if (primero === "aborted") {
+        obtener.catch(() => {});
+        store.removePending(placeholderId);
+        await deps.persist({ ...user, status: "done" });
+        store.removePending(user.id);
+        return;
+      }
+      parts = primero;
+      if (parts !== null) deps.answers.set(user.id, parts);
     }
-    store.removePending(placeholderId);
+    // El marcador «Pensando…» sigue hasta terminar de persistir: así el composer sigue en
+    // «Detener» y no acepta un envío que se perdería mientras se hacen los INSERT.
     await deps.persist({ ...user, status: "done" });
     userPersisted = true;
     // «Detener»: la pregunta se conserva y la respuesta parcial se descarta (no se persiste).
     if (signal.aborted || parts === null) {
+      store.removePending(placeholderId);
       store.removePending(user.id);
+      deps.answers.delete(user.id);
       return;
     }
     await deps.persist({
@@ -67,12 +102,15 @@ async function run(deps: ChatDeps, user: Message, signal: AbortSignal) {
       patientId: user.patientId,
       parts,
     });
+    deps.answers.delete(user.id);
+    store.removePending(placeholderId);
     store.removePending(user.id);
     store.addUnread();
   } catch (error) {
     store.removePending(placeholderId);
     if (deps.isAuthRequired(error)) {
       store.removePending(user.id);
+      deps.answers.delete(user.id);
       deps.onAuthRequired();
       return;
     }
@@ -80,6 +118,7 @@ async function run(deps: ChatDeps, user: Message, signal: AbortSignal) {
     if (userPersisted) {
       // La pregunta ya está guardada: reintentarla la duplicaría. Se avisa de la respuesta perdida.
       store.removePending(user.id);
+      deps.answers.delete(user.id);
       store.addPending({
         id: `${user.id}:error`,
         role: "assistant",

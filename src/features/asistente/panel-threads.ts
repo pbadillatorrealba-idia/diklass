@@ -31,6 +31,13 @@ export type PanelThread = {
 /** Hilo al que pasa el panel si el activo deja de estar disponible (spec «Hilos contextuales»). */
 export const FALLBACK_THREAD = "asistente";
 
+/**
+ * `/knowledge` muestra el chat a pantalla completa: en esa pantalla el panel no ofrece un segundo
+ * chat (dos regiones `log` y dos composers con el mismo nombre, y cada respuesta se anunciaría dos
+ * veces). La colección de fuentes (`/knowledge/sources`) sí conserva el del panel.
+ */
+export const chatOwnsScreen = (pathname: string) => /^\/knowledge\/?$/.test(pathname);
+
 export type ThreadRegistryState = {
   // Un `Map` conserva el orden de la primera aparición de cada dueño.
   owners: ReadonlyMap<string, readonly PanelThread[]>;

@@ -72,6 +72,8 @@ describe("MarkdownText", () => {
     "[x](data:text/html;base64,AAAA)",
     "[x](//evil.example/x)",
     "[x](mailto:a@b.cl)",
+    "[x](/\\evil.example)",
+    "[x](</\t/evil.example>)",
   ])("%s no es un enlace", (fuente) => {
     const html = render(fuente);
     expect(html).not.toContain("href=");
@@ -100,6 +102,12 @@ describe("isSafeHref", () => {
     ["//evil.example", false],
     ["data:text/html,x", false],
     ["ftp://example.org", false],
+    // Los navegadores normalizan `\` y las tabulaciones: estos terminan siendo `//evil.example`.
+    ["/\\evil.example", false],
+    ["/\t/evil.example", false],
+    ["/\n/evil.example", false],
+    ["/ruta con espacio", false],
+    ["/patients/abc?tab=1#x", true],
     ["", false],
   ])("%s → %s", (href, ok) => {
     expect(isSafeHref(href)).toBe(ok);

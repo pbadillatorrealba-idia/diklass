@@ -2,7 +2,12 @@ import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef } from "react";
 import { Share } from "react-native";
 import { useAgendaEvents } from "@/features/agenda/use-agenda-events";
-import { type Message, mergeMessages, newMessageId } from "@/features/asistente/chat-model";
+import {
+  type Message,
+  mergeMessages,
+  newMessageId,
+  type Part,
+} from "@/features/asistente/chat-model";
 import { type ChatDeps, retryTurn, startTurn } from "@/features/asistente/chat-session";
 import { useChatStore } from "@/features/asistente/chat-store";
 import {
@@ -17,6 +22,7 @@ import {
   KnowledgeResponder,
   routeResponder,
 } from "@/features/asistente/responders";
+import { createTurnGate } from "@/features/asistente/turn-gate";
 import { conversationQueryKey, useConversation } from "@/features/asistente/use-conversation";
 import { consultKnowledge } from "@/features/conocimiento/consulta-service";
 import { useConversationStore } from "@/features/conocimiento/conversation-store";
@@ -26,19 +32,24 @@ import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
-/**
- * El turno en curso es de la sesión, no de cada instancia del controlador: el chat del panel y el de
- * `/knowledge` comparten la conversación, y «Detener» en uno debe cortar la respuesta del otro.
- */
-let activeTurn: AbortController | null = null;
+/** El turno en curso es de la sesión, no de cada instancia del controlador (ver `turn-gate.ts`). */
+const gate = createTurnGate();
 
-/** «Copiar»: portapapeles en web; en nativo, la hoja de compartir (no hay módulo de portapapeles). */
-async function copyText(text: string) {
-  if (process.env.EXPO_OS === "web" && globalThis.navigator?.clipboard) {
-    await globalThis.navigator.clipboard.writeText(text);
-    return;
+/**
+ * «Copiar»: portapapeles en web; en nativo, la hoja de compartir (no hay módulo de portapapeles).
+ * Devuelve si se pudo, para avisarlo.
+ */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (process.env.EXPO_OS === "web" && globalThis.navigator?.clipboard) {
+      await globalThis.navigator.clipboard.writeText(text);
+    } else {
+      await Share.share({ message: text });
+    }
+    return true;
+  } catch {
+    return false;
   }
-  await Share.share({ message: text });
 }
 
 /**
@@ -86,6 +97,9 @@ export function useChatController() {
     [clinicId, queryClient, veterinarianId],
   );
 
+  // Respuestas ya obtenidas por pregunta: sobreviven a re-renders para reutilizarlas al reintentar.
+  const answers = useRef(new Map<string, Part[]>()).current;
+
   const deps = useMemo<ChatDeps>(
     () => ({
       responder: routeResponder({
@@ -107,6 +121,7 @@ export function useChatController() {
         addUnread: () => useChatStore.getState().addUnread(),
       },
       getPending: () => useChatStore.getState().pending,
+      answers,
       history: () => historyRef.current,
       now: () => new Date(),
       newId: newMessageId,
@@ -122,46 +137,50 @@ export function useChatController() {
           requestId: makeRequestId(),
         }),
     }),
-    [clinicId, openExpiredDialog, persist, setAccessState],
+    [answers, clinicId, openExpiredDialog, persist, setAccessState],
   );
 
-  const send = useCallback(
-    async (text: string) => {
-      if (activeTurn) return;
-      const controller = new AbortController();
-      activeTurn = controller;
-      try {
-        // El paciente de contexto es el vigente al enviar, no el de cuando llegue la respuesta.
-        await startTurn(
-          deps,
-          { text, patientId: useConversationStore.getState().patientId },
-          controller.signal,
-        );
-      } finally {
-        activeTurn = null;
-      }
-    },
+  /** Una escritura de un turno ya invalidado (conversación borrada) no se hace. */
+  const guarded = useCallback(
+    (turn: { isCurrent: () => boolean }): ChatDeps => ({
+      ...deps,
+      persist: (message) => (turn.isCurrent() ? deps.persist(message) : Promise.resolve()),
+    }),
     [deps],
+  );
+
+  /** Devuelve si el envío se aceptó: con un turno en curso o sin sesión lista no se acepta. */
+  const send = useCallback(
+    (text: string): boolean => {
+      const turn = clinicId ? gate.begin() : null;
+      if (!turn) return false;
+      // El paciente de contexto es el vigente al enviar, no el de cuando llegue la respuesta.
+      void startTurn(
+        guarded(turn),
+        { text, patientId: useConversationStore.getState().patientId },
+        turn.signal,
+      ).finally(turn.end);
+      return true;
+    },
+    [clinicId, guarded],
   );
 
   const retry = useCallback(
-    async (messageId: string) => {
-      if (activeTurn) return;
-      const controller = new AbortController();
-      activeTurn = controller;
-      try {
-        await retryTurn(deps, messageId, controller.signal);
-      } finally {
-        activeTurn = null;
-      }
+    (messageId: string): boolean => {
+      const turn = clinicId ? gate.begin() : null;
+      if (!turn) return false;
+      void retryTurn(guarded(turn), messageId, turn.signal).finally(turn.end);
+      return true;
     },
-    [deps],
+    [clinicId, guarded],
   );
 
-  const stop = useCallback(() => activeTurn?.abort(), []);
+  const stop = useCallback(() => gate.abort(), []);
 
   /** «Borrar conversación»: texto y audio del autor; `knowledge_queries` permanece (FR-020). */
   const clear = useCallback(async () => {
+    // Un turno en vuelo no puede «resucitar» la conversación escribiendo tras el borrado.
+    gate.invalidate();
     await deleteConversation(supabase);
     useChatStore.getState().reset();
     await queryClient.invalidateQueries({ queryKey: conversationQueryKey(veterinarianId) });

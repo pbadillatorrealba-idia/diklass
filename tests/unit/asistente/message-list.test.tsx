@@ -60,6 +60,25 @@ describe("MessageList", () => {
     expect(html).toContain('aria-live="off"');
   });
 
+  test("la región de estado es hermana de la lista, no está dentro del log", () => {
+    const html = render(<MessageList {...base} messages={[msg("u1")]} />);
+    expect(html).toContain('data-testid="chat-status"');
+    const inicioEstado = html.lastIndexOf("<div", html.indexOf('data-testid="chat-status"'));
+    const log = html.slice(html.indexOf('role="log"'), inicioEstado);
+    expect(log).not.toContain('role="status"');
+  });
+
+  test("«Pensando…» del mensaje pendiente no se anuncia dentro del log", () => {
+    const html = render(
+      <MessageList
+        {...base}
+        messages={[msg("u1"), msg("a1", { status: "thinking", parts: [] })]}
+      />,
+    );
+    expect(html).toContain("Pensando…");
+    expect(html).not.toMatch(/role="status"[^>]*>[^<]*<[^>]*>Pensando…/);
+  });
+
   test("sin mensajes y sin carga muestra el vacío", () => {
     expect(render(<MessageList {...base} messages={[]} />)).toContain("Aún no hay mensajes");
   });

@@ -96,7 +96,13 @@ test.describe("chat del asistente", () => {
 
     await panel(page).getByTestId("chat-clear").click();
     await expect(panel(page).getByTestId("chat-clear-confirm")).toContainText("auditoría");
+    // Acción destructiva: el foco entra en «Cancelar» y vuelve al disparador al cancelar.
+    await expect(panel(page).getByRole("alertdialog")).toHaveAccessibleName(
+      "Confirmar el borrado de la conversación",
+    );
+    await expect(panel(page).getByTestId("chat-clear-no")).toBeFocused();
     await panel(page).getByTestId("chat-clear-no").click();
+    await expect(panel(page).getByTestId("chat-clear")).toBeFocused();
     await expect(mensajes(page)).toHaveCount(2);
 
     await panel(page).getByTestId("chat-clear").click();
@@ -208,5 +214,30 @@ test.describe("chat del asistente", () => {
     await page.getByRole("link", { name: "Inicio" }).first().click();
     await expect(page).toHaveURL(/\/home$/);
     await expect(panel(page).getByTestId("chat-context")).toHaveCount(0);
+  });
+
+  // Hallazgo 5 de la revisión: «Detener» corta al instante aunque la red tarde; la pregunta se conserva
+  // y se puede volver a preguntar sin esperar.
+  test("«Detener» corta una consulta lenta al instante y deja la pregunta", async ({ page }) => {
+    await page.route("**/rest/v1/rpc/search_knowledge_fragments", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await route.continue();
+    });
+    await preguntar(page, `¿Protocolo de prueba de detener ${Date.now()}?`);
+    await expect(panel(page).getByTestId("composer-stop")).toBeVisible();
+    await expect(panel(page).getByText("Pensando…").first()).toBeVisible();
+
+    await panel(page).getByTestId("composer-stop").click();
+    // Al instante: sin esperar a los 4 s de la red.
+    await expect(panel(page).getByTestId("composer-stop")).toHaveCount(0, { timeout: 2_000 });
+    await expect(panel(page).getByText("Pensando…")).toHaveCount(0);
+    await expect(mensajes(page)).toHaveCount(1, { timeout: 5_000 });
+    await expect(panel(page).getByTestId("message-user")).toBeVisible();
+
+    // Se puede volver a preguntar de inmediato.
+    await preguntar(page, "¿Qué día es hoy?");
+    await expect(panel(page).getByTestId("message-assistant").last()).toContainText(/Hoy es/, {
+      timeout: 15_000,
+    });
   });
 });

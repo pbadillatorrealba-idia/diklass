@@ -61,7 +61,8 @@ export function MessageItem({
         ))}
       </View>
       {message.status === "thinking" ? (
-        <View role="status">
+        // Solo visual: la región de estado de la lista lo anuncia una vez («Pensando…»).
+        <View aria-hidden>
           <Text tone="muted">Pensando…</Text>
         </View>
       ) : null}
@@ -71,7 +72,7 @@ export function MessageItem({
         </Text>
       ) : null}
       {message.status === "error" ? (
-        <Text tone="destructive" variant="caption">
+        <Text role="alert" tone="destructive" variant="caption">
           No se pudo completar.
         </Text>
       ) : null}

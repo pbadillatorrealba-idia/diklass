@@ -63,7 +63,7 @@ export default function PatientDetailScreen() {
     queryKey: ["registro", "patient", patientId],
     queryFn: () => (isUuid(patientId) ? getPatient(supabase, patientId) : null),
   });
-  // El hilo «Conocimiento» del panel pregunta sobre este paciente (FR-026), una vez que existe.
+  // El chat del panel toma a este paciente como contexto (FR-026), una vez que existe.
   usePatientContext(patientQuery.data ? patientId : null, patientQuery.data?.content.name);
   const tutorsQuery = useQuery({
     queryKey: ["registro", "tutors"],

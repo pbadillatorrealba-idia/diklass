@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Composer } from "@/components/asistente/composer";
 import { MessageList } from "@/components/asistente/message-list";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useChatStore } from "@/features/asistente/chat-store";
+import { restoreFocus } from "@/features/asistente/restore-focus";
 import type { ChatController } from "@/features/asistente/use-chat-controller";
 
 const SUGERENCIAS = [
@@ -25,12 +26,34 @@ export function ChatThread({ chat }: { chat: ChatController }) {
   const setDraft = useChatStore((state) => state.setDraft);
   const clearUnread = useChatStore((state) => state.clearUnread);
   const [confirming, setConfirming] = useState(false);
+  // Foco de la confirmación (acción destructiva): entra en «Cancelar» y vuelve al disparador al cerrar.
+  const clearRef = useRef<View>(null);
+  const cancelRef = useRef<View>(null);
+  const asHtml = (node: View | null) => node as unknown as HTMLElement | null;
+  useEffect(() => {
+    if (confirming) asHtml(cancelRef.current)?.focus?.({ preventScroll: true });
+  }, [confirming]);
+  const cancelarBorrado = () => {
+    setConfirming(false);
+    restoreFocus(() => asHtml(clearRef.current));
+  };
   const [status, setStatus] = useState<string | null>(null);
+  // Aviso breve de «Copiar»: una región de estado que existe siempre y se rellena (se anuncia).
+  const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (notice === "") return;
+    const id = setTimeout(() => setNotice(""), 3000);
+    return () => clearTimeout(id);
+  }, [notice]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: se repite con cada mensaje que llega.
   useEffect(() => {
     clearUnread();
   }, [chat.messages.length, clearUnread]);
+
+  const copiar = async (text: string) => {
+    setNotice((await chat.copy(text)) ? "Copiado al portapapeles." : "No se pudo copiar.");
+  };
 
   const borrar = async () => {
     try {
@@ -52,7 +75,13 @@ export function ChatThread({ chat }: { chat: ChatController }) {
           conocimiento. No escribo en el registro clínico.
         </Text>
         {chat.messages.length > 0 ? (
-          <Button onPress={() => setConfirming(true)} size="sm" testID="chat-clear" variant="ghost">
+          <Button
+            onPress={() => setConfirming(true)}
+            ref={clearRef}
+            size="sm"
+            testID="chat-clear"
+            variant="ghost"
+          >
             <ButtonText>Borrar conversación</ButtonText>
           </Button>
         ) : null}
@@ -68,6 +97,7 @@ export function ChatThread({ chat }: { chat: ChatController }) {
       {confirming ? (
         <View
           className="mx-3 mt-2 gap-2 rounded-sm border border-border bg-card p-3"
+          aria-label="Confirmar el borrado de la conversación"
           role="alertdialog"
           testID="chat-clear-confirm"
         >
@@ -85,7 +115,8 @@ export function ChatThread({ chat }: { chat: ChatController }) {
               <ButtonText>Borrar</ButtonText>
             </Button>
             <Button
-              onPress={() => setConfirming(false)}
+              onPress={cancelarBorrado}
+              ref={cancelRef}
               size="sm"
               testID="chat-clear-no"
               variant="outline"
@@ -95,6 +126,13 @@ export function ChatThread({ chat }: { chat: ChatController }) {
           </View>
         </View>
       ) : null}
+      <View aria-live="polite" role="status">
+        {notice !== "" ? (
+          <Text className="px-3 pt-2" tone="muted" variant="caption">
+            {notice}
+          </Text>
+        ) : null}
+      </View>
       {status !== null ? (
         <Text className="px-3 pt-2" tone="destructive" variant="caption">
           {status}
@@ -108,7 +146,7 @@ export function ChatThread({ chat }: { chat: ChatController }) {
               className="items-start"
               isDisabled={chat.isResponding}
               key={sugerencia}
-              onPress={() => void chat.send(sugerencia)}
+              onPress={() => chat.send(sugerencia)}
               variant="outline"
             >
               <ButtonText>{sugerencia}</ButtonText>
@@ -122,9 +160,9 @@ export function ChatThread({ chat }: { chat: ChatController }) {
         isLoading={chat.isLoading}
         isLoadingOlder={chat.isLoadingOlder}
         messages={chat.messages}
-        onCopy={(text) => void chat.copy(text)}
+        onCopy={(text) => void copiar(text)}
         onLoadOlder={() => void chat.loadOlder()}
-        onRetry={(id) => void chat.retry(id)}
+        onRetry={(id) => chat.retry(id)}
       />
 
       <View className="border-t border-border p-3">
@@ -132,8 +170,8 @@ export function ChatThread({ chat }: { chat: ChatController }) {
           isResponding={chat.isResponding}
           onChangeText={(text) => setDraft(THREAD_ID, text)}
           onSend={(text) => {
-            setDraft(THREAD_ID, "");
-            void chat.send(text);
+            // Solo se vacía el borrador si el envío se aceptó: si no, el texto no se pierde.
+            if (chat.send(text)) setDraft(THREAD_ID, "");
           }}
           onStop={chat.stop}
           value={draft}
