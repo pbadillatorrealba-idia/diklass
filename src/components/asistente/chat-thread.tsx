@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Composer } from "@/components/asistente/composer";
 import { MessageList } from "@/components/asistente/message-list";
+import { VoiceButton, VoicePanel } from "@/components/asistente/voice-controls";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useChatStore } from "@/features/asistente/chat-store";
@@ -26,6 +27,8 @@ export function ChatThread({ chat }: { chat: ChatController }) {
   const setDraft = useChatStore((state) => state.setDraft);
   const clearUnread = useChatStore((state) => state.clearUnread);
   const [confirming, setConfirming] = useState(false);
+  // «Eliminar audio» pide confirmación (asistente-conversacional «Conservación del audio por 90 días»).
+  const [audioToRemove, setAudioToRemove] = useState<string | null>(null);
   // Foco de la confirmación (acción destructiva): entra en «Cancelar» y vuelve al disparador al cerrar.
   const clearRef = useRef<View>(null);
   const cancelRef = useRef<View>(null);
@@ -133,6 +136,38 @@ export function ChatThread({ chat }: { chat: ChatController }) {
           </Text>
         ) : null}
       </View>
+      {audioToRemove !== null ? (
+        <View
+          aria-label="Confirmar la eliminación del audio"
+          className="mx-3 mt-2 gap-2 rounded-sm border border-border bg-card p-3"
+          role="alertdialog"
+          testID="audio-remove-confirm"
+        >
+          <Text>Se eliminará el audio de este mensaje. Su transcripción permanece como texto.</Text>
+          <View className="flex-row gap-2">
+            <Button
+              onPress={() => {
+                const id = audioToRemove;
+                setAudioToRemove(null);
+                void chat.removeAudio(id);
+              }}
+              size="sm"
+              testID="audio-remove-yes"
+              variant="destructive"
+            >
+              <ButtonText>Eliminar audio</ButtonText>
+            </Button>
+            <Button
+              onPress={() => setAudioToRemove(null)}
+              size="sm"
+              testID="audio-remove-no"
+              variant="outline"
+            >
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+          </View>
+        </View>
+      ) : null}
       {status !== null ? (
         <Text className="px-3 pt-2" tone="destructive" variant="caption">
           {status}
@@ -162,11 +197,15 @@ export function ChatThread({ chat }: { chat: ChatController }) {
         messages={chat.messages}
         onCopy={(text) => void copiar(text)}
         onLoadOlder={() => void chat.loadOlder()}
+        onPlayAudio={chat.playAudio}
+        onRemoveAudio={(id) => setAudioToRemove(id)}
         onRetry={(id) => chat.retry(id)}
       />
 
-      <View className="border-t border-border p-3">
+      <View className="gap-2 border-t border-border p-3">
+        <VoicePanel onSend={() => void chat.sendVoice()} voice={chat.voice} />
         <Composer
+          actions={<VoiceButton voice={chat.voice} />}
           isResponding={chat.isResponding}
           onChangeText={(text) => setDraft(THREAD_ID, text)}
           onSend={(text) => {

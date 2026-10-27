@@ -13,6 +13,7 @@ export type MessageItemProps = {
   onRetry?: (messageId: string) => void;
   onRemoveAudio?: (messageId: string) => void;
   onConfirmProposal?: (proposalId: string) => void;
+  onPlayAudio?: (path: string) => Promise<string | null>;
 };
 
 /**
@@ -25,6 +26,7 @@ export function MessageItem({
   message,
   onCopy,
   onConfirmProposal,
+  onPlayAudio,
   onRemoveAudio,
   onRetry,
 }: MessageItemProps) {
@@ -54,7 +56,7 @@ export function MessageItem({
       <View className="gap-2">
         {message.parts.map((part, index) => (
           <PartView
-            ctx={{ role: message.role, onConfirmProposal }}
+            ctx={{ role: message.role, onConfirmProposal, onPlayAudio }}
             key={`${part.type}-${index}`}
             part={part}
           />

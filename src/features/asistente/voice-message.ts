@@ -10,7 +10,7 @@ import type { WindowRecorder } from "@/features/voz/window-recorder";
 export const MIN_VOICE_MS = 1000;
 export const MAX_VOICE_MS = 120_000;
 
-export type VoiceNotice = "too-short" | "unavailable" | "blocked";
+export type VoiceNotice = "too-short" | "unavailable" | "blocked" | "not-understood";
 
 export type VoiceState =
   | { kind: "idle" }
@@ -60,6 +60,11 @@ export class VoiceMessageMachine {
   subscribe(listener: (state: VoiceState) => void): () => void {
     this.#listeners.add(listener);
     return () => this.#listeners.delete(listener);
+  }
+
+  /** Un aviso que viene de fuera de la máquina (p. ej. la transcripción salió ininteligible). */
+  showNotice(notice: VoiceNotice) {
+    this.#set(this.#state, notice);
   }
 
   dismissNotice() {

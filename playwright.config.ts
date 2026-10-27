@@ -7,7 +7,8 @@ const projects: PlaywrightTestProject[] = [
   // The theme follows `prefers-color-scheme`: the WCAG gate also runs against the dark palette.
   {
     name: "chromium-dark",
-    testMatch: "accessibility.spec.ts",
+    // El chat de voz también se verifica en oscuro (axe de sus estados, tarea 8.1).
+    testMatch: ["accessibility.spec.ts", "chat-voz.spec.ts"],
     use: { ...devices["Desktop Chrome"], colorScheme: "dark" },
   },
 ];

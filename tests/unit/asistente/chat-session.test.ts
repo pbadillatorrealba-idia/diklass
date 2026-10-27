@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import type { Message, Part } from "@/features/asistente/chat-model";
-import { type ChatDeps, retryTurn, startTurn } from "@/features/asistente/chat-session";
+import {
+  type ChatDeps,
+  retryTurn,
+  startTurn,
+  startTurnWithMessage,
+} from "@/features/asistente/chat-session";
 import { useChatStore } from "@/features/asistente/chat-store";
 import type { Responder } from "@/features/asistente/responders";
 
@@ -262,5 +267,64 @@ describe("startTurn", () => {
     await retryTurn(deps, id, senal());
     expect(consultas).toBe(1);
     expect(persistidos.map((m) => m.role)).toEqual(["user", "assistant"]);
+  });
+
+  // Mensaje de voz (7.5): la pregunta es la transcripción, y el audio se conserva en el mensaje.
+  describe("mensaje de voz", () => {
+    const conAudio = (): Message => ({
+      id: "voz-1",
+      role: "user",
+      createdAt: "2026-10-27T15:00:00.000Z",
+      status: "sending",
+      patientId: "bruma",
+      parts: [
+        {
+          type: "audio",
+          durationMs: 5000,
+          transcript: "dosis de meloxicam",
+          audioPath: "c1/a1/voz-1.webm",
+          audioState: "ready",
+        },
+      ],
+    });
+
+    test("el respondedor recibe la transcripción como pregunta", async () => {
+      let pregunta = "";
+      const { deps } = setup({
+        responder: {
+          async *respond(_h, input) {
+            pregunta = input.text;
+            yield { type: "ready", parts: [{ type: "text", text: "ok" }] };
+          },
+        },
+      });
+      await startTurnWithMessage(deps, conAudio(), senal());
+      expect(pregunta).toBe("dosis de meloxicam");
+    });
+
+    test("se persiste el mensaje con su parte de audio y la respuesta", async () => {
+      const { deps, persistidos } = setup();
+      await startTurnWithMessage(deps, conAudio(), senal());
+      expect(persistidos.map((m) => m.role)).toEqual(["user", "assistant"]);
+      expect(persistidos[0]?.parts[0]).toMatchObject({
+        type: "audio",
+        audioPath: "c1/a1/voz-1.webm",
+        audioState: "ready",
+      });
+      expect(persistidos[0]?.patientId).toBe("bruma");
+    });
+
+    test("si el turno falla, el mensaje de voz queda en error para reintentar", async () => {
+      const { deps } = setup({
+        responder: {
+          // biome-ignore lint/correctness/useYield: simula un fallo antes de responder
+          async *respond() {
+            throw new Error("sin red");
+          },
+        },
+      });
+      await startTurnWithMessage(deps, conAudio(), senal());
+      expect(store().pending[0]).toMatchObject({ id: "voz-1", status: "error" });
+    });
   });
 });

@@ -16,7 +16,7 @@ import { nextStatusText } from "@/features/asistente/live-status";
 
 export type MessageListProps = Pick<
   MessageItemProps,
-  "onCopy" | "onRetry" | "onRemoveAudio" | "onConfirmProposal"
+  "onCopy" | "onRetry" | "onRemoveAudio" | "onConfirmProposal" | "onPlayAudio"
 > & {
   /** Cronológicos: los persistidos y, al final, los pendientes de la sesión. */
   messages: readonly Message[];

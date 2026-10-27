@@ -154,6 +154,43 @@ describe("MessageItem", () => {
       expect(html).toContain(marca);
     });
 
+    test("audio vigente con reproductor: ofrece «Reproducir audio» y conserva la transcripción", () => {
+      const message = base({
+        role: "user",
+        parts: [
+          {
+            type: "audio",
+            durationMs: 65_000,
+            transcript: "lo que dije",
+            audioPath: "c1/a1/m1.webm",
+            audioState: "ready",
+          },
+        ],
+      });
+      const html = render(<MessageItem message={message} onPlayAudio={async () => "https://x"} />);
+      expect(html).toContain('data-testid="message-play-audio"');
+      expect(html).toContain("lo que dije");
+      expect(html).toContain("01:05");
+    });
+
+    test("audio vencido o eliminado no ofrece reproducir", () => {
+      const message = base({
+        role: "user",
+        parts: [
+          {
+            type: "audio",
+            durationMs: 5000,
+            transcript: "x",
+            audioPath: null,
+            audioState: "expired",
+          },
+        ],
+      });
+      expect(
+        render(<MessageItem message={message} onPlayAudio={async () => null} />),
+      ).not.toContain("message-play-audio");
+    });
+
     test("audio vigente ofrece «Eliminar audio»", () => {
       const message = base({
         role: "user",

@@ -31,8 +31,13 @@ export type ChatDeps = {
   onError: (error: unknown) => void;
 };
 
+/** Lo que se le pregunta al asistente: el texto escrito o la transcripción del audio. */
 const textOf = (message: Message) =>
-  message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n");
+  message.parts
+    .flatMap((part) =>
+      part.type === "text" ? [part.text] : part.type === "audio" ? [part.transcript] : [],
+    )
+    .join("\n");
 
 /** Resuelve `"aborted"` cuando se pulsa «Detener», sin esperar a la red. */
 function whenAborted(signal: AbortSignal): Promise<"aborted"> {
@@ -138,14 +143,22 @@ export async function startTurn(
   input: { text: string; patientId: string | null },
   signal: AbortSignal,
 ) {
-  const user: Message = {
-    id: deps.newId(),
-    role: "user",
-    createdAt: deps.now().toISOString(),
-    status: "sending",
-    patientId: input.patientId,
-    parts: [{ type: "text", text: input.text }],
-  };
+  await startTurnWithMessage(
+    deps,
+    {
+      id: deps.newId(),
+      role: "user",
+      createdAt: deps.now().toISOString(),
+      status: "sending",
+      patientId: input.patientId,
+      parts: [{ type: "text", text: input.text }],
+    },
+    signal,
+  );
+}
+
+/** Un turno con un mensaje ya armado (p. ej. de voz: parte de audio con su transcripción). */
+export async function startTurnWithMessage(deps: ChatDeps, user: Message, signal: AbortSignal) {
   deps.store.addPending(user);
   await run(deps, user, signal);
 }

@@ -259,4 +259,11 @@ describe("VoiceMessageMachine", () => {
     expect(despues).not.toBe(antes);
     expect(despues).toEqual({ state: { kind: "idle" }, notice: "unavailable" });
   });
+
+  test("showNotice muestra un aviso sin cambiar el estado (p. ej. «No se entendió»)", async () => {
+    const h = harness();
+    h.machine.showNotice("not-understood");
+    expect(h.machine.getNotice()).toBe("not-understood");
+    expect(h.machine.getState().kind).toBe("idle");
+  });
 });

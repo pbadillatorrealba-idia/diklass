@@ -44,6 +44,10 @@ export function useVoiceMessage() {
     sendFailed: useCallback(() => current.sendFailed(), [current]),
     sendDone: useCallback(() => current.sendDone(), [current]),
     dismissNotice: useCallback(() => current.dismissNotice(), [current]),
+    showNotice: useCallback(
+      (n: Parameters<typeof current.showNotice>[0]) => current.showNotice(n),
+      [current],
+    ),
   };
 }
 
