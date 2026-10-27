@@ -1,4 +1,4 @@
-import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef } from "react";
 import { Share } from "react-native";
 import { useAgendaEvents } from "@/features/agenda/use-agenda-events";
@@ -8,7 +8,12 @@ import {
   newMessageId,
   type Part,
 } from "@/features/asistente/chat-model";
-import { type ChatDeps, retryTurn, startTurn } from "@/features/asistente/chat-session";
+import {
+  type ChatDeps,
+  retryTurn,
+  startTurn,
+  startTurnWithMessage,
+} from "@/features/asistente/chat-session";
 import { useChatStore } from "@/features/asistente/chat-store";
 import {
   type Cursor,
@@ -24,6 +29,17 @@ import {
 } from "@/features/asistente/responders";
 import { createTurnGate } from "@/features/asistente/turn-gate";
 import { conversationQueryKey, useConversation } from "@/features/asistente/use-conversation";
+import { useVoiceMessage } from "@/features/asistente/use-voice-message";
+import { acceptVoiceConsent, hasVoiceConsent } from "@/features/asistente/voice-consent";
+import {
+  borrarAudioChat,
+  firmarAudioChat,
+  quitarAudio,
+  rutaAudioChat,
+  rutasDeAudio,
+  subirAudioChat,
+  transcribirAudioChat,
+} from "@/features/asistente/voice-message-service";
 import { consultKnowledge } from "@/features/conocimiento/consulta-service";
 import { useConversationStore } from "@/features/conocimiento/conversation-store";
 import { isAuthenticationRequired } from "@/lib/errors";
@@ -69,6 +85,21 @@ export function useChatController() {
   const unread = useChatStore((state) => state.unread);
   const patientId = useConversationStore((state) => state.patientId);
   const patientName = useConversationStore((state) => state.patientName);
+  const voice = useVoiceMessage();
+  // Consentimiento de la primera grabación (el audio va a un proveedor externo). La clave empieza por
+  // «asistente»: se elimina de la caché al cerrar sesión.
+  const consent = useQuery({
+    enabled: veterinarianId !== null,
+    queryFn: () => hasVoiceConsent(supabase),
+    queryKey: ["asistente", "voz-consentimiento", veterinarianId],
+    // Sin reintento automático: un error se dice y el usuario reintenta él (no se queda «cargando»).
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const acceptConsent = useCallback(async () => {
+    await acceptVoiceConsent(supabase);
+    queryClient.setQueryData(["asistente", "voz-consentimiento", veterinarianId], true);
+  }, [queryClient, veterinarianId]);
   const events = useAgendaEvents();
   const eventsRef = useRef(events);
   eventsRef.current = events;
@@ -181,10 +212,115 @@ export function useChatController() {
   const clear = useCallback(async () => {
     // Un turno en vuelo no puede «resucitar» la conversación escribiendo tras el borrado.
     gate.invalidate();
+    // El audio es dato clínico: se borra de Storage antes que las filas (de mejor esfuerzo; la purga
+    // programada barre lo que quede sin referencia).
+    await borrarAudioChat(supabase, await rutasDeAudio(supabase).catch(() => []));
     await deleteConversation(supabase);
     useChatStore.getState().reset();
     await queryClient.invalidateQueries({ queryKey: conversationQueryKey(veterinarianId) });
   }, [queryClient, veterinarianId]);
+
+  /**
+   * Enviar el audio en revisión (tarea 7.5): subir → transcribir → un único mensaje de voz con su
+   * transcripción como pregunta. Si la transcripción es insuficiente se avisa y no se responde; si algo
+   * falla se vuelve a la revisión con el mismo audio para reintentar.
+   */
+  const sendVoice = useCallback(async (): Promise<boolean> => {
+    const turn = clinicId && veterinarianId ? gate.begin() : null;
+    if (!turn) {
+      // Hay una respuesta en curso: el audio sigue en revisión y se avisa, no se pierde en silencio.
+      voice.showNotice("busy");
+      return false;
+    }
+    const envio = voice.beginSend();
+    if (!envio || !clinicId || !veterinarianId) {
+      turn.end();
+      return false;
+    }
+    const id = newMessageId();
+    const path = rutaAudioChat(clinicId, veterinarianId, id, envio.payload.extension);
+    let subido = false;
+    try {
+      await subirAudioChat(supabase, path, envio.payload);
+      subido = true;
+      const { text, quality } = await transcribirAudioChat(supabase, envio.payload);
+      if (quality === "insufficient" || text.trim() === "") {
+        await borrarAudioChat(supabase, [path]);
+        voice.sendDone();
+        voice.showNotice("not-understood");
+        turn.end();
+        return true;
+      }
+      voice.sendDone();
+      void startTurnWithMessage(
+        guarded(turn),
+        {
+          id,
+          role: "user",
+          createdAt: new Date().toISOString(),
+          status: "sending",
+          patientId: useConversationStore.getState().patientId,
+          parts: [
+            {
+              type: "audio",
+              durationMs: envio.durationMs,
+              transcript: text.trim(),
+              audioPath: path,
+              audioState: "ready",
+            },
+          ],
+        },
+        turn.signal,
+      ).finally(turn.end);
+      return true;
+    } catch (error) {
+      if (subido) await borrarAudioChat(supabase, [path]);
+      voice.sendFailed();
+      turn.end();
+      if (deps.isAuthRequired(error)) deps.onAuthRequired();
+      else deps.onError(error);
+      return true;
+    }
+  }, [clinicId, deps, guarded, veterinarianId, voice]);
+
+  /** «Eliminar audio»: la transcripción permanece; el mensaje en pantalla pasa a «audio eliminado». */
+  const removeAudio = useCallback(
+    async (messageId: string) => {
+      try {
+        if (!(await quitarAudio(supabase, messageId))) return;
+      } catch (error) {
+        deps.onError(error);
+        return;
+      }
+      const key = conversationQueryKey(veterinarianId);
+      queryClient.setQueryData<InfiniteData<MessagePage, Cursor | undefined>>(key, (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                messages: page.messages.map((m) =>
+                  m.id === messageId
+                    ? {
+                        ...m,
+                        parts: m.parts.map((part) =>
+                          part.type === "audio"
+                            ? { ...part, audioState: "deleted" as const, audioPath: null }
+                            : part,
+                        ),
+                      }
+                    : m,
+                ),
+              })),
+            }
+          : old,
+      );
+    },
+    [deps, queryClient, veterinarianId],
+  );
+
+  /** URL firmada para reproducir un audio vigente; `null` si ya venció. */
+  const playAudio = useCallback((path: string) => firmarAudioChat(supabase, path), []);
 
   const messages = useMemo(
     () => mergeMessages(conversation.messages, pending),
@@ -207,6 +343,23 @@ export function useChatController() {
     stop,
     clear,
     copy: copyText,
+    voice,
+    voiceConsent: {
+      // Un error de carga es un estado propio (con reintento): tratarlo como «needed» dejaba al usuario
+      // en un bucle de aviso que no puede resolver.
+      status: (consent.data === true
+        ? "accepted"
+        : consent.isError
+          ? "error"
+          : consent.isLoading
+            ? "loading"
+            : "needed") as "accepted" | "error" | "loading" | "needed",
+      accept: acceptConsent,
+      retry: () => void consent.refetch(),
+    },
+    sendVoice,
+    removeAudio,
+    playAudio,
   };
 }
 

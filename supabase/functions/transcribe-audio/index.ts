@@ -1,12 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
-import { handleTranscribeAudio, TranscriptionTimeoutError } from "./handler.ts";
+import { transcribeWithOpenAI } from "../_shared/transcription.ts";
+import { handleTranscribeAudio } from "./handler.ts";
 
 declare const Deno: {
   serve: (handler: (request: Request) => Response | Promise<Response>) => void;
   env: { get: (name: string) => string | undefined };
 };
 
-const MODELO = "gpt-transcribe";
 const TIEMPO_MAXIMO_MS = 20_000;
 
 /** La clave vive solo en los secretos de la función (Principio V); nunca llega al cliente. */
@@ -40,33 +40,7 @@ Deno.serve((request) =>
         .maybeSingle();
       return (consulta?.content as { status?: string } | null)?.status === "open";
     },
-    transcribe: async (audio) => {
-      if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY no configurada");
-      const form = new FormData();
-      form.set("file", audio, audio.type.includes("webm") ? "tramo.webm" : "tramo.m4a");
-      form.set("model", MODELO);
-      form.set("language", "es");
-      form.set("response_format", "json");
-      let respuesta: Response;
-      try {
-        respuesta = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: form,
-          signal: AbortSignal.timeout(TIEMPO_MAXIMO_MS),
-        });
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "TimeoutError") {
-          throw new TranscriptionTimeoutError();
-        }
-        throw error;
-      }
-      if (!respuesta.ok) {
-        // Solo el estado: el cuerpo del proveedor no se propaga ni se registra.
-        throw new Error(`OPENAI_${respuesta.status}`);
-      }
-      const { text } = (await respuesta.json()) as { text?: string };
-      return text ?? "";
-    },
+    transcribe: (audio) =>
+      transcribeWithOpenAI({ audio, apiKey: OPENAI_API_KEY, timeoutMs: TIEMPO_MAXIMO_MS }),
   }),
 );

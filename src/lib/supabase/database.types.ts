@@ -140,6 +140,33 @@ export type Database = {
           },
         ]
       }
+      assistant_voice_consent: {
+        Row: {
+          accepted_at: string
+          author_id: string
+          version: string
+        }
+        ComputedFields: never
+        Insert: {
+          accepted_at?: string
+          author_id?: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          author_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_voice_consent_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_audit_events: {
         Row: {
           action: string
@@ -582,6 +609,8 @@ export type Database = {
         Args: { p_bucket_key: string; p_limit?: number }
         Returns: boolean
       }
+      assistant_audio_object_count: { Args: never; Returns: number }
+      consume_assistant_audio_quota: { Args: never; Returns: string }
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
@@ -607,6 +636,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      remove_assistant_audio: { Args: { p_message_id: string }; Returns: string }
       request_id: { Args: never; Returns: string }
       revoke_access_session: {
         Args: { p_session_id?: string }

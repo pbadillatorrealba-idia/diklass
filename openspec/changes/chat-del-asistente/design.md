@@ -87,10 +87,11 @@ clínica append-only (más sensible y no permite el derecho a retirar la convers
 
 ### D4. Borrar la conversación
 
-Borrar objetos de Storage no se puede por SQL, así que el borrado lo orquesta una Edge Function
-(`delete-assistant-conversation`, JWT del autor) que elimina los objetos de su audio con la API de Storage
-—la misma lógica que la purga, extraída a `_shared`— y luego llama a la RPC `delete_assistant_conversation()`
-que borra las filas del autor. `knowledge_queries` no se toca (auditoría, FR-020); la confirmación lo dice.
+Borrar objetos de Storage no se puede por SQL, pero sí por la API de Storage con la política de borrado del
+autor sobre su propio prefijo (migración 023): el cliente lee las rutas de audio de sus mensajes, borra los
+objetos y luego llama a la RPC `delete_assistant_conversation()` que borra las filas. No hace falta una Edge
+Function para esto; la purga programada (D6) barre además los objetos que queden sin referencia.
+`knowledge_queries` no se toca (auditoría, FR-020); la confirmación lo dice.
 
 ### D5. Audio: grabador, bucket y función
 
@@ -113,6 +114,11 @@ que borra las filas del autor. `knowledge_queries` no se toca (auditoría, FR-02
   la duración que declara el cliente solo es informativa, no un control. El tiempo hacia el proveedor sube
   de 20 s a 60 s para el chat, porque 2 min de audio con 20 s daría `TRANSCRIPTION_TIMEOUT` frecuentes;
   una prueba del handler cubre el tope y el tiempo. Se prueban ambos contenedores (webm y mp4).
+- **Primer uso**: el audio y su transcripción van a un proveedor externo, así que antes de la primera
+  grabación se muestra un aviso que el veterinario acepta; se guarda por autor con la versión del aviso en
+  `assistant_voice_consent` (el servidor fija el autor y el momento). Una versión nueva lo vuelve a pedir.
+- **Cuota y abuso**: `consume_assistant_audio_quota` (20 transcripciones en 10 min por usuario) y un tope de
+  100 objetos por autor en el bucket; el acceso y la cuota se comprueban antes de leer el cuerpo.
 - **Flujo de envío**: el mensaje pendiente vive en el almacén efímero (`sending`); se sube el audio, se
   transcribe y, solo entonces, se inserta **un único** mensaje de usuario terminal con la transcripción, y
   el asistente responde sobre ella. Si falla la subida o la transcripción, el pendiente queda en `error`

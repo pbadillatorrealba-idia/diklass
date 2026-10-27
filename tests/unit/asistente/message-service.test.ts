@@ -3,6 +3,7 @@ import {
   cursorFilter,
   flattenPages,
   PAGE_SIZE,
+  rowToInsert,
   rowToMessage,
 } from "@/features/asistente/message-service";
 
@@ -62,6 +63,55 @@ describe("rowToMessage", () => {
   });
 });
 
+// El audio vence a los 90 días: la lectura lo marca «vencido» sin esperar a la purga.
+describe("rowToMessage · audio", () => {
+  const audioRow = (over: Record<string, unknown>) =>
+    fila({
+      audio_path: "c1/a1/m1.webm",
+      parts: [
+        {
+          type: "audio",
+          durationMs: 5000,
+          transcript: "x",
+          audioPath: "c1/a1/m1.webm",
+          audioState: "ready",
+        },
+      ],
+      ...over,
+    });
+  const ahora = new Date("2026-10-27T12:00:00.000Z");
+
+  test("un audio vigente sigue «ready»", () => {
+    const m = rowToMessage(audioRow({ audio_expires_at: "2027-01-01T00:00:00Z" }), ahora);
+    expect(m?.parts[0]).toMatchObject({ audioState: "ready", audioPath: "c1/a1/m1.webm" });
+  });
+
+  test("pasado el vencimiento se ve «expired», sin ruta, con su transcripción", () => {
+    const m = rowToMessage(audioRow({ audio_expires_at: "2026-10-01T00:00:00Z" }), ahora);
+    expect(m?.parts[0]).toMatchObject({ audioState: "expired", audioPath: null, transcript: "x" });
+  });
+
+  test("un audio eliminado no cambia", () => {
+    const m = rowToMessage(
+      audioRow({
+        audio_path: null,
+        audio_expires_at: null,
+        parts: [
+          {
+            type: "audio",
+            durationMs: 5000,
+            transcript: "x",
+            audioPath: null,
+            audioState: "deleted",
+          },
+        ],
+      }),
+      ahora,
+    );
+    expect(m?.parts[0]).toMatchObject({ audioState: "deleted" });
+  });
+});
+
 describe("paginación por cursor", () => {
   test("la página es de 50", () => {
     expect(PAGE_SIZE).toBe(50);
@@ -98,5 +148,55 @@ describe("flattenPages", () => {
 
   test("sin páginas es vacío", () => {
     expect(flattenPages([])).toEqual([]);
+  });
+});
+
+// El audio se declara en la fila (la migración 023 exige la ruta canónica y fija el vencimiento).
+describe("rowToInsert", () => {
+  const base = {
+    id: "m1",
+    role: "user" as const,
+    createdAt: "",
+    status: "done" as const,
+    patientId: null,
+  };
+
+  test("un mensaje de texto no declara audio", () => {
+    const fila = rowToInsert("c1", { ...base, parts: [{ type: "text", text: "hola" }] });
+    expect(fila.audio_path).toBeNull();
+    expect(fila.clinic_id).toBe("c1");
+    expect(fila.id).toBe("m1");
+  });
+
+  test("un mensaje con audio vigente declara su ruta", () => {
+    const fila = rowToInsert("c1", {
+      ...base,
+      parts: [
+        {
+          type: "audio",
+          durationMs: 5000,
+          transcript: "x",
+          audioPath: "c1/a1/m1.webm",
+          audioState: "ready",
+        },
+      ],
+    });
+    expect(fila.audio_path).toBe("c1/a1/m1.webm");
+  });
+
+  test("un audio ya eliminado o vencido no declara ruta", () => {
+    const fila = rowToInsert("c1", {
+      ...base,
+      parts: [
+        {
+          type: "audio",
+          durationMs: 5000,
+          transcript: "x",
+          audioPath: null,
+          audioState: "deleted",
+        },
+      ],
+    });
+    expect(fila.audio_path).toBeNull();
   });
 });

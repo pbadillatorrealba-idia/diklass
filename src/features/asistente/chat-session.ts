@@ -31,8 +31,13 @@ export type ChatDeps = {
   onError: (error: unknown) => void;
 };
 
+/** Lo que se le pregunta al asistente: el texto escrito o la transcripción del audio. */
 const textOf = (message: Message) =>
-  message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n");
+  message.parts
+    .flatMap((part) =>
+      part.type === "text" ? [part.text] : part.type === "audio" ? [part.transcript] : [],
+    )
+    .join("\n");
 
 /** Resuelve `"aborted"` cuando se pulsa «Detener», sin esperar a la red. */
 function whenAborted(signal: AbortSignal): Promise<"aborted"> {
@@ -138,14 +143,22 @@ export async function startTurn(
   input: { text: string; patientId: string | null },
   signal: AbortSignal,
 ) {
-  const user: Message = {
-    id: deps.newId(),
-    role: "user",
-    createdAt: deps.now().toISOString(),
-    status: "sending",
-    patientId: input.patientId,
-    parts: [{ type: "text", text: input.text }],
-  };
+  await startTurnWithMessage(
+    deps,
+    {
+      id: deps.newId(),
+      role: "user",
+      createdAt: deps.now().toISOString(),
+      status: "sending",
+      patientId: input.patientId,
+      parts: [{ type: "text", text: input.text }],
+    },
+    signal,
+  );
+}
+
+/** Un turno con un mensaje ya armado (p. ej. de voz: parte de audio con su transcripción). */
+export async function startTurnWithMessage(deps: ChatDeps, user: Message, signal: AbortSignal) {
   deps.store.addPending(user);
   await run(deps, user, signal);
 }
@@ -153,7 +166,7 @@ export async function startTurn(
 /** «Reintentar»: reenvía la misma pregunta (mismo id) sin duplicarla en la conversación. */
 export async function retryTurn(deps: ChatDeps, messageId: string, signal: AbortSignal) {
   const user = deps.getPending().find((m) => m.id === messageId);
-  if (!user || user.role !== "user" || user.status !== "error") return;
+  if (user?.role !== "user" || user.status !== "error") return;
   deps.store.setPendingStatus(messageId, "sending");
   await run(deps, { ...user, status: "sending" }, signal);
 }

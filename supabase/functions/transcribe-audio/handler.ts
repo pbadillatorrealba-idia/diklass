@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  calidad,
+  corsHeaders,
+  MIME_PERMITIDOS,
+  TranscriptionTimeoutError,
+  tipoBase,
+} from "../_shared/transcription.ts";
 
 /**
  * Transcripción de un tramo de la escucha clínica (cambio implementar-asr-real-captura-voz, D3).
@@ -7,36 +14,13 @@ import { z } from "zod";
  * es dato clínico (Principio V) y la bitácora lleva solo identificadores, estado y tamaños.
  */
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-request-id",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-} as const satisfies Record<string, string>;
-
 /** Coincide con el límite del bucket `consultation-audio` (migración 019). */
 export const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
 const MARGEN_MULTIPART_BYTES = 64 * 1024;
 
-// `video/webm`: el mismo contenedor WebM de solo audio; algunos runtimes y navegadores lo
-// reetiquetan así al armar el FormData.
-const MIME_PERMITIDOS = new Set([
-  "audio/webm",
-  "video/webm",
-  "audio/mp4",
-  "audio/m4a",
-  "audio/x-m4a",
-]);
-
 const sessionIdSchema = z.string().uuid();
 
-/** El proveedor excedió el tiempo máximo (FR-055): el cliente descarta el tramo. */
-export class TranscriptionTimeoutError extends Error {
-  constructor() {
-    super("TRANSCRIPTION_TIMEOUT");
-    this.name = "TranscriptionTimeoutError";
-  }
-}
+export { TranscriptionTimeoutError };
 
 export type TranscribeDependencies = {
   log: (line: string) => void;
@@ -49,12 +33,6 @@ export type TranscribeDependencies = {
 
 const respond = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
-
-/** FR-031: calidad por la cantidad de letras; vacío, ruido o puntuación no es clínicamente útil. */
-function calidad(texto: string): "ok" | "insufficient" {
-  const letras = texto.match(/\p{L}/gu)?.length ?? 0;
-  return letras < 3 ? "insufficient" : "ok";
-}
 
 export async function handleTranscribeAudio(
   request: Request,
@@ -103,7 +81,7 @@ export async function handleTranscribeAudio(
   if (!(audio instanceof Blob) || !sessionId.success) {
     return fallo("INVALID_INPUT", 400);
   }
-  if (!MIME_PERMITIDOS.has(audio.type.split(";")[0]?.trim() ?? "")) {
+  if (!MIME_PERMITIDOS.has(tipoBase(audio))) {
     return fallo("INVALID_INPUT", 400);
   }
   if (audio.size > MAX_AUDIO_BYTES) {

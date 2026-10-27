@@ -34,6 +34,21 @@ const chat = (over: Record<string, unknown> = {}) =>
     retry: () => true,
     stop: () => {},
     clear: async () => {},
+    voice: {
+      state: { kind: "idle" },
+      notice: null,
+      elapsed: "00:00",
+      blockedReason: null,
+      start: () => {},
+      stop: () => {},
+      cancel: () => {},
+      discard: () => {},
+      dismissNotice: () => {},
+    },
+    voiceConsent: { status: "accepted", accept: async () => {}, retry: () => {} },
+    sendVoice: async () => true,
+    removeAudio: async () => {},
+    playAudio: async () => null,
     copy: async () => {},
     ...over,
   }) as never;
@@ -80,5 +95,24 @@ describe("ChatThread", () => {
     const html = render(<ChatThread chat={chat({ messages: [msg("u1")] })} />);
     expect(html).toContain('data-testid="composer-input"');
     expect(html).toContain('data-testid="message-list"');
+  });
+
+  test("el composer ofrece grabar un mensaje de voz", () => {
+    expect(render(<ChatThread chat={chat()} />)).toContain('data-testid="voice-record"');
+  });
+
+  test("con la escucha de la consulta activa explica por qué no se puede grabar", () => {
+    const voice = {
+      ...(chat() as unknown as { voice: Record<string, unknown> }).voice,
+      blockedReason: "La escucha de la consulta usa el micrófono.",
+    };
+    const html = render(<ChatThread chat={chat({ voice })} />);
+    expect(html).toContain("La escucha de la consulta usa el micrófono.");
+  });
+
+  test("sin audio por eliminar no hay confirmación de «Eliminar audio»", () => {
+    expect(render(<ChatThread chat={chat()} />)).not.toContain(
+      'data-testid="audio-remove-confirm"',
+    );
   });
 });

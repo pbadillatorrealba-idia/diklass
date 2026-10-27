@@ -18,6 +18,7 @@ import {
   VOZ_QUERY_KEY,
 } from "@/features/voz/listen-mode-pipeline";
 import { startListenSession } from "@/features/voz/listen-session-service";
+import { useMicLockStore } from "@/features/voz/mic-lock-store";
 import {
   listTranscriptSegments,
   type TranscriptSegmentEntry,
@@ -66,6 +67,13 @@ export function useListenMode(
   // Siempre la última función: `confirmFact` no cambia de identidad con cada render.
   const onLandedRef = useRef(onLanded);
   onLandedRef.current = onLanded;
+
+  // Un solo micrófono: mientras esta captura está activa, el chat no puede grabar un mensaje de voz.
+  useEffect(() => {
+    if (state !== "capturando") return;
+    useMicLockStore.getState().setListenActive(true);
+    return () => useMicLockStore.getState().setListenActive(false);
+  }, [state]);
 
   // El reloj es de la captura: quien lo muestre (hilo, riel o cinta) cuenta desde este instante.
   useEffect(() => {

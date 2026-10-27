@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Composer } from "@/components/asistente/composer";
 import { MessageList } from "@/components/asistente/message-list";
+import { VoiceButton, VoiceConsentDialog, VoicePanel } from "@/components/asistente/voice-controls";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useChatStore } from "@/features/asistente/chat-store";
@@ -16,6 +17,8 @@ const SUGERENCIAS = [
 
 const THREAD_ID = "asistente";
 
+const asHtml = (node: View | null) => node as unknown as HTMLElement | null;
+
 /**
  * Hilo «Asistente» como chat (asistente-conversacional · design.md D10 · D12): la lista de mensajes
  * anclada, el composer fijo al pie y «Borrar conversación» con su confirmación. Que el hilo esté
@@ -26,10 +29,39 @@ export function ChatThread({ chat }: { chat: ChatController }) {
   const setDraft = useChatStore((state) => state.setDraft);
   const clearUnread = useChatStore((state) => state.clearUnread);
   const [confirming, setConfirming] = useState(false);
+  // «Eliminar audio» pide confirmación (asistente-conversacional «Conservación del audio por 90 días»).
+  const [audioToRemove, setAudioToRemove] = useState<string | null>(null);
+  // Aviso de primer uso: se pide antes de la primera grabación (el audio va a un proveedor externo).
+  const [consentOpen, setConsentOpen] = useState(false);
+  const recordRef = useRef<View>(null);
+  const empezarVoz = () => {
+    const { status, retry } = chat.voiceConsent;
+    if (status === "accepted") void chat.voice.start();
+    else if (status === "needed") setConsentOpen(true);
+    else if (status === "error") {
+      setStatus(
+        "No se pudo comprobar tu aceptación del aviso de voz. Se está reintentando; vuelve a intentarlo.",
+      );
+      retry();
+    }
+  };
+  const cancelarAviso = () => {
+    setConsentOpen(false);
+    // El diálogo se desmonta: el foco vuelve al botón de grabar (el escenario «rechazar el aviso»).
+    restoreFocus(() => asHtml(recordRef.current));
+  };
+  const aceptarVoz = async () => {
+    try {
+      await chat.voiceConsent.accept();
+      setConsentOpen(false);
+      void chat.voice.start();
+    } catch {
+      setStatus("No se pudo registrar tu aceptación. Inténtalo de nuevo.");
+    }
+  };
   // Foco de la confirmación (acción destructiva): entra en «Cancelar» y vuelve al disparador al cerrar.
   const clearRef = useRef<View>(null);
   const cancelRef = useRef<View>(null);
-  const asHtml = (node: View | null) => node as unknown as HTMLElement | null;
   useEffect(() => {
     if (confirming) asHtml(cancelRef.current)?.focus?.({ preventScroll: true });
   }, [confirming]);
@@ -133,6 +165,38 @@ export function ChatThread({ chat }: { chat: ChatController }) {
           </Text>
         ) : null}
       </View>
+      {audioToRemove !== null ? (
+        <View
+          aria-label="Confirmar la eliminación del audio"
+          className="mx-3 mt-2 gap-2 rounded-sm border border-border bg-card p-3"
+          role="alertdialog"
+          testID="audio-remove-confirm"
+        >
+          <Text>Se eliminará el audio de este mensaje. Su transcripción permanece como texto.</Text>
+          <View className="flex-row gap-2">
+            <Button
+              onPress={() => {
+                const id = audioToRemove;
+                setAudioToRemove(null);
+                void chat.removeAudio(id);
+              }}
+              size="sm"
+              testID="audio-remove-yes"
+              variant="destructive"
+            >
+              <ButtonText>Eliminar audio</ButtonText>
+            </Button>
+            <Button
+              onPress={() => setAudioToRemove(null)}
+              size="sm"
+              testID="audio-remove-no"
+              variant="outline"
+            >
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+          </View>
+        </View>
+      ) : null}
       {status !== null ? (
         <Text className="px-3 pt-2" tone="destructive" variant="caption">
           {status}
@@ -162,11 +226,18 @@ export function ChatThread({ chat }: { chat: ChatController }) {
         messages={chat.messages}
         onCopy={(text) => void copiar(text)}
         onLoadOlder={() => void chat.loadOlder()}
+        onPlayAudio={chat.playAudio}
+        onRemoveAudio={(id) => setAudioToRemove(id)}
         onRetry={(id) => chat.retry(id)}
       />
 
-      <View className="border-t border-border p-3">
+      <View className="gap-2 border-t border-border p-3">
+        {consentOpen ? (
+          <VoiceConsentDialog onAccept={() => void aceptarVoz()} onCancel={cancelarAviso} />
+        ) : null}
+        <VoicePanel onSend={() => void chat.sendVoice()} voice={chat.voice} />
         <Composer
+          actions={<VoiceButton buttonRef={recordRef} onPress={empezarVoz} voice={chat.voice} />}
           isResponding={chat.isResponding}
           onChangeText={(text) => setDraft(THREAD_ID, text)}
           onSend={(text) => {

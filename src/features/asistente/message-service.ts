@@ -46,14 +46,32 @@ const rowSchema = z.object({
   parts: z.array(partSchema),
   patient_id: z.string().nullable(),
   created_at: z.string(),
+  audio_expires_at: z.string().nullable().optional(),
 });
 
-/** Fila → mensaje del modelo; una fila ilegible da `null` (se omite, no tumba la conversación). */
-export function rowToMessage(row: unknown): Message | null {
+/**
+ * Fila → mensaje del modelo; una fila ilegible da `null` (se omite, no tumba la conversación). El audio
+ * vencido se marca «expired» al leer, sin esperar a la purga: pasada `audio_expires_at` no hay URL.
+ */
+export function rowToMessage(row: unknown, now: Date = new Date()): Message | null {
   const parsed = rowSchema.safeParse(row);
   if (!parsed.success) return null;
-  const { id, role, status, parts, patient_id, created_at } = parsed.data;
-  return { id, role, createdAt: created_at, status, patientId: patient_id, parts };
+  const { id, role, status, parts, patient_id, created_at, audio_expires_at } = parsed.data;
+  const vencido = audio_expires_at != null && new Date(audio_expires_at) < now;
+  return {
+    id,
+    role,
+    createdAt: created_at,
+    status,
+    patientId: patient_id,
+    parts: vencido
+      ? parts.map((part) =>
+          part.type === "audio" && part.audioState === "ready"
+            ? { ...part, audioState: "expired" as const, audioPath: null }
+            : part,
+        )
+      : parts,
+  };
 }
 
 /** Filtro de PostgREST para «lo anterior al cursor»; `null` sin cursor. */
@@ -71,7 +89,7 @@ export async function listMessages(
   try {
     let query = client
       .from("assistant_messages")
-      .select("id, role, status, parts, patient_id, created_at")
+      .select("id, role, status, parts, patient_id, created_at, audio_expires_at")
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       // Una fila de más dice si hay página anterior sin otra consulta.
@@ -105,22 +123,33 @@ export async function listMessages(
   }
 }
 
+/**
+ * La fila a insertar. El audio vigente declara su ruta (la migración 023 exige que sea la canónica de
+ * su id y fija el vencimiento a 90 días); el cliente no manda `created_at` ni `audio_expires_at`.
+ */
+export function rowToInsert(clinicId: string, message: Message) {
+  const audio = message.parts.find((part) => part.type === "audio");
+  return {
+    id: message.id,
+    clinic_id: clinicId,
+    role: message.role,
+    status: message.status as "done" | "error",
+    parts: message.parts as never,
+    patient_id: message.patientId,
+    audio_path: audio?.type === "audio" && audio.audioState === "ready" ? audio.audioPath : null,
+  };
+}
+
 /** Persiste un mensaje terminal con el mismo id que tenía en la sesión (sin duplicarlo al reintentar). */
 export async function insertMessage(
   client: SupabaseClient<Database>,
   input: { clinicId: string; message: Message },
 ): Promise<void> {
   const requestId = makeRequestId();
-  const { message, clinicId } = input;
   try {
-    const { error } = await client.from("assistant_messages").insert({
-      id: message.id,
-      clinic_id: clinicId,
-      role: message.role,
-      status: message.status as "done" | "error",
-      parts: message.parts as never,
-      patient_id: message.patientId,
-    });
+    const { error } = await client
+      .from("assistant_messages")
+      .insert(rowToInsert(input.clinicId, input.message));
     if (error) throw error;
   } catch (error) {
     void captureClientError(errorReporter, { error, operation: "insertMessage", requestId });

@@ -60,6 +60,9 @@ export function messageText(message: Message): string {
           return part.answer.segmentos.map((segmento) => segmento.texto).join("\n");
         case "proposal":
           return part.proposal.summary;
+        default:
+          // Un tipo de parte nuevo que aún no sabe copiarse: sin texto, no rompe «Copiar».
+          return "";
       }
     })
     .filter((texto) => texto !== "")
