@@ -6,7 +6,7 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 
 ## 1. Base
 
-- [ ] 1.1 Orden decidido: mergear #70 primero y rebasar esta rama sobre `main`; revertir en esta rama el retiro de requisitos del shell hecho en `b76bc00` (quedan en la spec de #70) y registrar en `quickstart.md` el estado de #70. Verificación: `git log` con #70 en la base y `openspec validate shell-asistente-tres-zonas --strict` verde.
+- [ ] 1.1 Orden decidido: mergear #70 primero y actualizar esta rama con `main` por merge fast-forward (sin rebase); revertir en esta rama el retiro de requisitos del shell hecho en `b76bc00` (quedan en la spec de #70) y registrar en `quickstart.md` el estado de #70. Verificación: `git log` con #70 en la base y `openspec validate shell-asistente-tres-zonas --strict` verde.
 
 ## 2. Modelo, puerto y respondedores (D1 · D2)
 

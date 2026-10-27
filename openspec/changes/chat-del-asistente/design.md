@@ -224,7 +224,7 @@ se pone a cero al abrirlo; se pinta junto al icono del Asistente en el riel y en
 - **Duplicación con la escucha**: la grabación del chat y la de la escucha comparten `WindowRecorder` pero no
   su estado; el bloqueo mutuo evita dos usos del micrófono.
 - **Fusionar «Conocimiento»** cambia varias pruebas. Orden decidido: **#70 se mergea primero** y esta rama
-  se rebasa sobre `main`; los requisitos de #70 que este cambio reemplaza («Conocimiento en el panel»,
+  se actualiza con `main` por merge fast-forward (sin rebase); los requisitos de #70 que este cambio reemplaza («Conocimiento en el panel»,
   «Hilo del asistente con consultas básicas» y «Conocimiento» en «Hilos contextuales del panel») se
   quedan en la spec de #70 (se revierte su retiro del commit `b76bc00` en esta rama) y aquí se retiran con
   un delta REMOVED/MODIFIED de `sistema-visual`, de modo que #70 se valida y archiva sola.
@@ -232,7 +232,7 @@ se pone a cero al abrirlo; se pinta junto al icono del Asistente en el riel y en
 
 ## Migration Plan
 
-1. Mergear #70 y rebasar esta rama sobre `main`. 2. Migración 022 + `db:types`. 3. Desplegar
+1. Mergear #70 y actualizar esta rama con `main` por merge fast-forward (sin rebase). 2. Migración 022 + `db:types`. 3. Desplegar
 `transcribe-chat-audio`, `purge-chat-audio` y `delete-assistant-conversation`, guardar el secreto en Vault
 y programar la purga. Reversión: revertir el commit y `drop` de la tabla y el bucket (los mensajes son del
 chat; las auditorías de conocimiento no se tocan).

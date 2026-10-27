@@ -50,13 +50,13 @@ anclada, partes de mensaje, estados) y no como un parche más.
 Los requisitos de `shell-asistente-tres-zonas` que este cambio reemplaza («Conocimiento en el panel» y
 «Hilo del asistente con consultas básicas», y «Conocimiento» en «Hilos contextuales del panel») se quedan
 en la spec de #70, que construye la pestaña «Conocimiento» y el asistente básico. **Orden decidido: #70 se
-mergea primero** y esta rama se rebasa sobre `main`; aquí se retiran con un delta REMOVED/MODIFIED de
+mergea primero** y esta rama se actualiza con `main` por merge fast-forward (sin rebase); aquí se retiran con un delta REMOVED/MODIFIED de
 `sistema-visual` (`specs/sistema-visual/spec.md`, que solo se puede archivar tras archivar #70; ver tarea 9.2).
 
 ## Impact
 
 - **Base**: apilado sobre la PR #70 (`feat/shell-asistente-tres-zonas`); su PR base es esa rama hasta que se
-  mergee #70, tras lo cual se rebasa sobre `main`.
+  mergee #70, tras lo cual se actualiza con `main` por merge fast-forward (sin rebase).
 - **Datos**: migración nueva (`assistant_messages` con FK de paciente, bucket `assistant-audio`, RLS con
   acceso activo, vencimiento a 90 días, `pg_cron`/`pg_net`) y Edge Functions `transcribe-chat-audio`,
   `purge-chat-audio` (secreto compartido en Vault) y `delete-assistant-conversation`; `supabase/functions/_shared`
