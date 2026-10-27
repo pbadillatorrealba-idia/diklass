@@ -22,7 +22,7 @@ export const ANA = {
  */
 export async function submitLogin(page: Page, credentials: { email: string; password: string }) {
   await page.goto("/login");
-  const emailField = page.getByLabel("Correo de acceso");
+  const emailField = page.getByLabel("Correo");
   const passwordField = page.getByLabel("Contraseña", { exact: true });
   // Se escribe con React ya hidratado (el botón se habilita entonces): así cada tecla pasa por
   // el estado del formulario (sistema-visual D16).

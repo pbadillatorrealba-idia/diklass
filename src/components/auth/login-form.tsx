@@ -1,18 +1,19 @@
 import { useForm } from "@tanstack/react-form";
 import { useEffect, useRef, useState } from "react";
-import type { TextInput } from "react-native";
+import { type TextInput, useWindowDimensions, View } from "react-native";
+import { CONTINUOUS_CURVE } from "@/components/ui/border-curve";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
-import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlError,
   FormControlErrorText,
   FormControlLabel,
-  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AuthenticationError } from "@/features/auth/auth-service";
 import { type LoginValues, loginSchema } from "@/lib/forms/form";
@@ -57,6 +58,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       } catch (error) {
         // La contraseña no se conserva tras un intento fallido; el correo sí (FR-090 · US15-AC5).
         form.setFieldValue("password", "");
+        passwordRef.current?.focus();
         setSubmitError(
           error instanceof AuthenticationError
             ? error.message
@@ -75,113 +77,127 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 
   const submit = () => void form.handleSubmit();
   const isWeb = process.env.EXPO_OS === "web";
+  // Foco inicial solo en pantalla ancha: en móvil abriría el teclado de golpe (`md` = 768 px).
+  const { width } = useWindowDimensions();
+  const autoFocusEmail = isWeb && width >= 768;
 
   return (
     <AuthForm onSubmit={submit}>
-      <Card className="w-full max-w-form gap-6">
-        <VStack className="gap-2">
-          {/* La marca la pone `Logo` en la pantalla; el h1 nombra el propósito del formulario. */}
-          <Heading level={1}>Acceso para profesionales veterinarios</Heading>
+      <View
+        className="w-full md:max-w-form md:overflow-hidden md:rounded-sm md:border md:border-border md:bg-card"
+        style={CONTINUOUS_CURVE}
+      >
+        <VStack className="gap-6 md:p-4">
+          {/* Solo para lectores de pantalla: la marca la pone `Logo`, que no es un encabezado. */}
+          <Heading
+            level={1}
+            style={{ height: 1, overflow: "hidden", position: "absolute", width: 1 }}
+          >
+            Iniciar sesión
+          </Heading>
+          <View className="items-center py-6 md:py-12">
+            <Logo size="lg" />
+          </View>
+          <form.Field name="email">
+            {(field) => {
+              const error = field.state.meta.errors[0];
+              return (
+                <FormControl isInvalid={Boolean(error)}>
+                  <FormControlLabel>
+                    <Text variant="rubric">Correo</Text>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      accessibilityLabel="Correo"
+                      aria-label="Correo"
+                      autoCapitalize="none"
+                      autoComplete="username"
+                      autoFocus={autoFocusEmail}
+                      importantForAutofill="yes"
+                      keyboardType="email-address"
+                      nativeID="username"
+                      onBlur={field.handleBlur}
+                      onChangeText={field.handleChange}
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                      placeholder="Ingresa tu correo"
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      testID="login-email"
+                      textContentType="username"
+                      value={field.state.value}
+                    />
+                  </Input>
+                  {error ? (
+                    <FormControlError>
+                      <FormControlErrorText>{String(error)}</FormControlErrorText>
+                    </FormControlError>
+                  ) : null}
+                </FormControl>
+              );
+            }}
+          </form.Field>
+
+          <form.Field name="password">
+            {(field) => {
+              const error = field.state.meta.errors[0];
+              return (
+                <FormControl isInvalid={Boolean(error)}>
+                  <FormControlLabel>
+                    <Text variant="rubric">Contraseña</Text>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      accessibilityLabel="Contraseña"
+                      aria-label="Contraseña"
+                      autoCapitalize="none"
+                      autoComplete="current-password"
+                      importantForAutofill="yes"
+                      nativeID="password"
+                      onBlur={field.handleBlur}
+                      onChangeText={field.handleChange}
+                      // En web, Intro envía el `<form>` (envío implícito); en nativo, este evento.
+                      onSubmitEditing={isWeb ? undefined : submit}
+                      placeholder="Ingresa tu contraseña"
+                      ref={passwordRef}
+                      returnKeyType="go"
+                      secureTextEntry={!showPassword}
+                      testID="login-password"
+                      textContentType="password"
+                      value={field.state.value}
+                    />
+                    <PasswordToggle
+                      onToggle={() => setShowPassword((visible) => !visible)}
+                      visible={showPassword}
+                    />
+                  </Input>
+                  {error ? (
+                    <FormControlError>
+                      <FormControlErrorText>{String(error)}</FormControlErrorText>
+                    </FormControlError>
+                  ) : null}
+                </FormControl>
+              );
+            }}
+          </form.Field>
+
+          {submitError ? (
+            <Callout testID="login-error" tone="error">
+              {submitError}
+            </Callout>
+          ) : null}
+
+          <Button
+            accessibilityLabel="Iniciar sesión"
+            isDisabled={!isHydrated || form.state.isSubmitting}
+            // En web el envío llega por el evento `submit` del `<form>` (design.md D16).
+            onPress={isWeb ? undefined : submit}
+            testID="login-submit"
+            type="submit"
+          >
+            <ButtonText>{form.state.isSubmitting ? "Ingresando…" : "Iniciar sesión"}</ButtonText>
+          </Button>
         </VStack>
-
-        <form.Field name="email">
-          {(field) => {
-            const error = field.state.meta.errors[0];
-            return (
-              <FormControl isInvalid={Boolean(error)}>
-                <FormControlLabel>
-                  <FormControlLabelText>Correo de acceso</FormControlLabelText>
-                </FormControlLabel>
-                <Input>
-                  <InputField
-                    accessibilityLabel="Correo de acceso"
-                    aria-label="Correo de acceso"
-                    autoCapitalize="none"
-                    autoComplete="username"
-                    importantForAutofill="yes"
-                    keyboardType="email-address"
-                    nativeID="username"
-                    onBlur={field.handleBlur}
-                    onChangeText={field.handleChange}
-                    onSubmitEditing={() => passwordRef.current?.focus()}
-                    placeholder="nombre@clinica.test"
-                    returnKeyType="next"
-                    submitBehavior="submit"
-                    testID="login-email"
-                    textContentType="username"
-                    value={field.state.value}
-                  />
-                </Input>
-                {error ? (
-                  <FormControlError>
-                    <FormControlErrorText>{String(error)}</FormControlErrorText>
-                  </FormControlError>
-                ) : null}
-              </FormControl>
-            );
-          }}
-        </form.Field>
-
-        <form.Field name="password">
-          {(field) => {
-            const error = field.state.meta.errors[0];
-            return (
-              <FormControl isInvalid={Boolean(error)}>
-                <FormControlLabel>
-                  <FormControlLabelText>Contraseña</FormControlLabelText>
-                </FormControlLabel>
-                <Input>
-                  <InputField
-                    accessibilityLabel="Contraseña"
-                    aria-label="Contraseña"
-                    autoCapitalize="none"
-                    autoComplete="current-password"
-                    importantForAutofill="yes"
-                    nativeID="password"
-                    onBlur={field.handleBlur}
-                    onChangeText={field.handleChange}
-                    // En web, Intro envía el `<form>` (envío implícito); en nativo, este evento.
-                    onSubmitEditing={isWeb ? undefined : submit}
-                    placeholder="Tu contraseña"
-                    ref={passwordRef}
-                    returnKeyType="go"
-                    secureTextEntry={!showPassword}
-                    testID="login-password"
-                    textContentType="password"
-                    value={field.state.value}
-                  />
-                  <PasswordToggle
-                    onToggle={() => setShowPassword((visible) => !visible)}
-                    visible={showPassword}
-                  />
-                </Input>
-                {error ? (
-                  <FormControlError>
-                    <FormControlErrorText>{String(error)}</FormControlErrorText>
-                  </FormControlError>
-                ) : null}
-              </FormControl>
-            );
-          }}
-        </form.Field>
-
-        {submitError ? (
-          <Callout testID="login-error" tone="error">
-            {submitError}
-          </Callout>
-        ) : null}
-
-        <Button
-          accessibilityLabel="Iniciar sesión"
-          isDisabled={!isHydrated || form.state.isSubmitting}
-          // En web el envío llega por el evento `submit` del `<form>` (design.md D16).
-          onPress={isWeb ? undefined : submit}
-          testID="login-submit"
-          type="submit"
-        >
-          <ButtonText>{form.state.isSubmitting ? "Ingresando…" : "Iniciar sesión"}</ButtonText>
-        </Button>
-      </Card>
+      </View>
     </AuthForm>
   );
 }
