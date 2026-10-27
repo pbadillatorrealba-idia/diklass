@@ -21,6 +21,11 @@ export type PanelThread = {
   pending?: number;
   /** Llegó una respuesta con el hilo fuera de vista: el riel y el dock lo marcan hasta abrirlo. */
   unread?: boolean;
+  /**
+   * El panel envuelve el hilo en un desplazamiento propio (por defecto). Un hilo con su propia lista
+   * y su composer fijo al pie (el chat) lo apaga y gestiona su desplazamiento.
+   */
+  scroll?: boolean;
 };
 
 /** Hilo al que pasa el panel si el activo deja de estar disponible (spec «Hilos contextuales»). */

@@ -42,7 +42,7 @@ export function MessageItem({
       className={esUsuario ? "self-end rounded-sm bg-primary-surface px-3 py-2" : "gap-2"}
       role="article"
       style={esUsuario ? { maxWidth: "85%" } : undefined}
-      testID={`message-${message.id}`}
+      testID={`message-${message.role}`}
     >
       <Text
         className={esUsuario ? "self-end" : ""}

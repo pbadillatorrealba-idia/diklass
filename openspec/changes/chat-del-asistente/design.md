@@ -197,7 +197,7 @@ tope, el plan B (`markdown-it` o tokenizador mínimo) se evalúa antes de integr
 ### D10. Lista y composer
 
 - Lista: en web, `ScrollView` con anclaje al final (observa el crecimiento del contenido y la distancia al
-  final); en nativo, `FlatList` sin virtualizar a propósito (50 mensajes por página). La decisión de
+  final); en nativo, el mismo `ScrollView` (se evaluó `FlatList`, pero no virtualiza a propósito —50 mensajes por página— y un solo componente evita dos implementaciones). La decisión de
   anclaje (¿cerca del final?, conteo de nuevos) es una **función pura compartida** por ambas
   implementaciones, con prueba unitaria, para que no diverjan. «Ir al final» se muestra si hay nuevos
   fuera de vista. Desplazamiento instantáneo.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ScrollView, type ScrollView as ScrollViewHandle, View } from "react-native";
 import { MessageItem, type MessageItemProps } from "@/components/asistente/message-item";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -53,14 +53,20 @@ export function MessageList({
   }, [isLoading]);
 
   const ids = messages.map((message) => message.id);
+  // En layout (antes del pintado): la marca de «conservar posición» debe estar puesta cuando el
+  // contenido cambie de tamaño, que ocurre antes que un `useEffect`.
   // biome-ignore lint/correctness/useExhaustiveDependencies: depende de los ids, no del arreglo.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const change = diffMessages(prevIds.current, ids);
     prevIds.current = ids;
     if (change.prepended > 0) keepPosition.current = true;
     if (change.appended > 0) {
+      // Quien envía un mensaje vuelve al final: lo que acaba de escribir debe verse.
+      const propio = messages.slice(-change.appended).some((message) => message.role === "user");
       setAnchor((current) => {
-        const next = nextAnchor(current, { appended: change.appended });
+        const next = propio
+          ? nextAnchor(current, { nearBottom: true })
+          : nextAnchor(current, { appended: change.appended });
         pinned.current = next.pinned;
         return next;
       });

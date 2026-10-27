@@ -21,14 +21,12 @@ export type MessageDiff =
 export function diffMessages(prev: readonly string[], next: readonly string[]): MessageDiff {
   if (prev.length === 0) return { kind: "initial", appended: 0, prepended: 0 };
   const first = next.indexOf(prev[0] as string);
-  if (first === -1 || next[first + prev.length - 1] !== prev.at(-1)) {
-    return { kind: "change", appended: 0, prepended: 0 };
-  }
-  return {
-    kind: "change",
-    prepended: first,
-    appended: next.length - first - prev.length,
-  };
+  if (first === -1) return { kind: "change", appended: 0, prepended: 0 };
+  // Lo que sigue a la parte común es nuevo: también el marcador «Pensando…» que se reemplaza por la
+  // respuesta, que llega con otra id.
+  let common = 0;
+  while (common < prev.length && next[first + common] === prev[common]) common++;
+  return { kind: "change", prepended: first, appended: next.length - first - common };
 }
 
 export type Anchor = { pinned: boolean; unseen: number };

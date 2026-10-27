@@ -128,17 +128,24 @@ export function PanelBody({
             <Fragment key={thread.id}>{thread.status?.("dock")}</Fragment>
           ))}
       </View>
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-4 p-4"
-        testID="assistant-thread"
-      >
-        {active ? (
-          active.element
-        ) : (
-          <Text tone="muted">Esta pantalla no ofrece hilos del asistente.</Text>
-        )}
-      </ScrollView>
+      {active && active.scroll === false ? (
+        // El hilo trae su propio desplazamiento (el chat: lista con el composer fijo al pie).
+        <View className="min-h-0 flex-1" testID="assistant-thread">
+          {active.element}
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="gap-4 p-4"
+          testID="assistant-thread"
+        >
+          {active ? (
+            active.element
+          ) : (
+            <Text tone="muted">Esta pantalla no ofrece hilos del asistente.</Text>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }

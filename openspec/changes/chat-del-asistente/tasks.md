@@ -28,7 +28,7 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 - [x] 4.3 En rojo y luego `Composer` (multilínea 1–6 líneas, Enter/Shift+Enter con guarda IME solo en web, en nativo envío solo con el botón, «Detener», foco tras enviar, envío deshabilitado vacío). Verificación: prueba de teclas con eventos IME simulados y e2e.
 - [x] 4.4 En rojo y luego `MessageList` anclada al final con «Ir al final» y conteo de nuevos; la lógica de anclaje como función pura compartida por la lista web (`ScrollView`) y la nativa (`FlatList`); `role="log"` que no anuncia la carga inicial; «Pensando…» en `role="status"`. Verificación: prueba unitaria de la función de anclaje, e2e «no arrastra a quien lee» y axe.
 - [x] 4.5 En rojo y luego el aviso de no leído en el riel y el dock. Verificación: e2e con el panel colapsado.
-- [ ] 4.6 Reemplazar `AsistenteThread` por `ChatThread` en el panel y en la hoja; migrar el contenido de `asistente-store`. Verificación: e2e de `panel-asistente` adaptados.
+- [x] 4.6 Reemplazar `AsistenteThread` por `ChatThread` en el panel y en la hoja; migrar el contenido de `asistente-store`. Verificación: e2e de `panel-asistente` adaptados. Hecho: `ChatThread` + `useChatController` (en `ShellThreads`, siempre montado) + `chat-session.ts`; se eliminan `AsistenteThread` y `asistente-store`. Desviaciones: un solo `ScrollView` para web y nativo (no `FlatList`, que no virtualizamos) con la lógica de anclaje pura; «Copiar» usa el portapapeles en web y la hoja de compartir en nativo (no hay módulo de portapapeles instalado); la confirmación de «Borrar conversación» (3.3) va aquí. La Edge Function que borra el audio sigue pendiente (7.x).
 
 ## 5. Contexto de paciente automático (D8)
 

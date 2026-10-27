@@ -58,6 +58,22 @@ describe("diffMessages", () => {
     expect(diffMessages(["a"], ["a"])).toEqual({ kind: "change", appended: 0, prepended: 0 });
   });
 
+  test("el marcador «Pensando…» reemplazado por la respuesta cuenta como un mensaje nuevo", () => {
+    expect(diffMessages(["a", "u", "p"], ["a", "u", "r"])).toEqual({
+      kind: "change",
+      appended: 1,
+      prepended: 0,
+    });
+  });
+
+  test("la pregunta persistida y su respuesta reemplazan a los pendientes", () => {
+    expect(diffMessages(["a", "u", "p"], ["a", "u", "r", "s"])).toEqual({
+      kind: "change",
+      appended: 2,
+      prepended: 0,
+    });
+  });
+
   test("si la lista se reemplaza (p. ej. borrar la conversación) no hay nuevos", () => {
     expect(diffMessages(["a", "b"], [])).toEqual({ kind: "change", appended: 0, prepended: 0 });
     expect(diffMessages(["a", "b"], ["x", "y"])).toEqual({

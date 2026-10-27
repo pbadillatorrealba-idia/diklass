@@ -151,14 +151,14 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await openPatients(page, 1440);
     await abrirHilo(page, "asistente");
     const panel = page.getByTestId("assistant-panel");
-    await panel.getByTestId("asistente-pregunta").fill("¿Qué día es hoy?");
-    await panel.getByTestId("asistente-preguntar").click();
-    await expect(panel.getByTestId("asistente-respuesta").first()).toContainText(
-      /^Hoy es .+ de \d{4}\.$/,
+    await panel.getByTestId("composer-input").fill("¿Qué día es hoy?");
+    await panel.getByTestId("composer-send").click();
+    await expect(panel.getByTestId("message-assistant").first()).toContainText(
+      /Hoy es .+ de \d{4}\./,
     );
-    await panel.getByTestId("asistente-pregunta").fill("¿Qué eventos tengo agendados?");
-    await panel.getByTestId("asistente-preguntar").click();
-    await expect(panel.getByTestId("asistente-respuesta").nth(1)).toContainText(
+    await panel.getByTestId("composer-input").fill("¿Qué eventos tengo agendados?");
+    await panel.getByTestId("composer-send").click();
+    await expect(panel.getByTestId("message-assistant").nth(1)).toContainText(
       "No tienes eventos agendados",
     );
     await expect(panel.getByTestId("agent-proposal")).toHaveCount(0);
@@ -168,9 +168,9 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await openPatients(page, 1440);
     await abrirHilo(page, "asistente");
     const panel = page.getByTestId("assistant-panel");
-    await panel.getByTestId("asistente-pregunta").fill("¿Cuáles son los pacientes de hoy?");
-    await panel.getByTestId("asistente-preguntar").click();
-    await expect(panel.getByTestId("asistente-respuesta")).toContainText(
+    await panel.getByTestId("composer-input").fill("¿Cuáles son los pacientes de hoy?");
+    await panel.getByTestId("composer-send").click();
+    await expect(panel.getByTestId("message-assistant").last()).toContainText(
       /Pacientes con consulta hoy:|No hay pacientes con consulta registrada hoy\./,
       { timeout: 15_000 },
     );
@@ -180,7 +180,7 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/home");
     const panel = page.getByTestId("assistant-panel");
-    await expect(panel.getByTestId("asistente-pregunta")).toBeVisible({ timeout: 15_000 });
+    await expect(panel.getByTestId("composer-input")).toBeVisible({ timeout: 15_000 });
     await expect(panel.getByTestId("assistant-thread-asistente")).toHaveCount(0);
     await expect(panel.getByTestId("assistant-thread-conocimiento")).toHaveCount(0);
     await expect(panel.getByTestId("conocimiento-pregunta")).toHaveCount(0);
@@ -285,7 +285,7 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await page.getByTestId("panel-dock-open").click();
     const hoja = page.getByTestId("panel-sheet");
     await hoja.getByTestId("assistant-thread-asistente").click();
-    await expect(hoja.getByTestId("asistente-pregunta")).toBeVisible();
+    await expect(hoja.getByTestId("composer-input")).toBeVisible();
     await hoja.getByTestId("assistant-thread-conocimiento").click();
     await expect(hoja.getByTestId("conocimiento-pregunta")).toBeVisible();
   });
