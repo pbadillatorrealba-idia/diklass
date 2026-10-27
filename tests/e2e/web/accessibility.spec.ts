@@ -8,6 +8,7 @@ import {
   syntheticScreens,
 } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
+import { abrirHilo } from "./panel";
 import { prepararPaciente } from "./preparar-paciente";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -226,6 +227,67 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
       await walkKeyboard(page, screen.keyboardTestIDs);
     }
+  });
+
+  // shell-asistente-tres-zonas 7.1 (D1/D2/D7/D8): el panel acoplado, el riel, el cajón, la cinta y la
+  // hoja cumplen WCAG 2.2 AA en claro (`chromium`) y en oscuro (`chromium-dark`).
+  test("el shell con el panel acoplado, el riel, el cajón y la cinta con su hoja no tienen violaciones axe", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const abrirConsulta = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/consultations/${caso.openConsultationId}`);
+      await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
+    };
+
+    // 1440 px: panel acoplado, con cada uno de sus hilos.
+    await abrirConsulta(1440);
+    await expect(page.getByTestId("assistant-panel")).toBeVisible();
+    for (const hilo of ["escucha", "conocimiento", "asistente"]) {
+      await abrirHilo(page, hilo);
+      await expectNoViolations(page);
+    }
+    // Panel colapsado a riel.
+    await page.getByTestId("assistant-toggle").click();
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByTestId("assistant-toggle").click();
+
+    // 1280 px: riel y cajón abierto.
+    await abrirConsulta(1280);
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByTestId("assistant-toggle").click();
+    await expect(page.getByTestId("assistant-drawer")).toBeVisible();
+    await expectNoViolations(page);
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("assistant-drawer")).toHaveCount(0);
+
+    // 375 px: cinta y hoja abierta.
+    await abrirConsulta(375);
+    await expect(page.getByTestId("panel-dock")).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByTestId("panel-dock-open").click();
+    await expect(page.getByTestId("panel-sheet")).toBeVisible();
+    await expectNoViolations(page);
+  });
+
+  // shell-asistente-tres-zonas 2.3: el control del panel y sus hilos se alcanzan por teclado, con
+  // foco visible.
+  test("el panel acoplado se recorre por teclado con foco visible", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("assistant-panel")).toBeVisible({ timeout: 15_000 });
+    await walkKeyboard(page, [
+      "assistant-thread-conocimiento",
+      "assistant-thread-asistente",
+      "assistant-toggle",
+    ]);
   });
 
   // rediseno-pacientes: la consulta va en una sola columna, con el contexto antes del registro.

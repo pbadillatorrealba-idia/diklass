@@ -455,7 +455,8 @@ describe("confirmarHecho", () => {
     const hechos = ["voz", "audio-facts", "consulta-1"];
     queryClient.setQueryData(workspace, { entradas: [] });
     queryClient.setQueryData(hechos, []);
-    await confirmarHecho({ client, queryClient }, "hecho-1");
+    // Devuelve la entrada de anamnesis aterrizada: la pantalla la trae a la vista y la marca.
+    expect(await confirmarHecho({ client, queryClient }, "hecho-1")).toBe("anamnesis-9");
     expect(queryClient.getQueryState(workspace)?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(hechos)?.isInvalidated).toBe(true);
   });

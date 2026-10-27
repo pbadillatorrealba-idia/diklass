@@ -34,8 +34,11 @@ import { Screen } from "@/components/ui/screen";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { ListenLiveStatus } from "@/components/voz/listen-live-status";
 import { ListenModeSection } from "@/components/voz/listen-mode-section";
+import { usePanelThreads } from "@/features/asistente/panel-threads";
 import { flushDraft, useDraftPreserver } from "@/features/clinical/draft-preserver";
+import { usePatientContext } from "@/features/conocimiento/use-patient-context";
 import {
   type AnamnesisEntry,
   correctProvenance,
@@ -77,6 +80,8 @@ import {
   effectiveEpicrisis,
 } from "@/features/registro/summaries";
 import { getTutor, tutorFullName } from "@/features/registro/tutor-service";
+import { keepLanding, type Landing, landAt } from "@/features/voz/landing-mark";
+import { useListenMode } from "@/features/voz/use-listen-mode";
 import type { Attribution } from "@/lib/attribution/types";
 import { isAuthenticationRequired } from "@/lib/errors";
 import { getFieldErrors } from "@/lib/forms/errors";
@@ -202,6 +207,10 @@ export default function ConsultationScreen() {
   } | null>(null);
   const [draft, setDraft] = useState<ConsultationDraft | null>(null);
   const [status, setStatus] = useState<OperationStatus | null>(null);
+  // Borrador confirmado que acaba de aterrizar en la anamnesis (design.md D9): se marca «Nuevo»
+  // hasta la siguiente acción, que deja otro estado de operación.
+  const [landing, setLanding] = useState<Landing | null>(null);
+  useEffect(() => setLanding((actual) => keepLanding(actual, status)), [status]);
   const [isBusy, setIsBusy] = useState(false);
   // Última sección editada (D20): su banda se marca en `primary` sólido.
   const [editedSection, setEditedSection] = useState<SectionNumber | null>(null);
@@ -212,6 +221,8 @@ export default function ConsultationScreen() {
     queryFn: () => loadWorkspace(consultationId),
   });
   const patientId = workspaceQuery.data?.consultation.content.patientId ?? null;
+  // El hilo «Conocimiento» del panel pregunta sobre el paciente de esta consulta (FR-026).
+  usePatientContext(patientId);
   const followUpQuery = useQuery({
     queryKey: ["registro", "consultation-follow-up", patientId ?? "sin-paciente"],
     queryFn: async () => {
@@ -256,6 +267,30 @@ export default function ConsultationScreen() {
   });
 
   const data = workspaceQuery.data ?? null;
+
+  // Una sola captura por consulta, compartida por el hilo, el riel y la cinta (design.md D3). Solo
+  // con la consulta abierta: sin id el hook no consulta ni inicia sesiones.
+  const listenMode = useListenMode(data && !data.isClosed ? consultationId : "", (entryId) => {
+    // El anuncio va en `consultation-status` (región `polite`) para los lectores de pantalla.
+    const anuncio = notice("Antecedente incorporado a la anamnesis.");
+    setStatus(anuncio);
+    setLanding(landAt(entryId, anuncio));
+  });
+  usePanelThreads(
+    data && !data.isClosed
+      ? [
+          {
+            id: "escucha",
+            label: "Escucha",
+            icon: "microphone-outline",
+            element: <ListenModeSection modo={listenMode} />,
+            status: (variant) => <ListenLiveStatus modo={listenMode} variant={variant} />,
+            pending: listenMode.facts.filter((fact) => fact.content.confirmationState === "pending")
+              .length,
+          },
+        ]
+      : [],
+  );
   const draftEntry =
     data === null
       ? null
@@ -338,6 +373,7 @@ export default function ConsultationScreen() {
   };
 
   const handleComposerTextChange = (text: string) => {
+    setLanding(null);
     setComposerText(text);
     setDraft({ notes: text, updatedAt: new Date().toISOString() });
   };
@@ -655,16 +691,19 @@ export default function ConsultationScreen() {
             {/* Un solo eje vertical con las secciones numeradas del protocolo (D20). */}
             <VStack className="gap-6" testID="consultation-main">
               <FormSection active={activeSection === 1} number={1} title="Anamnesis">
-                {data.isClosed ? null : <ListenModeSection consultationId={id} />}
                 <AnamnesisSection
                   entries={anamnesisViews}
                   field={composerField}
                   isBusy={isBusy}
                   isSealed={data.isClosed}
+                  landedEntryId={landing?.entryId ?? null}
                   onCorrectProvenance={(entryId, provenance) =>
                     void correctAnamnesisProvenance(entryId, provenance)
                   }
-                  onFieldChange={setComposerField}
+                  onFieldChange={(next) => {
+                    setLanding(null);
+                    setComposerField(next);
+                  }}
                   onProvenanceChange={setComposerProvenance}
                   onSubmit={() => void submitAnamnesis()}
                   onTextChange={handleComposerTextChange}

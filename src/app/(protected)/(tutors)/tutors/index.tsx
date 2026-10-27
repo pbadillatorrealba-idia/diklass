@@ -123,7 +123,7 @@ export default function TutorsScreen() {
             <InputField
               accessibilityLabel="Filtrar por nombre"
               onChangeText={setNameDraft}
-              placeholder="Buscar por nombre o apellido"
+              placeholder="Nombre o apellido"
               value={nameDraft}
             />
           </Input>

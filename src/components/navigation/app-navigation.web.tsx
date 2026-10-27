@@ -1,7 +1,12 @@
 import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
+import { ASSISTANT_ID, AssistantPanel } from "@/components/asistente/assistant-panel";
+import { PanelDock } from "@/components/asistente/panel-dock";
+import { ShellThreads } from "@/components/asistente/shell-threads";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Logo } from "@/components/ui/logo";
+import { DockProvider } from "@/features/asistente/panel-dock";
+import { presentationFor } from "@/features/asistente/panel-store";
 import { useAuth } from "@/features/auth/auth-provider";
 import { AccountLink } from "./account-link";
 import { NavItem } from "./nav-item";
@@ -15,11 +20,13 @@ const CONTENT_ID = "contenido";
  * Navegación global en web (FR-082 · FR-093 · design.md D12/D17). El `TabList` oculto solo
  * define las rutas; los disparadores visibles están en la barra lateral (desde `lg`, 5
  * secciones) o en la barra superior compacta más la inferior (por debajo de `lg`, con las 4
- * clínicas, y Configuración desde el avatar). El orden del DOM coincide con el visual en cada
- * ancho.
+ * clínicas, y Configuración desde el avatar). A la derecha, el panel de asistente (acoplado,
+ * riel o cajón desde 1024 px). El orden del DOM coincide con el visual en cada ancho.
  */
 export function AppNavigation() {
   const { signOut } = useAuth();
+  // Por debajo de 1024 px el panel es la cinta al pie de cada pantalla (D7), no una zona del shell.
+  const compact = presentationFor(useWindowDimensions().width) === "dock";
 
   const items = (variant: "sidebar" | "tabbar", sections: readonly Section[]) =>
     sections.map((section) => (
@@ -38,6 +45,12 @@ export function AppNavigation() {
     <Tabs style={{ flex: 1 }}>
       <View className="flex-1 bg-background lg:flex-row">
         <SkipLink targetId={CONTENT_ID} />
+        {/* Solo desde `lg`: por debajo no hay panel (lo reemplaza el dock) y, invisible, desbordaría. */}
+        <SkipLink
+          className="left-56 hidden lg:flex"
+          label="Ir al asistente"
+          targetId={ASSISTANT_ID}
+        />
         <View
           className="flex-row items-center justify-between border-b border-border bg-card px-4 py-1 lg:hidden"
           testID="app-topbar"
@@ -64,9 +77,14 @@ export function AppNavigation() {
             <LogoutButton onLogout={signOut} />
           </View>
         </View>
-        <View className="flex-1" nativeID={CONTENT_ID} role="main" tabIndex={-1}>
-          <TabSlot />
-        </View>
+        <DockProvider value={compact ? <PanelDock /> : null}>
+          <View className="flex-1" nativeID={CONTENT_ID} role="main" tabIndex={-1}>
+            <TabSlot />
+          </View>
+        </DockProvider>
+        {/* Tercera zona del shell (sistema-visual «Shell de tres zonas»): después del contenido en el DOM. */}
+        <ShellThreads />
+        <AssistantPanel />
         <View
           aria-label="Secciones"
           className="flex-row border-t border-border bg-card lg:hidden"

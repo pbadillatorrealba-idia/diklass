@@ -3,6 +3,8 @@ import Head from "expo-router/head";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import { FlatList, type FlatListProps, ScrollView, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDock } from "@/features/asistente/panel-dock";
+import { useContentWidth } from "@/features/asistente/use-content-width";
 import { Heading } from "./heading";
 import { Text } from "./text";
 
@@ -20,6 +22,11 @@ export type ScreenProps = PropsWithChildren<{
    * ventanas estrechas, en una barra fija al pie a todo el ancho.
    */
   action?: ReactNode;
+  /**
+   * Cinta del asistente al pie (sistema-visual «Dock de asistente en compacto»). Sin pasarla, la
+   * pantalla toma la del shell (`DockProvider`); sin dock en el shell no hay cinta.
+   */
+  dock?: ReactNode;
   /**
    * Retroceso explícito de las pantallas de detalle (FR-083): en web, un enlace «‹ Volver a …»;
    * en nativo lo da la cabecera. `href` es fijo para que funcione al entrar por URL directa.
@@ -68,6 +75,34 @@ const ACTION_BAR_BELOW = 768;
 function useActionBar() {
   const width = useWindowDimensions().width;
   return process.env.EXPO_OS !== "web" || width < ACTION_BAR_BELOW;
+}
+
+/**
+ * Barra fija al pie, fuera del desplazamiento (FR-088 · design.md D7): la acción principal en
+ * compacto y, a cualquier ancho, la cinta del asistente. Es un solo contenedor con borde, fondo
+ * `card` y el área segura inferior (`SafeAreaView` mide su solape real con el indicador de inicio
+ * o la barra de gestos); en iOS/Android queda sobre `NativeTabs` y en web sobre la barra inferior.
+ */
+function ScreenBottomBar({
+  action,
+  dock,
+  width,
+}: {
+  action: ReactNode;
+  dock: ReactNode;
+  width: keyof typeof WIDTHS;
+}) {
+  if (!(action || dock)) return null;
+  return (
+    <View className="border-t border-border bg-card" testID="screen-action-bar">
+      <SafeAreaView edges={["bottom"]}>
+        {action ? (
+          <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
+        ) : null}
+        {dock ? <View testID="screen-dock">{dock}</View> : null}
+      </SafeAreaView>
+    </View>
+  );
 }
 
 /** En web, «‹ Volver a …» (o, desde `lg`, el breadcrumb) y el `h1`; en nativo, la cabecera. */
@@ -125,12 +160,15 @@ export function Screen({
   action,
   back,
   children,
+  dock: dockProp,
   className,
   testID,
   title,
   width = "content",
 }: ScreenProps) {
   const actionBar = useActionBar();
+  const shellDock = useDock();
+  const dock = dockProp ?? shellDock;
   const content = (
     <View
       className={`w-full ${WIDTHS[width]} self-center gap-6 p-4 md:p-6 ${className ?? ""}`.trim()}
@@ -153,24 +191,20 @@ export function Screen({
       >
         {content}
       </ScrollView>
-      {action && actionBar ? (
-        // `SafeAreaView` mide su solape real con el indicador de inicio o la barra de gestos.
-        <View className="border-t border-border bg-card" testID="screen-action-bar">
-          <SafeAreaView edges={["bottom"]}>
-            <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
-          </SafeAreaView>
-        </View>
-      ) : null}
+      <ScreenBottomBar action={actionBar ? action : null} dock={dock} width={width} />
     </ScreenFrame>
   );
 }
 
-/** Ventana a partir de la cual una lista `wide` va a 2 columnas (`xl`, design.md D18). */
-const TWO_COLUMNS_FROM = 1280;
+/**
+ * Ancho de contenido a partir del cual una lista `wide` va a 2 columnas (design.md D18). Es el
+ * contenido que deja la ventana de 1280 px (`xl`) con la barra lateral y el riel del panel.
+ */
+const TWO_COLUMNS_FROM = 960;
 
-/** Columnas de una `ScreenList` según su ancho y la ventana (design.md D18). */
-export function listColumns(width: keyof typeof WIDTHS, windowWidth: number) {
-  return width === "wide" && windowWidth >= TWO_COLUMNS_FROM ? 2 : 1;
+/** Columnas de una `ScreenList` según su ancho y el ancho del contenido, no el de la ventana. */
+export function listColumns(width: keyof typeof WIDTHS, contentWidth: number) {
+  return width === "wide" && contentWidth >= TWO_COLUMNS_FROM ? 2 : 1;
 }
 
 export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title" | "width"> &
@@ -181,6 +215,8 @@ export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title" | "width"> &
     footer?: ReactElement;
     /** Lo que se pinta sin filas: carga, error o vacío (`QueryState`). */
     empty: ReactElement;
+    /** Cinta del asistente al pie; sin pasarla se toma la del shell (ver `ScreenProps.dock`). */
+    dock?: ReactNode;
     testID: string;
   };
 
@@ -192,6 +228,7 @@ export type ScreenListProps<T> = Pick<ScreenProps, "back" | "title" | "width"> &
 export function ScreenList<T>({
   back,
   data,
+  dock: dockProp,
   empty,
   footer,
   header,
@@ -201,7 +238,9 @@ export function ScreenList<T>({
   title,
   width = "content",
 }: ScreenListProps<T>) {
-  const columns = listColumns(width, useWindowDimensions().width);
+  const columns = listColumns(width, useContentWidth());
+  const shellDock = useDock();
+  const dock = dockProp ?? shellDock;
   return (
     <ScreenFrame title={title}>
       <FlatList
@@ -233,6 +272,7 @@ export function ScreenList<T>({
         }
         testID={testID}
       />
+      <ScreenBottomBar action={null} dock={dock} width={width} />
     </ScreenFrame>
   );
 }

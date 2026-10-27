@@ -29,6 +29,7 @@ import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { usePatientContext } from "@/features/conocimiento/use-patient-context";
 import { listPatientTimeline, openConsultation } from "@/features/registro/consultation-service";
 import {
   addAntecedentItem,
@@ -62,6 +63,8 @@ export default function PatientDetailScreen() {
     queryKey: ["registro", "patient", patientId],
     queryFn: () => (isUuid(patientId) ? getPatient(supabase, patientId) : null),
   });
+  // El hilo «Conocimiento» del panel pregunta sobre este paciente (FR-026), una vez que existe.
+  usePatientContext(patientQuery.data ? patientId : null);
   const tutorsQuery = useQuery({
     queryKey: ["registro", "tutors"],
     queryFn: () => listTutors(supabase),

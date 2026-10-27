@@ -44,11 +44,38 @@ MUST degradar a los valores por defecto si no puede leerse.
 - **WHEN** el veterinario abre el panel desde el riel
 - **THEN** el panel se superpone al contenido y la posición y el ancho del contenido no cambian
 
+### Requirement: Ancho del panel elegible
+
+El ancho del panel acoplado y del cajón MUST poder elegirse arrastrando su borde izquierdo con el
+mouse y moviéndolo con las flechas izquierda y derecha (separador vertical con nombre accesible y
+`aria-valuenow`). MUST acotarse entre 280 y 560 px (360 px por defecto), recordarse por dispositivo
+y descontarse del ancho del contenido, que decide su composición por el ancho que le queda.
+
+#### Scenario: cambiar el ancho con el mouse
+
+- **GIVEN** una ventana de 1440 px con el panel acoplado a 360 px
+- **WHEN** el veterinario arrastra su borde 100 px a la izquierda y recarga la página
+- **THEN** el panel mide 460 px, el contenido cede ese ancho y el panel sigue en 460 px tras recargar
+
+#### Scenario: límites del ancho
+
+- **GIVEN** el borde del panel en arrastre
+- **WHEN** el veterinario lo lleva más allá de los límites
+- **THEN** el ancho queda en 280 px como mínimo y en 560 px como máximo
+
 ### Requirement: Hilos contextuales del panel
 
 El panel MUST ofrecer hilos según la pantalla: «Escucha» solo con una consulta abierta, «Conocimiento»
-en toda pantalla protegida y «Asistente» siempre. Cambiar de pantalla MUST conservar el estado del
-panel y MUST mantener el hilo activo si sigue disponible, o pasar a «Conocimiento» si no.
+en toda pantalla protegida salvo el inicio y «Asistente» siempre. El inicio MUST ofrecer solo
+«Asistente» (que ya cubre el conocimiento) y, con un único hilo, el panel MUST nombrarlo sin
+pestañas. Cambiar de pantalla MUST conservar el estado del panel y MUST mantener el hilo activo si
+sigue disponible, o pasar a «Conocimiento» si no (o al primero disponible si tampoco existe).
+
+#### Scenario: el inicio solo ofrece «Asistente»
+
+- **GIVEN** el veterinario en `/home`
+- **WHEN** ve el panel
+- **THEN** solo está el hilo «Asistente», sin pestañas ni «Conocimiento»
 
 #### Scenario: hilo de escucha solo en consulta abierta
 
@@ -107,17 +134,37 @@ una ficha MUST tomar al paciente como contexto (FR-026). La ruta `/knowledge` MU
 - **WHEN** el veterinario pregunta en el hilo «Conocimiento»
 - **THEN** la respuesta lleva citas con fuente y fragmento y declara el paciente de contexto
 
-### Requirement: Hilo del asistente reservado
+### Requirement: Hilo del asistente con consultas básicas
 
-El hilo «Asistente» MUST reservar los estados en espera, pensando, propone y error. Mientras no
-exista un agente MUST declarar que no está disponible y MUST NOT simular respuestas ni propuestas.
+El hilo «Asistente» MUST estar disponible en toda pantalla protegida y responder con reglas
+deterministas la fecha de hoy, los eventos agendados (sin fuente, que no hay y por qué) y los
+pacientes de hoy (consultas creadas ese día). Lo que no reconozca MUST consultarse a la base de
+conocimiento con el paciente de contexto (FR-005, FR-026). MUST NOT escribir en el registro, proponer
+cambios ni presentarse como agente, y su conversación MUST NOT sobrevivir a la sesión de acceso.
 
-#### Scenario: sin agente
+#### Scenario: la fecha de hoy
 
-- **GIVEN** ninguna capacidad de agente instalada
-- **WHEN** el veterinario abre el hilo «Asistente»
-- **THEN** ve que el asistente conversacional no está disponible y no aparece ninguna respuesta
-  simulada
+- **GIVEN** el hilo «Asistente» abierto
+- **WHEN** el veterinario pregunta «¿Qué día es hoy?»
+- **THEN** responde con el día de la semana y la fecha completa de hoy
+
+#### Scenario: sin eventos agendados
+
+- **GIVEN** que no existe una fuente de eventos
+- **WHEN** el veterinario pregunta «¿Qué eventos tengo agendados?»
+- **THEN** responde que no tiene eventos agendados y que la agenda aún no tiene fuente de eventos
+
+#### Scenario: pacientes de hoy
+
+- **GIVEN** consultas creadas hoy para dos pacientes
+- **WHEN** el veterinario pregunta «¿Cuáles son los pacientes de hoy?»
+- **THEN** lista a cada paciente una sola vez y omite los de otros días
+
+#### Scenario: pregunta de conocimiento
+
+- **GIVEN** una pregunta que no es fecha, agenda ni pacientes de hoy
+- **WHEN** el veterinario la envía desde el hilo «Asistente»
+- **THEN** la respuesta lleva citas con fuente y fragmento, igual que en «Conocimiento»
 
 ### Requirement: Las propuestas del agente exigen confirmación
 

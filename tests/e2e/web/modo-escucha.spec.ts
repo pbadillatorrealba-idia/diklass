@@ -1,4 +1,5 @@
 import { expect, SUPABASE_ANON_KEY, SUPABASE_URL, test } from "./fixtures";
+import { abrirHilo } from "./panel";
 import { prepararPaciente } from "./preparar-paciente";
 
 test.describe("modo de escucha web (captura de voz hacia anamnesis)", () => {
@@ -21,6 +22,8 @@ test.describe("modo de escucha web (captura de voz hacia anamnesis)", () => {
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
+      // El control de escucha vive en el hilo «Escucha» del panel de asistente.
+      await abrirHilo(page, "escucha");
 
       await expect(page.getByTestId("listen-status-indicator")).toHaveText(/Escucha inactiva/);
       await page.getByRole("button", { name: "Modo de escucha" }).click();

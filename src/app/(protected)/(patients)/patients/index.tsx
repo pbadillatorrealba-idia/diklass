@@ -37,7 +37,7 @@ type Params = {
 
 function FilterField({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <View className="flex-1 gap-1">
+    <View className="flex-1 gap-1" style={{ minWidth: 160 }}>
       <Text variant="label">{label}</Text>
       {children}
     </View>
@@ -149,13 +149,13 @@ export default function PatientsScreen() {
       title="Pacientes"
       width="wide"
     >
-      <Card className="gap-3 md:flex-row md:items-end" testID="patients-filters">
+      <Card className="gap-3 md:flex-row md:flex-wrap md:items-end" testID="patients-filters">
         <FilterField label="Nombre">
           <Input>
             <InputField
               accessibilityLabel="Filtrar por nombre"
               onChangeText={setNameDraft}
-              placeholder="Buscar por nombre"
+              placeholder="Nombre"
               value={nameDraft}
             />
           </Input>
@@ -165,7 +165,7 @@ export default function PatientsScreen() {
             <InputField
               accessibilityLabel="Filtrar por raza"
               onChangeText={setBreedDraft}
-              placeholder="Buscar por raza"
+              placeholder="Raza"
               value={breedDraft}
             />
           </Input>
