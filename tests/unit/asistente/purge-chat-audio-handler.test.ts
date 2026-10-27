@@ -8,18 +8,23 @@ const SECRETO = "secreto-compartido-de-la-purga";
 const URL_FUNCION = "http://localhost:54321/functions/v1/purge-chat-audio";
 
 type Cfg = {
+  tandas?: Array<Array<{ message_id: string; audio_path: string }>>;
   vencidos?: Array<{ message_id: string; audio_path: string }>;
   huerfanos?: string[];
   fallanRutas?: string[];
   listaFalla?: boolean;
 };
 
+const reloj = { valor: 1_000_000 };
+
 function harness({
+  tandas,
   vencidos = [],
   huerfanos = [],
   fallanRutas = [],
   listaFalla = false,
 }: Cfg = {}) {
+  const cola = tandas ? [...tandas] : [vencidos];
   const lineas: string[] = [];
   const llamadas = { borrados: [] as string[][], marcados: [] as string[][], listas: 0 };
   const deps: PurgeDependencies = {
@@ -28,10 +33,12 @@ function harness({
       lineas.push(l);
     },
     randomId: () => "id-generado",
+    now: () => reloj.valor,
+    batchSize: 2,
     listDue: async () => {
       llamadas.listas++;
       if (listaFalla) throw new Error("base caída");
-      return vencidos;
+      return cola.shift() ?? [];
     },
     listOrphans: async () => huerfanos,
     removeObjects: async (rutas) => {
@@ -170,5 +177,62 @@ describe("purge-chat-audio · handler", () => {
       .find((l) => l.event === "purge_chat_audio_rejected");
     expect(linea).toMatchObject({ requestId: "id-generado", code: "UNAUTHENTICATED" });
     expect(h.lineas.join("\n")).not.toContain("incorrecto");
+  });
+
+  // Hallazgo 7: con más de un lote pendiente se repite hasta vaciar (con tope) y se avisa si no alcanzó.
+  describe("varias tandas", () => {
+    const fila = (n: number) => ({ message_id: `m${n}`, audio_path: `c/a/m${n}.webm` });
+
+    test("repite mientras la tanda venga llena y se detiene al vaciarse", async () => {
+      const h = harness({ tandas: [[fila(1), fila(2)], [fila(3), fila(4)], [fila(5)]] });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      expect(await res.json()).toMatchObject({ due: 5, removed: 5, truncated: false });
+      expect(h.llamadas.marcados).toEqual([["m1", "m2"], ["m3", "m4"], ["m5"]]);
+    });
+
+    test("si no avanza (todo falla) no repite sin fin", async () => {
+      const lote = [fila(1), fila(2)];
+      const h = harness({
+        tandas: [lote, lote, lote, lote],
+        fallanRutas: ["c/a/m1.webm", "c/a/m2.webm"],
+      });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      expect(await res.json()).toMatchObject({ removed: 0, failed: 2 });
+      expect(h.llamadas.listas).toBe(1);
+    });
+
+    test("al llegar al tope de tandas avisa «truncated» para que no se pospongan en silencio", async () => {
+      const llena = [fila(1), fila(2)];
+      const h = harness({ tandas: Array.from({ length: 30 }, () => llena) });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      const cuerpo = (await res.json()) as { truncated: boolean };
+      expect(cuerpo.truncated).toBe(true);
+      const fin = h.lineas
+        .map((l) => JSON.parse(l))
+        .find((l) => l.event === "purge_chat_audio_done");
+      expect(fin.truncated).toBe(true);
+    });
+  });
+
+  test("los huérfanos que no se pudieron borrar se registran por ruta", async () => {
+    const h = harness({ huerfanos: ["c/a/h1.webm", "c/a/h2.webm"], fallanRutas: ["c/a/h2.webm"] });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ orphans: 1 });
+    const fin = h.lineas.map((l) => JSON.parse(l)).find((l) => l.event === "purge_chat_audio_done");
+    expect(fin.failedOrphanPaths).toEqual(["c/a/h2.webm"]);
+  });
+
+  // Un `rejected` por cada intento sin secreto inundaría los registros: se limita por ventana.
+  test("los rechazos repetidos no inundan el registro: uno por minuto con el conteo suprimido", async () => {
+    const h = harness();
+    for (let i = 0; i < 5; i++) await handlePurgeChatAudio(peticion("mal"), h.deps);
+    expect(h.lineas.filter((l) => l.includes("purge_chat_audio_rejected"))).toHaveLength(1);
+    reloj.valor += 61_000;
+    await handlePurgeChatAudio(peticion("mal"), h.deps);
+    const rechazos = h.lineas
+      .filter((l) => l.includes("purge_chat_audio_rejected"))
+      .map((l) => JSON.parse(l));
+    expect(rechazos).toHaveLength(2);
+    expect(rechazos[1].suppressed).toBe(4);
   });
 });

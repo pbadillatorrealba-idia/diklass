@@ -1,7 +1,7 @@
 -- Purga del audio del chat (cambio chat-del-asistente, D6 · tarea 7.6a): qué se purga y quién puede
 -- pedirlo. Corre como `postgres`: siembra mensajes y objetos que la API no dejaría sembrar.
 begin;
-select plan(14);
+select plan(15);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -40,7 +40,8 @@ update public.assistant_messages
  where id = '00000000-0000-4000-8000-0000000000e1';
 
 select results_eq(
-  $$select message_id::text from public.assistant_audio_due(10) order by message_id$$,
+  $$select message_id::text from public.assistant_audio_due(1000)
+     where audio_path like '99999999-9999-4000-8000-000000000009/%' order by message_id$$,
   $$values ('00000000-0000-4000-8000-0000000000e1'), ('00000000-0000-4000-8000-0000000000e3')$$,
   'purga el audio vencido y el de un autor bloqueado, y no el vigente de quien tiene acceso'
 );
@@ -79,7 +80,10 @@ select results_eq(
 select is(public.assistant_audio_mark_purged(array['00000000-0000-4000-8000-0000000000e1']::uuid[]), 0,
   'marcar dos veces no cuenta de nuevo (idempotente)');
 
-select is((select count(*)::int from public.assistant_audio_due(10)), 0, 'tras marcar ya no queda nada pendiente');
+select is(
+  (select count(*)::int from public.assistant_audio_due(1000)
+    where audio_path like '99999999-9999-4000-8000-000000000009/%'),
+  0, 'tras marcar ya no queda nada pendiente');
 
 -- Objetos huérfanos: más de un día en el bucket y sin mensaje que los referencie.
 insert into storage.objects (bucket_id, name, created_at)
@@ -97,6 +101,9 @@ select results_eq(
   $$values ('99999999-9999-4000-8000-000000000009/a9a9a9a9-0000-4000-8000-00000000000a/huerfano-viejo.webm')$$,
   'solo el objeto viejo y sin mensaje es huérfano (no el reciente, que puede estar en un envío; ni el referenciado)'
 );
+
+select has_index('public', 'assistant_messages', 'assistant_messages_audio_path_idx',
+  'la lectura y la purga buscan por ruta con un índice, no recorriendo la tabla');
 
 -- Quién puede pedirlo: solo el service role.
 set local role authenticated;

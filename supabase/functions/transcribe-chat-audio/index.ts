@@ -30,6 +30,19 @@ Deno.serve((request) =>
       const { data } = await user.rpc("is_active_access");
       return data === true;
     },
+    // Cuota por usuario, en la base y con su JWT: un usuario activo no debe gastar la cuota del proveedor.
+    consumeQuota: async (authorization) => {
+      const user = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: { headers: { Authorization: authorization } },
+          auth: { persistSession: false, autoRefreshToken: false },
+        },
+      );
+      const { data } = await user.rpc("consume_assistant_audio_quota");
+      return data === true;
+    },
     transcribe: (audio) =>
       transcribeWithOpenAI({ audio, apiKey: OPENAI_API_KEY, timeoutMs: TIEMPO_MAXIMO_MS }),
   }),

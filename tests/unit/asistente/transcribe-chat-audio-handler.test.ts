@@ -8,15 +8,16 @@ import {
 const URL_FUNCION = "http://localhost:54321/functions/v1/transcribe-chat-audio";
 const CLAVE_SECRETA = "sk-test-secreta-no-debe-filtrarse";
 
-type Opciones = { autoriza?: boolean; texto?: string; falla?: Error };
+type Opciones = { autoriza?: boolean; cuota?: boolean; texto?: string; falla?: Error };
 
 function harness({
   autoriza = true,
+  cuota = true,
   texto = "Dosis de meloxicam en perros",
   falla,
 }: Opciones = {}) {
   const lineas: string[] = [];
-  const llamadas = { autorizar: 0, transcribir: 0 };
+  const llamadas = { autorizar: 0, cuota: 0, transcribir: 0 };
   return {
     lineas,
     llamadas,
@@ -29,6 +30,10 @@ function harness({
       canTranscribe: async () => {
         llamadas.autorizar += 1;
         return autoriza;
+      },
+      consumeQuota: async () => {
+        llamadas.cuota += 1;
+        return cuota;
       },
       transcribe: async () => {
         llamadas.transcribir += 1;
@@ -84,14 +89,14 @@ describe("transcribe-chat-audio · handler", () => {
     const h = harness();
     const res = await handleTranscribeChatAudio(peticion({ conAuth: false }), h.deps);
     expect(res.status).toBe(401);
-    expect(h.llamadas).toEqual({ autorizar: 0, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 0, cuota: 0, transcribir: 0 });
   });
 
   test("un usuario sin acceso activo responde 403 sin llamar al proveedor (falla cerrado)", async () => {
     const h = harness({ autoriza: false });
     const res = await handleTranscribeChatAudio(peticion(), h.deps);
     expect(res.status).toBe(403);
-    expect(h.llamadas).toEqual({ autorizar: 1, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 1, cuota: 0, transcribir: 0 });
   });
 
   test("si la comprobación de acceso falla, no se envía audio al proveedor", async () => {
@@ -180,7 +185,7 @@ describe("transcribe-chat-audio · handler", () => {
     const res = await handleTranscribeChatAudio(request, h.deps);
     expect(res.status).toBe(413);
     expect(leido).toBe(false);
-    expect(h.llamadas).toEqual({ autorizar: 0, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 0, cuota: 0, transcribir: 0 });
   });
 
   test("el tiempo máximo del proveedor responde 504 y otro error 502", async () => {
@@ -213,5 +218,75 @@ describe("transcribe-chat-audio · handler", () => {
     for (const linea of ok.lineas) {
       expect(JSON.parse(linea)).toMatchObject({ requestId: "id-generado" });
     }
+  });
+
+  // Hallazgo 4 de la revisión: el acceso y la cuota se comprueban ANTES de leer el cuerpo (la clave anónima
+  // pasa `verify_jwt`) y el tope vale también sin Content-Length (chunked).
+  describe("acceso, cuota y cuerpo", () => {
+    const sinLeer = () => {
+      let leido = false;
+      const real = peticion();
+      const request = {
+        method: "POST",
+        headers: new Headers({ Authorization: "Bearer x" }),
+        get body() {
+          leido = true;
+          return real.body;
+        },
+        formData: async () => {
+          leido = true;
+          return real.formData();
+        },
+      } as unknown as Request;
+      return { request, fueLeido: () => leido };
+    };
+
+    test("sin acceso activo no se lee el cuerpo", async () => {
+      const h = harness({ autoriza: false });
+      const { request, fueLeido } = sinLeer();
+      const res = await handleTranscribeChatAudio(request, h.deps);
+      expect(res.status).toBe(403);
+      expect(fueLeido()).toBe(false);
+    });
+
+    test("sin cuota (demasiadas transcripciones) responde 429 sin leer el cuerpo ni llamar al proveedor", async () => {
+      const h = harness({ cuota: false });
+      const { request, fueLeido } = sinLeer();
+      const res = await handleTranscribeChatAudio(request, h.deps);
+      expect(res.status).toBe(429);
+      expect(await res.json()).toMatchObject({ code: "RATE_LIMITED" });
+      expect(fueLeido()).toBe(false);
+      expect(h.llamadas.transcribir).toBe(0);
+    });
+
+    test("la cuota solo se consume si hay acceso", async () => {
+      const h = harness({ autoriza: false });
+      await handleTranscribeChatAudio(peticion(), h.deps);
+      expect(h.llamadas.cuota).toBe(0);
+    });
+
+    test("un cuerpo en trozos (sin Content-Length) mayor al máximo responde 413 sin llamar al proveedor", async () => {
+      const h = harness();
+      const trozo = new Uint8Array(1024 * 1024);
+      let enviados = 0;
+      const flujo = new ReadableStream<Uint8Array>({
+        pull(control) {
+          if (enviados >= MAX_CHAT_AUDIO_BYTES / trozo.length + 4) return control.close();
+          enviados += 1;
+          control.enqueue(trozo);
+        },
+      });
+      const request = new Request(URL_FUNCION, {
+        method: "POST",
+        headers: { Authorization: "Bearer x", "content-type": "multipart/form-data; boundary=x" },
+        body: flujo,
+        duplex: "half",
+      } as RequestInit);
+      const res = await handleTranscribeChatAudio(request, h.deps);
+      expect(res.status).toBe(413);
+      expect(h.llamadas.transcribir).toBe(0);
+      // No lo leyó entero: se corta al pasar del tope.
+      expect(enviados).toBeLessThan(MAX_CHAT_AUDIO_BYTES / trozo.length + 4);
+    });
   });
 });

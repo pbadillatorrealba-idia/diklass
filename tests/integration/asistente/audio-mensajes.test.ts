@@ -231,6 +231,30 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       expect(propio.data ?? []).toHaveLength(1);
     });
 
+    // Sin tope, un usuario podría llenar el bucket con archivos de 5 MiB hasta la purga.
+    test("un autor no puede tener más de 100 objetos de audio a la vez", async () => {
+      const admin = adminClient();
+      const rutas = Array.from({ length: 100 }, () => ruta(bruno, crypto.randomUUID()));
+      try {
+        await Promise.all(
+          rutas.map((r) =>
+            admin.storage.from(BUCKET).upload(r, new Uint8Array(8), { contentType: "audio/webm" }),
+          ),
+        );
+        const sobra = await bruno.client.storage
+          .from(BUCKET)
+          .upload(ruta(bruno, crypto.randomUUID()), audio());
+        expect(sobra.error).not.toBeNull();
+        // Control positivo: otro autor sí puede subir.
+        const otra = await ana.client.storage
+          .from(BUCKET)
+          .upload(ruta(ana, crypto.randomUUID()), audio());
+        expect(otra.error).toBeNull();
+      } finally {
+        await admin.storage.from(BUCKET).remove(rutas);
+      }
+    }, 60_000);
+
     test("un archivo que no es audio o es demasiado grande se rechaza", async () => {
       const id = crypto.randomUUID();
       // Control positivo: un audio válido y pequeño sí se sube.
@@ -249,6 +273,94 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
           new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: "audio/webm" }),
         );
       expect(grande.error).not.toBeNull();
+    });
+  });
+
+  // Consentimiento de la primera grabación (el audio va a un proveedor externo).
+  describe("consentimiento de voz", () => {
+    beforeAll(async () => {
+      await adminClient().from("assistant_voice_consent").delete().eq("author_id", bruno.userId);
+    });
+
+    test("sin aceptar no hay consentimiento", async () => {
+      const { data } = await bruno.client.from("assistant_voice_consent").select("version");
+      expect(data).toEqual([]);
+    });
+
+    test("el autor acepta una versión y el servidor fija el autor y el momento", async () => {
+      const { error } = await bruno.client
+        .from("assistant_voice_consent")
+        .insert({ version: "v1" });
+      expect(error).toBeNull();
+      const { data } = await bruno.client
+        .from("assistant_voice_consent")
+        .select("author_id, version, accepted_at")
+        .single();
+      expect(data?.author_id).toBe(bruno.userId);
+      expect(data?.version).toBe("v1");
+      expect(Math.abs(Date.now() - new Date(data?.accepted_at ?? 0).getTime())).toBeLessThan(
+        60_000,
+      );
+    });
+
+    test("no se puede aceptar a nombre de otro ni fijar el momento", async () => {
+      const aNombreDeOtro = await ana.client
+        .from("assistant_voice_consent")
+        .insert({ version: "v1", author_id: bruno.userId } as never);
+      expect(aNombreDeOtro.error).not.toBeNull();
+      const conFecha = await ana.client
+        .from("assistant_voice_consent")
+        .insert({ version: "v1", accepted_at: "2020-01-01T00:00:00Z" } as never);
+      expect(conFecha.error).not.toBeNull();
+    });
+
+    test("otro veterinario no ve el consentimiento ajeno", async () => {
+      const { data } = await ana.client
+        .from("assistant_voice_consent")
+        .select("author_id")
+        .eq("author_id", bruno.userId);
+      expect(data).toEqual([]);
+    });
+
+    test("el consentimiento no se edita ni se borra desde el cliente", async () => {
+      const edita = await bruno.client
+        .from("assistant_voice_consent")
+        .update({ version: "v2" })
+        .eq("author_id", bruno.userId);
+      expect(edita.error).not.toBeNull();
+      const borra = await bruno.client
+        .from("assistant_voice_consent")
+        .delete()
+        .eq("author_id", bruno.userId);
+      expect(borra.error).not.toBeNull();
+    });
+  });
+
+  // Cuota de transcripciones: un usuario activo no debe poder gastar la cuota del proveedor.
+  describe("cuota de transcripciones", () => {
+    test("permite 20 y la 21 se rechaza", async () => {
+      const veterinaria = await signedInVeterinarian(ANA);
+      const resultados: boolean[] = [];
+      for (let i = 0; i < 21; i++) {
+        const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota");
+        resultados.push(data === true);
+      }
+      expect(resultados.filter(Boolean)).toHaveLength(20);
+      expect(resultados[20]).toBe(false);
+      // Limpieza: la cuota es del servicio, el cliente no tiene acceso a la tabla.
+      await adminClient()
+        .from("assistant_audio_usage")
+        .delete()
+        .eq("author_id", veterinaria.userId);
+    });
+
+    test("sin sesión de acceso activa no hay cuota", async () => {
+      const sinSesion = await signedInVeterinarian(BRUNO);
+      await sinSesion.client.rpc("revoke_access_session", {
+        p_session_id: sinSesion.accessSessionId,
+      });
+      const { data } = await sinSesion.client.rpc("consume_assistant_audio_quota");
+      expect(data).toBe(false);
     });
   });
 });

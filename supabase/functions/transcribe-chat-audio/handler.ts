@@ -28,9 +28,39 @@ export type TranscribeChatDependencies = {
   randomId: () => string;
   /** El solicitante está autenticado y tiene acceso activo en su clínica; sin sesión de escucha. */
   canTranscribe: (authorization: string) => Promise<boolean>;
+  /** Cuota de transcripciones del usuario (evita gastar la del proveedor); `false` = agotada. */
+  consumeQuota: (authorization: string) => Promise<boolean>;
   /** Devuelve el texto transcrito; lanza TranscriptionTimeoutError al exceder el tiempo máximo. */
   transcribe: (audio: Blob) => Promise<string>;
 };
+
+/**
+ * Lee el cuerpo hasta `max` bytes: sin `Content-Length` (cuerpo en trozos) la cabecera no protege, así que
+ * el tope se aplica leyendo y se corta (`null`) al pasarlo, sin bufferizar más.
+ */
+async function readCapped(request: Request, max: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return new Uint8Array(0);
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      void reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
 
 const respond = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
@@ -67,9 +97,32 @@ export async function handleTranscribeChatAudio(
     return fallo("PAYLOAD_TOO_LARGE", 413);
   }
 
+  // Fallo cerrado: ante cualquier error al comprobar, no se envía audio al proveedor. El acceso y la
+  // cuota se comprueban ANTES de leer el cuerpo: la clave anónima pasa `verify_jwt`, así que sin esto
+  // cualquiera con ella podría obligar a bufferizar un cuerpo.
+  let permitido = false;
+  try {
+    permitido = await deps.canTranscribe(authorization);
+  } catch {
+    permitido = false;
+  }
+  if (!permitido) return fallo("FORBIDDEN", 403);
+
+  let conCuota = false;
+  try {
+    conCuota = await deps.consumeQuota(authorization);
+  } catch {
+    conCuota = false;
+  }
+  if (!conCuota) return fallo("RATE_LIMITED", 429);
+
+  const bytes = await readCapped(request, MAX_CHAT_AUDIO_BYTES + MARGEN_MULTIPART_BYTES);
+  if (bytes === null) return fallo("PAYLOAD_TOO_LARGE", 413);
   let form: globalThis.FormData;
   try {
-    form = (await request.formData()) as unknown as globalThis.FormData;
+    form = (await new Response(new Blob([bytes]), {
+      headers: { "content-type": request.headers.get("content-type") ?? "" },
+    }).formData()) as unknown as globalThis.FormData;
   } catch {
     return fallo("INVALID_INPUT", 400);
   }
@@ -78,15 +131,6 @@ export async function handleTranscribeChatAudio(
     return fallo("INVALID_INPUT", 400);
   }
   if (audio.size > MAX_CHAT_AUDIO_BYTES) return fallo("PAYLOAD_TOO_LARGE", 413);
-
-  // Fallo cerrado: ante cualquier error al comprobar, no se envía audio al proveedor.
-  let permitido = false;
-  try {
-    permitido = await deps.canTranscribe(authorization);
-  } catch {
-    permitido = false;
-  }
-  if (!permitido) return fallo("FORBIDDEN", 403);
 
   const inicio = Date.now();
   try {
