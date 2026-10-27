@@ -11,8 +11,8 @@ Playwright con `--workers=1` y un proyecto a la vez. Sin tokens ni colores nuevo
 ## 2. Modelo, puerto y respondedores (D1 · D2)
 
 - [x] 2.1 En rojo `tests/unit/asistente/chat-model.test.ts` y luego `Message` y `Part` (`src/features/asistente/chat-model.ts`). Verificación: prueba verde (tipos y reglas de estado).
-- [ ] 2.2 En rojo y luego el puerto `Responder` con `AsyncIterable`, `BasicResponder`, `KnowledgeResponder` y `Router` (reutiliza `consultas-basicas.ts`). Verificación: `responders.test.ts` con un respondedor falso que emite por trozos y con «Detener» (`AbortSignal`: descarta lo parcial pero no la auditoría de `knowledge_queries` ya lanzada), conocimiento sin paciente y error de red.
-- [ ] 2.3 En rojo y luego el almacén efímero (borrador por hilo, pendiente, no leído). Verificación: el borrador sobrevive al cambio de hilo y se limpia al cerrar la sesión.
+- [x] 2.2 En rojo y luego el puerto `Responder` con `AsyncIterable`, `BasicResponder`, `KnowledgeResponder` y `Router` (reutiliza `consultas-basicas.ts`). Verificación: `responders.test.ts` con un respondedor falso que emite por trozos y con «Detener» (`AbortSignal`: descarta lo parcial pero no la auditoría de `knowledge_queries` ya lanzada), conocimiento sin paciente y error de red.
+- [x] 2.3 En rojo y luego el almacén efímero (borrador por hilo, pendiente, no leído). Verificación: el borrador sobrevive al cambio de hilo y se limpia al cerrar la sesión.
 
 ## 3. Persistencia (D3 · D4)
 
