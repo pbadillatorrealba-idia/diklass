@@ -5,6 +5,7 @@
 -- * Solo el autor, con acceso activo, sube bajo su propio prefijo y puede borrar sus objetos (limpiar
 --   un envío fallido, «Eliminar audio», borrar la conversación). Lo lee solo mientras el mensaje no
 --   haya vencido: pasada `audio_expires_at` no se firma URL, aunque el archivo siga ahí hasta la purga.
+--   Un objeto todavía sin mensaje también es legible por su autor (necesario para poder borrarlo).
 -- * El audio se sube ANTES de insertar el mensaje (se transcribe y entonces se persiste una vez), así
 --   que la política de subida no puede exigir una fila existente: acota por prefijo.
 -- * El mensaje que declara un `audio_path` debe llevar exactamente la ruta canónica de su id.
@@ -18,16 +19,20 @@ values (
 )
 on conflict (id) do nothing;
 
+-- Lectura: el autor, bajo su prefijo, mientras el audio no haya vencido. Un objeto aún sin mensaje (el
+-- audio se sube ANTES de insertarlo) también es legible por su autor: Storage necesita leer el objeto
+-- para poder borrarlo, y sin esto un envío fallido o «No se entendió» dejaría el archivo huérfano.
 create policy "asistente audio: el autor lee su audio vigente"
 on storage.objects for select to authenticated
 using (
   bucket_id = 'assistant-audio'
   and public.is_active_access(auth.uid())
-  and exists (
+  and (storage.foldername(name))[1] = public.current_clinic_id()::text
+  and (storage.foldername(name))[2] = auth.uid()::text
+  and not exists (
     select 1 from public.assistant_messages message
     where message.audio_path = name
-      and message.author_id = auth.uid()
-      and message.audio_expires_at > timezone('utc', now())
+      and message.audio_expires_at <= timezone('utc', now())
   )
 );
 

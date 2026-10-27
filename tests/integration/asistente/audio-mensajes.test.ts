@@ -205,6 +205,18 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       expect(vencida.data?.signedUrl ?? null).toBeNull();
     });
 
+    // Un envío fallido o «No se entendió» deja un objeto SIN mensaje: su autor debe poder borrarlo.
+    test("el autor borra un objeto huérfano (sin mensaje) y otro veterinario no lo ve", async () => {
+      const id = crypto.randomUUID();
+      const path = ruta(ana, id);
+      expect((await ana.client.storage.from(BUCKET).upload(path, audio())).error).toBeNull();
+      const ajena = await bruno.client.storage.from(BUCKET).createSignedUrl(path, 60);
+      expect(ajena.data?.signedUrl ?? null).toBeNull();
+      const borrado = await ana.client.storage.from(BUCKET).remove([path]);
+      expect(borrado.error).toBeNull();
+      expect(borrado.data ?? []).toHaveLength(1);
+    });
+
     test("el autor borra su objeto y otro veterinario no puede borrarlo", async () => {
       const id = crypto.randomUUID();
       const path = ruta(ana, id);
