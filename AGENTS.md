@@ -221,21 +221,16 @@ constitución > este archivo > cambio OpenSpec > ponytail.
 - **Lo que ponytail no puede recortar:** requisitos y criterios del cambio activo (cuentan como
   «pedido explícito»), los IDs FR/US/SC, validación en fronteras de confianza, fallo cerrado,
   accesibilidad, RLS y la verificación que exige la constitución.
-- **`openspec-propose` y `openspec-update-change`:** no propongas capacidades ni requisitos que
-  nadie pidió; `design.md` solo cuando hay una decisión real con alternativas; tareas mínimas y
-  verificables. Ponytail acota el alcance, nunca la presencia de un artefacto exigido.
-- **`openspec-apply-change`:** cada tarea se implementa con el mínimo código que la cumple; no
-  añadas nada fuera de la tarea. Una simplificación con techo conocido lleva un comentario
-  `ponytail:` con el límite y cómo mejorarla. Ese comentario no sustituye a la deuda de tests,
-  que sigue registrándose como tarea (ver «openspec/changes/ frente a openspec/specs/»).
-- **`openspec-explore`, `-sync-specs` y `-archive-change`:** ponytail no interviene.
+- **OpenSpec:** en `propose` y `update-change` no propongas capacidades ni requisitos que nadie
+  pidió, y `design.md` solo con una decisión real; ponytail acota el alcance, nunca la presencia
+  de un artefacto exigido. En `apply-change`, cada tarea con el mínimo código que la cumple. Una
+  simplificación con techo conocido lleva un comentario `ponytail:`; eso no sustituye a la deuda
+  de tests, que sigue siendo una tarea. En `explore`, `sync-specs` y `archive-change` no interviene.
 - **`test-driven-development` sigue vigente** para toda funcionalidad y corrección; ponytail solo
-  fija el tamaño: el test fallido más pequeño que prueba el comportamiento, sin una suite por
-  función. La excepción de ponytail para «one-liners triviales» no aplica en este repo.
-- **`systematic-debugging` + ponytail:** primero la causa raíz con el proceso de la skill; el
-  arreglo es la corrección más pequeña en el punto por el que pasan todos los llamadores.
+  fija el tamaño (el test fallido más pequeño, sin una suite por función). Su excepción para
+  «one-liners triviales» no aplica aquí.
 - **Revisión:** la sección «Sobreingeniería» de `requesting-code-review` es la única pasada de
-  ponytail en el cierre de una PR; no lances además `ponytail-review` ni `simplify`.
+  ponytail al cerrar una PR; no lances además `ponytail-review` ni `simplify`.
 
 ## Idioma
 

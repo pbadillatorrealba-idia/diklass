@@ -68,13 +68,7 @@ CLI scan:
 - Exit code 0 = clean; 2 = findings.
 - If the detector entrypoint is missing or fails to load, report deterministic scan unavailable and continue with browser/manual review.
 
-Browser visualization is required for a viewable target when browser automation is available. Use a localhost dev/static URL for local files; avoid `file://` unless the available browser explicitly supports this workflow. Overlay flow:
-
-1. Create a fresh tab and navigate. Prefer the harness's native/browser-canvas screenshot path before hand-rolling a Playwright/Puppeteer script; only fall back to a custom script when no native browser tool is exposed.
-2. Preflight mutable injection by setting `document.title` and appending a `<script>` tag. Read-only evaluate APIs do not count.
-3. If mutation is unavailable, skip live server, browser presentation, and injection; report fallback signal.
-4. If mutation is available, start `.claude/skills/impeccable/scripts/impeccable live-server --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then stop the live server.
-5. For multi-view targets, inject on 3-5 representative pages.
+The browser overlay and live server are retired in this repo: run the CLI detector and report its findings as the signal; inspect the page visually through the harness's own browser tool when one exists.
 
 Return: CLI findings JSON/counts, browser console findings if applicable, false positives, and skipped/failed browser steps with concrete reasons.
 
