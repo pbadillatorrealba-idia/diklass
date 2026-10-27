@@ -26,6 +26,12 @@ import { errorReporter, supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
+/**
+ * El turno en curso es de la sesión, no de cada instancia del controlador: el chat del panel y el de
+ * `/knowledge` comparten la conversación, y «Detener» en uno debe cortar la respuesta del otro.
+ */
+let activeTurn: AbortController | null = null;
+
 /** «Copiar»: portapapeles en web; en nativo, la hoja de compartir (no hay módulo de portapapeles). */
 async function copyText(text: string) {
   if (process.env.EXPO_OS === "web" && globalThis.navigator?.clipboard) {
@@ -50,12 +56,13 @@ export function useChatController() {
   const conversation = useConversation();
   const pending = useChatStore((state) => state.pending);
   const unread = useChatStore((state) => state.unread);
+  const patientId = useConversationStore((state) => state.patientId);
+  const patientName = useConversationStore((state) => state.patientName);
   const events = useAgendaEvents();
   const eventsRef = useRef(events);
   eventsRef.current = events;
   const historyRef = useRef<readonly Message[]>([]);
   historyRef.current = conversation.messages;
-  const abort = useRef<AbortController | null>(null);
 
   const persist = useCallback(
     async (message: Message) => {
@@ -120,9 +127,9 @@ export function useChatController() {
 
   const send = useCallback(
     async (text: string) => {
-      if (abort.current) return;
+      if (activeTurn) return;
       const controller = new AbortController();
-      abort.current = controller;
+      activeTurn = controller;
       try {
         // El paciente de contexto es el vigente al enviar, no el de cuando llegue la respuesta.
         await startTurn(
@@ -131,7 +138,7 @@ export function useChatController() {
           controller.signal,
         );
       } finally {
-        abort.current = null;
+        activeTurn = null;
       }
     },
     [deps],
@@ -139,19 +146,19 @@ export function useChatController() {
 
   const retry = useCallback(
     async (messageId: string) => {
-      if (abort.current) return;
+      if (activeTurn) return;
       const controller = new AbortController();
-      abort.current = controller;
+      activeTurn = controller;
       try {
         await retryTurn(deps, messageId, controller.signal);
       } finally {
-        abort.current = null;
+        activeTurn = null;
       }
     },
     [deps],
   );
 
-  const stop = useCallback(() => abort.current?.abort(), []);
+  const stop = useCallback(() => activeTurn?.abort(), []);
 
   /** «Borrar conversación»: texto y audio del autor; `knowledge_queries` permanece (FR-020). */
   const clear = useCallback(async () => {
@@ -173,6 +180,8 @@ export function useChatController() {
     isLoadingOlder: conversation.isLoadingOlder,
     loadOlder: conversation.loadOlder,
     isResponding,
+    /** Paciente de contexto que fija la navegación; `null` sin paciente (etiqueta de solo lectura). */
+    context: patientId === null ? null : { name: patientName },
     unread: unread > 0,
     send,
     retry,

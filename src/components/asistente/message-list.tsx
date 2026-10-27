@@ -8,6 +8,7 @@ import {
   diffMessages,
   isNearBottom,
   nextAnchor,
+  planScroll,
   unseenLabel,
 } from "@/features/asistente/anchor";
 import type { Message } from "@/features/asistente/chat-model";
@@ -41,10 +42,11 @@ export function MessageList({
 }: MessageListProps) {
   const scroll = useRef<ScrollViewHandle>(null);
   const [anchor, setAnchor] = useState<Anchor>({ pinned: true, unseen: 0 });
-  const pinned = useRef(true);
+  // Última medida de nativo (`onScroll`/`onLayout`) y alto del contenido antes del último cambio.
   const viewport = useRef({ y: 0, height: 0, content: 0 });
   const prevIds = useRef<string[]>([]);
   const keepPosition = useRef(false);
+  const forceEnd = useRef(false);
   // La carga inicial no se anuncia: la región viva se enciende cuando ya hay contenido.
   const [announce, setAnnounce] = useState(false);
 
@@ -52,9 +54,19 @@ export function MessageList({
     if (!isLoading) setAnnounce(true);
   }, [isLoading]);
 
+  /** Posición real de la vista: en web, del propio nodo (RNW no emite todos los eventos de scroll). */
+  const live = () => {
+    const node = (
+      scroll.current as unknown as { getScrollableNode?: () => HTMLElement | null } | null
+    )?.getScrollableNode?.();
+    return node
+      ? { y: node.scrollTop, height: node.clientHeight }
+      : { y: viewport.current.y, height: viewport.current.height };
+  };
+
   const ids = messages.map((message) => message.id);
-  // En layout (antes del pintado): la marca de «conservar posición» debe estar puesta cuando el
-  // contenido cambie de tamaño, que ocurre antes que un `useEffect`.
+  // En layout (antes del pintado): las marcas de «conservar posición» y «ir al final» deben estar
+  // puestas cuando el contenido cambie de tamaño, que ocurre antes que un `useEffect`.
   // biome-ignore lint/correctness/useExhaustiveDependencies: depende de los ids, no del arreglo.
   useLayoutEffect(() => {
     const change = diffMessages(prevIds.current, ids);
@@ -63,19 +75,23 @@ export function MessageList({
     if (change.appended > 0) {
       // Quien envía un mensaje vuelve al final: lo que acaba de escribir debe verse.
       const propio = messages.slice(-change.appended).some((message) => message.role === "user");
-      setAnchor((current) => {
-        const next = propio
-          ? nextAnchor(current, { nearBottom: true })
-          : nextAnchor(current, { appended: change.appended });
-        pinned.current = next.pinned;
-        return next;
+      const { y, height } = live();
+      const abajo = isNearBottom({
+        scrollTop: y,
+        clientHeight: height,
+        scrollHeight: viewport.current.content,
       });
+      if (propio) forceEnd.current = true;
+      setAnchor((current) =>
+        propio || abajo
+          ? nextAnchor(current, { nearBottom: true })
+          : nextAnchor(nextAnchor(current, { nearBottom: false }), { appended: change.appended }),
+      );
     }
   }, [ids.join("|")]);
 
   const goToEnd = () => {
     scroll.current?.scrollToEnd({ animated: false });
-    pinned.current = true;
     setAnchor({ pinned: true, unseen: 0 });
   };
 
@@ -87,15 +103,21 @@ export function MessageList({
         className="flex-1"
         contentContainerClassName="gap-4 p-4"
         onContentSizeChange={(_width, height) => {
-          const { content, y } = viewport.current;
+          const { y, height: client } = live();
+          const plan = planScroll({
+            y,
+            height: client,
+            prevContent: viewport.current.content,
+            nextContent: height,
+            keepPosition: keepPosition.current,
+            forceEnd: forceEnd.current,
+          });
+          keepPosition.current = false;
+          forceEnd.current = false;
           viewport.current.content = height;
-          if (keepPosition.current) {
-            // «Cargar anteriores»: la vista conserva lo que leía, el contenido nuevo queda arriba.
-            keepPosition.current = false;
-            scroll.current?.scrollTo({ y: y + (height - content), animated: false });
-          } else if (pinned.current) {
-            scroll.current?.scrollToEnd({ animated: false });
-          }
+          if (plan === null) return;
+          if (plan.to === "end") scroll.current?.scrollToEnd({ animated: false });
+          else scroll.current?.scrollTo({ y: plan.to, animated: false });
         }}
         onLayout={(event) => {
           viewport.current.height = event.nativeEvent.layout.height;
@@ -108,12 +130,12 @@ export function MessageList({
             clientHeight: layoutMeasurement.height,
             scrollHeight: contentSize.height,
           });
-          pinned.current = near;
           setAnchor((current) => nextAnchor(current, { nearBottom: near }));
         }}
         ref={scroll}
         role="log"
-        scrollEventThrottle={50}
+        // Un cuadro: iOS solo emite un evento por gesto con 0, y RNW solo emite ticks con un valor > 0.
+        scrollEventThrottle={16}
         testID="message-list"
       >
         {hasOlder ? (

@@ -222,7 +222,7 @@ export default function ConsultationScreen() {
   });
   const patientId = workspaceQuery.data?.consultation.content.patientId ?? null;
   // El hilo «Conocimiento» del panel pregunta sobre el paciente de esta consulta (FR-026).
-  usePatientContext(patientId);
+  usePatientContext(patientId, workspaceQuery.data?.header.patientName);
   const followUpQuery = useQuery({
     queryKey: ["registro", "consultation-follow-up", patientId ?? "sin-paciente"],
     queryFn: async () => {

@@ -29,7 +29,7 @@ export type PanelThread = {
 };
 
 /** Hilo al que pasa el panel si el activo deja de estar disponible (spec «Hilos contextuales»). */
-export const FALLBACK_THREAD = "conocimiento";
+export const FALLBACK_THREAD = "asistente";
 
 export type ThreadRegistryState = {
   // Un `Map` conserva el orden de la primera aparición de cada dueño.

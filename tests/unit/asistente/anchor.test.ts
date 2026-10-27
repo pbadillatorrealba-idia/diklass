@@ -4,6 +4,7 @@ import {
   isNearBottom,
   NEAR_BOTTOM_PX,
   nextAnchor,
+  planScroll,
   unseenLabel,
 } from "@/features/asistente/anchor";
 
@@ -114,6 +115,17 @@ describe("nextAnchor", () => {
   });
 });
 
+describe("nextAnchor no cambia sin necesidad", () => {
+  // Cada evento de scroll pasa por aquí: devolver el mismo objeto evita re-renderizar la lista.
+  test("sin cambio de ancla devuelve el mismo estado", () => {
+    const anclado = { pinned: true, unseen: 0 };
+    const leyendo = { pinned: false, unseen: 2 };
+    expect(nextAnchor(anclado, { nearBottom: true })).toBe(anclado);
+    expect(nextAnchor(leyendo, { nearBottom: false })).toBe(leyendo);
+    expect(nextAnchor(anclado, {})).toBe(anclado);
+  });
+});
+
 describe("unseenLabel", () => {
   test.each([
     [1, "1 nuevo"],
@@ -121,5 +133,46 @@ describe("unseenLabel", () => {
     [12, "12 nuevos"],
   ])("%i → %s", (n, texto) => {
     expect(unseenLabel(n)).toBe(texto);
+  });
+});
+
+// Qué hacer con el desplazamiento cuando cambia el tamaño del contenido, con la posición REAL de la
+// vista en ese instante (no la del último evento de scroll, que puede faltar).
+describe("planScroll", () => {
+  const base = {
+    y: 0,
+    height: 400,
+    prevContent: 1000,
+    nextContent: 1100,
+    keepPosition: false,
+    forceEnd: false,
+  };
+
+  test("anclado abajo, sigue lo nuevo", () => {
+    expect(planScroll({ ...base, y: 600 })).toEqual({ to: "end" });
+  });
+
+  test("leyendo arriba, no mueve nada", () => {
+    expect(planScroll({ ...base, y: 0 })).toBeNull();
+  });
+
+  test("quien envía vuelve al final aunque leyera arriba", () => {
+    expect(planScroll({ ...base, y: 0, forceEnd: true })).toEqual({ to: "end" });
+  });
+
+  test("al cargar anteriores conserva lo que leía: baja lo que creció el contenido", () => {
+    expect(
+      planScroll({ ...base, y: 0, keepPosition: true, nextContent: 2140, prevContent: 1000 }),
+    ).toEqual({
+      to: 1140,
+    });
+  });
+
+  test("cargar anteriores manda sobre estar abajo (no arrastra al final)", () => {
+    expect(planScroll({ ...base, y: 600, keepPosition: true })).toEqual({ to: 700 });
+  });
+
+  test("la primera carga (contenido previo casi vacío) se ancla al final", () => {
+    expect(planScroll({ ...base, prevContent: 32, nextContent: 1936 })).toEqual({ to: "end" });
   });
 });

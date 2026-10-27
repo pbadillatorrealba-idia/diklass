@@ -36,11 +36,38 @@ export function nextAnchor(
   anchor: Anchor,
   event: { appended?: number; nearBottom?: boolean },
 ): Anchor {
-  if (event.nearBottom === true) return { pinned: true, unseen: 0 };
-  if (event.nearBottom === false) return { ...anchor, pinned: false };
+  if (event.nearBottom === true) {
+    return anchor.pinned && anchor.unseen === 0 ? anchor : { pinned: true, unseen: 0 };
+  }
+  if (event.nearBottom === false) return anchor.pinned ? { ...anchor, pinned: false } : anchor;
   if (event.appended && !anchor.pinned)
     return { ...anchor, unseen: anchor.unseen + event.appended };
   return anchor;
+}
+
+export type ScrollPlan = { to: "end" } | { to: number } | null;
+
+/**
+ * Qué hacer con el desplazamiento cuando el contenido cambia de tamaño. `y` y `height` son la
+ * posición REAL de la vista en ese instante; `prevContent`, el alto de antes del cambio. Cargar
+ * anteriores conserva lo que se leía; quien envía o está abajo sigue lo nuevo; quien lee arriba no se
+ * mueve.
+ */
+export function planScroll(input: {
+  y: number;
+  height: number;
+  prevContent: number;
+  nextContent: number;
+  keepPosition: boolean;
+  forceEnd: boolean;
+}): ScrollPlan {
+  if (input.keepPosition) return { to: input.y + (input.nextContent - input.prevContent) };
+  const wasNearBottom = isNearBottom({
+    scrollTop: input.y,
+    clientHeight: input.height,
+    scrollHeight: input.prevContent,
+  });
+  return input.forceEnd || wasNearBottom ? { to: "end" } : null;
 }
 
 export const unseenLabel = (count: number) => (count === 1 ? "1 nuevo" : `${count} nuevos`);

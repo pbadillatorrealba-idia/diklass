@@ -1,9 +1,11 @@
 import { expect, readSupabaseSession, SUPABASE_ANON_KEY, SUPABASE_URL, test } from "./fixtures";
-import { abrirHilo } from "./panel";
+import { abrirHilo, limpiarConversacion } from "./panel";
 import { prepararPaciente } from "./preparar-paciente";
 
-// sistema-visual «Conocimiento en el panel» (shell-asistente-tres-zonas, design.md D5, FR-026).
-test.describe("hilo «Conocimiento» del panel (web)", () => {
+// asistente-conversacional «Conocimiento dentro del chat» y «Paciente de contexto automático»
+// (chat-del-asistente, FR-026): el chat del panel responde a la base de conocimiento con citas y toma
+// el paciente de la consulta sin elegirlo.
+test.describe("conocimiento en el chat del panel (web)", () => {
   test.beforeEach(() => {
     test.skip(
       !SUPABASE_URL || !SUPABASE_ANON_KEY,
@@ -54,31 +56,33 @@ test.describe("hilo «Conocimiento» del panel (web)", () => {
 
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.setViewportSize({ width: 1440, height: 900 });
+      await limpiarConversacion(page);
       await page.goto(`/consultations/${consultationId}`);
       await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
 
-      await abrirHilo(page, "conocimiento");
+      await abrirHilo(page, "asistente");
       const panel = page.getByTestId("assistant-panel");
+      // El paciente de la consulta es el contexto, sin haberlo elegido: la etiqueta lo declara.
+      await expect(panel.getByTestId("chat-context")).toHaveText(
+        "Contexto: Rocky E2E conocimiento",
+      );
+
       const pregunta = `¿Qué indica el protocolo de ${palabra}?`;
-      const campo = panel.getByLabel("Tu pregunta al asistente");
+      const campo = panel.getByTestId("composer-input");
       await expect(campo).toBeEditable();
       await campo.click();
       await page.keyboard.type(pregunta, { delay: 5 });
       await expect(campo).toHaveValue(pregunta);
-      await panel.getByTestId("conocimiento-consultar").click();
+      await panel.getByTestId("composer-send").click();
 
-      // La respuesta lleva la cita con su fuente y fragmento, dentro del panel.
+      // La respuesta lleva la cita con su fuente y fragmento, dentro del panel, y «Ver respaldo».
       const respuesta = panel.getByTestId("respuesta-conocimiento");
       await expect(respuesta).toBeVisible({ timeout: 15_000 });
       await expect(respuesta).toContainText(titulo);
       await expect(respuesta).toContainText("revisar el entorno del paciente");
+      await expect(panel.getByText("Ver respaldo registrado")).toBeVisible();
 
-      // El paciente de la consulta es el contexto, sin haberlo elegido: queda seleccionado y la
-      // consulta registrada lo declara.
-      await expect(panel.getByTestId(`selector-paciente-contexto-${patientId}`)).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      // La consulta registrada declara el paciente de contexto.
       const registradas = await api.get(
         `/rest/v1/knowledge_queries?select=patient_id&question=eq.${encodeURIComponent(pregunta)}`,
       );

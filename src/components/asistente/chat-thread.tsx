@@ -58,6 +58,13 @@ export function ChatThread({ chat }: { chat: ChatController }) {
         ) : null}
       </View>
 
+      {chat.context !== null ? (
+        // Contexto automático de solo lectura: lo fija la navegación, no un selector (FR-026).
+        <Text className="px-3 pt-2" tone="muted" testID="chat-context" variant="caption">
+          {`Contexto: ${chat.context.name ?? "paciente"}`}
+        </Text>
+      ) : null}
+
       {confirming ? (
         <View
           className="mx-3 mt-2 gap-2 rounded-sm border border-border bg-card p-3"

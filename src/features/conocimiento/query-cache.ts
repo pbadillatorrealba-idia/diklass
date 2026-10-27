@@ -1,15 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { REGISTRO_QUERY_KEY } from "@/features/registro/query-cache";
 
 /** Prefijo de las consultas de React Query de la base de conocimiento. */
 export const CONOCIMIENTO_QUERY_KEY = ["conocimiento"] as const;
-
-/**
- * Pacientes del selector de contexto de la conversación. Son la misma lista que la del
- * registro (`listPatients`), así que comparten su clave: `invalidateRegistro`, que ya corre
- * tras crear un paciente, también refresca el selector (revisión de la PR #30).
- */
-export const PACIENTES_CONTEXTO_QUERY_KEY = [...REGISTRO_QUERY_KEY, "patients"] as const;
 
 /**
  * Marca como obsoleto todo lo leído de la base de conocimiento tras incorporar o retirar una

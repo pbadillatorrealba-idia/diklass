@@ -329,8 +329,8 @@ export function syntheticScreens(caseIds: SyntheticCase): SyntheticScreen[] {
     {
       name: "consulta a la base de conocimiento",
       url: "/knowledge",
-      readyTestID: "conocimiento-pregunta",
-      keyboardTestIDs: ["conocimiento-pregunta"],
+      readyTestID: "composer-input",
+      keyboardTestIDs: ["composer-input"],
     },
     {
       name: "colección de fuentes",

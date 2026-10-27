@@ -45,8 +45,8 @@ describe("hilo activo", () => {
   });
 
   test("pasa a «Conocimiento» si ya no está disponible", () => {
-    expect(resolveActiveThread("escucha", ["conocimiento", "asistente"])).toBe(FALLBACK_THREAD);
-    expect(FALLBACK_THREAD).toBe("conocimiento");
+    expect(resolveActiveThread("escucha", ["asistente", "otro"])).toBe(FALLBACK_THREAD);
+    expect(FALLBACK_THREAD).toBe("asistente");
   });
 
   test("si tampoco está «Conocimiento», pasa al primero disponible", () => {

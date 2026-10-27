@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { provisionClinicalCase, type SyntheticCase } from "./caso-sintetico";
 import {
   ANA,
   expect,
@@ -15,9 +16,14 @@ import { abrirHilo } from "./panel";
 test.describe("chat del asistente", () => {
   test.skip(!hasBackend, "Requiere Supabase con las veterinarias sintéticas provisionadas.");
 
+  let caso: SyntheticCase = { patientId: "", openConsultationId: "", closedConsultationId: "" };
   let api: APIRequestContext;
   let userId = "";
   let clinicId = "";
+
+  test.beforeAll(async ({ browser }) => {
+    caso = await provisionClinicalCase(browser);
+  });
 
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -182,5 +188,25 @@ test.describe("chat del asistente", () => {
   }) => {
     await expect(panel(page).getByTestId("composer-stop")).toHaveCount(0);
     await expect(panel(page).getByTestId("composer-send")).toBeDisabled();
+  });
+
+  // «Paciente de contexto automático»: lo fija la navegación y se suelta al salir de la pantalla.
+  test("el paciente de contexto lo fija la ficha y se suelta al volver al inicio", async ({
+    page,
+  }) => {
+    await expect(panel(page).getByTestId("chat-context")).toHaveCount(0);
+
+    await page.goto(`/patients/${caso.patientId}`);
+    await expect(panel(page).getByTestId("chat-context")).toHaveText(
+      "Contexto: Luna Caso Sintético",
+      { timeout: 15_000 },
+    );
+    // Sin selector de pacientes: la etiqueta es de solo lectura.
+    await expect(panel(page).getByRole("radiogroup")).toHaveCount(0);
+
+    // Navegación dentro de la app (sin recargar): al salir, el contexto se suelta.
+    await page.getByRole("link", { name: "Inicio" }).first().click();
+    await expect(page).toHaveURL(/\/home$/);
+    await expect(panel(page).getByTestId("chat-context")).toHaveCount(0);
   });
 });

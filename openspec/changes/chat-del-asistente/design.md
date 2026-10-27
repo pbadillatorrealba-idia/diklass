@@ -161,7 +161,7 @@ contexto» y `conversation-store.patientId` pasa a derivarse del proveedor. La e
 la pinta la cabecera del chat; el nombre se lee de la ficha ya cargada, sin consulta extra. El mensaje
 guarda `patientId` al enviarse (el de ese instante, no el de la respuesta).
 
-Regla de dueño: **el último en montar gana, y al desmontar limpia solo quien lo fijó** (cada setter guarda
+Regla de dueño: **el último en enfocarse gana, y al salir limpia solo quien lo fijó** (sigue al foco de la pantalla, no a su montaje: navegar entre pestañas deja la pantalla montada) (cada setter guarda
 su propio id). Así, pasar de la ficha a una consulta del mismo paciente no parpadea, y una consulta con la
 ficha abierta en el panel anidado no se pisa. Una pregunta en vuelo al cambiar de pantalla sigue usando el
 paciente con que se envió.

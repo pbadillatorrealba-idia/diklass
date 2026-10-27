@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { provisionClinicalCase, type SyntheticCase } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
-import { abrirHilo } from "./panel";
+import { abrirHilo, limpiarConversacion } from "./panel";
 
 // sistema-visual «Shell de tres zonas» y «Panel de asistente colapsable»
 // (shell-asistente-tres-zonas, design.md D1/D2/D8/D10).
@@ -17,6 +17,7 @@ test.describe("shell de tres zonas con panel de asistente", () => {
   test.beforeEach(async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await limpiarConversacion(page);
   });
 
   const box = async (page: Page, testID: string) => {
@@ -183,7 +184,6 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await expect(panel.getByTestId("composer-input")).toBeVisible({ timeout: 15_000 });
     await expect(panel.getByTestId("assistant-thread-asistente")).toHaveCount(0);
     await expect(panel.getByTestId("assistant-thread-conocimiento")).toHaveCount(0);
-    await expect(panel.getByTestId("conocimiento-pregunta")).toHaveCount(0);
   });
 
   test("el borde del panel se arrastra con el mouse y el contenido cede el ancho", async ({
@@ -280,13 +280,12 @@ test.describe("shell de tres zonas con panel de asistente", () => {
     await expect(page.getByTestId("panel-dock-open")).toBeFocused();
   });
 
-  test("la hoja aloja el hilo activo y permite cambiar de hilo", async ({ page }) => {
+  test("la hoja aloja el chat y no ofrece un hilo «Conocimiento»", async ({ page }) => {
     await openPatients(page, 375);
     await page.getByTestId("panel-dock-open").click();
     const hoja = page.getByTestId("panel-sheet");
-    await hoja.getByTestId("assistant-thread-asistente").click();
+    // En una pantalla sin consulta el único hilo es el chat: se nombra sin pestañas.
     await expect(hoja.getByTestId("composer-input")).toBeVisible();
-    await hoja.getByTestId("assistant-thread-conocimiento").click();
-    await expect(hoja.getByTestId("conocimiento-pregunta")).toBeVisible();
+    await expect(hoja.getByTestId("assistant-thread-conocimiento")).toHaveCount(0);
   });
 });

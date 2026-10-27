@@ -138,22 +138,4 @@ test.describe("estados de datos", () => {
     await expect(error).toHaveCount(0);
     await expect(page.getByTestId("feedback-antecedents")).toBeVisible();
   });
-
-  test("si falla el selector de pacientes de conocimiento, ofrece reintentar", async ({ page }) => {
-    let fallar = true;
-    await page.route("**/rest/v1/clinical_records?*", (route) => {
-      const url = route.request().url();
-      if (fallar && url.includes("record_type=eq.patient") && !url.includes("id=eq.")) {
-        return route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
-      }
-      return route.continue();
-    });
-    await page.goto("/knowledge");
-    const error = page.getByTestId("knowledge-patients-error");
-    await expect(error).toBeVisible({ timeout: 15_000 });
-    fallar = false;
-    await error.getByRole("button", { name: "Reintentar" }).click();
-    await expect(error).toHaveCount(0);
-    await expect(page.getByTestId("selector-paciente-contexto")).toBeVisible();
-  });
 });
