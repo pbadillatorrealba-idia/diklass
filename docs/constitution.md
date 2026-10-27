@@ -106,8 +106,8 @@ La matriz mínima es iOS 16 o posterior, Android API 26 o posterior, Chrome y Ed
 dos versiones mayores anteriores, Firefox actual más las dos versiones mayores anteriores, y Safari
 17 o posterior en macOS/iOS. Los flujos protegidos y los controles interactivos DEBEN verificarse
 mediante la suite web en Chromium en cada cambio y también en Firefox y WebKit en la suite de la
-rama principal; la app no puede depender de una
-comprobación exclusivamente del cliente para garantizar seguridad en ninguna plataforma.
+rama principal; la app no puede depender de una comprobación exclusivamente del cliente para
+garantizar seguridad en ninguna plataforma.
 
 ## Flujo de Trabajo de Desarrollo
 

@@ -191,13 +191,12 @@ constitución > este archivo > cambio OpenSpec > ponytail.
 - **Lo que ponytail no puede recortar:** requisitos y criterios del cambio activo (cuentan como
   «pedido explícito»), los IDs FR/US/SC, validación en fronteras de confianza, fallo cerrado,
   accesibilidad, RLS y la verificación que exige la constitución.
-- **OpenSpec:** en `propose` y `update-change` no propongas capacidades ni requisitos que nadie
-  pidió, y `design.md` solo con una decisión real; ponytail acota el alcance, nunca la presencia
-  de un artefacto exigido. En `apply-change`, cada tarea con el mínimo código que la cumple. Una
-  simplificación con techo conocido lleva un comentario `ponytail:`; eso no sustituye a la deuda
-  de tests, que sigue siendo una tarea. En `explore`, `sync-specs` y `archive-change` no interviene.
+- **OpenSpec:** en `propose` y `update-change` no propongas lo que nadie pidió y deja `design.md`
+  para decisiones reales (ponytail acota el alcance, nunca quita un artefacto exigido); en
+  `apply-change`, el mínimo código por tarea. Una simplificación con techo conocido lleva un
+  comentario `ponytail:`, que no sustituye a la deuda de tests (sigue siendo una tarea). No
+  interviene en `explore`, `sync-specs` ni `archive-change`.
 - **`test-driven-development` sigue vigente** para toda funcionalidad y corrección; ponytail solo
-  fija el tamaño (el test fallido más pequeño, sin una suite por función). Su excepción para
-  «one-liners triviales» no aplica aquí.
+  fija el tamaño (el test fallido más pequeño). Su excepción para «one-liners triviales» no aplica.
 - **Revisión:** la sección «Sobreingeniería» de `requesting-code-review` es la única pasada de
   ponytail al cerrar una PR; no lances además `ponytail-review` ni `simplify`.
