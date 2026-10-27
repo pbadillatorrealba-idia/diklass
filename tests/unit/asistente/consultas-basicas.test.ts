@@ -23,6 +23,25 @@ describe("detectIntent", () => {
     expect(detectIntent(question)).toBe(intent);
   });
 
+  test.each([
+    "¿Qué tratamiento recomiendas para la diarrea canina?",
+    "¿Cuál es la dosis diaria de meloxicam?",
+    "¿Qué hago si no mejora en un día?",
+    "¿Eventos adversos de meloxicam?",
+    "cita la fuente de la dosis",
+    "¿Cuál es el protocolo de la reunión clínica de parvovirus?",
+  ])("«%s» no es una consulta básica", (question) => {
+    expect(detectIntent(question)).toBeNull();
+  });
+
+  test.each([
+    ["¿Qué citas tengo hoy?", "agenda"],
+    ["¿Tengo reuniones esta semana?", "agenda"],
+    ["¿A qué fecha estamos?", "fecha"],
+  ] as const)("«%s» → %s", (question, intent) => {
+    expect(detectIntent(question)).toBe(intent);
+  });
+
   test.each(["¿Dosis de meloxicam en perros?", "protocolo de ayuno prequirúrgico", ""])(
     "«%s» va a la base de conocimiento",
     (question) => {

@@ -119,6 +119,15 @@ export function PanelBody({
           {control}
         </View>
       )}
+      {/* «Escucha siempre visible»: el aviso de grabación no depende del hilo abierto. El hilo que
+          lo declara ya lo muestra en su propio contenido, así que no se repite. */}
+      <View className="px-3">
+        {threads
+          .filter((thread) => thread.id !== active?.id)
+          .map((thread) => (
+            <Fragment key={thread.id}>{thread.status?.("dock")}</Fragment>
+          ))}
+      </View>
       <ScrollView
         className="flex-1"
         contentContainerClassName="gap-4 p-4"

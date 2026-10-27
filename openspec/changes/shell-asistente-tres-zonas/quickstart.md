@@ -46,7 +46,6 @@ Todas en `capturas/`.
 | Grabando, panel cerrado (riel) | 1280 | claro / oscuro | `light-1280-…`, `dark-1280-consulta-grabando-panel-cerrado.png` |
 | Grabando (dock) | 375 | claro | `light-375-consulta-grabando-panel-cerrado.png` |
 | Aterrizaje: «Nuevo» + «I» | 1440 | claro | `light-1440-consulta-aterrizaje-nuevo.png` |
-| Hilo «Asistente» no disponible | 1440 | claro | `light-1440-consulta-asistente-no-disponible.png` |
 | Hoja con foco | 375 | claro | `light-375-consulta-hoja-foco.png` |
 | `/patients` | 1440 · 1024 | claro | `light-1440-patients.png`, `light-1024-patients.png` |
 | `/knowledge` | 1440 | claro | `light-1440-knowledge.png` |
@@ -76,7 +75,13 @@ hoja con foco). El tiempo del riel es variante `nav`, dentro de la excepción de
 
 ## Mejoras del asistente (grupo 9)
 
-- **Desviación de la spec «Hilo del asistente reservado»**: el hilo «Asistente» ya no declara que no está disponible; responde consultas básicas (reglas por palabras, sin LLM) y consulta conocimiento. No escribe ni propone: `AgentThreadView` y `AgentProposal` quedan como contrato del agente futuro y `AgentThread` (el contenedor sin agente) ya no se monta. El delta está en `specs/sistema-visual/spec.md` («Hilo del asistente con consultas básicas», «Ancho del panel elegible» y los ajustes a «Panel de asistente colapsable» e «Hilos contextuales»).
+- **Desviación de la spec «Hilo del asistente reservado»**: el hilo «Asistente» ya no declara que no está disponible; responde consultas básicas (reglas por palabras, sin LLM) y consulta conocimiento. No escribe ni propone: solo `AgentProposal` queda como contrato del agente futuro; `AgentThread`, `AgentThreadView` y `useAgentAvailability` se retiraron por no tener consumidores. El delta está en `specs/sistema-visual/spec.md` («Hilo del asistente con consultas básicas», «Ancho del panel elegible» y los ajustes a «Panel de asistente colapsable» e «Hilos contextuales»).
 - **«Pacientes de hoy»** = pacientes con una consulta creada hoy (hora local); no hay agenda de citas. **Eventos**: siempre vacío hasta que exista una fuente (`useAgendaEvents`).
 - **Ancho del panel**: ya no es fijo en 360 px (el e2e y las capturas anteriores lo asumen por defecto).
 - **Sin verificar**: arrastre en táctil (solo mouse y teclado); el e2e completo no se reejecutó tras este grupo (corrieron `panel-asistente`, `accessibility`, `navegacion`, `conocimiento` y `panel-conocimiento`, en claro y oscuro donde aplica).
+
+## Revisión del agente (ronda 1)
+
+Corregido: regex de intenciones con límite de palabra (`consultas-basicas`), aviso de grabación en la cabecera del panel con otro hilo activo (`PanelBody`), parada de la captura al desmontar la consulta (`useListenMode`), contexto de paciente que se suelta al salir de la pantalla (`usePatientContext`), docs reconciliados con el grupo 9 y retiro de `AgentThread`, `AgentThreadView` y `useAgentAvailability`.
+
+Verificado: `biome ci`, `typecheck` y `bun test tests/unit` en local, con pruebas en rojo primero para las regex, `PanelBody` y el contexto de paciente. **Sin ejecutar**: e2e (ni el de la escucha con otro hilo abierto ni el de navegar durante la captura, que faltan escribir) y la suite viva. Menores del reporte sin atender: separador táctil y de un solo puntero, persistencia del ancho por `pointermove`, `aria-controls` del riel, orden de pestañas, e2e «pacientes de hoy» débil y las capturas versionadas.

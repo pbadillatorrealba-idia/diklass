@@ -43,7 +43,7 @@ no sirve al resto de la app y obligaba a modificar FR-079.
 
 | Ancho | Presentación | Contenido |
 |---|---|---|
-| web ≥ 1440 px | acoplado, expandido (360 px), colapsable a riel de 56 px | ≥ 840 px con panel expandido |
+| web ≥ 1440 px | acoplado, expandido (360 px por defecto; 280–560 px), colapsable a riel de 56 px | ≥ 840 px con panel expandido |
 | web 1024–1439 px | riel visible; el panel se abre como cajón superpuesto | sin reflujo |
 | web < 1024 px y nativo | dock (cinta) + hoja modal | una columna, el dock sobre las pestañas |
 
@@ -85,9 +85,9 @@ selector de paciente sigue disponible. La respuesta sigue siendo extractiva (HD1
 
 ### D6. Hilo del asistente y contrato de propuestas
 
-`AgentThread` reserva los estados `idle | thinking | proposing | error`. Sin agente instalado
-(`useAgentAvailability() === false`, hoy siempre) muestra «El asistente conversacional no está
-disponible todavía» y no renderiza respuestas. El contrato de propuestas (`AgentProposal`) se
+El hilo «Asistente» responde consultas básicas y consulta conocimiento (grupo 9); no es un agente y no
+propone. El contenedor `AgentThread` que reservaba los estados sin agente se retiró por no tener
+consumidores: el agente futuro trae el suyo. El contrato de propuestas (`AgentProposal`) se
 construye ya, con su prueba, porque es una regla de seguridad y no una función: una propuesta es una
 sugerencia (`SuggestedBlock`, pliego canario), lleva su origen y procedencia «Inferida», y un
 `onConfirm` es la única vía a una escritura, atribuida al veterinario (reutiliza la atribución de
@@ -133,7 +133,7 @@ al existente de «Saltar al contenido». Bajo 1024 px el dock va al final del DO
 | `usePanelStore` y registro de hilos | Panel colapsable y hilos contextuales (spec «Panel colapsable», «Hilos contextuales») | Nunca mientras exista el panel |
 | `ListenThread` y `ListenControls` | Hilo de escucha y escucha siempre visible | — |
 | `ConocimientoThread` extraído de `/knowledge` | Conocimiento en el panel sin duplicar la pantalla | — |
-| `AgentThread` y `AgentProposal` (contrato) | Reserva del asistente y regla «el agente solo propone» (spec «Asistente reservado», «Propuestas exigen confirmación») | Si se descarta la visión agéntica |
+| `AgentProposal` (contrato) | Regla «el agente solo propone» (spec «Propuestas exigen confirmación») | Si se descarta la visión agéntica |
 | `Screen` `dock`, `PanelDock`, `PanelSheet` | Dock y hoja en compacto | Nunca mientras exista el panel en móvil |
 | `useElapsed` | Tiempo transcurrido en el riel y el dock | — |
 
@@ -167,5 +167,5 @@ nueva e inocua.
 
 - Orden del hilo de escucha (más nuevo arriba o abajo) y desplazamiento automático al último tramo: no
   cambia specs ni tareas; se decide al probarlo con voz real.
-- Ancho del panel expandido (360 px) frente al contenido de las pantallas más densas (listas, tablas): se
+- Ancho del panel expandido (360 px por defecto) frente al contenido de las pantallas más densas (listas, tablas): se
   valida con capturas en la verificación visual y puede ajustarse sin cambiar la spec.

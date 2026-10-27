@@ -34,7 +34,7 @@ grupo 3 ya funciona con un hilo.
 ## 5. Hilo del asistente y contrato de propuestas (D6)
 
 - [x] 5.1 En rojo `tests/unit/asistente/agent-proposal.test.tsx` y luego `AgentProposal`: se pinta como sugerencia (`SuggestedBlock`) con origen y procedencia «Inferida»; sin Confirmar no hay escritura ni acción; Confirmar llama a `onConfirm` y la atribución es la del veterinario. Verificación: prueba verde, incluido «sin confirmar no escribe».
-- [x] 5.2 En rojo y luego `AgentThread` con los estados `idle | thinking | proposing | error` y la disponibilidad `useAgentAvailability()` (siempre `false`): muestra que no está disponible y no renderiza respuestas simuladas. Verificación: `tests/unit/asistente/agent-thread.test.tsx` (los cuatro estados con un agente falso solo en la prueba) y e2e (el hilo declara su no disponibilidad).
+- [x] 5.2 (retirada) `AgentThread` y `useAgentAvailability()` se construyeron y se retiraron al responder el hilo «Asistente» (grupo 9): no tenían consumidores. `AgentProposal` (5.1) se conserva como contrato. Verificación: `git grep AgentThread` sin resultados.
 
 ## 6. Dock y hoja en compacto (D7)
 

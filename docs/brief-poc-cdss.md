@@ -305,7 +305,7 @@ veterinario decide**. Toda propuesta se presenta como sugerencia con su origen y
 confirmación queda atribuida a quien la hizo (FR-010, FR-021, FR-063, FR-076). El agente real —modelo,
 herramientas, seguridad y la revisión de la decisión de conocimiento extractivo (HD1)— **no está
 implementado** y es un cambio futuro aparte; hoy el panel solo aloja la captura de voz y la consulta
-de conocimiento, y el hilo del asistente declara que no está disponible. Esta visión no altera el
+de conocimiento, y el hilo del asistente responde consultas básicas por reglas (fecha, agenda, pacientes de hoy) y consulta la base de conocimiento, sin ser un agente. Esta visión no altera el
 alcance del PoC: la interacción con el asistente sigue siendo por texto (spec 003) y la voz, solo
 captura de la conversación (spec 004).
 
