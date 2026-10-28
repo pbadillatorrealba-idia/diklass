@@ -53,7 +53,7 @@ verificado localmente; esta rama depende de aquella. Marcas no equivalen a acept
   Verificación: CI con evidencias de limpieza y repetición; documentar comandos nuevos en `SETUP.md`.
   No modificar `.github/workflows/native-e2e.yml` ni `tests/e2e/native/`: Maestro Cloud y su
   backend remoto quedan fuera de esta entrega por decisión del usuario.
-- [ ] 3.3 Tras autorización para cerrar la PR de implementación, ejecutar las compuertas aplicables
+- [x] 3.3 Tras autorización para cerrar la PR de implementación, ejecutar las compuertas aplicables
   y prerrevisión con Sobreingeniería según AGENTS.md (FR-133–FR-136). Verificación: resultados y
   reporte en español en la PR, diferenciando pruebas locales de CI y límites pendientes.
 
@@ -98,5 +98,12 @@ verificado localmente; esta rama depende de aquella. Marcas no equivalen a acept
   CI previa: pgTap 375 correctas, tipos y unitarios correctos; carga demo cortada por timeout de
   5 s, ahora con presupuesto explícito de 60 s para el grafo completo. Auditoría de dependencias
   bloqueada por `deepmerge` (GHSA-gcqx-w48m-w2h4), ajeno a esta entrega; decisión solicitada al usuario.
-- Pendientes: compuerta final, segunda prerrevisión y CI del HEAD corregido. Firefox/WebKit,
-  Maestro Cloud y proveedor externo de ASR no se han verificado localmente.
+- Compuerta final: Biome (465 archivos), tipos y 1.648 tests correctos / 155 vivas omitidas /
+  0 fallos; las vivas se verificaron aparte. Soporte focalizado: 70 correctas / 173 aserciones.
+  Integración de los cuatro archivos corregidos: 26 correctas / 0 fallos, incluida la carga demo.
+  Segunda prerrevisión independiente sin nuevos hallazgos; informes de ambas rondas en #82.
+- Comprobación SQL final: 56 scopes `clean`, cero pendientes y cero cuentas/clínicas/fichas
+  propias restantes; tabla de cuota idéntica al último snapshot privado. Esto acredita la
+  ejecución local y no sustituye una CI verde ni aceptación humana de la PR.
+- Pendiente: CI del HEAD corregido, incluida la auditoría de dependencias ajena al cambio.
+  Firefox/WebKit, Maestro Cloud y proveedor externo de ASR no se han verificado localmente.
