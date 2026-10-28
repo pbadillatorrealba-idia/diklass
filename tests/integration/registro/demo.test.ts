@@ -27,6 +27,14 @@ test.skipIf(!live)(
     expect(epicrisis.filter((row) => row.status === "approved")).toHaveLength(3);
     expect(epicrisis.filter((row) => row.status === "draft")).toHaveLength(1);
     expect(epicrisis.filter((row) => row.status === "corrective")).toHaveLength(1);
+    const corrected = epicrisis.find((row) => row.status === "corrective");
+    const original = epicrisis.find(
+      (row) =>
+        row.status === "approved" &&
+        row.content.consultationId === corrected?.content.consultationId,
+    );
+    expect(original?.content.observaciones).toContain("tres horas");
+    expect(corrected?.content.observaciones).toContain("cuatro horas");
     const feedback = rows.filter((row) => row.record_type === "clinical_feedback");
     expect(feedback).toHaveLength(6);
     expect(feedback.filter((row) => row.status === "corrective")).toHaveLength(1);

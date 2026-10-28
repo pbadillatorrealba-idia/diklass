@@ -420,7 +420,7 @@ export type ConsultaDemo = {
     author: number;
   }[];
   diagnosis?: { key: string; text: string; plan?: ConsultationPlanInput };
-  epicrisis?: { key: string; status: "approved" | "draft"; author: number };
+  epicrisis?: { key: string; status: "approved" | "draft"; author: number; observaciones?: string };
   correction?: { key: string; author: number; observaciones: string };
   feedback: {
     key: string;
@@ -526,7 +526,12 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
         followUp: "Revisar pendientes y antecedentes del rescate",
       },
     },
-    epicrisis: { key: "C01-E01", status: "approved", author: 0 },
+    epicrisis: {
+      key: "C01-E01",
+      status: "approved",
+      author: 0,
+      observaciones: "Tiempo máximo de ausencia consignado: tres horas.",
+    },
     correction: {
       key: "C01-E02",
       author: 0,

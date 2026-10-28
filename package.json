@@ -22,7 +22,7 @@
     "provision:veterinarians": "bun scripts/provision-veterinarians.ts",
     "provision:demo": "bun scripts/provision-demo-data.ts",
     "demo:check": "bun scripts/demo/contratos-demo.ts && bun test tests/unit/scripts/datos-demo.test.ts tests/unit/scripts/contratos-demo.test.ts tests/unit/scripts/provision-demo.test.ts",
-    "demo:reset": "supabase db reset --local && bun scripts/provision-veterinarians.ts && bun scripts/provision-demo-data.ts",
+    "demo:reset": "bun scripts/reset-demo.ts",
     "db:types": "supabase gen types --lang=typescript --local > src/lib/supabase/database.types.ts"
   },
   "dependencies": {

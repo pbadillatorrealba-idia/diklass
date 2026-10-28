@@ -115,6 +115,11 @@ manifiesto pero hay datos previos, cambia la versión o queda una carga parcial,
 ni reanudar. Reconstruir requiere decidir expresamente que la base local es desechable. El bloqueo
 remoto solo se levanta mediante `--allow-remote`, con aviso, para un backend sintético autorizado.
 
+`demo:reset` comprueba que el CLI y el entorno apunten a la misma base local antes de reiniciar.
+Solo tras un reset exitoso archiva el manifiesto activo como `.before-reset-<instante>` y carga
+de nuevo. Con manifiesto personalizado, repetir su ruta: `bun run demo:reset -- --manifest <ruta>`.
+No se retiran manifiestos durante una carga ordinaria ni se reinicia un destino remoto.
+
 Las fechas de auditoría son las reales de carga; los intervalos del relato son simulados. No
 se acreditan semanas transcurridas, agenda histórica ni eficacia clínica por cargar el demo.
 

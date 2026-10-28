@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { demoHash, loadDemo } from "./demo/cargar-demo";
+import { demoManifestPath, loadDemo } from "./demo/cargar-demo";
 import { parseArgs } from "./lib/provisioning";
 
 const args = process.argv.slice(2);
@@ -24,9 +23,7 @@ const result = await loadDemo({
   anonKey,
   fixtures,
   allowRemote,
-  manifestPath: resolve(
-    manifestPath ?? `test-results/demo/${demoHash(new URL(url).origin).slice(0, 16)}.json`,
-  ),
+  manifestPath: demoManifestPath(url, manifestPath),
   revision: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
 });
 console.info(

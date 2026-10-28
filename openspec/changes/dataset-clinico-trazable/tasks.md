@@ -88,3 +88,14 @@ La revisión veterinaria especializada sigue pendiente.
   originales/correctivas y autoría cruzada en verde (11 aserciones); repetición verifica grafo
   y auditoría sin nuevas escrituras clínicas. No se modificó la base de desarrollo.
 - Pendientes 4.1/4.2: inspección visual, revisión veterinaria y compuertas/prerrevisión de cierre.
+
+### Correcciones tras prerrevisión de implementación
+
+- Dos regresiones observadas en rojo: reset explícito conservaba manifiesto activo y la epicrisis
+  original no contenía el tiempo de tres horas descrito por la correctiva. Corregidas con archivo
+  del manifiesto solo tras reset exitoso del mismo destino y edición explícita del borrador previo
+  a aprobación. `demo:check`: 22 tests / 521 aserciones en verde.
+- Ciclo real `demo:reset` sobre `diklass-testing` comprobado y repetición posterior sin escrituras
+  clínicas. Integración de estados, vínculos y contenidos original/correctiva: 13 aserciones verdes.
+- Esta prueba viva se invoca localmente con entorno de testing explícito; la CI anterior no la
+  ejecuta todavía. La integración de ese entorno en CI pertenece a #82, no se acredita aquí.

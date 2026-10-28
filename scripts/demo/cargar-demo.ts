@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { recordAnamnesisEntry } from "@/features/registro/anamnesis-service";
@@ -10,6 +10,7 @@ import {
   approveEpicrisis,
   correctEpicrisis,
   generateEpicrisisDraft,
+  updateEpicrisisDraft,
 } from "@/features/registro/epicrisis-service";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { EpicrisisContent } from "@/features/registro/schema";
@@ -49,6 +50,9 @@ export const demoHash = (value: unknown) =>
   createHash("sha256")
     .update(JSON.stringify(canonical(value)))
     .digest("hex");
+
+export const demoManifestPath = (url: string, path?: string) =>
+  resolve(path ?? `test-results/demo/${demoHash(new URL(url).origin).slice(0, 16)}.json`);
 
 const entitySchema = z.object({ id: z.string().uuid(), hash: z.string().length(64) });
 const manifestSchema = z.object({
@@ -289,6 +293,14 @@ export async function loadDemo(input: {
         consultationId: id(c.key),
       });
       await remember(c.epicrisis.key, result.record);
+      if (c.epicrisis.observaciones) {
+        await updateEpicrisisDraft(author.client, result.record.id, {
+          ...(result.record.content as EpicrisisContent),
+          observaciones: c.epicrisis.observaciones,
+        });
+        await snapshot(false);
+        save();
+      }
       if (c.epicrisis.status === "approved") {
         await approveEpicrisis(author.client, result.record.id);
         await snapshot(false);

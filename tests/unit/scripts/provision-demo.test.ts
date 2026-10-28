@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -94,4 +94,35 @@ test("un fixture mal formado se rechaza antes de autenticar", () => {
   );
   expect(result.exitCode).not.toBe(0);
   expect(result.stderr.toString()).toContain("fixture de veterinarios");
+});
+
+test("el reset explícito retira solo su manifiesto después de reiniciar su mismo destino", () => {
+  const bin = join(directory, "bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(
+    join(bin, "supabase"),
+    '#!/bin/sh\nif [ "$1" = "status" ]; then echo \'{"API_URL":"http://127.0.0.1:1"}\'; fi\nexit 0\n',
+    { mode: 0o700 },
+  );
+  const manifest = join(directory, "reset.json");
+  const other = join(directory, "otro-destino.json");
+  writeFileSync(manifest, JSON.stringify({ ...complete, target: "http://127.0.0.1:1" }));
+  writeFileSync(other, "no tocar");
+  const result = Bun.spawnSync(
+    [process.execPath, "run", "demo:reset", "--", "--manifest", manifest],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH}`,
+        SUPABASE_URL: "http://127.0.0.1:1",
+        EXPO_PUBLIC_SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      },
+    },
+  );
+  // El provisioning posterior no conecta al puerto cerrado; el reset ya fue exitoso.
+  expect(result.exitCode).not.toBe(0);
+  expect(existsSync(manifest)).toBe(false);
+  expect(existsSync(other)).toBe(true);
 });
