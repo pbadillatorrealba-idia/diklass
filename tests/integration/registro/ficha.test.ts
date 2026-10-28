@@ -23,7 +23,7 @@ import {
 } from "@/features/registro/summaries";
 import { getTutor, listTutors, updateTutor } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
-import { randomRut } from "../../support/rut";
+import { patientFixture, randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -45,14 +45,7 @@ function fichaBase(
   cambios: Partial<Omit<PatientContent, "tutorId">> = {},
 ): Omit<PatientContent, "tutorId"> {
   return {
-    name: nombre,
-    species: "canino",
-    breed: "Mestizo",
-    birthDate: "2021-05-01",
-    ageMonths: 24,
-    weightKg: 12.4,
-    sex: "hembra",
-    reproductiveStatus: "esterilizado",
+    ...patientFixture(nombre).ficha,
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -86,7 +79,7 @@ async function provisionarCasoCerrado(
     ficha: fichaBase(nombre),
     tutor: {
       newTutor: {
-        name: `Tutor de ${nombre}`,
+        name: "Camila Muñoz Rojas",
         rut: randomRut(),
         phone: "+56 9 3333 3333",
         email: null,
@@ -126,15 +119,15 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
 
   beforeAll(async () => {
     ana = await signedInVeterinarian(ANA);
-    caso = await provisionarCasoCerrado(ana.client, ana.clinicId, "Caso límite integración");
+    caso = await provisionarCasoCerrado(ana.client, ana.clinicId, "Cholito");
     // Fixtures compartidos creados en beforeAll: los tests no consumen estado creado por
     // otros tests (un fallo del primero no puede cascading en los demás).
     const compartida = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Luna compartida"),
+      ficha: fichaBase("Mora"),
       tutor: {
         newTutor: {
-          name: "Sra. Pérez compartida",
+          name: "Camila Muñoz Rojas",
           rut: randomRut(),
           phone: "+56 9 1111 2222",
           email: null,
@@ -145,7 +138,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     pacienteId = compartida.record.id;
     await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Simón compartida"),
+      ficha: fichaBase("Canela"),
       tutor: { existingTutorId: compartida.tutorId },
     });
   });
@@ -154,9 +147,14 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const inicio = performance.now();
     const alta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Luna integración"),
+      ficha: fichaBase("Cholito"),
       tutor: {
-        newTutor: { name: "Sra. Pérez", rut: randomRut(), phone: "+56 9 1111 1111", email: null },
+        newTutor: {
+          name: "Camila Muñoz Rojas",
+          rut: randomRut(),
+          phone: "+56 9 1111 1111",
+          email: null,
+        },
       },
     });
     expect(performance.now() - inicio).toBeLessThan(2000);
@@ -168,7 +166,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const inicioSegundo = performance.now();
     const segundo = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Simón integración"),
+      ficha: fichaBase("Simón"),
       tutor: { existingTutorId: alta.tutorId },
     });
     expect(performance.now() - inicioSegundo).toBeLessThan(2000);
@@ -188,7 +186,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
   test("getTutor lee el tutor de la clínica por id y un id inexistente resuelve null", async () => {
     const tutor = await getTutor(ana.client, tutorId);
     expect(tutor?.record.id).toBe(tutorId);
-    expect(tutor?.content.name).toBe("Sra. Pérez compartida");
+    expect(tutor?.content.name).toBe("Camila Muñoz Rojas");
     await expect(getTutor(ana.client, crypto.randomUUID())).resolves.toBeNull();
   });
 
@@ -224,7 +222,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const incompleta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: {
-        name: "Mora integración",
+        name: "Mora",
         species: "felino",
         breed: "Común",
         birthDate: null,
@@ -323,7 +321,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const antes = await epicrisisEfectiva(ana.client, caso.consultationId);
 
     const actualizado = await updateTutor(ana.client, caso.tutorId, {
-      name: "Tutor de Caso límite integración",
+      name: "Tutor de Cholito",
       rut: randomRut(),
       phone: "+56 9 4444 4444",
       email: null,

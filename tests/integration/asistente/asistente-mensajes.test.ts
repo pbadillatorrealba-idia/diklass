@@ -243,3 +243,29 @@ describe.skipIf(!isLiveSupabase)("assistant_messages (RLS)", () => {
     expect(error).not.toBeNull();
   });
 });
+
+test.skipIf(!isLiveSupabase)(
+  "trazabilidadRPC: recuerda mensajes antes del borrado del producto",
+  async () => {
+    const { readFileSync } = await import("node:fs");
+    const vet = await signedInVeterinarian(ANA);
+    const id = crypto.randomUUID();
+    await insertMessage(vet.client, {
+      clinicId: vet.clinicId,
+      message: {
+        id,
+        role: "user",
+        createdAt: "",
+        status: "done",
+        patientId: null,
+        parts: [{ type: "text", text: "Mensaje de trazabilidad" }],
+      },
+    });
+    await deleteConversation(vet.client);
+    const state = JSON.parse(readFileSync(process.env.TEST_SCOPE_FILE as string, "utf8"));
+    expect(state.remembered?.assistant_messages ?? []).toContainEqual({ id });
+    expect((await vet.client.from("assistant_messages").select("id").eq("id", id)).data).toEqual(
+      [],
+    );
+  },
+);

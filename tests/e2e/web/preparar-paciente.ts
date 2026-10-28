@@ -1,5 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
-import { randomRut } from "../../support/rut";
+import { patientFixture } from "../../support/rut";
 import {
   ANA,
   expect,
@@ -50,28 +50,10 @@ export async function prepararPaciente(
     return fila.id;
   };
 
-  const tutorId = await crear("tutor", {
-    name: `Tutor de ${nombre}`,
-    rut: randomRut(),
-    phone: "+56 9 5550 0101",
-    email: null,
-  });
+  const fixture = patientFixture(nombre);
+  const tutorId = await crear("tutor", fixture.tutor);
   const patientId = await crear("patient", {
-    name: nombre,
-    species: "canino",
-    breed: "Mestizo",
-    birthDate: "2021-03-10",
-    ageMonths: null,
-    weightKg: 12.5,
-    sex: "hembra",
-    reproductiveStatus: "entero",
-    antecedentes: {
-      medicalHistory: [],
-      preexistingDiseases: [],
-      currentMedications: [],
-      knownAllergies: [],
-      behavioralHistory: [],
-    },
+    ...fixture.ficha,
     tutorId,
   });
   return { api, patientId, crear };

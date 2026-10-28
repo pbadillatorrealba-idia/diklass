@@ -19,7 +19,7 @@ import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { EpicrisisContent } from "@/features/registro/schema";
 import { effectiveEpicrisis } from "@/features/registro/summaries";
 import type { Database } from "@/lib/supabase/database.types";
-import { randomRut } from "../../support/rut";
+import { patientFixture, randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
 /**
@@ -78,14 +78,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
     const alta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: {
-        name: "Nala integración",
-        species: "canino",
-        breed: "Mestizo",
-        birthDate: "2019-06-01",
-        ageMonths: 84,
-        weightKg: 18.5,
-        sex: "hembra",
-        reproductiveStatus: "esterilizado",
+        ...patientFixture("Pepa").ficha,
         antecedentes: {
           medicalHistory: [{ text: "Displasia de cadera", negative: false }],
           preexistingDiseases: [],
@@ -95,7 +88,12 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
         },
       },
       tutor: {
-        newTutor: { name: "Sra. Rojas", rut: randomRut(), phone: "+56 9 5555 5555", email: null },
+        newTutor: {
+          name: "Constanza Fuentes Sepúlveda",
+          rut: randomRut(),
+          phone: "+56 9 5555 5555",
+          email: null,
+        },
       },
     });
     patientId = alta.record.id;

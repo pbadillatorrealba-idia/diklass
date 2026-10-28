@@ -131,6 +131,69 @@ clínica, ampliar inventario, matriz y filtros de `.github/workflows/dataset-dem
 cubre también cambios de especificaciones y corre sin Supabase. Pasar sus tests demuestra forma y
 cobertura técnica, no aceptación clínica.
 
+### Integración y e2e web con datos aislados
+
+El dataset debe estar implementado antes de este ciclo. El runner utiliza sus plantillas, pero
+crea una clínica y tres cuentas exclusivas por fixture de archivo/suite; las suites que comparten
+`beforeAll` conservan ese alcance. Nombres visibles naturales, UUID y RUT nuevos por intento.
+Una secuencia privada reserva bloques de 10.000 cuerpos de RUT por scope y un contador durable
+impide reutilizarlos al reiniciar un worker. Al agotarse el bloque o el espacio reservado, falla
+antes de crear un tutor; no vuelve a usar valores.
+
+```sh
+bun run test:backend:start
+bun --env-file=test-results/backend.env run test:integration
+bun --env-file=test-results/backend.env run test:e2e:smoke
+bun --env-file=test-results/backend.env run test:e2e:web -- --project=chromium
+bun --env-file=test-results/backend.env run test:backend:stop
+```
+
+El arranque deriva configuración/migraciones/seed/funciones/tests del repo en
+`test-results/backend/`, proyecto `diklass-testing`, API 55321, DB 55322; nunca edita `.env` ni
+configuración de desarrollo. Rechaza otro stack Supabase activo: detener desarrollo exige una
+decisión explícita y debe volver a levantarse al terminar. `stop` conserva los volúmenes.
+`test-results/backend.env` es privado (0600); no subirlo ni copiar sus valores a PR/logs.
+
+Variables sobrescribibles: `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_DATABASE_URL`,
+`TEST_SUPABASE_SERVICE_ROLE_KEY` y `TEST_SUPABASE_PROJECT_ID`, con ejemplos no sensibles en
+`.env.example`. `E2E_WEB_PORT` controla servidor/navegación/espera (8083 por defecto). No hay
+fallback a las variables de desarrollo. El runner verifica contenedores/puertos/credenciales,
+marca privada de instancia y exclusión mutua en PostgreSQL antes de escribir. No admite remoto.
+
+Las pruebas vivas se ejecutan mediante el runner; pedirlas sin configuración completa o sin
+scope falla. Las unitarias normales siguen omitiendo integración viva. Puede elegirse un archivo,
+por ejemplo `bun --env-file=test-results/backend.env run test:integration -- tests/integration/registro/epicrisis.test.ts`.
+Los e2e aceptan nombres cortos y `--project=chromium|chromium-dark|firefox|webkit`; mantienen la
+matriz de Playwright. Cada lote exporta una sola vez, limpia caché y dirige app/helpers al mismo
+backend, sin inyectar claves privadas en el bundle.
+
+Antes de provisionar o enviar escrituras se guardan raíces/identidades de recuperación en un
+registro durable (fsync, 0600). Los recursos se reconcilian por padres propios e identidades
+exactas, nunca por nombres. El teardown privado conserva el error original, elimina solo IDs
+propios en orden de dependencias y verifica ausencia y centinelas. Auth, Storage, auditoría,
+correctivas y cuotas por autor forman parte del grafo. Las RPC de borrado de conversación usan
+cuentas exclusivas y un checkpoint previo registra los mensajes/rutas que elimina el producto.
+
+Reportes sin contraseñas: `test-results/scopes/*.scope.json`, con versión/claves del dataset,
+raíces, recursos, eliminaciones del producto/teardown, estado y residuos. Los archivos
+`*.actors.json` contienen credenciales efímeras: no publicarlos. CI conserva solo reportes scope.
+Ante SIGKILL queda intención pendiente, no se promete finally. Para recuperar:
+
+```sh
+bun --env-file=test-results/backend.env run test:recover -- test-results/scopes/<id>.scope.json
+```
+
+La recuperación exige la misma identidad durable de la base y verifica Docker/puertos actuales;
+permite reiniciar contenedores conservando volúmenes, pero no adoptar una base distinta o resetada.
+El siguiente runner bloquea scopes pendientes. No ejecuta reset para ocultar fallos de limpieza.
+La prueba del propio ciclo se ejecuta fuera del runner para no anidar locks:
+`TEST_LIFECYCLE_TESTS=1 bun --env-file=test-results/backend.env test tests/integration/testing/test-scope.test.ts`.
+
+Maestro Cloud y `tests/e2e/native/` conservan su flujo y backend remoto. Por decisión explícita del usuario, la cuota global de observabilidad por IP se captura antes del
+caso y se restaura por claves exactas bajo el lock del runner, solo en la DB de testing verificada.
+El snapshot privado `*.quota.json` no se publica; el reporte acredita captura/restauración sin
+buckets. No se cambia la función del producto ni se simula el endpoint real.
+
 ### Corpus inicial de la base de conocimiento
 
 ```bash

@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { deleteConversation } from "@/features/asistente/message-service";
+import { reserveTestStorageObject } from "../../support/test-scope";
 import {
   ANA,
   adminClient,
@@ -235,6 +236,7 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
     test("un autor no puede tener más de 100 objetos de audio a la vez", async () => {
       const admin = adminClient();
       const rutas = Array.from({ length: 100 }, () => ruta(bruno, crypto.randomUUID()));
+      for (const path of rutas) reserveTestStorageObject(BUCKET, path);
       try {
         await Promise.all(
           rutas.map((r) =>

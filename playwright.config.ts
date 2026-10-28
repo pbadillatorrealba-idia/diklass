@@ -1,5 +1,10 @@
 import { defineConfig, devices, type PlaywrightTestProject } from "@playwright/test";
 
+import { resolveTestConfig, resolveWebConfig } from "./tests/support/test-config";
+
+const testConfig = resolveTestConfig(process.env);
+const { webPort, baseURL } = resolveWebConfig(process.env);
+
 const projects: PlaywrightTestProject[] = [
   { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   { name: "firefox", use: { ...devices["Desktop Firefox"] } },
@@ -16,21 +21,31 @@ const projects: PlaywrightTestProject[] = [
 export default defineConfig({
   testDir: "./tests/e2e/web",
   fullyParallel: true,
-  // Equipo local con poca RAM: un worker. En CI cada shard ya corre en su propia máquina.
-  workers: process.env.CI ? undefined : 1,
+  // Una instancia de testing y un worker, también en CI.
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:8083",
+    baseURL,
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "sh scripts/e2e-web-server.sh 8083",
-    url: "http://127.0.0.1:8083",
-    reuseExistingServer: false,
-    timeout: 240_000, // incluye el export estático de la app
-  },
+  webServer:
+    process.env.TEST_WEB_SERVER_READY === "1"
+      ? undefined
+      : {
+          command: `sh scripts/e2e-web-server.sh ${webPort}`,
+          url: baseURL,
+          env: {
+            EXPO_PUBLIC_SUPABASE_URL: testConfig?.url ?? "",
+            EXPO_PUBLIC_SUPABASE_ANON_KEY: testConfig?.anonKey ?? "",
+            EXPO_NO_DOTENV: "1",
+            // Evita reutilizar un backend horneado en una exportación anterior.
+            E2E_CLEAR_CACHE: "1",
+          },
+          reuseExistingServer: false,
+          timeout: 240_000, // incluye el export estático de la app
+        },
   // Local: solo Chromium (con su variante oscura). Firefox y WebKit corren en CI al hacer push
   // a main; en local se piden con PLAYWRIGHT_ALL_BROWSERS=1.
   projects: projects.filter(

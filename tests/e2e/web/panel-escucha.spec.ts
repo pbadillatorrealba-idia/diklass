@@ -31,7 +31,7 @@ test.describe("escucha en el panel de asistente (web)", () => {
 
   for (const ancho of [1440, 1280]) {
     test(`a ${ancho} px la escucha no desplaza el formulario de la sección 1`, async ({ page }) => {
-      const { api, patientId, crear } = await prepararPaciente(page, `Rocky E2E layout ${ancho}`);
+      const { api, patientId, crear } = await prepararPaciente(page, `Rucio`);
       try {
         const consultationId = await crear("consultation", { patientId, status: "open" });
         await page.setViewportSize({ width: ancho, height: 900 });
@@ -63,7 +63,7 @@ test.describe("escucha en el panel de asistente (web)", () => {
   test("confirmar un borrador lo lleva a su campo, visible, marcado «Nuevo» y anunciado", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E aterrizaje");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.setViewportSize({ width: 1440, height: 800 });

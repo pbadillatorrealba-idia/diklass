@@ -16,7 +16,7 @@ test.describe("conocimiento en el chat del panel (web)", () => {
   test("pregunta desde la consulta con el paciente de contexto y responde con citas", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E conocimiento");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     // Una palabra inventada: solo la fuente de esta prueba la contiene, así la cita es inequívoca.
     const palabra = `zorrilomaquia${Date.now()}`;
     const titulo = `Guía E2E ${palabra}`;
@@ -63,9 +63,7 @@ test.describe("conocimiento en el chat del panel (web)", () => {
       await abrirHilo(page, "asistente");
       const panel = page.getByTestId("assistant-panel");
       // El paciente de la consulta es el contexto, sin haberlo elegido: la etiqueta lo declara.
-      await expect(panel.getByTestId("chat-context")).toHaveText(
-        "Contexto: Rocky E2E conocimiento",
-      );
+      await expect(panel.getByTestId("chat-context")).toHaveText("Contexto: Rucio");
 
       const pregunta = `¿Qué indica el protocolo de ${palabra}?`;
       const campo = panel.getByTestId("composer-input");

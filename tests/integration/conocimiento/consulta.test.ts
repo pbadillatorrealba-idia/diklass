@@ -4,7 +4,7 @@ import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento
 import type { FuenteContent } from "@/features/conocimiento/schema";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
-import { randomRut } from "../../support/rut";
+import { patientFixture, randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -38,14 +38,7 @@ function fuenteNueva(titulo: string, texto: string): FuenteContent {
 
 function fichaBase(nombre: string): Omit<PatientContent, "tutorId"> {
   return {
-    name: nombre,
-    species: "canino",
-    breed: "Mestizo",
-    birthDate: "2021-05-01",
-    ageMonths: 36,
-    weightKg: 12.4,
-    sex: "hembra",
-    reproductiveStatus: "esterilizado",
+    ...patientFixture(nombre).ficha,
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -80,7 +73,7 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
       clinicId: ana.clinicId,
       tutor: {
         newTutor: {
-          name: "Sra. Consulta",
+          name: "Francisca Contreras Díaz",
           rut: randomRut(),
           phone: "+56 9 1111 2222",
           email: null,
@@ -190,7 +183,7 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
       clinicId: ana.clinicId,
       tutor: {
         newTutor: {
-          name: "Sra. Contexto",
+          name: "Matías González Soto",
           rut: randomRut(),
           phone: "+56 9 3333 4444",
           email: null,

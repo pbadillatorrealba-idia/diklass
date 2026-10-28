@@ -5,6 +5,7 @@ import {
   type Page,
   type Route,
 } from "@playwright/test";
+import { checkpointApiConversation } from "../../support/test-network";
 import {
   ANA,
   expect,
@@ -108,6 +109,7 @@ test.describe("mensajes de voz del chat (micrófono falso)", () => {
   });
 
   test.afterEach(async () => {
+    await checkpointApiConversation(api);
     await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
     await api.dispose();
   });
@@ -435,7 +437,7 @@ test.describe("un solo micrófono: la escucha de la consulta y el chat", () => {
   test("con la escucha de la consulta activa el botón de grabar queda deshabilitado y lo explica", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E un micrófono");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     try {
       await consentimientoDeVoz(page, true);
       const consultationId = await crear("consultation", { patientId, status: "open" });

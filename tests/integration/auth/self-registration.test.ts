@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test";
+import { reserveTestEmail } from "../../support/test-scope";
 import { adminClient, anonymousClient, isLiveSupabase } from "../live-supabase";
 
 // supabase/config.toml keeps enable_signup = true because this CLI version maps it to
@@ -16,7 +17,7 @@ describe.skipIf(!isLiveSupabase)("self-registered accounts (spec Assumptions, FR
   test("an account created through Supabase Auth signUp cannot operate", async () => {
     const client = anonymousClient();
     const { data, error } = await client.auth.signUp({
-      email: `self.registered.${Date.now()}@example.test`,
+      email: reserveTestEmail("self-registered"),
       password: "self-registered-password",
     });
     expect(error).toBeNull();

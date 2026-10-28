@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { checkpointApiConversation } from "../../support/test-network";
 import { provisionClinicalCase, type SyntheticCase } from "./caso-sintetico";
 import {
   ANA,
@@ -42,11 +43,13 @@ test.describe("chat del asistente", () => {
     const perfil = await api.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
     clinicId = ((await perfil.json()) as Array<{ clinic_id: string }>)[0]?.clinic_id ?? "";
     // Cada prueba parte de una conversación vacía.
+    await checkpointApiConversation(api);
     await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
     await page.reload();
   });
 
   test.afterEach(async () => {
+    await checkpointApiConversation(api);
     await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
     await api.dispose();
   });
@@ -203,10 +206,9 @@ test.describe("chat del asistente", () => {
     await expect(panel(page).getByTestId("chat-context")).toHaveCount(0);
 
     await page.goto(`/patients/${caso.patientId}`);
-    await expect(panel(page).getByTestId("chat-context")).toHaveText(
-      "Contexto: Luna Caso Sintético",
-      { timeout: 15_000 },
-    );
+    await expect(panel(page).getByTestId("chat-context")).toHaveText("Contexto: Cholito", {
+      timeout: 15_000,
+    });
     // Sin selector de pacientes: la etiqueta es de solo lectura.
     await expect(panel(page).getByRole("radiogroup")).toHaveCount(0);
 

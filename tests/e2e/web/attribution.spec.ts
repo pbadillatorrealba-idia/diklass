@@ -76,7 +76,7 @@ test.describe("attribution web contract", () => {
         data: {
           clinic_id: anaProfile.clinic_id,
           record_type: "patient",
-          content: patientContent("Luna E2E"),
+          content: patientContent("Cholito"),
           status: "draft",
         },
         headers: { Prefer: "return=representation" },
@@ -100,7 +100,7 @@ test.describe("attribution web contract", () => {
         data: {
           clinic_id: anaProfile.clinic_id,
           record_type: "patient",
-          content: patientContent("Rex E2E"),
+          content: patientContent("Chascón"),
           status: "draft",
           created_by: ana.userId,
         },

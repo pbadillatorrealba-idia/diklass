@@ -80,36 +80,24 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      # `db:start` skips the services nothing here uses (same flags as local development); a fresh
-      # `supabase start` already applies migrations and seed, so no `db reset` before the tests.
-      # `gen types` and `test db` run their own one-off containers, not the excluded services.
-      - name: Start local Supabase
+      # Backend local exclusivo: el runner provisiona actores/fixtures y limpia sus IDs.
+      - name: Start isolated testing Supabase
         run: |
-          bun run db:start
-          status=$(supabase status -o json)
-          {
-            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
-            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
-          } >> "$GITHUB_ENV"
+          bun run test:backend:start
+          bun -e 'import {appendFileSync,readFileSync} from "node:fs"; for(const line of readFileSync("test-results/backend.env","utf8").split("\n")){const i=line.indexOf("="); if(i>0) appendFileSync(process.env.GITHUB_ENV!,line.slice(0,i)+"="+JSON.parse(line.slice(i+1))+"\n");}'
       - name: pgTap (RLS, triggers, session expiry, attribution)
-        run: supabase test db
+        run: supabase test db --workdir test-results/backend
       - name: Generated database types match the migrations
         run: |
-          supabase gen types --lang=typescript --local > "$RUNNER_TEMP/database.types.ts"
+          supabase gen types --lang=typescript --local --workdir test-results/backend > "$RUNNER_TEMP/database.types.ts"
           diff -u src/lib/supabase/database.types.ts "$RUNNER_TEMP/database.types.ts"
-      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
       - name: Live integration (access sessions, two clinicians, self-registration)
         run: bun run test:integration
         env:
           SUPABASE_LIVE_TESTS: "1"
-      # The live suites leave rows in the shared clinic (the source of an earlier flake in the
-      # read-resilience tests), so the E2E starts from a freshly reset database.
-      - name: Reset the database for the E2E
-        run: |
-          supabase db reset
-          bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+      # Mantener este reset explícito de testing hasta demostrar la suite completa sin residuos.
+      - name: Reset only the testing database for the E2E
+        run: supabase db reset --workdir test-results/backend --local
       # Browser downloads dominate this job's setup time; cache them across runs.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -126,6 +114,14 @@ jobs:
           E2E_CLEAR_CACHE: "1"
           EXPO_PUBLIC_VOZ_MODO: real
           EXPO_PUBLIC_VOZ_VENTANA_MS: "2000"
+
+      - name: Preserve only credential-free cleanup reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cleanup-${{ github.job }}
+          path: test-results/scopes/*.scope.json
+          if-no-files-found: ignore
 
   # Firefox and WebKit run only on push to main to keep pull-request feedback fast, per
   # plan.md's CI design; Chromium above still covers every pull request. One job and one
@@ -149,26 +145,25 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      # A fresh `supabase start` already applies migrations and seed, so no `db reset` here.
-      # E2E only needs Postgres, Auth, PostgREST, Kong and Edge Functions (client error
-      # reporting); `bun run db:start` skips the rest (same flags as local development).
-      - name: Start local Supabase and provision synthetic veterinarians
+      # Backend local exclusivo: el runner provisiona actores/fixtures y limpia sus IDs.
+      - name: Start isolated testing Supabase
         run: |
-          bun run db:start
-          status=$(supabase status -o json)
-          {
-            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
-            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
-          } >> "$GITHUB_ENV"
-      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+          bun run test:backend:start
+          bun -e 'import {appendFileSync,readFileSync} from "node:fs"; for(const line of readFileSync("test-results/backend.env","utf8").split("\n")){const i=line.indexOf("="); if(i>0) appendFileSync(process.env.GITHUB_ENV!,line.slice(0,i)+"="+JSON.parse(line.slice(i+1))+"\n");}'
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-firefox-webkit-${{ hashFiles('bun.lock') }}
       - run: bunx playwright install --with-deps firefox webkit
       - run: bun run test:e2e:web -- --project=firefox --project=webkit
+
+      - name: Preserve only credential-free cleanup reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cleanup-${{ github.job }}
+          path: test-results/scopes/*.scope.json
+          if-no-files-found: ignore
 
   dependency-audit:
     name: Dependency audit

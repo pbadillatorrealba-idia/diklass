@@ -1,5 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Browser } from "@playwright/test";
-import { randomRut } from "../../support/rut";
+import { patientFixture } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -98,28 +98,20 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       return row.id;
     };
 
+    const fixture = patientFixture("Cholito");
     const tutorId = await insert(anaApi, {
       recordType: "tutor",
-      content: {
-        name: "Marcela Rojas (caso sintético)",
-        rut: randomRut(),
-        phone: "+56912345678",
-        email: "tutora.caso@example.test",
-      },
+      content: fixture.tutor,
     });
     // La ficha deja campos sin dato (FR-044) y un hallazgo negativo explícito (SC-024):
     // el panel debe distinguirlos visiblemente.
     const patientId = await insert(anaApi, {
       recordType: "patient",
       content: {
-        name: "Luna Caso Sintético",
-        species: "canino",
-        breed: "Mestizo",
+        ...fixture.ficha,
         birthDate: null,
         ageMonths: 36,
         weightKg: null,
-        sex: "hembra",
-        reproductiveStatus: "entero",
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [{ text: "Sin enfermedades preexistentes", negative: true }],
@@ -146,7 +138,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       content: {
         consultationId: closedConsultationId,
         field: "motivo_consulta",
-        text: "Aúlla cuando queda sola (caso sintético).",
+        text: "Aúlla cuando queda sola.",
         provenance: "reportada",
       },
     });
@@ -154,7 +146,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       recordType: "diagnosis",
       content: {
         consultationId: closedConsultationId,
-        text: "Ansiedad por separación (caso sintético).",
+        text: "Ansiedad por separación.",
       },
     });
 
@@ -163,17 +155,17 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
     // incluye hipótesis con estado y un pendiente para que el resumen de FR-013 señale algo.
     const epicrisisContent = {
       consultationId: closedConsultationId,
-      motivoConsulta: "Aúlla cuando queda sola (caso sintético).",
+      motivoConsulta: "Aúlla cuando queda sola.",
       antecedentesRelevantes:
         "Enfermedades preexistentes: Sin enfermedades preexistentes (hallazgo negativo).",
       hallazgosAnamnesis: "Motivo de consulta: Aúlla cuando queda sola [procedencia: reportada].",
       hipotesis: [{ texto: "Ansiedad por separación", estado: "confirmada" }],
-      diagnostico: "Ansiedad por separación (caso sintético).",
+      diagnostico: "Ansiedad por separación.",
       examenesSolicitados: ["Hemograma completo"],
       intervencionesPropuestas: ["Modificación de conducta"],
       medicamentosAprobados: [],
       recomendacionesTutor: "Evitar despedidas prolongadas.",
-      planSeguimiento: { pendientes: ["Control en 30 días (caso sintético)"] },
+      planSeguimiento: { pendientes: ["Control en 30 días"] },
       observaciones: "",
     };
     const epicrisisDraftId = await insert(anaApi, {
@@ -210,7 +202,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       adherence: "parcial",
       evolution: "mejoriaParcial",
       evolutionNote: null,
-      adverseEvents: [{ severity: "grave", description: "Vómito aislado (caso sintético)." }],
+      adverseEvents: [{ severity: "grave", description: "Vómito aislado." }],
       treatmentApplied: "Modificación de conducta",
       treatmentModification: null,
       revisedDiagnosis: null,
@@ -240,7 +232,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       content: {
         consultationId: openConsultationId,
         field: "motivo_consulta",
-        text: "Control de seguimiento (caso sintético).",
+        text: "Control de seguimiento.",
         provenance: "reportada",
       },
     });
@@ -258,7 +250,7 @@ export async function provisionClinicalCase(browser: Browser): Promise<Synthetic
       recordType: "diagnosis",
       content: {
         consultationId: openConsultationId,
-        text: "Evolución favorable (caso sintético).",
+        text: "Evolución favorable.",
       },
     });
 

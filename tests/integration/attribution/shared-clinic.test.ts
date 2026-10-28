@@ -22,7 +22,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
       .insert({
         clinic_id: ana.clinicId,
         record_type: "patient",
-        content: patientContent("Luna integración"),
+        content: patientContent("Cholito"),
         status: "draft",
       })
       .select("id, created_by")
@@ -71,7 +71,7 @@ describe.skipIf(!isLiveSupabase)("two authenticated veterinarians against local 
   test("a colleague attends the shared record without taking over its authorship", async () => {
     const update = await bruno.client
       .from("clinical_records")
-      .update({ content: patientContent("Luna integración", { weightKg: 12 }) })
+      .update({ content: patientContent("Cholito", { weightKg: 12 }) })
       .eq("id", recordId)
       .select("created_by, updated_by")
       .single();

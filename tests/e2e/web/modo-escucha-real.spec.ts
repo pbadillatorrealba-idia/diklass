@@ -61,7 +61,7 @@ test.describe("modo de escucha con micrófono real (web)", () => {
   });
 
   test("graba, avisa, transcribe, conserva el audio y deja borradores", async ({ page }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E micrófono");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     const transcripciones = await interceptarTranscripcion(page);
 
     try {
@@ -116,7 +116,7 @@ test.describe("modo de escucha con micrófono real (web)", () => {
       navigator.mediaDevices.getUserMedia = () =>
         Promise.reject(new DOMException("denegado", "NotAllowedError"));
     });
-    const { api, patientId, crear } = await prepararPaciente(page, "Luna E2E sin micrófono");
+    const { api, patientId, crear } = await prepararPaciente(page, "Cholito");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
@@ -135,7 +135,7 @@ test.describe("modo de escucha con micrófono real (web)", () => {
   test("con el panel colapsado el riel muestra estado, tiempo, aviso y Detener, y la captura sigue", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E riel");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     const transcripciones = await interceptarTranscripcion(page);
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
@@ -182,7 +182,7 @@ test.describe("modo de escucha con micrófono real (web)", () => {
   test("a 375 px la cinta sigue visible al desplazar y escribir, y cerrar la hoja no detiene la captura", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E cinta");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     const transcripciones = await interceptarTranscripcion(page);
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });

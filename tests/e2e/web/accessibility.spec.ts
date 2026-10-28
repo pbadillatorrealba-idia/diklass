@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type Page, request } from "@playwright/test";
 import { randomRut } from "../../support/rut";
+import { checkpointApiConversation } from "../../support/test-network";
 import {
   provisionClinicalCase,
   type SyntheticCase,
@@ -359,6 +360,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       await expect(panel.getByTestId("chat-clear-confirm")).toBeVisible();
       await expectNoViolations(page);
     } finally {
+      await checkpointApiConversation(api);
       await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
       await api.dispose();
     }
@@ -471,15 +473,15 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     page,
   }) => {
     // La lista necesita dos filas; en una base recién reseteada no hay pacientes.
-    const { crear } = await prepararPaciente(page, "Lista E2E uno");
+    const { crear } = await prepararPaciente(page, "Cholito");
     const tutorId = await crear("tutor", {
-      name: "Tutor lista E2E",
+      name: "Camila Muñoz Rojas",
       rut: randomRut(),
       phone: "+56 9 5550 0102",
       email: null,
     });
     await crear("patient", {
-      name: "Lista E2E dos",
+      name: "Frida",
       species: "felino",
       breed: "Siamés",
       birthDate: "2022-05-01",

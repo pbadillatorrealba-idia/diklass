@@ -18,7 +18,7 @@ test.describe("modo de escucha web (captura de voz hacia anamnesis)", () => {
   test("activar la escucha deja borradores, confirmar uno lo lleva a la anamnesis y detener cierra la captura", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Rocky E2E escucha");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);

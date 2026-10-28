@@ -43,7 +43,7 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await expect(page).toHaveURL(/\/tutors\/new$/);
 
     // FR-121: un RUT con dígito verificador erróneo se señala junto al campo.
-    await page.getByTestId("tutor-name").fill(`Tutora E2E ${sufijo}`);
+    await page.getByTestId("tutor-name").fill(`Camila Muñoz Rojas`);
     await page.getByTestId("tutor-rut").fill("12345678-4");
     await page.getByTestId("tutor-phone").fill(telefono);
     await page.getByTestId("tutor-submit").click();
@@ -61,27 +61,27 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await page.getByTestId("tutor-phone").fill(telefono);
     await page.getByTestId("tutor-submit").click();
     await expect(page).toHaveURL(/\/tutors\/[0-9a-f-]{36}$/, { timeout: 15_000 });
-    await expect(page.getByRole("heading", { name: `Tutora E2E ${sufijo}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Camila Muñoz Rojas` })).toBeVisible();
 
     // El RUT es único por clínica: repetirlo bloquea y nombra al tutor existente.
     await page.goto("/tutors/new");
-    await page.getByTestId("tutor-name").fill(`Homónimo E2E ${sufijo}`);
+    await page.getByTestId("tutor-name").fill(`Francisca Contreras Díaz`);
     await page.getByTestId("tutor-rut").fill(rut);
     await page.getByTestId("tutor-phone").fill("+56 9 0000 0000");
     await page.getByTestId("tutor-submit").click();
-    await expect(page.getByText(`Ya hay un tutor con este RUT: Tutora E2E ${sufijo}`)).toBeVisible({
+    await expect(page.getByText(`Ya hay un tutor con este RUT: Camila Muñoz Rojas`)).toBeVisible({
       timeout: 15_000,
     });
     await expect(page).toHaveURL(/\/tutors\/new$/);
 
     // FR-122: mismo teléfono, otra persona. Avisa, no bloquea.
     await page.goto("/tutors/new");
-    await page.getByTestId("tutor-name").fill(`Familiar E2E ${sufijo}`);
+    await page.getByTestId("tutor-name").fill(`Matías González Soto`);
     await page.getByTestId("tutor-rut").fill(randomRut());
     await page.getByTestId("tutor-phone").fill(telefono);
     await page.getByTestId("tutor-submit").click();
     await expect(page.getByTestId("tutor-duplicate")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("tutor-duplicate-link")).toContainText(`Tutora E2E ${sufijo}`);
+    await expect(page.getByTestId("tutor-duplicate-link")).toContainText(`Camila Muñoz Rojas`);
     await expect(page).toHaveURL(/\/tutors\/new$/);
     await sinViolacionesAxe(page);
     await page.getByTestId("tutor-submit").click();
@@ -92,7 +92,7 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await page.getByTestId("tutor-edit").click();
     await page.getByTestId("tutor-card").getByTestId("tutor-rut").fill(rut);
     await page.getByTestId("tutor-edit-save").click();
-    await expect(page.getByText(`Ya hay un tutor con este RUT: Tutora E2E ${sufijo}`)).toBeVisible({
+    await expect(page.getByText(`Ya hay un tutor con este RUT: Camila Muñoz Rojas`)).toBeVisible({
       timeout: 15_000,
     });
     await page.getByTestId("tutor-card").getByTestId("tutor-rut").fill(randomRut());
@@ -107,7 +107,7 @@ test.describe("administración de tutores (administracion-tutores)", () => {
     await page.getByLabel("Filtrar por RUT, teléfono o correo").fill(telefono);
     await expect(page).toHaveURL(/contact=/);
     await expect(page.getByTestId("tutor-item")).toHaveCount(1, { timeout: 15_000 });
-    await expect(page.getByTestId("tutor-item")).toContainText(`Tutora E2E ${sufijo}`);
+    await expect(page.getByTestId("tutor-item")).toContainText(`Camila Muñoz Rojas`);
     await expect(page.getByTestId("tutor-open")).toHaveAttribute("href", /^\/tutors\//);
   });
 });

@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { patientFixture } from "../../support/rut";
 import {
   ANA,
   expect,
@@ -55,24 +56,9 @@ async function prepararConsultaCerrada(page: Page, nombre: string): Promise<Prep
     return fila.id;
   };
 
-  const patientId = await crear("patient", {
-    name: nombre,
-    species: "canino",
-    breed: "Mestizo",
-    birthDate: "2021-03-10",
-    ageMonths: null,
-    weightKg: 12.5,
-    sex: "hembra",
-    reproductiveStatus: "entero",
-    antecedentes: {
-      medicalHistory: [],
-      preexistingDiseases: [],
-      currentMedications: [],
-      knownAllergies: [],
-      behavioralHistory: [],
-    },
-    tutorId: crypto.randomUUID(),
-  });
+  const fixture = patientFixture(nombre);
+  const tutorId = await crear("tutor", fixture.tutor);
+  const patientId = await crear("patient", { ...fixture.ficha, tutorId });
   const consultationId = await crear("consultation", { patientId, status: "open" });
   const epicrisisId = await crear("epicrisis", {
     consultationId,
@@ -145,7 +131,7 @@ test.describe("retroalimentación clínica web", () => {
   test("el reporte de eventos adversos muestra una vez el evento de una entrada corregida dos veces", async ({
     page,
   }) => {
-    const preparado = await prepararConsultaCerrada(page, "Luna E2E eventos adversos");
+    const preparado = await prepararConsultaCerrada(page, "Cholito");
     try {
       await registrarConCorrecciones(preparado, 2);
 
@@ -176,7 +162,7 @@ test.describe("retroalimentación clínica web", () => {
   // Revisión de la PR #28 (hallazgo 4): «Corregir» sobre una versión ya sustituida
   // prellenaba el contenido viejo y revertía en silencio la corrección vigente.
   test("solo la versión vigente de una cadena ofrece «Corregir entrada»", async ({ page }) => {
-    const preparado = await prepararConsultaCerrada(page, "Nube E2E corregir vigente");
+    const preparado = await prepararConsultaCerrada(page, "Rucio");
     try {
       await registrarConCorrecciones(preparado, 1);
 
@@ -198,7 +184,7 @@ test.describe("retroalimentación clínica web", () => {
   test("dos pulsaciones rápidas en «Registrar evolución» registran una sola entrada", async ({
     page,
   }) => {
-    const preparado = await prepararConsultaCerrada(page, "Sol E2E doble envío");
+    const preparado = await prepararConsultaCerrada(page, "Tango");
     try {
       await page.goto(`/follow-up/${preparado.patientId}`);
       await page
@@ -233,7 +219,7 @@ test.describe("retroalimentación clínica web", () => {
   // Revisión de la PR #28 (hallazgo 6): los antecedentes mostraban los identificadores del
   // vocabulario (`mejoriaParcial`) y un texto vacío que no correspondía a lo que se lista.
   test("los antecedentes muestran el vocabulario en español", async ({ page }) => {
-    const preparado = await prepararConsultaCerrada(page, "Kira E2E antecedentes");
+    const preparado = await prepararConsultaCerrada(page, "Kira");
     try {
       await page.goto(`/follow-up/${preparado.patientId}`);
       const antecedentes = page.getByTestId("feedback-antecedents").filter({ visible: true });
@@ -256,7 +242,7 @@ test.describe("retroalimentación clínica web", () => {
   test("una lectura rechazada por sesión expirada abre el diálogo de sesión expirada", async ({
     page,
   }) => {
-    const preparado = await prepararConsultaCerrada(page, "Toby E2E sesión");
+    const preparado = await prepararConsultaCerrada(page, "Cholito");
     try {
       await page.route("**/rest/v1/clinical_records?*", async (route) => {
         if (

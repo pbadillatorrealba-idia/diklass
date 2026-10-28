@@ -73,7 +73,7 @@ describe.skipIf(!isLiveSupabase)("retroalimentación clínica contra Supabase vi
       .insert({
         clinic_id: ana.clinicId,
         record_type: "patient",
-        content: patientContent("Luna Retro Live"),
+        content: patientContent("Cholito"),
         status: "draft",
       })
       .select("id")

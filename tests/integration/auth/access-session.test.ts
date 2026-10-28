@@ -53,7 +53,7 @@ describe.skipIf(!isLiveSupabase)("access session lifecycle against local Supabas
       .insert({
         clinic_id: ana.clinicId,
         record_type: "patient",
-        content: patientContent("Luna sesión"),
+        content: patientContent("Cholito"),
         status: "draft",
       })
       .select("id")

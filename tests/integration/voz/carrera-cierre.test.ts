@@ -12,8 +12,7 @@ import { nuevaConsultaVoz } from "./consulta-voz";
  * la A y falla cerrado. Corre solo con Supabase viva (`SUPABASE_LIVE_TESTS=1`).
  */
 
-const dbUrl =
-  process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+const dbUrl = process.env.TEST_DATABASE_URL ?? "";
 
 describe.skipIf(!isLiveSupabase)("carrera de cierre con FOR SHARE (integración viva)", () => {
   let ana: LiveVeterinarian;

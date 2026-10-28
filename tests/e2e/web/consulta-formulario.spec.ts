@@ -34,7 +34,7 @@ test.describe("consulta como formulario", () => {
   test("cada entrada de anamnesis muestra su código de procedencia con nombre", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Kira E2E formulario");
+    const { api, patientId, crear } = await prepararPaciente(page, "Kira");
     try {
       const consultationId = await consultaConAnamnesis(crear, patientId);
       await page.goto(`/consultations/${consultationId}`);
@@ -71,7 +71,7 @@ test.describe("consulta como formulario", () => {
       page,
     }) => {
       await page.setViewportSize(viewport);
-      const nombre = `Olivia E2E clave ${viewport.width}`;
+      const nombre = `Pepa`;
       const { api, patientId, crear } = await prepararPaciente(page, nombre);
       try {
         const consultationId = await consultaConAnamnesis(crear, patientId);
@@ -102,7 +102,7 @@ test.describe("consulta como formulario", () => {
   test("corregir procedencia se confirma aparte, se cancela sin registrar y conserva el foco", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Lluvia E2E procedencia");
+    const { api, patientId, crear } = await prepararPaciente(page, "Frida");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await crear("anamnesis", {
@@ -157,7 +157,7 @@ test.describe("consulta como formulario", () => {
 
   // Revisión final de D20: el borrador se lee entero antes de firmarlo.
   test("un campo largo del borrador crece y no esconde texto", async ({ page }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Nieve E2E campo largo");
+    const { api, patientId, crear } = await prepararPaciente(page, "Canela");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
@@ -186,7 +186,7 @@ test.describe("consulta como formulario", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    const { api, patientId, crear } = await prepararPaciente(page, "Ceniza E2E firma animada");
+    const { api, patientId, crear } = await prepararPaciente(page, "Mora");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
@@ -210,7 +210,7 @@ test.describe("consulta como formulario", () => {
   test("corregir una epicrisis firmada deja el valor anterior tachado junto al vigente", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Sal E2E corrección");
+    const { api, patientId, crear } = await prepararPaciente(page, "Simón");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
@@ -249,7 +249,7 @@ test.describe("consulta como formulario", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    const { api, patientId, crear } = await prepararPaciente(page, "Bruma E2E firma");
+    const { api, patientId, crear } = await prepararPaciente(page, "Pepa");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);

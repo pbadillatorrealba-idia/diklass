@@ -1,20 +1,43 @@
 import { test as base, expect, type Locator, type Page } from "@playwright/test";
+import { resolveTestConfig } from "../../support/test-config";
+import { checkpointConversation } from "../../support/test-network";
+import { readTestActors } from "../../support/test-scope";
 
 export const test = base;
 export { expect };
 
-export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-export const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const config = resolveTestConfig(process.env);
+if (config && !process.env.TEST_SCOPE_FILE)
+  throw new Error("Los e2e con backend requieren el runner aislado y TEST_SCOPE_FILE.");
+export const SUPABASE_URL = config?.url;
+export const SUPABASE_ANON_KEY = config?.anonKey;
+export const SERVICE_ROLE_KEY = config?.serviceRoleKey;
 export const hasBackend = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
-export const BRUNO = { email: "vet.bruno@example.test", password: "synthetic-password-bruno" };
+base.beforeEach(async ({ page }) => {
+  if (!SUPABASE_URL) return;
+  await page.route(
+    (url) =>
+      url.origin === new URL(SUPABASE_URL).origin &&
+      [
+        "/rest/v1/rpc/delete_assistant_conversation",
+        "/functions/v1/delete-assistant-conversation",
+      ].includes(url.pathname),
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.continue();
+        return;
+      }
+      await checkpointConversation(route.request().url(), await route.request().allHeaders());
+      const response = await route.fetch();
+      await route.fulfill({ response });
+    },
+  );
+});
 
-export const ANA = {
-  email: "vet.ana@example.test",
-  password: "synthetic-password-ana",
-  displayName: "Dra. Ana Torres",
-};
+const actors = readTestActors();
+export const ANA = actors[0] as { email: string; password: string; displayName: string };
+export const BRUNO = actors[1] as { email: string; password: string; displayName: string };
 
 /**
  * React Native Web's TextInput does not reliably react to `.fill()`: a real click plus

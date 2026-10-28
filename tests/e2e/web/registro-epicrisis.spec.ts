@@ -14,7 +14,7 @@ test.describe("registro clínico web", () => {
   test("los campos de lista de la epicrisis admiten varias palabras y varias líneas", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Luna E2E epicrisis");
+    const { api, patientId, crear } = await prepararPaciente(page, "Cholito");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
 
@@ -52,7 +52,7 @@ test.describe("registro clínico web", () => {
   test("al volver a la ficha tras cerrar la consulta, el historial la muestra cerrada", async ({
     page,
   }) => {
-    const { api, patientId } = await prepararPaciente(page, "Nube E2E historial");
+    const { api, patientId } = await prepararPaciente(page, "Rucio");
     try {
       await page.goto(`/patients/${patientId}`);
       await expect(page.getByTestId("history-empty")).toBeVisible();

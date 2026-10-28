@@ -1,18 +1,36 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { dirname, join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { loadDemo } from "../../../scripts/demo/cargar-demo";
+import { readTestActors } from "../../support/test-scope";
 
 const live = process.env.SUPABASE_LIVE_TESTS === "1" && Boolean(process.env.TEST_SUPABASE_URL);
 
 test.skipIf(!live)(
   "el demo conserva originales, autoría cruzada y dos historias longitudinales",
   async () => {
+    if (!process.env.TEST_SCOPE_FILE)
+      throw new Error("La carga demo viva requiere un scope aislado.");
+    const actors = readTestActors();
+    await loadDemo({
+      url: process.env.TEST_SUPABASE_URL as string,
+      anonKey: process.env.TEST_SUPABASE_ANON_KEY as string,
+      fixtures: actors,
+      allowRemote: false,
+      manifestPath: join(
+        dirname(process.env.TEST_SCOPE_FILE),
+        `${process.env.TEST_SCOPE_FILE.split("/").at(-1)}.demo.json`,
+      ),
+      revision: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+    });
     const client = createClient(
       process.env.TEST_SUPABASE_URL as string,
       process.env.TEST_SUPABASE_ANON_KEY as string,
       { auth: { persistSession: false } },
     );
-    const [vet] = JSON.parse(readFileSync("tests/fixtures/veterinarians.json", "utf8"));
+    const [vet] = actors;
+    if (!vet) throw new Error("Falta el actor del scope.");
     const { error: authError } = await client.auth.signInWithPassword(vet);
     if (authError) throw authError;
     const { error: sessionError } = await client.rpc("start_access_session");

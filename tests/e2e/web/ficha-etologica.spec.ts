@@ -31,7 +31,7 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
     await page.goto("/patients/new");
 
-    await page.getByTestId("patient-name").fill("Rocky E2E etología");
+    await page.getByTestId("patient-name").fill("Rucio");
     await page.getByTestId("patient-species-canino").click();
     await page.getByTestId("patient-breed").fill("Mestizo");
     await page.getByTestId("patient-sex-macho").click();
@@ -43,9 +43,9 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
     await page.getByTestId("patient-referrer-center").fill("Clínica Norte");
 
     await page.getByRole("radio", { name: "Nuevo tutor" }).click();
-    await page.getByTestId("tutor-name").fill("Marta");
+    await page.getByTestId("tutor-name").fill("Matías");
     await page.getByTestId("tutor-rut").fill(randomRut());
-    await page.getByTestId("tutor-surname").fill("Soto");
+    await page.getByTestId("tutor-surname").fill("González Soto");
     await page.getByTestId("tutor-phone").fill("+56 9 5550 0202");
     await page.getByTestId("tutor-city").fill("Santiago");
 
@@ -61,7 +61,7 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
   test("una pregunta cerrada se responde con A veces y el plan queda con el diagnóstico", async ({
     page,
   }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Luna E2E hoja etológica");
+    const { api, patientId, crear } = await prepararPaciente(page, "Cholito");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);
@@ -93,7 +93,7 @@ test.describe("ficha canina etológica (ficha-canina-etologia)", () => {
   });
 
   test("un principio activo sin pauta no se guarda y se explica", async ({ page }) => {
-    const { api, patientId, crear } = await prepararPaciente(page, "Nube E2E plan incompleto");
+    const { api, patientId, crear } = await prepararPaciente(page, "Rucio");
     try {
       const consultationId = await crear("consultation", { patientId, status: "open" });
       await page.goto(`/consultations/${consultationId}`);

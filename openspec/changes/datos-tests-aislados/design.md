@@ -39,7 +39,7 @@ Variables propuestas, con valores no sensibles en `.env.example` y explicación 
 | `TEST_SUPABASE_URL` | URL local del API de testing; obligatoria para suites vivas |
 | `TEST_SUPABASE_ANON_KEY` | Clave pública del mismo entorno; obligatoria |
 | `TEST_DATABASE_URL` | Conexión PostgreSQL privilegiada solo para runner/teardown; obligatoria, nunca pública |
-| `TEST_SUPABASE_SERVICE_ROLE_KEY` | Solo suites que ya necesitan administración Auth/Storage; requerida en esas suites |
+| `TEST_SUPABASE_SERVICE_ROLE_KEY` | Obligatoria en toda ejecución viva: provisioning/limpieza de cuentas exclusivas y Storage; opcional solo para validación estática de configuración |
 | `TEST_SUPABASE_PROJECT_ID` | Identidad esperada del proyecto local de testing, distinta de `diklass`; obligatoria |
 | `E2E_WEB_PORT` | Puerto del servidor y URL de espera; predeterminado 8083, sobrescribible |
 
@@ -161,3 +161,19 @@ destrucción de una instancia de tests no autoriza borrar historiales de product
 - [Supabase CLI, identidad de recursos Docker](https://github.com/supabase/cli/blob/develop/internal/utils/config.go).
 - [Playwright 1.63.0, aislamiento por worker](https://github.com/microsoft/playwright/blob/v1.63.0/docs/src/test-parallel-js.md).
 - [Playwright 1.63.0, fixtures](https://github.com/microsoft/playwright/blob/v1.63.0/docs/src/test-fixtures-js.md).
+
+## Decisiones concretadas al implementar
+
+- El fixture mantiene alcance de archivo/suite para conservar los `beforeAll` existentes; cada
+  archivo recibe clínica y tres cuentas exclusivas. No añade tenancy a la aplicación. Las
+  identidades raíz se reservan de forma durable antes de escribir y permiten reconciliar hijos.
+- RUT: secuencia privada por instancia reserva bloques de 10.000 cuerpos, con contador durable
+  en scope que no se reinicia por retries. Fallar al agotar el bloque o el espacio (9.000 bloques).
+- Identidad durable de base en `testsupport.environment.instance_id`: recuperar permite reiniciar
+  contenedores con volúmenes conservados, verificando el Docker/puertos actuales y esa identidad.
+- Checkpoint antes de borrados de conversación: conserva IDs/rutas que el producto elimina antes
+  del teardown, separados de las eliminaciones del teardown. No registra textos ni tokens.
+- Decisión explícita del usuario (2026-10-28): guardar/restaurar exactamente la cuota privada
+  por IP de `report-client-error`, solo en DBtesting verificada y bajo lock. Snapshot privado
+  separado 0600; el reporte solo refleja captura/restauración, sin buckets. No se modifica
+  la función del producto ni se sustituye el endpoint real.

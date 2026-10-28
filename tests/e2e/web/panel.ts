@@ -1,4 +1,5 @@
 import { expect, type Page, request } from "@playwright/test";
+import { checkpointApiConversation } from "../../support/test-network";
 import { readSupabaseSession, SUPABASE_ANON_KEY, SUPABASE_URL } from "./fixtures";
 
 /**
@@ -36,6 +37,7 @@ export async function limpiarConversacion(page: Page) {
     },
   });
   try {
+    await checkpointApiConversation(api);
     await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
   } finally {
     await api.dispose();
@@ -50,7 +52,7 @@ export async function limpiarConversacion(page: Page) {
  */
 export async function consentimientoDeVoz(page: Page, aceptado: boolean) {
   const { accessToken, userId } = await readSupabaseSession(page);
-  const claveDeServicio = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const claveDeServicio = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? "";
   const api = await request.newContext({
     baseURL: SUPABASE_URL,
     extraHTTPHeaders: {

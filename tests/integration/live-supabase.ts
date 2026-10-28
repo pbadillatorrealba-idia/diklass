@@ -1,9 +1,18 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import { resolveTestConfig } from "../support/test-config";
+import { trackedTestFetch } from "../support/test-network";
+import { readTestActors } from "../support/test-scope";
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const config = resolveTestConfig(process.env);
+const url = config?.url;
+const anonKey = config?.anonKey;
+const serviceRoleKey = config?.serviceRoleKey;
+if (process.env.SUPABASE_LIVE_TESTS === "1" && !process.env.TEST_SCOPE_FILE) {
+  throw new Error(
+    "Las suites vivas requieren el runner aislado y TEST_SCOPE_FILE; no se usan cuentas compartidas.",
+  );
+}
 
 /**
  * Opt-in: these suites need `supabase start`, `supabase db reset` and the synthetic
@@ -12,10 +21,14 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 export const isLiveSupabase =
   process.env.SUPABASE_LIVE_TESTS === "1" && Boolean(url && anonKey && serviceRoleKey);
 
-export const ANA = { email: "vet.ana@example.test", password: "synthetic-password-ana" };
-export const BRUNO = { email: "vet.bruno@example.test", password: "synthetic-password-bruno" };
+const actors = readTestActors();
+export const ANA = actors[0] as { email: string; password: string };
+export const BRUNO = actors[1] as { email: string; password: string };
 
-const noPersistence = { auth: { persistSession: false, autoRefreshToken: false } };
+const noPersistence = {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: trackedTestFetch },
+};
 
 export function anonymousClient(): SupabaseClient<Database> {
   return createClient<Database>(url ?? "", anonKey ?? "", noPersistence);
@@ -33,7 +46,7 @@ export function adminClient(): SupabaseClient {
 export function clientWithToken(accessToken: string): SupabaseClient<Database> {
   return createClient<Database>(url ?? "", anonKey ?? "", {
     ...noPersistence,
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    global: { fetch: trackedTestFetch, headers: { Authorization: `Bearer ${accessToken}` } },
   });
 }
 
