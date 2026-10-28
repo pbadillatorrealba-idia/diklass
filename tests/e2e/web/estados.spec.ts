@@ -1,3 +1,4 @@
+import { provisionClinicalCase } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 
 // sistema-visual FR-085 · SC-056 · US14-AC5 (design.md D13): carga, error con reintento, vacío y
@@ -5,6 +6,10 @@ import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 // reproduce respondiendo la lectura de la colección con una lista vacía.
 test.describe("estados de datos", () => {
   test.skip(!hasBackend, "Requiere Supabase con las veterinarias sintéticas provisionadas.");
+
+  test.beforeAll(async ({ browser }) => {
+    await provisionClinicalCase(browser);
+  });
 
   test.beforeEach(async ({ page }) => {
     await submitLogin(page, ANA);

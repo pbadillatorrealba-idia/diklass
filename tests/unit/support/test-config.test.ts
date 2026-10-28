@@ -1,7 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { resolveTestConfig, resolveWebConfig } from "../../support/test-config";
 
 function loadPlaywrightConfig(env: Record<string, string> = {}) {
@@ -76,6 +84,64 @@ test("un servidor ya gestionado por el runner evita reexportar por archivo", () 
   expect(result.exitCode).toBe(0);
   expect(JSON.parse(result.stdout.toString()).webServer).toBeUndefined();
 });
+
+test("Playwright limita su limpieza de salida y conserva diarios y credenciales del runner", () => {
+  const result = loadPlaywrightConfig();
+  expect(result.exitCode).toBe(0);
+  expect(JSON.parse(result.stdout.toString()).outputDir).toBe("test-results/playwright");
+});
+
+test("una ejecución mínima real de Playwright conserva los archivos hermanos de su salida", () => {
+  const directory = mkdtempSync(join(tmpdir(), "pw-output-"));
+  try {
+    mkdirSync(join(directory, "specs"));
+    mkdirSync(join(directory, "test-results/scopes"), { recursive: true });
+    writeFileSync(join(directory, "package.json"), '{"type":"module"}');
+    symlinkSync(resolve("node_modules"), join(directory, "node_modules"), "dir");
+    const journal = join(directory, "test-results/scopes/marker.scope.json");
+    const environment = join(directory, "test-results/backend.env");
+    writeFileSync(journal, "journal-centinela");
+    writeFileSync(environment, "entorno-centinela");
+    writeFileSync(
+      join(directory, "playwright.config.ts"),
+      `
+      import base from ${JSON.stringify(resolve("playwright.config.ts"))};
+      import {resolve} from "node:path";
+      export default {...base, testDir:"./specs", outputDir:resolve(import.meta.dirname,base.outputDir ?? "test-results"),
+        webServer:undefined, reporter:"list", retries:0, projects:[{name:"regresion"}], use:{}};
+    `,
+    );
+    writeFileSync(
+      join(directory, "specs/output.spec.ts"),
+      `
+      import {test,expect} from "@playwright/test";
+      import {existsSync} from "node:fs";
+      test("journal conservado al arrancar",()=>expect(existsSync("test-results/scopes/marker.scope.json")).toBe(true));
+    `,
+    );
+    const result = Bun.spawnSync(
+      [
+        process.execPath,
+        resolve("node_modules/playwright/cli.js"),
+        "test",
+        "--config",
+        join(directory, "playwright.config.ts"),
+      ],
+      {
+        cwd: directory,
+        env: { PATH: process.env.PATH ?? "" },
+        stdout: "pipe",
+        stderr: "pipe",
+        timeout: 20000,
+      },
+    );
+    expect(result.exitCode, result.stdout.toString() + result.stderr.toString()).toBe(0);
+    expect(existsSync(journal)).toBe(true);
+    expect(existsSync(environment)).toBe(true);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}, 25000);
 
 test("las pantallas sin backend no heredan las claves públicas de desarrollo", () => {
   const result = loadPlaywrightConfig({

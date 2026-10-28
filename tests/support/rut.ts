@@ -26,8 +26,8 @@ export function randomRut(): string {
  * exige catálogos y obligatorios (migración 018). `tutorId` es solo un texto no vacío.
  */
 export function patientFixture(name = "Cholito") {
-  const patient = PACIENTES_DEMO.find((p) => p.ficha.name === name) ?? PACIENTES_DEMO[0];
-  if (!patient) throw new Error("Falta la plantilla de paciente.");
+  const patient = PACIENTES_DEMO.find((p) => p.key === name || p.ficha.name === name);
+  if (!patient) throw new Error(`Falta la plantilla de paciente: ${name}.`);
   const tutor = TUTORES_DEMO.find((t) => t.key === patient.tutorKey);
   if (!tutor) throw new Error(`Falta tutor de ${patient.key}.`);
   if (process.env.TEST_SCOPE_FILE) {
@@ -35,7 +35,7 @@ export function patientFixture(name = "Cholito") {
     recordTestDatasetKey(tutor.key);
   }
   return {
-    ficha: { ...structuredClone(patient.ficha), name },
+    ficha: structuredClone(patient.ficha),
     tutor: { ...tutor, rut: randomRut() },
   };
 }

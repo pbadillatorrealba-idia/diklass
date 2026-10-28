@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { provisionClinicalCase } from "./caso-sintetico";
 import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -15,6 +16,10 @@ const background = (page: import("@playwright/test").Page) =>
 test.describe("tema manual, calendario de Inicio y Configuración", () => {
   test.skip(!hasBackend, "Requiere Supabase con las veterinarias sintéticas provisionadas.");
   test.use({ colorScheme: "light" });
+
+  test.beforeAll(async ({ browser }) => {
+    await provisionClinicalCase(browser);
+  });
 
   test.beforeEach(async ({ page }) => {
     await submitLogin(page, ANA);

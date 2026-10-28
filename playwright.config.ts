@@ -20,6 +20,8 @@ const projects: PlaywrightTestProject[] = [
 
 export default defineConfig({
   testDir: "./tests/e2e/web",
+  // Playwright vacía solo esta subcarpeta; los journals y secretos del runner son hermanos.
+  outputDir: "test-results/playwright",
   fullyParallel: true,
   // Una instancia de testing y un worker, también en CI.
   workers: 1,

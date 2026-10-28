@@ -79,7 +79,7 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
           email: null,
         },
       },
-      ficha: fichaBase("Luna Consulta"),
+      ficha: fichaBase("Cholito"),
     });
     patientId = ficha.record.id;
   });
@@ -189,7 +189,7 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
           email: null,
         },
       },
-      ficha: fichaBase("Toby Contexto"),
+      ficha: fichaBase("Rucio"),
     });
     await expect(
       consultKnowledge(ana.client, {

@@ -1,5 +1,7 @@
 # Inventario de escritores de tests para #82
 
+Inventario inicial previo a la implementación: las columnas de nombres y teardown describen el punto de partida, no el estado final.
+
 Inspección estática del worktree `docs/dataset-clinico-trazable`, 2026-10-27. Solo lectura: no se ejecutaron suites vivas, DB, Auth, Storage ni borrados. No contiene credenciales. Los números del apéndice permiten localizar los escritores en el código inspeccionado. Las rutas son relativas al repositorio.
 
 ## Hallazgos que condicionan el diseño

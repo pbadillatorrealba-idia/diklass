@@ -72,14 +72,14 @@ test.describe("consulta como formulario", () => {
     }) => {
       await page.setViewportSize(viewport);
       const nombre = `Pepa`;
-      const { api, patientId, crear } = await prepararPaciente(page, nombre);
+      const { api, patientId, crear, tutorName } = await prepararPaciente(page, nombre);
       try {
         const consultationId = await consultaConAnamnesis(crear, patientId);
         await page.goto(`/consultations/${consultationId}`);
 
         const encabezado = page.getByTestId("consultation-header").filter({ visible: true });
         await expect(encabezado).toContainText(nombre);
-        await expect(encabezado).toContainText(`Tutor de ${nombre}`);
+        await expect(encabezado).toContainText(tutorName);
         await expect(encabezado).toContainText("Consulta n.º 1");
 
         const clave = page.getByRole("list", { name: "Clave de procedencia" });

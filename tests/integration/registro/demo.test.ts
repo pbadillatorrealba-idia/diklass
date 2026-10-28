@@ -79,4 +79,6 @@ test.skipIf(!live)(
       ),
     ).toBe(true);
   },
+  // Carga el grafo completo mediante servicios reales; CI supera el límite predeterminado de 5 s.
+  60_000,
 );

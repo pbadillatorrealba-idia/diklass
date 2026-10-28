@@ -164,7 +164,8 @@ Las pruebas vivas se ejecutan mediante el runner; pedirlas sin configuración co
 scope falla. Las unitarias normales siguen omitiendo integración viva. Puede elegirse un archivo,
 por ejemplo `bun --env-file=test-results/backend.env run test:integration -- tests/integration/registro/epicrisis.test.ts`.
 Los e2e aceptan nombres cortos y `--project=chromium|chromium-dark|firefox|webkit`; mantienen la
-matriz de Playwright. Cada lote exporta una sola vez, limpia caché y dirige app/helpers al mismo
+matriz de Playwright. Playwright escribe únicamente en `test-results/playwright/`; su limpieza automática no alcanza
+`scopes/`, snapshots de cuota ni `backend.env/config`. Cada lote exporta una sola vez, limpia caché y dirige app/helpers al mismo
 backend, sin inyectar claves privadas en el bundle.
 
 Antes de provisionar o enviar escrituras se guardan raíces/identidades de recuperación en un
@@ -211,18 +212,19 @@ obligatorias). Igual que el provisioning, falla cerrado: rechaza cualquier Supab
 | Nivel | Comando | Requisitos |
 |---|---|---|
 | Unitarios e integración | `bun run test` | Ninguno; las suites vivas se omiten |
-| Integración viva | `SUPABASE_LIVE_TESTS=1 bun run test:integration` | Supabase local y veterinarios provisionados |
+| Integración viva | `bun --env-file=test-results/backend.env run test:integration` | Backend exclusivo de testing identificado; el runner provisiona y limpia |
 | Base de datos | `supabase test db` | Supabase local |
-| E2E web | `bun --env-file=.env run test:e2e:web` | Supabase local, veterinarios provisionados y navegadores de Playwright |
+| E2E web | `bun --env-file=test-results/backend.env run test:e2e:web` | Backend exclusivo de testing y navegadores de Playwright |
 | E2E nativo | `bun run test:e2e:native` | Build nativo instalado; ver `tests/e2e/native/README.md` |
 
-Playwright corre con Node, que no carga `.env`. Sin `--env-file=.env`, los escenarios de login y la
-compuerta de accesibilidad con sesión se omiten y la ejecución sale verde sin haberlos probado.
+Playwright corre con Node; el runner de Bun carga `test-results/backend.env` e inyecta el scope.
+Los comandos públicos de integración viva y e2e web fallan si falta la configuración `TEST_*`:
+no omiten silenciosamente los escenarios con backend ni recurren al `.env` de desarrollo.
 
 En local, Playwright corre con un worker y solo Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox
 y WebKit). La app se exporta una vez (`expo export`, pico de ~1,2 GB) y se sirve estática en vez de
 mantener Metro; `E2E_DEV_SERVER=1` vuelve a `expo start`. En CI, Chromium corre dentro del job
-`database` (un solo Supabase, tras un `db reset`) y las variables pasan por `GITHUB_ENV`.
+`database` (un solo Supabase de testing, sin reset entre integración y web) y las variables pasan por `GITHUB_ENV`.
 `bun run gate` ejecuta `biome ci`, `tsc` y todos los tests en secuencia, con tope de 3 GB si hay
 systemd; `--changed` solo acota Biome.
 

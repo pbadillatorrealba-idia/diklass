@@ -45,7 +45,9 @@ function fichaBase(
   cambios: Partial<Omit<PatientContent, "tutorId">> = {},
 ): Omit<PatientContent, "tutorId"> {
   return {
-    ...patientFixture(nombre).ficha,
+    // Los nombres numerados son el objeto de la prueba de paginación.
+    ...patientFixture(nombre.startsWith("Lote integración ") ? "P01" : nombre).ficha,
+    ...(nombre.startsWith("Lote integración ") ? { name: nombre } : {}),
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -321,7 +323,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const antes = await epicrisisEfectiva(ana.client, caso.consultationId);
 
     const actualizado = await updateTutor(ana.client, caso.tutorId, {
-      name: "Tutor de Cholito",
+      name: "Camila Muñoz Rojas",
       rut: randomRut(),
       phone: "+56 9 4444 4444",
       email: null,
@@ -337,7 +339,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const bruno = await signedInVeterinarian(BRUNO);
     const alta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Kira concurrencia"),
+      ficha: fichaBase("Kira"),
       tutor: { existingTutorId: tutorId },
     });
     // Ana abre «Editar ficha» con esta lectura…
@@ -365,7 +367,7 @@ describe.skipIf(!isLiveSupabase)("ficha y tutor contra Supabase viva", () => {
     const bruno = await signedInVeterinarian(BRUNO);
     const alta = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      ficha: fichaBase("Toby concurrencia"),
+      ficha: fichaBase("Cholito"),
       tutor: { existingTutorId: tutorId },
     });
 

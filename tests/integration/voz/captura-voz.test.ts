@@ -16,7 +16,7 @@ import {
   settleTranscriptSegment,
 } from "@/features/voz/transcript-service";
 import { SimulatedTranscriptionAdapter } from "@/features/voz/transcription-port";
-import { randomRut } from "../../support/rut";
+import { patientFixture } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -45,17 +45,11 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
   beforeAll(async () => {
     ana = await signedInVeterinarian(ANA);
     bruno = await signedInVeterinarian(BRUNO);
+    const fixture = patientFixture("P01");
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
       ficha: {
-        name: "Rocky Voz",
-        species: "canino",
-        breed: "Mestizo",
-        birthDate: "2021-05-01",
-        ageMonths: 24,
-        weightKg: 12.4,
-        sex: "macho",
-        reproductiveStatus: "entero",
+        ...fixture.ficha,
         antecedentes: {
           medicalHistory: [],
           preexistingDiseases: [],
@@ -64,14 +58,7 @@ describe.skipIf(!isLiveSupabase)("captura de voz hacia anamnesis (integración v
           behavioralHistory: [],
         },
       },
-      tutor: {
-        newTutor: {
-          name: "Sra. Integración Voz",
-          rut: randomRut(),
-          phone: "+56 9 5550 0099",
-          email: null,
-        },
-      },
+      tutor: { newTutor: fixture.tutor },
     });
     const consulta = await openConsultation(ana.client, {
       clinicId: ana.clinicId,

@@ -95,9 +95,7 @@ jobs:
         run: bun run test:integration
         env:
           SUPABASE_LIVE_TESTS: "1"
-      # Mantener este reset explícito de testing hasta demostrar la suite completa sin residuos.
-      - name: Reset only the testing database for the E2E
-        run: supabase db reset --workdir test-results/backend --local
+      # Cada archivo reconcilia y limpia sus recursos; integración y web comparten el baseline.
       # Browser downloads dominate this job's setup time; cache them across runs.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

@@ -45,10 +45,10 @@ verificado localmente; esta rama depende de aquella. Marcas no equivalen a acept
 
 ## 3. Integración y CI
 
-- [ ] 3.1 Ejecutar dos veces un subconjunto de integración y e2e web con caso cerrado/correctiva y
+- [x] 3.1 Ejecutar dos veces un subconjunto de integración y e2e web con caso cerrado/correctiva y
   objetos de voz/conocimiento, incluyendo fallo deliberado (FR-135/FR-136; US21-AC3–AC5).
   Verificación: baseline equivalente antes/después, centinelas intactos y reporte trazable.
-- [ ] 3.2 Adaptar CI al destino explícito, un worker y ejecución secuencial; retirar reset intermedio
+- [x] 3.2 Adaptar CI al destino explícito, un worker y ejecución secuencial; retirar reset intermedio
   solo después de demostrar ausencia de residuos en la suite completa (FR-134–FR-136).
   Verificación: CI con evidencias de limpieza y repetición; documentar comandos nuevos en `SETUP.md`.
   No modificar `.github/workflows/native-e2e.yml` ni `tests/e2e/native/`: Maestro Cloud y su
@@ -77,5 +77,26 @@ verificado localmente; esta rama depende de aquella. Marcas no equivalen a acept
   prueba viva de purga/incremento/fallo y restauración exacta en verde; recuperación tras SIGKILL
   también conserva toda la tabla. Núcleo: 12 vivas / 85 aserciones; 9 unitarias / 29 aserciones.
 - Integración demo por runner de archivo completó 15/25/8 en su propio scope y lo limpió al salir.
-- Pendientes: ejecutar conjuntos reales completos y repetición, web exportado una vez, compuertas
-  y prerrevisión de implementación. Mantener reset intermedio de CI hasta acreditar limpieza completa.
+- Integración completa dos veces: 125 correctas / 4 omitidas (ASR externo opt-in) / 0 fallos.
+  Chromium: los 22 archivos completados, 122 correctas y 4 de micrófono omitidas en modo simulado;
+  las 4 de micrófono pasaron después en modo real con transcripción interceptada. Se ejecutó por
+  lotes: los primeros fallos de `estados` y `tema` revelaron dependencia de pacientes de otros
+  archivos; corregidos provisionando su propio caso, sin cambios de producto.
+- Repetición web de epicrisis, correctivas de feedback, conocimiento y voz: 27 correctas / 0 fallos.
+  Smoke: 13 correctas. Un solo worker, una exportación por lote y sin reset entre estas ejecuciones.
+- Tras los primeros 48 scopes conservados: todos `clean`; SQL confirmó cero cuentas, clínicas y
+  fichas propias restantes. Cada teardown verifica todo su grafo y la restauración exacta de cuota.
+  Retirado el reset intermedio de CI después de esta evidencia local; la CI del nuevo HEAD sigue
+  pendiente y no se confunde con aceptación remota.
+- Incidente inicial de Playwright: su salida por defecto borró los diarios antes de arrancar los
+  tests. Se reconstruyeron las identidades exactas de las tres cuentas/clínica provisionadas y
+  se recuperaron únicamente sus filas, comprobando que no había registros clínicos ni cuotas
+  modificadas y que el baseline ajeno seguía intacto. Fue recuperación manual, no automática
+  de un diario perdido. La salida dedicada y una prueba real mínima de Playwright evitan repetirlo.
+- Prerrevisión de implementación, ronda 1, publicada en #82: corregidos salida de Playwright,
+  expectativa de tutor y nombres/fallback; se exige clave/nombre existente del dataset.
+  CI previa: pgTap 375 correctas, tipos y unitarios correctos; carga demo cortada por timeout de
+  5 s, ahora con presupuesto explícito de 60 s para el grafo completo. Auditoría de dependencias
+  bloqueada por `deepmerge` (GHSA-gcqx-w48m-w2h4), ajeno a esta entrega; decisión solicitada al usuario.
+- Pendientes: compuerta final, segunda prerrevisión y CI del HEAD corregido. Firefox/WebKit,
+  Maestro Cloud y proveedor externo de ASR no se han verificado localmente.

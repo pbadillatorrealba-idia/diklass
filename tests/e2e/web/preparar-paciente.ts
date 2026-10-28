@@ -1,4 +1,5 @@
 import { type APIRequestContext, request as apiRequest, type Page } from "@playwright/test";
+import { tutorFullName } from "../../../src/features/registro/tutor-service";
 import { patientFixture } from "../../support/rut";
 import {
   ANA,
@@ -16,7 +17,7 @@ import {
 export async function prepararPaciente(
   page: Page,
   nombre: string,
-): Promise<{ api: APIRequestContext; patientId: string; crear: Crear }> {
+): Promise<{ api: APIRequestContext; patientId: string; crear: Crear; tutorName: string }> {
   await submitLogin(page, ANA);
   await expect(page).toHaveURL(/\/home$/, { timeout: 10_000 });
   const session = await readSupabaseSession(page);
@@ -56,7 +57,7 @@ export async function prepararPaciente(
     ...fixture.ficha,
     tutorId,
   });
-  return { api, patientId, crear };
+  return { api, patientId, crear, tutorName: tutorFullName(fixture.tutor) };
 }
 
 export type Crear = (recordType: string, content: Record<string, unknown>) => Promise<string>;

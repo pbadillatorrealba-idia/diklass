@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { patientContent, randomRut } from "../../support/rut";
+import { patientContent, patientFixture, randomRut } from "../../support/rut";
 
 test("el contenido clínico reutiliza los datos coherentes de Cholito", () => {
   const patient = patientContent("Cholito");
@@ -7,6 +7,11 @@ test("el contenido clínico reutiliza los datos coherentes de Cholito", () => {
   expect(patient.sex).toBe("macho");
   expect(patient.reproductiveStatus).toBe("esterilizado");
   expect(patientContent("Kira").sex).toBe("hembra");
+});
+
+test("rechaza nombres técnicos fuera del dataset y permite selección por clave estable", () => {
+  expect(() => patientFixture("Toby concurrencia")).toThrow("plantilla");
+  expect(patientFixture("P01").ficha.name).toBe("Cholito");
 });
 
 test("reservar RUT no depende de que el generador aleatorio no colisione", () => {

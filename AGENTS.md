@@ -73,12 +73,12 @@ Bun es el runtime y package manager (versión en `.bun-version`). Los scripts co
 | `bunx biome ci --error-on-warnings .` | Biome en modo CI: los warnings también fallan. |
 | `bun run gate` | `biome ci`, `tsc` y todos los tests, en secuencia y con tope de 3 GB si hay systemd. **Es la batería pesada**: `--changed` solo acota Biome. |
 | `bun run test` | Tests unitarios y de integración. Sin Supabase, las suites vivas se omiten. |
-| `bun run test:integration` | Solo integración; con `SUPABASE_LIVE_TESTS=1` y Supabase local ejecuta las suites vivas. |
+| `bun --env-file=test-results/backend.env run test:integration` | Integración viva en backend exclusivo de testing; el runner crea/limpia fixtures por archivo. |
 | `bun run db:start` | `supabase start` sin los servicios que no usan los e2e (ahorra ~300 MB de RAM). |
 | `supabase test db` | pgTap: RLS, triggers, caducidad de sesión y atribución. |
 | `bun run db:types` | Regenera `src/lib/supabase/database.types.ts`; CI falla si difiere de las migraciones. |
 | `bun run test:e2e:smoke` | Solo `login` y `navegacion` en Chromium: iteración rápida. |
-| `bun --env-file=.env run test:e2e:web` | Playwright con gate WCAG 2.2 AA. Sin `--env-file` los escenarios con backend se omiten en silencio. Local: un worker y Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit). CI: Chromium en cada PR; Firefox y WebKit solo en `main`. |
+| `bun --env-file=test-results/backend.env run test:e2e:web` | Playwright con gate WCAG 2.2 AA y fixtures aislados. Sin configuración `TEST_*` completa falla antes de escribir. Local: un worker y Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox y WebKit). CI: Chromium en cada PR; Firefox y WebKit solo en `main`. |
 | `bun run test:e2e:native` | Maestro sobre un build nativo; CI en `native-e2e.yml` (`main`, nightly y a demanda). |
 
 La definición completa de CI está en `.github/workflows/ci.yml`; en cambios que solo tocan
@@ -97,7 +97,7 @@ e2e y las exportaciones corren de uno en uno, con un solo worker.
 | `src/theme/` o clases de UI | lo anterior y `tests/unit/theme/tema.test.ts` | `gate` y `bun run test:e2e:web -- --project=chromium` |
 | Login o navegación | como mucho `bun run test:e2e:smoke` | `gate` y `test:e2e:web` |
 | `supabase/migrations/` o `database.types.ts` | Biome, `supabase test db`, `db:types` y `typecheck`, sin gate completo | `gate`, `supabase test db` y `db:types` |
-| `src/lib/supabase/`, autenticación o atribución | lo de «Código» y `SUPABASE_LIVE_TESTS=1 bun run test:integration` | `gate` y `SUPABASE_LIVE_TESTS=1 bun run test:integration` |
+| `src/lib/supabase/`, autenticación o atribución | lo de «Código» y `bun --env-file=test-results/backend.env run test:integration` | `gate` y `bun --env-file=test-results/backend.env run test:integration` |
 | Solo `**.md`, `docs/**` u `openspec/**` | nada | nada |
 
 Al declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
