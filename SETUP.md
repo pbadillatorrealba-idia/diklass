@@ -88,17 +88,43 @@ El script falla cerrado: rechaza cualquier `SUPABASE_URL` que no sea local, salv
 
 ### Clínica de demostración (datos de prueba)
 
-```bash
-bun run provision:demo   # 15 tutores, 25 pacientes (perros y gatos) y 8 consultas
-bun run demo:reset       # base local desde cero + veterinarios + demo (borra TODO lo local)
+```sh
+bun run demo:check       # contratos, esquema y cobertura; sin DB ni PDF
+bun run provision:demo   # veterinarios provisionados; 15 tutores, 25 mascotas y 8 consultas
+bun run demo:reset       # BORRA TODA la base local; solo para una instancia desechable
 ```
 
-Los datos están en `scripts/demo/datos-demo.ts`: nombres y apellidos comunes en Chile combinados
-al azar (no apuntan a personas reales), correos `@example.test`, teléfonos `+56 9 5550 xxxx` y RUT
-con dígito verificador válido sobre cuerpos `5.000.0NN`. Se escriben con la sesión de cada
-veterinario del fixture, por los mismos servicios que la interfaz, así que pasan las mismas
-validaciones. Si la clínica ya está cargada, el script lo dice y no duplica nada. Mismas
-salvaguardas que el provisioning: rechaza cualquier Supabase no local salvo `--allow-remote`.
+El elenco de `scripts/demo/datos-demo.ts` usa nombres habituales en Chile y claves estables
+independientes de nombres/posiciones: 17 perros y 8 gatos con ficha administrativa. Las ocho
+consultas caninas incluyen tres cerradas, dos historias longitudinales, un borrador, seis entradas
+de evolución (una correctiva) y una epicrisis correctiva adicional. Son relatos y aprobaciones
+editoriales simulados por cuentas de prueba, sin decisiones automáticas del asistente ni
+validación veterinaria del contenido.
+
+`metadata-demo.ts` relaciona cada clave con fuente estructural, FR, escenario, prueba, autoría y
+procedencia clínica. Los SHA-256/páginas de las fichas son referencias históricas: no se verifican
+PDF localmente ni en CI. Los correos usan `@example.test`; teléfonos y RUT válidos inventados
+pueden coincidir por azar con valores reales: no usarlos para contactar ni verificar identidades.
+
+La carga pasa por las sesiones y servicios reales. Deja un manifiesto progresivo en
+`test-results/demo/` (ignorado, modo 0600), con versión, revisión Git, huella del fixture y mapeo
+clave → registro/eventos; no guarda contraseñas, RUT ni contactos. Puede elegirse otra ruta con
+`bun run provision:demo -- --manifest <ruta>`. Para repetir, conservar el manifiesto original:
+solo un grafo completo, idéntico y con auditoría intacta permite omitir escrituras. Si falta el
+manifiesto pero hay datos previos, cambia la versión o queda una carga parcial, falla sin borrar
+ni reanudar. Reconstruir requiere decidir expresamente que la base local es desechable. El bloqueo
+remoto solo se levanta mediante `--allow-remote`, con aviso, para un backend sintético autorizado.
+
+Las fechas de auditoría son las reales de carga; los intervalos del relato son simulados. No
+se acreditan semanas transcurridas, agenda histórica ni eficacia clínica por cargar el demo.
+
+Si cambia un contrato vigilado, `demo:check` falla con las rutas afectadas. Revisar datos y cobertura,
+registrar motivo/requisitos afectados y actualizar explícitamente las huellas/inventario de
+`scripts/demo/contratos-demo.json`; no renovarlas automáticamente para acallar la compuerta.
+Los contratos vigilados y sus altas/bajas se enumeran en ese archivo; al crear una capacidad
+clínica, ampliar inventario, matriz y filtros de `.github/workflows/dataset-demo.yml`. Ese workflow
+cubre también cambios de especificaciones y corre sin Supabase. Pasar sus tests demuestra forma y
+cobertura técnica, no aceptación clínica.
 
 ### Corpus inicial de la base de conocimiento
 

@@ -56,5 +56,5 @@ fixture al implementar, manteniendo sus cantidades y comandos.
 - Sin dependencias de ejecución nuevas, cambios de UI, migraciones, campos clínicos nuevos ni
   ampliación de la anamnesis a gatos. Estos se incluyen solo como fichas administrativas.
 
-Estado: propuesta documental; especificación y diseño pendientes de aprobación, implementación y
-aceptación pendientes. Los nombres, edades y relatos no acreditan revisión veterinaria.
+Estado: especificación/diseño aprobados por el usuario para implementar (2026-10-28).
+Implementación en curso; evidencia y pendientes en tasks.md. La aceptación clínica sigue pendiente.

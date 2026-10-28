@@ -1,0 +1,79 @@
+name: Vigencia del dataset demo
+
+on:
+  pull_request:
+    paths:
+      - "src/features/registro/**"
+      - "src/features/retroalimentacion/**"
+      - "src/lib/attribution/clinical-mutations.ts"
+      - "src/lib/attribution/types.ts"
+      - "src/lib/supabase/database.types.ts"
+      - "supabase/migrations/**"
+      - "openspec/specs/registro-clinico-longitudinal/**"
+      - "openspec/specs/ficha-paciente/**"
+      - "openspec/specs/ficha-etologica-canina/**"
+      - "openspec/specs/retroalimentacion-clinica/**"
+      - "openspec/changes/implementar-identidad-y-acceso/specs/**"
+      - "openspec/changes/catalogos-y-datos-demo/specs/**"
+      - "openspec/changes/dataset-clinico-trazable/specs/**"
+      - "openspec/changes/dataset-clinico-trazable/dataset.md"
+      - "docs/brief-poc-cdss.md"
+      - "docs/constitution.md"
+      - "scripts/demo/**"
+      - "scripts/provision-demo-data.ts"
+      - "tests/unit/scripts/**"
+      - "SETUP.md"
+      - "package.json"
+      - "bun.lock"
+      - ".bun-version"
+      - "tsconfig.json"
+      - ".github/workflows/dataset-demo.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/features/registro/**"
+      - "src/features/retroalimentacion/**"
+      - "src/lib/attribution/clinical-mutations.ts"
+      - "src/lib/attribution/types.ts"
+      - "src/lib/supabase/database.types.ts"
+      - "supabase/migrations/**"
+      - "openspec/specs/registro-clinico-longitudinal/**"
+      - "openspec/specs/ficha-paciente/**"
+      - "openspec/specs/ficha-etologica-canina/**"
+      - "openspec/specs/retroalimentacion-clinica/**"
+      - "openspec/changes/implementar-identidad-y-acceso/specs/**"
+      - "openspec/changes/catalogos-y-datos-demo/specs/**"
+      - "openspec/changes/dataset-clinico-trazable/specs/**"
+      - "openspec/changes/dataset-clinico-trazable/dataset.md"
+      - "docs/brief-poc-cdss.md"
+      - "docs/constitution.md"
+      - "scripts/demo/**"
+      - "scripts/provision-demo-data.ts"
+      - "tests/unit/scripts/**"
+      - "SETUP.md"
+      - "package.json"
+      - "bun.lock"
+      - ".bun-version"
+      - "tsconfig.json"
+      - ".github/workflows/dataset-demo.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dataset-demo-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dataset-demo:
+    name: Contratos y cobertura del demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - name: Comprobar contratos, cobertura y cargador sin Supabase ni PDF
+        run: bun run demo:check
