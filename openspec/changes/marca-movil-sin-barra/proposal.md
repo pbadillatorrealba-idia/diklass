@@ -24,3 +24,7 @@ Ninguna.
 ## Impact
 
 `AppNavigation` web, `Screen`, `ScreenList`, pruebas y DESIGN.md. Sin dependencias nuevas ni cambios clínicos o de datos. Depende del sistema visual y de la navegación ya implementada en esta rama; aceptación conjunta con sus cambios de login e Inicio. Las referencias aceptadas de FR-091/FR-093 a controles en la antigua barra ya difieren del código de esta rama: tema y cuenta están en Configuración; este cambio no vuelve a introducir esos controles.
+
+## Acceso compacto al asistente
+
+Dirección aprobada por el usuario: sustituir el botón de la cinta por una cápsula flotante a la derecha en móvil, con icono y nombre fijo Asistente. Conservar el panel de escritorio y la hoja existente, superpuestos al contenido, con padding final desplazable para alcanzar los últimos controles y controles de escucha siempre visibles. El usuario aclara que no debe existir una franja que ocupe espacio y solicita un segundo FAB Iniciar consulta, reutilizando /patients.

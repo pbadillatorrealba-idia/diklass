@@ -61,3 +61,13 @@ mediante tokens en el informe. No equivale a aceptación WCAG completa ni a veri
 Informe persistente: `evidencia/auditoria-configuracion.md`.
 
 También se ejecutó completa `navegacion.spec.ts` en Chromium contra el servidor de este worktree: 6 pruebas aprobadas.
+
+## 5. Cápsula compacta del asistente
+
+- [x] 5.1 Observar prueba roja del nombre estable con otro hilo activo y del aspecto/posición de la cápsula en navegador.
+- [x] 5.2 Aplicar dos FAB realmente superpuestos, padding final medido, enlace a pacientes y eliminación de la acción duplicada de Inicio; conservar avisos y controles de escucha; actualizar DESIGN.md.
+- [x] 5.3 Verificar pruebas focalizadas, tema, móvil claro/oscuro, apertura/cierre y escritorio; registrar límites.
+
+Evidencia de la cápsula y segundo FAB: prueba unitaria inicialmente roja por el nombre variable y por ausencia de Iniciar consulta sin hilos. E2e inicialmente rojo por alineación y radio; la primera solución todavía reservaba una franja, corregida tras aclaración del usuario. Implementado: superposición absoluta con interacción a través del espacio transparente y padding final medido en Screen/ScreenList; dos FAB redondeados y enlace a pacientes, sin duplicación móvil en Inicio. Avisos y escucha usan fondo card para mantener legibilidad sobre el contenido.
+
+Verificación local final: 432 unitarias en cinco archivos, dos e2e Chromium (320/375/768, superposición, posición, radio, paso de clics, último control accesible, apertura/cierre con retorno del foco, enlace a pacientes, Conocimiento sin hilo, escritorio y texto al 200 %), typecheck, Biome y validación OpenSpec aprobados. Inspección visual a 320/375 y 1280 en claro/oscuro, y formulario de paciente a 375; sin desbordamiento horizontal en las seis combinaciones de Configuración. Axe en Configuración a 375 en ambos temas: cero infracciones automáticas, color-contrast incompleto; los tokens conservan sus pruebas de contraste. Capturas temporales en /tmp/diklass-capsula-*.png. No se ejecutaron gate completo, e2e completo, grabación real en navegador, lectores de pantalla, otros motores ni dispositivos nativos. Aceptación de usuario e integración pendientes.

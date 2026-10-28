@@ -24,3 +24,7 @@ La marca consume 20 px y el espaciado existente del contenido, pero deja de ser 
 El usuario solicita retirar Seguimiento de la barra inferior web: quedan Inicio, Pacientes, Conocimiento y Configuración. Se conserva en SECTIONS para escritorio y nativo y se filtra solo en TABBAR_SECTIONS. No se añade una ruta alternativa; la ruta existente sigue disponible.
 
 Petición posterior aprobada: Configuración muestra su nombre debajo del icono, igual que los demás destinos compactos. Comprobar el texto visible y legible en 320 y 375 px.
+
+## Cápsula de asistente aprobada
+
+Reutilizar PanelDockView y ScreenBottomBar (incluida ScreenList): dos FAB extendidos apilados a la derecha, con 16 px a los bordes. Asistente usa primary y contenido primary-foreground; Iniciar consulta usa outline y enlaza a /patients, igual que el acceso de Inicio. Ambos tienen radio completo. El contenedor se posiciona absolutamente sobre el contenido, sin franja en el flujo. Su altura medida solo añade padding al final del contenido desplazable, de modo que los últimos controles puedan desplazarse por encima de los FAB. La zona transparente permite interacción con el contenido que hay debajo. Los avisos y controles de escucha se conservan. En Inicio se retira la acción móvil duplicada; escritorio conserva su botón. Iniciar consulta permanece disponible aunque no haya hilos del asistente (p. ej. Conocimiento). Sin nuevos tokens ni dependencias.

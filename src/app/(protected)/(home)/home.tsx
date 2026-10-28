@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { ConsultasDeHoy } from "@/components/home/consultas-de-hoy";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -27,6 +27,8 @@ const fechaDeHoy = (now: Date) =>
  * citas simuladas.
  */
 export default function HomeScreen() {
+  const { width } = useWindowDimensions();
+  const compact = process.env.EXPO_OS !== "web" || width < 1024;
   const displayName = useSessionStore((state) => state.displayName);
   const setAccessState = useSessionStore((state) => state.setAccessState);
   const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
@@ -54,12 +56,14 @@ export default function HomeScreen() {
   return (
     <Screen
       action={
-        // Las consultas cuelgan de un paciente: iniciar una es elegir primero el paciente.
-        <Link asChild href="/patients">
-          <Button accessibilityLabel="Iniciar consulta" testID="home-start-consultation">
-            <ButtonText>Iniciar consulta</ButtonText>
-          </Button>
-        </Link>
+        compact ? undefined : (
+          // Las consultas cuelgan de un paciente: iniciar una es elegir primero el paciente.
+          <Link asChild href="/patients">
+            <Button accessibilityLabel="Iniciar consulta" testID="home-start-consultation">
+              <ButtonText>Iniciar consulta</ButtonText>
+            </Button>
+          </Link>
+        )
       }
       pretitle="Hola"
       title={displayName ?? undefined}

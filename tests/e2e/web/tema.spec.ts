@@ -21,6 +21,63 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
   });
 
+  test("la cápsula móvil flota a la derecha sin tapar contenido y devuelve el foco al cerrar", async ({
+    page,
+  }) => {
+    await page.goto("/settings");
+    for (const width of [320, 375, 768]) {
+      await page.setViewportSize({ width, height: 900 });
+      const capsule = page.getByTestId("panel-dock-open");
+      await expect(capsule.getByText("Asistente", { exact: true })).toBeVisible();
+      const box = await capsule.boundingBox();
+      const tabs = await page.getByTestId("app-tabbar").boundingBox();
+      const scroll = await page.getByTestId("settings-screen-scroll").boundingBox();
+      if (!scroll || !tabs) throw new Error("Falta el desplazamiento o la navegación");
+      expect(scroll.y + scroll.height).toBe(tabs.y);
+      if (!box || !tabs) throw new Error("Falta la cápsula o la navegación");
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(width - box.x - box.width).toBe(16);
+      expect(tabs.y - box.y - box.height).toBe(16);
+      const style = await capsule.evaluate((el) => {
+        const css = getComputedStyle(el);
+        return { radius: parseFloat(css.borderTopLeftRadius), background: css.backgroundColor };
+      });
+      expect(style.radius).toBeGreaterThanOrEqual(box.height / 2);
+      expect(style.background).not.toBe("rgba(0, 0, 0, 0)");
+      const blocksContent = await page.evaluate(
+        ({ y }) =>
+          Boolean(document.elementFromPoint(8, y + 22)?.closest('[data-testid="panel-dock"]')),
+        box,
+      );
+      expect(blocksContent).toBe(false);
+      const bar = page.getByTestId("screen-action-bar");
+      await expect(bar).toHaveCSS("position", "absolute");
+      await expect(bar).toHaveCSS("border-top-width", "0px");
+      await expect(bar).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      const logout = page.getByTestId("settings-session").getByTestId("logout-button");
+      await logout.scrollIntoViewIfNeeded();
+      const last = await logout.boundingBox();
+      if (!last) throw new Error("Falta el cierre de sesión");
+      expect(last.y + last.height).toBeLessThanOrEqual(box.y);
+      await capsule.click();
+      await expect(page.getByRole("dialog", { name: "Asistente", exact: true })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog", { name: "Asistente", exact: true })).toHaveCount(0);
+      await expect(capsule).toBeFocused();
+    }
+    await page.getByTestId("dock-start-consultation").click();
+    await expect(page).toHaveURL(/\/patients$/);
+    await page.goto("/knowledge");
+    await expect(page.getByTestId("panel-dock-open")).toHaveCount(0);
+    await expect(page.getByTestId("dock-start-consultation")).toBeVisible();
+    await page.goto("/home");
+    await expect(page.getByTestId("home-start-consultation")).toHaveCount(0);
+    await expect(page.getByTestId("dock-start-consultation")).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.getByTestId("panel-dock-open")).toHaveCount(0);
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
+  });
+
   test("la marca móvil deja 24 px hasta el logo y la barra inferior omite Seguimiento", async ({
     page,
   }) => {

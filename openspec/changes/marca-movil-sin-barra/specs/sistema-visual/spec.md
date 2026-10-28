@@ -24,6 +24,27 @@ En web bajo 1024 px, toda pantalla protegida MUST mostrar el logo pequeño y cen
 - **WHEN** se abre en móvil o escritorio
 - **THEN** conserva su único logo existente
 
+### Requirement: Cápsula del asistente en compacto
+
+En compacto MUST mostrarse dos FAB redondeados y superpuestos, Asistente e Iniciar consulta, sin franja en el flujo. MUST conservar controles táctiles de 44 × 44 px y permitir desplazar el último contenido por encima de los FAB. Iniciar consulta MUST abrir /patients sin crear registros. El panel de escritorio MUST conservar su presentación.
+
+#### Scenario: Abrir y cerrar desde móvil
+
+- **GIVEN** una pantalla compacta con hilos disponibles
+- **WHEN** se activa la cápsula Asistente
+- **THEN** se abre la hoja con el hilo seleccionado y al cerrarla el foco vuelve a la cápsula
+- **AND** la cápsula tiene icono de conversación, fondo primary, contenido primary-foreground y separación de 16 px respecto al lateral y la navegación inferior
+- **AND** el contenido pasa bajo los FAB y su último control puede desplazarse por encima de ellos
+- **AND** Iniciar consulta abre /patients y sustituye al botón móvil duplicado de Inicio
+
+#### Scenario: Escucha en curso
+
+- **GIVEN** una captura de voz en curso, incluso con otro hilo seleccionado
+- **WHEN** la hoja está cerrada
+- **THEN** el acceso sigue llamándose Asistente y la grabación, el tiempo y Detener permanecen visibles
+- **AND** los avisos de respuesta nueva y pendientes se conservan cuando correspondan
+
+
 ## MODIFIED Requirements
 
 ### Requirement: FR-082
