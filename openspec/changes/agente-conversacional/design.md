@@ -14,22 +14,34 @@
   respaldo). Barge-in: voz del usuario corta el audio y cancela el turno (`turn-gate`).
 - **Streaming**: SSE desde la función; el chat pinta tokens y estados de herramienta.
 
-## Funcionalidades faltantes propuestas
+## Funcionalidades del primer corte
 
-1. Memoria de la consulta en curso (resumen corto persistente por consulta).
-2. Resolver pacientes por nombre/tutor con desambiguación hablada («¿Bruma de Pérez o de Soto?»).
-3. Borrador de nota SOAP y resumen de consulta a partir de la anamnesis dictada.
-4. Seguimientos y recordatorios propuestos desde la consulta (agenda).
-5. Deshacer: cada propuesta aplicada se puede revertir.
-6. Transparencia: «¿por qué?» muestra herramientas usadas y fuentes citadas.
-7. Trazas del agente (tabla con RLS) y conjunto de evaluación con casos anotados.
-8. Límites: coste por usuario/día, tiempo máximo por turno, modo degradado sin LLM
-   (`consultas-basicas`).
-9. Salvaguardas: prompt injection en documentos recuperados, redacción de RUT/PII en trazas, bloqueo de
-   dosis sin cita.
+1. **Pacientes por nombre**: herramienta `buscar_paciente(texto)`; con más de un resultado el agente pregunta
+   (hablado y con botones). El elegido pasa a ser el paciente de contexto.
+2. **Nota SOAP y resumen**: herramienta que lee la anamnesis y devuelve un borrador como propuesta editable.
+3. **Seguimientos y recordatorios**: propuestas de agenda al cerrar la consulta; se crean solo al confirmar.
+4. **Memoria de la consulta**: resumen corto por consulta, persistido y reinyectado en cada turno.
+5. **Deshacer**: cada propuesta aplicada guarda su inversa; «Deshacer» la ejecuta (misma validación).
+6. **«¿Por qué?»**: cada respuesta lleva herramientas usadas y fuentes citadas, visibles a demanda.
+7. **Anti prompt-injection**: el texto recuperado va delimitado como dato; las herramientas de escritura no
+   se pueden activar desde contenido recuperado, solo desde mensajes del usuario; tests con documentos hostiles.
+8. **Resumen del día**: al abrir la app (opt-in) el agente lee por voz agenda y pendientes.
+9. **Adjuntos**: fotos y PDF a bucket privado (RLS) y entrada multimodal; la lectura se muestra como texto
+   revisable antes de usarse en el registro.
+10. **Vocabulario veterinario**: lista de términos (etología, fármacos) como prompt del ASR y glosario del agente.
+
+## Observabilidad (Arize Phoenix)
+
+- `@arizeai/openinference-instrumentation-langchain` + exportador OTLP a Phoenix autoalojado (Docker).
+- Un trace por turno: herramientas, latencia, tokens, errores. El `trace_id` viaja en el mensaje para el «¿por qué?».
+- Evaluación: casos de `tests/fixtures/asistencia/casos-anotados.json` y nuevos como dataset de Phoenix;
+  experimentos al cambiar modelo o prompt.
+- Riesgo: las trazas contienen datos clínicos y RUT. Se mantiene Phoenix en red privada y se deja diferida la
+  redacción de PII; revisar antes de usar datos reales.
 
 ## Riesgos
 
 - LangChain en Deno: validar compatibilidad antes de comprometerse (tarea 1.1); plan B, bucle de
   herramientas propio con el SDK del proveedor.
+- OpenInference para LangChain JS en Deno: validar en 1.1 junto con LangGraph.
 - Latencia voz a voz: presupuesto objetivo < 2 s al primer audio; medir en 4.x.

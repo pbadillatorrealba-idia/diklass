@@ -18,11 +18,14 @@ veterinario maneje toda la app hablando, sin dejar de decidir él.
   diff) y solo se aplica al aceptarla. Sin decisión clínica definitiva automática; dosis solo como
   información a validar.
 - **Voz a voz**: ASR existente → agente → TTS por puerto, con interrupción (barge-in) y manos libres.
-- **Funcionalidades faltantes propuestas** (ver design.md): memoria de la consulta, contexto de paciente
-  por nombre, resumen de consulta y borrador de nota SOAP, recordatorios y seguimientos, trazas y
-  evaluación del agente, límites de coste y modo degradado sin LLM.
+- **Primer corte de features** (elegidas): pacientes por nombre con desambiguación, nota SOAP y resumen,
+  seguimientos y recordatorios propuestos, memoria de la consulta, deshacer propuestas, «¿por qué?»,
+  defensa anti prompt-injection, resumen del día por voz, adjuntar fotos/exámenes (multimodal) y
+  vocabulario veterinario en ASR y agente.
+- **Observabilidad con Arize Phoenix**: trazas OpenTelemetry/OpenInference de cada turno y evaluación con
+  casos anotados (datasets y experimentos de Phoenix).
 - **Integración de ramas**: 006 y 007 mergeadas en esta rama; `mejoras-ui-ux` ya incluida.
-- **Fuera de este cambio**: varias conversaciones, agente autónomo sin confirmación, multi-clínica.
+- **Fuera de este cambio** (diferido): límites de coste, modo degradado sin LLM, redacción de PII en trazas, sugerencias durante el dictado; varias conversaciones, agente autónomo sin confirmación, multi-clínica.
 
 ## Capabilities
 
