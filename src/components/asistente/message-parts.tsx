@@ -8,6 +8,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { type AudioPlayback, createAudioPlayback } from "@/features/asistente/audio-playback";
 import type { Message, Part } from "@/features/asistente/chat-model";
+import type { ProposalState } from "@/features/asistente/chat-store";
 import { formatElapsed } from "@/features/voz/use-elapsed";
 
 /**
@@ -18,6 +19,7 @@ export type PartContext = {
   role: Message["role"];
   /** Sin manejador, una propuesta guardada se ve como texto: persistir no es confirmar. */
   onConfirmProposal?: (proposalId: string) => void;
+  proposalState?: (proposalId: string) => ProposalState | undefined;
   /** URL firmada de corta vida para reproducir un audio vigente; `null` si ya no está disponible. */
   onPlayAudio?: (path: string) => Promise<string | null>;
 };
@@ -117,7 +119,14 @@ const RENDERERS: Renderers = {
   ),
   proposal: ({ part, ctx }) =>
     ctx.onConfirmProposal ? (
-      <AgentProposal onConfirm={ctx.onConfirmProposal} proposal={part.proposal} />
+      <AgentProposal
+        alreadyRecorded={ctx.proposalState?.(part.proposal.id)?.alreadyRecorded}
+        busy={ctx.proposalState?.(part.proposal.id)?.busy}
+        confirmedBy={ctx.proposalState?.(part.proposal.id)?.confirmedBy}
+        error={ctx.proposalState?.(part.proposal.id)?.error}
+        onConfirm={ctx.onConfirmProposal}
+        proposal={part.proposal}
+      />
     ) : (
       <Text>{part.proposal.summary}</Text>
     ),

@@ -1,6 +1,7 @@
 import type { CalendarEvent } from "@/features/agenda/calendar-event";
 import { type Message, messageText, type Part } from "@/features/asistente/chat-model";
 import { answerAgenda, answerFecha, detectIntent } from "@/features/asistente/consultas-basicas";
+import { isValidAction, type ProposalAction } from "@/features/asistente/proposal-action";
 import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
 import { isAllowedRoute } from "../../../supabase/functions/_shared/routes";
 
@@ -90,7 +91,11 @@ type AgentDeps = {
     text: string;
     patientId: string | null;
     history: { role: "user" | "assistant"; text: string }[];
-  }) => Promise<{ text: string; ui: { type: "navigate"; path: string }[] }>;
+  }) => Promise<{
+    text: string;
+    ui: { type: "navigate"; path: string }[];
+    proposals: { id: string; summary: string; origin: string; action: ProposalAction }[];
+  }>;
   navigate: (path: string) => void;
 };
 
@@ -110,14 +115,18 @@ export class AgentResponder implements Responder {
       .map((m) => ({ role: m.role, text: messageText(m) }))
       .filter((m) => m.text !== "")
       .slice(-HISTORY_TURNS);
-    const { text, ui } = await this.deps.invoke({
+    const { text, ui, proposals } = await this.deps.invoke({
       text: input.text,
       patientId: input.patientId,
       history: turns,
     });
     if (signal.aborted) return;
     for (const action of ui) if (isAllowedRoute(action.path)) this.deps.navigate(action.path);
-    const listo: ResponseEvent = { type: "ready", parts: [{ type: "text", text }] };
+    // Una propuesta que no cumple el catálogo vigente no llega a la pantalla.
+    const tarjetas: Part[] = proposals
+      .filter((p) => isValidAction(p.action))
+      .map((proposal) => ({ type: "proposal", proposal }));
+    const listo: ResponseEvent = { type: "ready", parts: [{ type: "text", text }, ...tarjetas] };
     yield listo;
   }
 }

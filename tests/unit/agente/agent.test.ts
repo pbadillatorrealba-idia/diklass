@@ -2,7 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { AIMessage, fakeModel } from "langchain";
 import { datos, isAllowedRoute, runAgent } from "../../../supabase/functions/agent/agent.ts";
 
-const db = (rows: unknown[]) => ({ rpc: async () => ({ data: rows, error: null }) });
+const db = (rows: unknown[], open: string[] = []) => ({
+  rpc: async () => ({ data: rows, error: null }),
+  openConsultations: async () => open,
+});
 
 describe("agente", () => {
   it("usa buscar_paciente y responde con el resultado", async () => {
@@ -75,5 +78,34 @@ describe("agente: robustez", () => {
       patientId: null,
     });
     expect(r.ui).toEqual([]);
+  });
+});
+
+describe("agente: propuestas", () => {
+  it("proponer_antecedente solo devuelve una propuesta", async () => {
+    const cid = "123e4567-e89b-42d3-a456-426614174000";
+    const model = fakeModel()
+      .respondWithTools([
+        {
+          name: "proponer_antecedente",
+          args: { consultaId: cid, campo: "motivo_consulta", texto: "ladra de noche" },
+          id: "1",
+        },
+      ])
+      .respond(new AIMessage("Preparé la propuesta."));
+    const r = await runAgent({
+      model,
+      db: db([], [cid]),
+      history: [],
+      text: "anota que ladra de noche",
+      patientId: null,
+    });
+    expect(r.proposals).toHaveLength(1);
+    expect(r.proposals[0]?.action).toEqual({
+      kind: "anamnesis",
+      consultationId: cid,
+      field: "motivo_consulta",
+      text: "ladra de noche",
+    });
   });
 });

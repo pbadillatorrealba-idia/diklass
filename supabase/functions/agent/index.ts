@@ -25,7 +25,24 @@ Deno.serve((request) =>
       const { data } = await asUser(authorization).rpc("is_active_access");
       return data === true;
     },
-    run: ({ authorization, ...input }) =>
-      runAgent({ model: MODEL, db: asUser(authorization), ...input }),
+    run: ({ authorization, ...input }) => {
+      const client = asUser(authorization);
+      return runAgent({
+        model: MODEL,
+        db: {
+          rpc: (fn, args) => client.rpc(fn, args),
+          openConsultations: async (patientId) => {
+            const { data } = await client
+              .from("clinical_records")
+              .select("id")
+              .eq("record_type", "consultation")
+              .eq("content->>patientId", patientId)
+              .eq("content->>status", "open");
+            return (data ?? []).map((r) => r.id);
+          },
+        },
+        ...input,
+      });
+    },
   }),
 );

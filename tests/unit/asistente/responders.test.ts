@@ -189,6 +189,7 @@ describe("AgentResponder", () => {
     const r = new AgentResponder({
       invoke: async () => ({
         text: "ok",
+        proposals: [],
         ui: [
           { type: "navigate", path: "/patients" },
           { type: "navigate", path: "/evil" },

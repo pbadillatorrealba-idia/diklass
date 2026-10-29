@@ -24,6 +24,7 @@ import {
   type MessagePage,
 } from "@/features/asistente/message-service";
 import { pacientesDeHoy } from "@/features/asistente/pacientes-de-hoy";
+import { executeProposal } from "@/features/asistente/proposal-action";
 import {
   AgentResponder,
   BasicResponder,
@@ -349,8 +350,50 @@ export function useChatController() {
   );
   const isResponding = pending.some((m) => m.status === "thinking");
 
+  const proposals = useChatStore((s) => s.proposals);
+  /**
+   * Confirmar una propuesta del agente: la única escritura del agente, con la misma validación que la
+   * UI manual. Un fallo no escribe nada y deja «Confirmar» disponible con el motivo.
+   */
+  const confirmProposal = useCallback(
+    async (proposalId: string) => {
+      const proposal = messages
+        .flatMap((m) => m.parts)
+        .flatMap((p) => (p.type === "proposal" ? [p.proposal] : []))
+        .find((p) => p.id === proposalId);
+      const { setProposal } = useChatStore.getState();
+      if (!proposal?.action || !clinicId || useChatStore.getState().proposals[proposalId]?.busy) {
+        return;
+      }
+      const base = { busy: false, confirmedBy: null, alreadyRecorded: false, error: null };
+      setProposal(proposalId, { ...base, busy: true });
+      try {
+        const { attribution } = await executeProposal(supabase, clinicId, proposal.action);
+        setProposal(proposalId, {
+          ...base,
+          confirmedBy: attribution,
+          alreadyRecorded: !attribution,
+        });
+      } catch (error) {
+        if (isAuthenticationRequired(error)) {
+          setAccessState("expired");
+          openExpiredDialog();
+        }
+        void captureClientError(errorReporter, {
+          error,
+          operation: "asistente_confirmar_propuesta",
+          requestId: makeRequestId(),
+        });
+        setProposal(proposalId, { ...base, error: "No se pudo guardar. No se registró nada." });
+      }
+    },
+    [clinicId, messages, openExpiredDialog, setAccessState],
+  );
+
   return {
     messages,
+    confirmProposal,
+    proposalState: (id: string) => proposals[id],
     isLoading: conversation.isLoading,
     hasOlder: conversation.hasOlder,
     isLoadingOlder: conversation.isLoadingOlder,

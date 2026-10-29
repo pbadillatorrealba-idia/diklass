@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import * as z from "zod";
+import { proposalActionSchema } from "@/features/asistente/proposal-action";
 
 /** Tiempo máximo de un turno del agente (varias llamadas al modelo y a herramientas). */
 const AGENT_TIMEOUT_MS = 60_000;
@@ -7,6 +8,16 @@ const AGENT_TIMEOUT_MS = 60_000;
 const respuestaSchema = z.object({
   text: z.string(),
   ui: z.array(z.object({ type: z.literal("navigate"), path: z.string() })).default([]),
+  proposals: z
+    .array(
+      z.object({
+        id: z.string(),
+        summary: z.string(),
+        origin: z.string(),
+        action: proposalActionSchema,
+      }),
+    )
+    .default([]),
 });
 
 type AgentClient = Pick<SupabaseClient, "functions">;

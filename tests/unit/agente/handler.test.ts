@@ -9,7 +9,7 @@ const deps = (over: Record<string, unknown> = {}) => {
       log: (l: string) => logs.push(l),
       randomId: () => "rid",
       canUse: async () => true,
-      run: async () => ({ text: "hola", ui: [] }),
+      run: async () => ({ text: "hola", ui: [], proposals: [] }),
       ...over,
     },
   };
@@ -30,7 +30,7 @@ describe("handler del agente", () => {
     let called = false;
     const run = async () => {
       called = true;
-      return { text: "", ui: [] };
+      return { text: "", ui: [], proposals: [] };
     };
     const a = deps({ canUse: async () => false, run });
     expect((await handleAgent(post({ text: "a" }), a.d)).status).toBe(403);

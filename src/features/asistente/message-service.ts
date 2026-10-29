@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Message } from "@/features/asistente/chat-model";
+import { proposalActionSchema } from "@/features/asistente/proposal-action";
 import { knowledgeAnswerSchema } from "@/features/conocimiento/schema";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { logEvent } from "@/lib/observability/logger";
@@ -35,7 +36,12 @@ const partSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("proposal"),
-    proposal: z.object({ id: z.string(), summary: z.string(), origin: z.string() }),
+    proposal: z.object({
+      id: z.string(),
+      summary: z.string(),
+      origin: z.string(),
+      action: proposalActionSchema.optional(),
+    }),
   }),
 ]);
 

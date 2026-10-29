@@ -7,11 +7,12 @@
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
 ## 2. Herramientas (pruebas primero)
-- [ ] 2.1 Lectura: `buscar_paciente` con desambiguación, fichas, agenda, consulta.
+- [x] 2.1 Lectura: `buscar_paciente` con desambiguación, fichas, agenda, consulta.
 - [ ] 2.2 Conocimiento con citas (`conocimiento`).
 - [ ] 2.3 Asistencia proactiva (006) y tratamiento/farmacología (007).
-- [ ] 2.4 Escritura como `propuesta` + tarjeta de confirmación + deshacer.
-- [ ] 2.5 `navegar(ruta)` con lista blanca.
+- [x] 2.4 Escritura como `propuesta` + tarjeta de confirmación (antecedente de anamnesis, procedencia «inferida»).
+- [ ] 2.4b Deshacer: pospuesto; el registro clínico es auditado y la anamnesis no admite correctivo (migración 009 solo exenta la epicrisis). Requiere diseño propio.
+- [x] 2.5 `navegar(ruta)` con lista blanca.
 - [ ] 2.6 Nota SOAP/resumen y seguimientos/recordatorios como propuestas.
 - [ ] 2.7 Memoria de la consulta (tabla con RLS + reinyección).
 
