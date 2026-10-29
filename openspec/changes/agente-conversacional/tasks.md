@@ -17,7 +17,7 @@
 - [ ] 2.7 Memoria de la consulta (tabla con RLS + reinyección).
 
 ## 3. Voz
-- [x] 3.1 TTS: Edge Function `speak` (OpenAI, misma cuota y consentimiento que la transcripción) y `speaker.ts` en el cliente. Sin respaldo `expo-speech` (pospuesto).
+- [x] 3.1 TTS: Edge Function `speak` (OpenAI, misma cuota y consentimiento que la transcripción) y `speaker.ts` en el cliente. Sin respaldo `expo-speech` (pospuesto). NO verificado en dispositivo: el audio va como data URL y iOS puede no reproducirlo (alternativa: archivo en caché).
 - [ ] 3.2 Manos libres (escucha continua) y barge-in por voz: hoy la respuesta se locuta si la pregunta fue por voz y se corta al grabar, enviar o «Detener». La escucha continua con detección de voz queda pendiente.
 - [ ] 3.3 Vocabulario veterinario en ASR y glosario del agente.
 - [ ] 3.4 Resumen del día por voz (opt-in).

@@ -33,8 +33,12 @@ export function createAudioPlayback(source: AudioSource): AudioPlayback {
   } | null = null;
   let listener: { remove(): void } | null = null;
   let pendiente: "play" | null = null;
-  const cargar = import("expo-audio").then(({ createAudioPlayer }) => {
-    if (!uri) return;
+  let liberado = false;
+  const cargar = import("expo-audio").then(({ createAudioPlayer, setAudioModeAsync }) => {
+    // `dispose` llegó antes que la carga: no se crea (ni suena) un reproductor que nadie puede detener.
+    if (!uri || liberado) return;
+    // iOS en silencio mutaría la voz del asistente.
+    void setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
     player = createAudioPlayer({ uri }) as unknown as typeof player;
     listener =
       player?.addListener("playbackStatusUpdate", (status) => {
@@ -56,6 +60,8 @@ export function createAudioPlayback(source: AudioSource): AudioPlayback {
       ended = callback;
     },
     dispose() {
+      liberado = true;
+      pendiente = null;
       listener?.remove();
       player?.remove();
       player = null;

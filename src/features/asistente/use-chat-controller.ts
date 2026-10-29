@@ -1,6 +1,6 @@
 import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Share } from "react-native";
 import { useAgendaEvents } from "@/features/agenda/use-agenda-events";
 import { invokeAgent } from "@/features/asistente/agent-service";
@@ -237,6 +237,7 @@ export function useChatController() {
 
   /** «Borrar conversación»: texto y audio del autor; `knowledge_queries` permanece (FR-020). */
   const clear = useCallback(async () => {
+    stopSpeaking();
     // Un turno en vuelo no puede «resucitar» la conversación escribiendo tras el borrado.
     gate.invalidate();
     // El audio es dato clínico: se borra de Storage antes que las filas (de mejor esfuerzo; la purga
@@ -285,8 +286,11 @@ export function useChatController() {
         {
           ...guarded(turn),
           onAnswer: (parts) => {
+            // Una conversación borrada (o de otra sesión) no se locuta.
+            if (!turn.isCurrent()) return;
             const texto = spokenText(parts);
-            if (texto) void speak(supabase, texto).catch((error) => deps.onError(error));
+            // Voz de mejor esfuerzo: sin consentimiento o cuota no hay voz y no es un error a reportar.
+            if (texto) void speak(supabase, texto).catch(() => {});
           },
         },
         {
@@ -361,6 +365,9 @@ export function useChatController() {
     () => mergeMessages(conversation.messages, pending),
     [conversation.messages, pending],
   );
+  // Cambiar de usuario o desmontar silencia la voz: no se locuta a otra sesión.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `veterinarianId` es el disparador del cleanup, no un valor que se lea.
+  useEffect(() => stopSpeaking, [veterinarianId]);
   const isResponding = pending.some((m) => m.status === "thinking");
 
   const proposals = useChatStore((s) => s.proposals);

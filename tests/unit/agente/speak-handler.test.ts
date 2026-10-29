@@ -70,3 +70,25 @@ describe("speak", () => {
     expect(logs.join()).not.toContain("SECRETO");
   });
 });
+
+describe("speak: cuota y tamaño", () => {
+  test("no consume cuota con entrada inválida ni sin acceso", async () => {
+    let usos = 0;
+    const consumeQuota = async () => {
+      usos++;
+      return "ok" as const;
+    };
+    await handleSpeak(post({ text: "" }), harness({ consumeQuota }).deps);
+    await handleSpeak(
+      post({ text: "hola" }),
+      harness({ consumeQuota, canUse: async () => false }).deps,
+    );
+    expect(usos).toBe(0);
+  });
+  test("audio de más de 0x8000 bytes se codifica completo", async () => {
+    const grande = new Uint8Array(100_000).fill(7);
+    const { deps } = harness({ synthesize: async () => grande });
+    const { audio } = await (await handleSpeak(post({ text: "hola" }), deps)).json();
+    expect(Buffer.from(audio, "base64").length).toBe(100_000);
+  });
+});
