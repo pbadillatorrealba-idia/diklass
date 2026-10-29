@@ -15,6 +15,7 @@ import { recordAnamnesisEntry } from "@/features/registro/anamnesis-service";
 import { openConsultation } from "@/features/registro/consultation-service";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { AnamnesisField, PatientContent } from "@/features/registro/schema";
+import { randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
 /**
@@ -38,13 +39,13 @@ const fixture = JSON.parse(
 function fichaBase(): Omit<PatientContent, "tutorId"> {
   return {
     name: "Caso Anotado",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: null,
     ageMonths: null,
     weightKg: null,
     sex: "macho",
-    reproductiveStatus: "castrado",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -108,7 +109,12 @@ describe.skipIf(!isLiveSupabase)(
         const ficha = await createPatientFicha(ana.client, {
           clinicId: ana.clinicId,
           tutor: {
-            newTutor: { name: `Tutor ${caso.clave}`, phone: "+56 9 7777 8888", email: null },
+            newTutor: {
+              name: `Tutor ${caso.clave}`,
+              rut: randomRut(),
+              phone: "+56 9 7777 8888",
+              email: null,
+            },
           },
           ficha: fichaBase(),
         });

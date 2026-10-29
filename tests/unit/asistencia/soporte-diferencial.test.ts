@@ -28,13 +28,13 @@ function entrada(
 
 const ficha: PatientContent = {
   name: "Tobi",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   birthDate: null,
   ageMonths: null,
   weightKg: null,
   sex: "macho",
-  reproductiveStatus: "castrado",
+  reproductiveStatus: "esterilizado",
   antecedentes: {
     medicalHistory: [],
     preexistingDiseases: [],

@@ -49,8 +49,8 @@ export function PanelSoporteDiferencial({
 
   return (
     <VStack className="gap-3" testID="panel-soporte-diferencial">
-      <Heading size="md">Apoyo al diagnóstico diferencial</Heading>
-      <Text className="text-foreground/70 text-sm">
+      <Heading level={2}>Apoyo al diagnóstico diferencial</Heading>
+      <Text className="text-muted-foreground text-sm">
         Candidaturas con antecedentes a favor, en contra, información faltante y evidencia citada.
         Toda salida es apoyo a la decisión y requiere tu validación: el sistema no emite
         diagnósticos.
@@ -67,14 +67,14 @@ export function PanelSoporteDiferencial({
       {suficiencia?.estado === "insuficiente" ? (
         <Box
           accessibilityLabel="Información insuficiente para proponer hipótesis fundadas"
-          className="rounded-lg border border-destructive bg-white p-3"
+          className="rounded-sm border border-destructive bg-card p-3"
           testID="aviso-insuficiencia"
         >
           <VStack className="gap-1">
-            <Text bold className="text-destructive">
+            <Text variant="strong" className="text-destructive">
               La información disponible es insuficiente para proponer hipótesis fundadas.
             </Text>
-            <Text className="text-foreground/70 text-sm">
+            <Text className="text-muted-foreground text-sm">
               Registra al menos los antecedentes que discriminarían el cuadro. Faltan, entre otros:{" "}
               {suficiencia.faltantes.join(", ")}.
             </Text>
@@ -117,12 +117,14 @@ export function PanelSoporteDiferencial({
       </Button>
 
       <VStack className="gap-2" testID="hipotesis-consideradas">
-        <Heading size="sm">Hipótesis consideradas (para la epicrisis)</Heading>
+        <Heading level={3}>Hipótesis consideradas (para la epicrisis)</Heading>
         {consideradas.length === 0 ? (
-          <Text className="text-foreground/70 text-sm">Todavía no hay hipótesis consideradas.</Text>
+          <Text className="text-muted-foreground text-sm">
+            Todavía no hay hipótesis consideradas.
+          </Text>
         ) : (
           consideradas.map((considerada) => (
-            <Text className="text-foreground/70 text-sm" key={considerada.texto}>
+            <Text className="text-muted-foreground text-sm" key={considerada.texto}>
               {considerada.texto} — {considerada.estado}
             </Text>
           ))

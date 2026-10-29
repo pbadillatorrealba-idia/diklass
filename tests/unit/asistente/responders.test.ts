@@ -175,3 +175,45 @@ describe("routeResponder", () => {
     expect(eventos.map((evento) => evento.type)).toEqual(["delta", "delta", "ready"]);
   });
 });
+
+describe("AgentResponder", () => {
+  const { AgentResponder, routeAgent } = require("@/features/asistente/responders");
+  const stub = (parts: string) => ({
+    respond: async function* () {
+      yield { type: "ready", parts: [{ type: "text", text: parts }] };
+    },
+  });
+
+  test("navega solo a rutas permitidas y responde con el texto", async () => {
+    const nav: string[] = [];
+    const r = new AgentResponder({
+      invoke: async () => ({
+        text: "ok",
+        ui: [
+          { type: "navigate", path: "/patients" },
+          { type: "navigate", path: "/evil" },
+        ],
+      }),
+      navigate: (p: string) => nav.push(p),
+    });
+    const out = [];
+    for await (const e of r.respond(
+      [],
+      { text: "abre", patientId: null },
+      new AbortController().signal,
+    ))
+      out.push(e);
+    expect(nav).toEqual(["/patients"]);
+    expect(out).toEqual([{ type: "ready", parts: [{ type: "text", text: "ok" }] }]);
+  });
+
+  test("enruta lo básico al local y el resto al agente", async () => {
+    const r = routeAgent({ basico: stub("basico"), agente: stub("agente") });
+    const get = async (text: string) => {
+      for await (const e of r.respond([], { text, patientId: null }, new AbortController().signal))
+        return e.parts[0].text;
+    };
+    expect(await get("qué día es hoy")).toBe("basico");
+    expect(await get("busca a Bruma")).toBe("agente");
+  });
+});

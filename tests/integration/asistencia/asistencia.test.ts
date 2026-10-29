@@ -9,6 +9,7 @@ import { recordAnamnesisEntry } from "@/features/registro/anamnesis-service";
 import { openConsultation } from "@/features/registro/consultation-service";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
+import { randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
 /**
@@ -44,13 +45,13 @@ function fuenteNueva(): FuenteContent {
 function fichaBase(): Omit<PatientContent, "tutorId"> {
   return {
     name: "Tobi Asistencia",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 36,
     weightKg: 12.4,
     sex: "macho",
-    reproductiveStatus: "castrado",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -70,7 +71,14 @@ describe.skipIf(!isLiveSupabase)("información faltante (US7)", () => {
     await incorporateSource(ana.client, { clinicId: ana.clinicId, fuente: fuenteNueva() });
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      tutor: { newTutor: { name: "Sra. Asistencia", phone: "+56 9 3333 4444", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Asistencia",
+          rut: randomRut(),
+          phone: "+56 9 3333 4444",
+          email: null,
+        },
+      },
       ficha: fichaBase(),
     });
     const consulta = await openConsultation(ana.client, {

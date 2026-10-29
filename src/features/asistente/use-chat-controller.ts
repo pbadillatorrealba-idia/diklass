@@ -1,7 +1,9 @@
 import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
 import { Share } from "react-native";
 import { useAgendaEvents } from "@/features/agenda/use-agenda-events";
+import { invokeAgent } from "@/features/asistente/agent-service";
 import {
   type Message,
   mergeMessages,
@@ -23,8 +25,10 @@ import {
 } from "@/features/asistente/message-service";
 import { pacientesDeHoy } from "@/features/asistente/pacientes-de-hoy";
 import {
+  AgentResponder,
   BasicResponder,
   KnowledgeResponder,
+  routeAgent,
   routeResponder,
 } from "@/features/asistente/responders";
 import { createTurnGate } from "@/features/asistente/turn-gate";
@@ -74,7 +78,11 @@ async function copyText(text: string): Promise<boolean> {
  * shell, que siempre está montado, para que una respuesta que llega con el panel cerrado se
  * registre y marque el no leído.
  */
+/** Bandera de entrega del agente: `EXPO_PUBLIC_AGENT=1` en el entorno de la app. */
+const AGENT_ENABLED = process.env.EXPO_PUBLIC_AGENT === "1";
+
 export function useChatController() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const clinicId = useSessionStore((state) => state.clinicId);
   const veterinarianId = useSessionStore((state) => state.veterinarianId);
@@ -133,17 +141,30 @@ export function useChatController() {
 
   const deps = useMemo<ChatDeps>(
     () => ({
-      responder: routeResponder({
-        basico: new BasicResponder({
+      responder: (() => {
+        const basico = new BasicResponder({
           now: () => new Date(),
           events: () => eventsRef.current,
           pacientesDeHoy,
-        }),
-        conocimiento: new KnowledgeResponder({
-          consult: (pregunta, patientId) =>
-            consultKnowledge(supabase, { clinicId: clinicId ?? "", pregunta, patientId }),
-        }),
-      }),
+        });
+        // Agente LangChain tras bandera: sin ella, el flujo de conocimiento de siempre.
+        if (AGENT_ENABLED) {
+          return routeAgent({
+            basico,
+            agente: new AgentResponder({
+              invoke: (body) => invokeAgent(supabase, body),
+              navigate: (path) => router.push(path as never),
+            }),
+          });
+        }
+        return routeResponder({
+          basico,
+          conocimiento: new KnowledgeResponder({
+            consult: (pregunta, patientId) =>
+              consultKnowledge(supabase, { clinicId: clinicId ?? "", pregunta, patientId }),
+          }),
+        });
+      })(),
       persist,
       store: {
         addPending: (m) => useChatStore.getState().addPending(m),
@@ -168,7 +189,7 @@ export function useChatController() {
           requestId: makeRequestId(),
         }),
     }),
-    [answers, clinicId, openExpiredDialog, persist, setAccessState],
+    [answers, clinicId, openExpiredDialog, persist, router, setAccessState],
   );
 
   /** Una escritura de un turno ya invalidado (conversación borrada) no se hace. */

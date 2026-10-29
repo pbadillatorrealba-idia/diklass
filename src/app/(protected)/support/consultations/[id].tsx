@@ -133,11 +133,11 @@ export default function SupportConsultationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#f8fafc", flex: 1 }}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-        <VStack className="w-full max-w-[720px] gap-6">
-          <Heading size="lg">Asistencia clínica proactiva</Heading>
-          <Text className="text-foreground/70 text-sm">
+        <VStack className="w-full max-w-content gap-6">
+          <Heading level={2}>Asistencia clínica proactiva</Heading>
+          <Text className="text-muted-foreground text-sm">
             Apoyo a la decisión para esta consulta: identificación de información faltante con
             preguntas sugeridas y apoyo al diagnóstico diferencial. Toda salida requiere tu
             validación profesional y distingue dato, inferencia y evidencia documental.

@@ -27,13 +27,13 @@ function entrada(field: AnamnesisContent["field"], text: string): EntradaAnamnes
 function fichaBase(): PatientContent {
   return {
     name: "Tobi",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 36,
     weightKg: 12.4,
     sex: "macho",
-    reproductiveStatus: "castrado",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Sin antecedentes médicos relevantes", negative: false }],
       preexistingDiseases: [],

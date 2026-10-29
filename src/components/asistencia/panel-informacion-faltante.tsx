@@ -18,13 +18,13 @@ export function PanelInformacionFaltante({
 }) {
   return (
     <VStack className="gap-3" testID="panel-informacion-faltante">
-      <Heading size="md">Información faltante</Heading>
-      <Text className="text-foreground/70 text-sm">
+      <Heading level={2}>Información faltante</Heading>
+      <Text className="text-muted-foreground text-sm">
         Antecedentes aún no recopilados con preguntas sugeridas. Cada sugerencia indica si se apoya
         en un protocolo cargado o en criterio general, y toda decisión queda registrada.
       </Text>
       {sugerencias.length === 0 ? (
-        <Text className="text-foreground/70 text-sm" testID="faltantes-vacio">
+        <Text className="text-muted-foreground text-sm" testID="faltantes-vacio">
           Sin sugerencias pendientes: lo detectado ya está cubierto o decidido en esta consulta.
         </Text>
       ) : (
