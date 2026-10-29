@@ -30,7 +30,7 @@ Copia `.env.example` a `.env`. `.env` está en `.gitignore` y no se commitea.
 | `CORPUS_VET_EMAIL` / `CORPUS_VET_PASSWORD` | `scripts/cargar-corpus-conocimiento.ts`: veterinario sintético que incorpora el corpus | **No**: nunca como `EXPO_PUBLIC_*` |
 | `EXPO_PUBLIC_VOZ_MODO` | `real` activa micrófono y transcripción reales en el modo de escucha; vacío usa el guion simulado | Sí |
 | `EXPO_PUBLIC_VOZ_VENTANA_MS` | Duración de cada ventana de captura (por defecto 30 000 ms); acortarla baja la latencia | Sí |
-| `OPENAI_API_KEY` | Solo en `supabase/functions/.env` (secreto de la función `transcribe-audio`) | **No**: nunca en `.env` del cliente ni como `EXPO_PUBLIC_*` |
+| `OPENAI_API_KEY` | Solo en `supabase/functions/.env` (secreto de las funciones `transcribe-audio`, `transcribe-chat-audio`, `speak` y `agent`) | **No**: nunca en `.env` del cliente ni como `EXPO_PUBLIC_*` |
 | `E2E_CLEAR_CACHE` | `1` limpia la caché de Metro en el export del e2e (al cambiar de modo de voz) | — |
 | `PLAYWRIGHT_BASE_URL` | Playwright (opcional) | — |
 
@@ -52,6 +52,8 @@ La URL web habitual es `http://localhost:9701`; revisa la salida si hay otras in
 Los comandos que pasan `--port` expresamente (como los e2e) mantienen ese puerto.
 
 ## Supabase local
+
+> Agente y voz: variables opcionales `AGENT_MODEL`, `TTS_MODEL`, `TTS_VOICE` y `PHOENIX_COLLECTOR_ENDPOINT`/`PHOENIX_API_KEY` en `supabase/functions/.env` (ver `.env.example`). Phoenix local: `docker compose -f docker-compose.phoenix.yml up -d`. Las trazas llevan datos clínicos: solo en red privada.
 
 ```bash
 supabase start           # levanta la pila local

@@ -74,7 +74,8 @@
         "open": []
       },
       "expect": {
-        "proposals": 0
+        "proposals": 0,
+        "tools": ["consulta_abierta"]
       }
     },
     {

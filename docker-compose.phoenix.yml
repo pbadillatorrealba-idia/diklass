@@ -4,10 +4,10 @@
 # Las trazas contienen entradas y salidas clínicas: no lo expongas fuera de una red privada.
 services:
   phoenix:
-    image: docker.io/arizephoenix/phoenix:latest
+    # Fijada por digest (arize-phoenix v20.27.0, la verificada); súbela a propósito, no con `latest`.
+    image: docker.io/arizephoenix/phoenix@sha256:4d575d1b335bfef4d8af7d321ef44551d410858a32c3f9073b6a6c4444d85b11
     ports:
       - "127.0.0.1:6006:6006"
-      - "127.0.0.1:4317:4317"
     volumes:
       - phoenix-data:/mnt/data
     environment:

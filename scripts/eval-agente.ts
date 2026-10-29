@@ -4,12 +4,12 @@
  * Con `PHOENIX_COLLECTOR_ENDPOINT` cada turno queda como traza en Phoenix. Sale con código 1 si algún caso falla.
  */
 
-import { runCases } from "../supabase/functions/agent/eval";
+import { type EvalCase, runCases } from "../supabase/functions/agent/eval";
 import { makeModel } from "../supabase/functions/agent/model";
 import fixture from "../tests/fixtures/agente/casos.json";
 
 const spec = process.env.AGENT_MODEL ?? "openai:gpt-5.5";
-const results = await runCases(fixture.cases as never, () => makeModel(spec));
+const results = await runCases(fixture.cases as EvalCase[], () => makeModel(spec));
 for (const r of results)
   console.log(`${r.pass ? "PASS" : "FAIL"} ${r.id}${r.pass ? "" : `: ${r.failures.join("; ")}`}`);
 const fallos = results.filter((r) => !r.pass).length;
