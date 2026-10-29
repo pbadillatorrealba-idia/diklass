@@ -1,8 +1,8 @@
 # Tasks
 
 ## 1. Base
-- [~] 1.1 (verificado bajo Deno 2.9 con `deno run`/`deno check`: el agente corre con `fakeModel` y los tres proveedores llegan a su API con clave falsa; falta llamada real, streaming SSE y la traza en Phoenix) Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
-- [ ] 1.2 Phoenix autoalojado en `docker-compose` de desarrollo y variables de entorno.
+- [~] 1.1 (verificado bajo Deno 2.9 incl. trazas en Phoenix: un solo trace por turno con `deno run`/`deno check`: el agente corre con `fakeModel` y los tres proveedores llegan a su API con clave falsa; falta llamada real, streaming SSE y la traza en Phoenix) Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
+- [x] 1.2 Phoenix autoalojado: `docker-compose.phoenix.yml` y variables en `supabase/functions/.env.example`.
 - [ ] 1.3 Puerto `ChatModel` (OpenAI/Claude/Gemini por env) con test de contrato.
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
@@ -29,7 +29,7 @@
 ## 5. Calidad y seguridad
 - [ ] 5.1 «¿Por qué?»: herramientas, fuentes y `trace_id` en el mensaje.
 - [ ] 5.2 Anti prompt-injection: delimitación de datos recuperados y tests con documentos hostiles.
-- [ ] 5.3 Dataset de evaluación en Phoenix con casos anotados y experimento base.
+- [~] 5.3 Casos anotados (`tests/fixtures/agente/casos.json`) y marcador (`agent/eval.ts`, `scripts/eval-agente.ts`) probados con `fakeModel`. Falta correrlos con el modelo real (necesita API key) y subirlos como dataset/experimento de Phoenix.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
 - [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).
 - [ ] 5.7 Declarar el proveedor de modelo y minimizar datos enviados (Principio V) antes de usar datos reales.

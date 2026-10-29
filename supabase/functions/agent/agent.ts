@@ -40,7 +40,15 @@ export type Proposal = {
   action: { kind: "anamnesis"; consultationId: string; field: string; text: string };
 };
 
-export type AgentResult = { text: string; ui: UiAction[]; proposals: Proposal[] };
+export type AgentResult = {
+  text: string;
+  ui: UiAction[];
+  proposals: Proposal[];
+  /** Herramientas que usó el turno (para «¿por qué?» y la evaluación). */
+  tools: string[];
+  /** Traza del turno en Phoenix (solo con observabilidad activa). */
+  traceId?: string;
+};
 
 /**
  * Lo recuperado (pacientes, documentos) va delimitado: es dato, no instrucciones. La defensa real es
@@ -207,5 +215,8 @@ export async function runAgent(opts: {
   );
   const text = textOf((result.messages as BaseMessage[]).at(-1));
   if (!text) throw new Error("EmptyAgentResponse");
-  return { text, ui, proposals };
+  const tools = (result.messages as BaseMessage[])
+    .filter((m) => m.type === "tool")
+    .map((m) => String((m as { name?: string }).name ?? ""));
+  return { text, ui, proposals, tools };
 }

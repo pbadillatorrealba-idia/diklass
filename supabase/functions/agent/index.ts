@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { runAgent } from "./agent.ts";
 import { handleAgent } from "./handler.ts";
 import { makeModel } from "./model.ts";
+import { setupTracing } from "./tracing.ts";
 
 declare const Deno: {
   serve: (handler: (request: Request) => Response | Promise<Response>) => void;
@@ -11,6 +12,12 @@ declare const Deno: {
 /** `proveedor:modelo` (openai, anthropic, google-genai); las claves viven solo en los secretos (Principio V). */
 const MAX_HOY = 50;
 const MODEL = Deno.env.get("AGENT_MODEL") ?? "openai:gpt-5.5";
+
+/** Phoenix es opt-in: sin `PHOENIX_COLLECTOR_ENDPOINT` no se instrumenta nada. */
+const tracing = setupTracing({
+  endpoint: Deno.env.get("PHOENIX_COLLECTOR_ENDPOINT"),
+  apiKey: Deno.env.get("PHOENIX_API_KEY"),
+});
 
 // El cliente actúa con el JWT del solicitante: RLS limita cada herramienta a su clínica.
 const asUser = (authorization: string) =>
@@ -29,61 +36,70 @@ Deno.serve((request) =>
     },
     run: async ({ authorization, ...input }) => {
       const client = asUser(authorization);
-      return runAgent({
-        model: await makeModel(MODEL),
-        db: {
-          consultationsSince: async (sinceIso) => {
-            const { data, error } = await client
-              .from("clinical_records")
-              .select("id, created_at, content")
-              .eq("record_type", "consultation")
-              .gte("created_at", sinceIso)
-              .order("created_at", { ascending: true })
-              .limit(MAX_HOY + 1);
-            if (error) throw error;
-            const filas = data ?? [];
-            const truncado = filas.length > MAX_HOY;
-            const visibles = filas.slice(0, MAX_HOY);
-            const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-            const idDe = (r: { content: unknown }) =>
-              String((r.content as { patientId?: string }).patientId ?? "");
-            const ids = [...new Set(visibles.map(idDe).filter((id) => UUID.test(id)))];
-            const nombres = new Map<string, string>();
-            if (ids.length > 0) {
-              const { data: pacientes, error: e2 } = await client
+      const turno = async () =>
+        runAgent({
+          model: await makeModel(MODEL),
+          db: {
+            consultationsSince: async (sinceIso) => {
+              const { data, error } = await client
                 .from("clinical_records")
-                .select("id, content")
-                .eq("record_type", "patient")
-                .in("id", ids);
-              if (e2) throw e2;
-              for (const p of pacientes ?? []) {
-                nombres.set(p.id, String((p.content as { name?: string }).name ?? ""));
+                .select("id, created_at, content")
+                .eq("record_type", "consultation")
+                .gte("created_at", sinceIso)
+                .order("created_at", { ascending: true })
+                .limit(MAX_HOY + 1);
+              if (error) throw error;
+              const filas = data ?? [];
+              const truncado = filas.length > MAX_HOY;
+              const visibles = filas.slice(0, MAX_HOY);
+              const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+              const idDe = (r: { content: unknown }) =>
+                String((r.content as { patientId?: string }).patientId ?? "");
+              const ids = [...new Set(visibles.map(idDe).filter((id) => UUID.test(id)))];
+              const nombres = new Map<string, string>();
+              if (ids.length > 0) {
+                const { data: pacientes, error: e2 } = await client
+                  .from("clinical_records")
+                  .select("id, content")
+                  .eq("record_type", "patient")
+                  .in("id", ids);
+                if (e2) throw e2;
+                for (const p of pacientes ?? []) {
+                  nombres.set(p.id, String((p.content as { name?: string }).name ?? ""));
+                }
               }
-            }
-            return {
-              truncado,
-              consultas: visibles.map((r) => ({
-                paciente: nombres.get(idDe(r)) || "(paciente no disponible)",
-                estado:
-                  (r.content as { status?: string }).status === "open" ? "abierta" : "cerrada",
-              })),
-            };
+              return {
+                truncado,
+                consultas: visibles.map((r) => ({
+                  paciente: nombres.get(idDe(r)) || "(paciente no disponible)",
+                  estado:
+                    (r.content as { status?: string }).status === "open" ? "abierta" : "cerrada",
+                })),
+              };
+            },
+            rpc: (fn, args) => client.rpc(fn, args),
+            openConsultations: async (patientId) => {
+              const { data, error } = await client
+                .from("clinical_records")
+                .select("id")
+                .eq("record_type", "consultation")
+                .eq("content->>patientId", patientId)
+                .eq("content->>status", "open")
+                .limit(20);
+              if (error) throw error;
+              return (data ?? []).map((r) => r.id);
+            },
           },
-          rpc: (fn, args) => client.rpc(fn, args),
-          openConsultations: async (patientId) => {
-            const { data, error } = await client
-              .from("clinical_records")
-              .select("id")
-              .eq("record_type", "consultation")
-              .eq("content->>patientId", patientId)
-              .eq("content->>status", "open")
-              .limit(20);
-            if (error) throw error;
-            return (data ?? []).map((r) => r.id);
-          },
-        },
-        ...input,
-      });
+          ...input,
+        });
+      if (!tracing) return turno();
+      try {
+        const { result, traceId } = await tracing.turn(turno);
+        return { ...result, traceId };
+      } finally {
+        // La función puede terminar en cuanto responde: se envía lo pendiente antes.
+        await tracing.flush().catch(() => {});
+      }
     },
   }),
 );
