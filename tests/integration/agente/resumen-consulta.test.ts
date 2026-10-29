@@ -78,4 +78,31 @@ describe.skipIf(!isLiveSupabase)("resumen de la consulta contra Supabase viva", 
     const segunda = await executeProposal(ana.client, ana.clinicId, accion);
     expect(segunda.attribution).toBeNull();
   });
+
+  test("el historial es de solo agregar: ni el autor puede reescribir un resumen", async () => {
+    const { data } = await ana.client
+      .from("clinical_records")
+      .select("id")
+      .eq("record_type", "consultation_summary")
+      .eq("content->>consultationId", consultaId)
+      .limit(1);
+    const id = data?.[0]?.id as string;
+    const { error } = await ana.client
+      .from("clinical_records")
+      .update({
+        content: { consultationId: consultaId, text: "Reescrito.", provenance: "inferida" },
+      })
+      .eq("id", id);
+    expect(error?.message).toContain("CONSULTATION_SUMMARY_IMMUTABLE");
+  });
+
+  test("no se resume una consulta inexistente", async () => {
+    await expect(
+      recordConsultationSummary(ana.client, {
+        clinicId: ana.clinicId,
+        consultationId: "99999999-9999-4999-8999-999999999999",
+        text: "Nada.",
+      }),
+    ).rejects.toMatchObject({ message: expect.stringContaining("CONSULTATION_NOT_FOUND") });
+  });
 });

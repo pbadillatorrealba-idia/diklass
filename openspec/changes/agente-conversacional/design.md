@@ -20,7 +20,7 @@
    (hablado y con botones). El elegido pasa a ser el paciente de contexto.
 2. **Nota SOAP y resumen**: herramienta que lee la anamnesis y devuelve un borrador como propuesta editable.
 3. **Seguimientos y recordatorios**: propuestas de agenda al cerrar la consulta; se crean solo al confirmar.
-4. **Memoria de la consulta**: resumen corto por consulta, persistido y reinyectado en cada turno.
+4. **Memoria de la consulta**: resumen corto por consulta como registro clínico auditado `consultation_summary` (migración 025): historial de solo agregar (trigger lo hace inmutable), procedencia «inferida», alta sin acción enumerada (la autoría es la de la fila), consulta validada en la misma clínica. El agente lo lee con `resumen_de_consulta` (envuelto en `<datos>`) y propone uno nuevo con `proponer_resumen`; nada se guarda sin confirmación.
 5. **Deshacer**: cada propuesta aplicada guarda su inversa; «Deshacer» la ejecuta (misma validación).
 6. **«¿Por qué?»**: cada respuesta lleva herramientas usadas y fuentes citadas, visibles a demanda.
 7. **Anti prompt-injection**: el texto recuperado va delimitado como dato; las herramientas de escritura no

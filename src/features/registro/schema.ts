@@ -233,6 +233,8 @@ export const anamnesisContentSchema = z
 export const consultationSummaryContentSchema = z.object({
   consultationId: z.string().uuid(),
   text: z.string().trim().min(1).max(2000),
+  /** Lo redacta el asistente y el veterinario lo confirma (como las propuestas de anamnesis). */
+  provenance: z.literal("inferida"),
 });
 
 export type ConsultationSummaryContent = z.infer<typeof consultationSummaryContentSchema>;

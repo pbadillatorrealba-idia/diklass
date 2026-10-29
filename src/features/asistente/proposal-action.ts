@@ -38,7 +38,7 @@ export type ProposalAction = z.infer<typeof proposalActionSchema>;
 /** ¿La acción es válida contra el catálogo vigente? Lo que no lo es se descarta antes de mostrarse. */
 export const isValidAction = (action: ProposalAction) =>
   action.kind === "summary"
-    ? consultationSummaryContentSchema.safeParse(action).success
+    ? consultationSummaryContentSchema.safeParse({ ...action, provenance: "inferida" }).success
     : !isLegacyAnamnesisField(action.field) &&
       anamnesisContentSchema.safeParse({ ...action, provenance: "inferida" }).success;
 

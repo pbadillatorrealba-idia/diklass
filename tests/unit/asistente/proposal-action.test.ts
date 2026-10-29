@@ -120,13 +120,21 @@ describe("proposal-action", () => {
     expect(nuevo.inserts[0]).toMatchObject({
       record_type: "consultation_summary",
       status: "draft",
-      content: { consultationId: resumen.consultationId, text: "Ladra de noche." },
+      content: {
+        consultationId: resumen.consultationId,
+        text: "Ladra de noche.",
+        provenance: "inferida",
+      },
     });
     const igual = fake([
       {
         id: "s1",
         record_type: "consultation_summary",
-        content: { consultationId: resumen.consultationId, text: "Ladra de noche." },
+        content: {
+          consultationId: resumen.consultationId,
+          text: "Ladra de noche.",
+          provenance: "inferida",
+        },
       },
     ]);
     expect((await executeProposal(igual.client, "clinic", resumen)).attribution).toBeNull();

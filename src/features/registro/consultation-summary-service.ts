@@ -39,6 +39,7 @@ export async function recordConsultationSummary(
   const content = consultationSummaryContentSchema.parse({
     consultationId: input.consultationId,
     text: input.text,
+    provenance: "inferida",
   });
   return createClinicalRecord(client, {
     clinic_id: input.clinicId,
