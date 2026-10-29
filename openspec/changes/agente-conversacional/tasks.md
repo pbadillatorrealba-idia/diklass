@@ -1,7 +1,7 @@
 # Tasks
 
 ## 1. Base
-- [ ] 1.1 Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
+- [~] 1.1 (verificado bajo Deno 2.9 con `deno run`/`deno check`: el agente corre con `fakeModel` y los tres proveedores llegan a su API con clave falsa; falta llamada real, streaming SSE y la traza en Phoenix) Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
 - [ ] 1.2 Phoenix autoalojado en `docker-compose` de desarrollo y variables de entorno.
 - [ ] 1.3 Puerto `ChatModel` (OpenAI/Claude/Gemini por env) con test de contrato.
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.

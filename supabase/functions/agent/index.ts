@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { runAgent } from "./agent.ts";
 import { handleAgent } from "./handler.ts";
+import { makeModel } from "./model.ts";
 
 declare const Deno: {
   serve: (handler: (request: Request) => Response | Promise<Response>) => void;
@@ -26,10 +27,10 @@ Deno.serve((request) =>
       const { data } = await asUser(authorization).rpc("is_active_access");
       return data === true;
     },
-    run: ({ authorization, ...input }) => {
+    run: async ({ authorization, ...input }) => {
       const client = asUser(authorization);
       return runAgent({
-        model: MODEL,
+        model: await makeModel(MODEL),
         db: {
           consultationsSince: async (sinceIso) => {
             const { data, error } = await client

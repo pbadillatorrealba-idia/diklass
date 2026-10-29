@@ -194,3 +194,12 @@ describe("agente: resumen del día", () => {
     expect(vistos.at(-1)).toBe("2026-10-29T03:00:00.000Z");
   });
 });
+
+describe("makeModel", () => {
+  it("instancia cada proveedor y rechaza uno desconocido", async () => {
+    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
+    process.env.OPENAI_API_KEY ??= "sk-test";
+    expect((await makeModel("openai:gpt-5.5")).constructor.name).toBe("ChatOpenAI");
+    await expect(makeModel("otro:modelo")).rejects.toThrow("no soportado");
+  });
+});
