@@ -30,6 +30,41 @@ Deno.serve((request) =>
       return runAgent({
         model: MODEL,
         db: {
+          consultationsSince: async (sinceIso) => {
+            const { data, error } = await client
+              .from("clinical_records")
+              .select("id, created_at, content")
+              .eq("record_type", "consultation")
+              .gte("created_at", sinceIso)
+              .order("created_at", { ascending: true })
+              .limit(50);
+            if (error) throw error;
+            const ids = [
+              ...new Set(
+                (data ?? []).map((r) => String((r.content as { patientId?: string }).patientId)),
+              ),
+            ];
+            const { data: pacientes, error: e2 } = await client
+              .from("clinical_records")
+              .select("id, content")
+              .eq("record_type", "patient")
+              .in("id", ids);
+            if (e2) throw e2;
+            const nombres = new Map(
+              (pacientes ?? []).map((p) => [
+                p.id,
+                String((p.content as { name?: string }).name ?? ""),
+              ]),
+            );
+            return (data ?? []).map((r) => {
+              const c = r.content as { patientId?: string; status?: string };
+              return {
+                paciente: nombres.get(String(c.patientId)) ?? "",
+                estado: c.status === "open" ? "abierta" : "cerrada",
+                creada: r.created_at,
+              };
+            });
+          },
           rpc: (fn, args) => client.rpc(fn, args),
           openConsultations: async (patientId) => {
             const { data, error } = await client

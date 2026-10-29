@@ -1,6 +1,11 @@
 import type { CalendarEvent } from "@/features/agenda/calendar-event";
 import { type Message, messageText, type Part } from "@/features/asistente/chat-model";
-import { answerAgenda, answerFecha, detectIntent } from "@/features/asistente/consultas-basicas";
+import {
+  answerAgenda,
+  answerFecha,
+  detectIntent,
+  startOfDay,
+} from "@/features/asistente/consultas-basicas";
 import { isValidAction, type ProposalAction } from "@/features/asistente/proposal-action";
 import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
 import { isAllowedRoute } from "../../../supabase/functions/_shared/routes";
@@ -90,6 +95,7 @@ type AgentDeps = {
   invoke: (body: {
     text: string;
     patientId: string | null;
+    since: string;
     history: { role: "user" | "assistant"; text: string }[];
   }) => Promise<{
     text: string;
@@ -118,6 +124,7 @@ export class AgentResponder implements Responder {
     const { text, ui, proposals } = await this.deps.invoke({
       text: input.text,
       patientId: input.patientId,
+      since: startOfDay(new Date()).toISOString(),
       history: turns,
     });
     if (signal.aborted) return;

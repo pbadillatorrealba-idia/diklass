@@ -11,6 +11,7 @@ import type { AgentResult, HistoryItem } from "./agent.ts";
 const Body = z.object({
   text: z.string().trim().min(1).max(4000),
   patientId: z.string().uuid().nullable().default(null),
+  since: z.string().datetime({ offset: true }).optional(),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().max(4000) }))
     .max(20)
@@ -26,6 +27,7 @@ export type AgentDependencies = {
     authorization: string;
     text: string;
     patientId: string | null;
+    since?: string;
     history: HistoryItem[];
   }) => Promise<AgentResult>;
 };

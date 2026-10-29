@@ -19,8 +19,8 @@
 ## 3. Voz
 - [x] 3.1 TTS: Edge Function `speak` (OpenAI, misma cuota y consentimiento que la transcripción) y `speaker.ts` en el cliente. Sin respaldo `expo-speech` (pospuesto). NO verificado en dispositivo: el audio va como data URL y iOS puede no reproducirlo (alternativa: archivo en caché).
 - [ ] 3.2 Manos libres (escucha continua) y barge-in por voz: hoy la respuesta se locuta si la pregunta fue por voz y se corta al grabar, enviar o «Detener». La escucha continua con detección de voz queda pendiente.
-- [ ] 3.3 Vocabulario veterinario en ASR y glosario del agente.
-- [ ] 3.4 Resumen del día por voz (opt-in).
+- [x] 3.3 Vocabulario veterinario: `prompt` del ASR y glosario en el prompt del agente (lista fija; sin evaluación de WER).
+- [~] 3.4 Resumen del día: tool `consultas_de_hoy` (la agenda aún no tiene fuente, FR-094). Falta el disparo opt-in al abrir la app.
 
 ## 4. Adjuntos
 - [ ] 4.1 Bucket privado con RLS, subida y entrada multimodal.

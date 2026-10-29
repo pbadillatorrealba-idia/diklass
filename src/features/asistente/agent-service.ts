@@ -28,6 +28,8 @@ export async function invokeAgent(
   body: {
     text: string;
     patientId: string | null;
+    /** Inicio del día local: el agente lo usa para «hoy». */
+    since?: string;
     history: { role: "user" | "assistant"; text: string }[];
   },
 ) {

@@ -27,6 +27,7 @@ describe("transcribeWithOpenAI", () => {
     const form = visto.init?.body as FormData;
     expect(form.get("model")).toBe("gpt-transcribe");
     expect(form.get("language")).toBe("es");
+    expect(String(form.get("prompt"))).toContain("etología");
     const cabeceras = visto.init?.headers as Record<string, string> | undefined;
     expect(cabeceras?.Authorization).toBe("Bearer clave");
   });

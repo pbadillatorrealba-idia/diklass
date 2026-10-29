@@ -2,7 +2,12 @@ import { describe, expect, it } from "bun:test";
 import { AIMessage, fakeModel } from "langchain";
 import { datos, isAllowedRoute, runAgent } from "../../../supabase/functions/agent/agent.ts";
 
-const db = (rows: unknown[], open: string[] = []) => ({
+const db = (
+  rows: unknown[],
+  open: string[] = [],
+  hoy: { paciente: string; estado: string; creada: string }[] = [],
+) => ({
+  consultationsSince: async () => hoy,
   rpc: async () => ({ data: rows, error: null }),
   openConsultations: async () => open,
 });
@@ -163,5 +168,23 @@ describe("agente: salvaguardas de propuestas", () => {
       .filter((f) => f.kind === "texto")
       .map((f) => f.id);
     expect([...TEXT_FIELDS].sort() as string[]).toEqual(cat.sort());
+  });
+});
+
+describe("agente: resumen del día", () => {
+  it("consultas_de_hoy entrega los datos al modelo y el glosario está en el prompt", async () => {
+    const { SYSTEM_PROMPT } = await import("../../../supabase/functions/agent/agent.ts");
+    expect(SYSTEM_PROMPT).toContain("fluoxetina");
+    const model = fakeModel()
+      .respondWithTools([{ name: "consultas_de_hoy", args: {}, id: "1" }])
+      .respond(new AIMessage("Hoy tienes 1 consulta."));
+    const r = await runAgent({
+      model,
+      db: db([], [], [{ paciente: "Bruma", estado: "abierta", creada: "2026-10-29T10:00:00Z" }]),
+      history: [],
+      text: "resumen del día",
+      patientId: null,
+    });
+    expect(r.text).toBe("Hoy tienes 1 consulta.");
   });
 });

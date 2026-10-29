@@ -21,6 +21,10 @@ export const MIME_PERMITIDOS = new Set([
   "audio/x-m4a",
 ]);
 
+/** Vocabulario que orienta al reconocedor: etología clínica y fármacos habituales (no es una instrucción). */
+export const GLOSARIO_ASR =
+  "Consulta veterinaria de etología canina: ansiedad por separación, reactividad, fobia a ruidos, estereotipias, desensibilización, fluoxetina, clomipramina, trazodona, gabapentina, selegilina, meloxicam.";
+
 export const MODELO_TRANSCRIPCION = "gpt-transcribe";
 
 /** El proveedor excedió el tiempo máximo (FR-055): el cliente descarta el audio. */
@@ -56,6 +60,7 @@ export async function transcribeWithOpenAI(options: {
   form.set("file", audio, audio.type.includes("webm") ? "audio.webm" : "audio.m4a");
   form.set("model", MODELO_TRANSCRIPCION);
   form.set("language", "es");
+  form.set("prompt", GLOSARIO_ASR);
   form.set("response_format", "json");
   let respuesta: Response;
   try {
