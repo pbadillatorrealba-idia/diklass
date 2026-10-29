@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { stopSpeaking } from "@/features/asistente/speaker";
 import { VoiceMessageMachine } from "@/features/asistente/voice-message";
 import { createWindowRecorder } from "@/features/voz/create-window-recorder";
 import { LISTEN_BLOCK_REASON, useMicLockStore } from "@/features/voz/mic-lock-store";
@@ -36,7 +37,11 @@ export function useVoiceMessage() {
     notice,
     elapsed,
     blockedReason,
-    start: useCallback(() => current.start(), [current]),
+    // Grabar corta la voz del asistente: el micrófono la captaría.
+    start: useCallback(() => {
+      stopSpeaking();
+      return current.start();
+    }, [current]),
     stop: useCallback(() => current.stop(), [current]),
     cancel: useCallback(() => current.cancel(), [current]),
     discard: useCallback(() => current.discard(), [current]),

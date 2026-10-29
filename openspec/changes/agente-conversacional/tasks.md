@@ -17,8 +17,8 @@
 - [ ] 2.7 Memoria de la consulta (tabla con RLS + reinyección).
 
 ## 3. Voz
-- [ ] 3.1 Puerto `Speaker` (proveedor + expo-speech de respaldo).
-- [ ] 3.2 Manos libres y barge-in sobre `turn-gate`.
+- [x] 3.1 TTS: Edge Function `speak` (OpenAI, misma cuota y consentimiento que la transcripción) y `speaker.ts` en el cliente. Sin respaldo `expo-speech` (pospuesto).
+- [ ] 3.2 Manos libres (escucha continua) y barge-in por voz: hoy la respuesta se locuta si la pregunta fue por voz y se corta al grabar, enviar o «Detener». La escucha continua con detección de voz queda pendiente.
 - [ ] 3.3 Vocabulario veterinario en ASR y glosario del agente.
 - [ ] 3.4 Resumen del día por voz (opt-in).
 

@@ -32,6 +32,7 @@ import {
   routeAgent,
   routeResponder,
 } from "@/features/asistente/responders";
+import { speak, spokenText, stopSpeaking } from "@/features/asistente/speaker";
 import { createTurnGate } from "@/features/asistente/turn-gate";
 import { conversationQueryKey, useConversation } from "@/features/asistente/use-conversation";
 import { useVoiceMessage } from "@/features/asistente/use-voice-message";
@@ -207,6 +208,7 @@ export function useChatController() {
     (text: string): boolean => {
       const turn = clinicId ? gate.begin() : null;
       if (!turn) return false;
+      stopSpeaking();
       // El paciente de contexto es el vigente al enviar, no el de cuando llegue la respuesta.
       void startTurn(
         guarded(turn),
@@ -228,7 +230,10 @@ export function useChatController() {
     [clinicId, guarded],
   );
 
-  const stop = useCallback(() => gate.abort(), []);
+  const stop = useCallback(() => {
+    stopSpeaking();
+    gate.abort();
+  }, []);
 
   /** «Borrar conversación»: texto y audio del autor; `knowledge_queries` permanece (FR-020). */
   const clear = useCallback(async () => {
@@ -248,6 +253,7 @@ export function useChatController() {
    * falla se vuelve a la revisión con el mismo audio para reintentar.
    */
   const sendVoice = useCallback(async (): Promise<boolean> => {
+    stopSpeaking();
     const turn = clinicId && veterinarianId ? gate.begin() : null;
     if (!turn) {
       // Hay una respuesta en curso: el audio sigue en revisión y se avisa, no se pierde en silencio.
@@ -275,7 +281,14 @@ export function useChatController() {
       }
       voice.sendDone();
       void startTurnWithMessage(
-        guarded(turn),
+        // Pregunta por voz, respuesta con voz; un fallo de la voz solo se registra.
+        {
+          ...guarded(turn),
+          onAnswer: (parts) => {
+            const texto = spokenText(parts);
+            if (texto) void speak(supabase, texto).catch((error) => deps.onError(error));
+          },
+        },
         {
           id,
           role: "user",
