@@ -117,19 +117,21 @@ const RENDERERS: Renderers = {
       )}
     </>
   ),
-  proposal: ({ part, ctx }) =>
-    ctx.onConfirmProposal ? (
+  proposal: ({ part, ctx }) => {
+    const estado = ctx.proposalState?.(part.proposal.id);
+    return ctx.onConfirmProposal ? (
       <AgentProposal
-        alreadyRecorded={ctx.proposalState?.(part.proposal.id)?.alreadyRecorded}
-        busy={ctx.proposalState?.(part.proposal.id)?.busy}
-        confirmedBy={ctx.proposalState?.(part.proposal.id)?.confirmedBy}
-        error={ctx.proposalState?.(part.proposal.id)?.error}
+        alreadyRecorded={estado?.alreadyRecorded}
+        busy={estado?.busy}
+        confirmedBy={estado?.confirmedBy}
+        error={estado?.error}
         onConfirm={ctx.onConfirmProposal}
         proposal={part.proposal}
       />
     ) : (
       <Text>{part.proposal.summary}</Text>
-    ),
+    );
+  },
 };
 
 export function PartView({ part, ctx }: { part: Part; ctx: PartContext }) {

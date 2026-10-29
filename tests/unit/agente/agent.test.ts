@@ -85,6 +85,7 @@ describe("agente: propuestas", () => {
   it("proponer_antecedente solo devuelve una propuesta", async () => {
     const cid = "123e4567-e89b-42d3-a456-426614174000";
     const model = fakeModel()
+      .respondWithTools([{ name: "consulta_abierta", args: { pacienteId: cid }, id: "0" }])
       .respondWithTools([
         {
           name: "proponer_antecedente",
@@ -107,5 +108,60 @@ describe("agente: propuestas", () => {
       field: "motivo_consulta",
       text: "ladra de noche",
     });
+  });
+});
+
+describe("agente: salvaguardas de propuestas", () => {
+  const cid = "123e4567-e89b-42d3-a456-426614174000";
+  const args = { consultaId: cid, campo: "motivo_consulta", texto: "ladra de noche" };
+  const propone = () =>
+    fakeModel()
+      .respondWithTools([{ name: "proponer_antecedente", args, id: "2" }])
+      .respond(new AIMessage("ok"));
+
+  it("rechaza una consulta que consulta_abierta no devolvió", async () => {
+    const r = await runAgent({
+      model: propone(),
+      db: db([], [cid]),
+      history: [],
+      text: "anota",
+      patientId: null,
+    });
+    expect(r.proposals).toEqual([]);
+  });
+
+  it("acepta la consulta vista y rotula el origen según lo dictado", async () => {
+    const vea = () =>
+      fakeModel()
+        .respondWithTools([{ name: "consulta_abierta", args: { pacienteId: cid }, id: "1" }])
+        .respondWithTools([{ name: "proponer_antecedente", args, id: "2" }])
+        .respond(new AIMessage("ok"));
+    const dictado = await runAgent({
+      model: vea(),
+      db: db([], [cid]),
+      history: [],
+      text: "Ladra de noche, anótalo",
+      patientId: null,
+    });
+    expect(dictado.proposals[0]?.origin).toStartWith("Lo que escribiste");
+    const ajeno = await runAgent({
+      model: vea(),
+      db: db([], [cid]),
+      history: [],
+      text: "anota algo",
+      patientId: null,
+    });
+    expect(ajeno.proposals[0]?.origin).toStartWith("Redactado por el asistente");
+  });
+
+  it("los campos permitidos coinciden con los de texto del catálogo del cliente", async () => {
+    const { ANAMNESIS_SECTIONS } = await import(
+      "../../../src/features/registro/anamnesis-catalog.ts"
+    );
+    const { TEXT_FIELDS } = await import("../../../supabase/functions/_shared/anamnesis-fields.ts");
+    const cat = ANAMNESIS_SECTIONS.flatMap((s) => [...s.fields] as { id: string; kind: string }[])
+      .filter((f) => f.kind === "texto")
+      .map((f) => f.id);
+    expect([...TEXT_FIELDS].sort() as string[]).toEqual(cat.sort());
   });
 });

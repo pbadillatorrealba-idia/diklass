@@ -32,12 +32,14 @@ Deno.serve((request) =>
         db: {
           rpc: (fn, args) => client.rpc(fn, args),
           openConsultations: async (patientId) => {
-            const { data } = await client
+            const { data, error } = await client
               .from("clinical_records")
               .select("id")
               .eq("record_type", "consultation")
               .eq("content->>patientId", patientId)
-              .eq("content->>status", "open");
+              .eq("content->>status", "open")
+              .limit(20);
+            if (error) throw error;
             return (data ?? []).map((r) => r.id);
           },
         },

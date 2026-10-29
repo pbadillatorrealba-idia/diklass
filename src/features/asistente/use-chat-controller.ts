@@ -24,7 +24,7 @@ import {
   type MessagePage,
 } from "@/features/asistente/message-service";
 import { pacientesDeHoy } from "@/features/asistente/pacientes-de-hoy";
-import { executeProposal } from "@/features/asistente/proposal-action";
+import { executeProposal, isValidAction } from "@/features/asistente/proposal-action";
 import {
   AgentResponder,
   BasicResponder,
@@ -366,6 +366,13 @@ export function useChatController() {
         return;
       }
       const base = { busy: false, confirmedBy: null, alreadyRecorded: false, error: null };
+      if (!isValidAction(proposal.action)) {
+        setProposal(proposalId, {
+          ...base,
+          error: "La propuesta ya no es válida. No se registró nada.",
+        });
+        return;
+      }
       setProposal(proposalId, { ...base, busy: true });
       try {
         const { attribution } = await executeProposal(supabase, clinicId, proposal.action);
@@ -384,7 +391,14 @@ export function useChatController() {
           operation: "asistente_confirmar_propuesta",
           requestId: makeRequestId(),
         });
-        setProposal(proposalId, { ...base, error: "No se pudo guardar. No se registró nada." });
+        // 23514: la consulta se cerró (sellado de la traza clínica); reintentar no sirve.
+        const cerrada = (error as { code?: string } | null)?.code === "23514";
+        setProposal(proposalId, {
+          ...base,
+          error: cerrada
+            ? "La consulta ya está cerrada. No se registró nada."
+            : "No se pudo guardar. No se registró nada.",
+        });
       }
     },
     [clinicId, messages, openExpiredDialog, setAccessState],

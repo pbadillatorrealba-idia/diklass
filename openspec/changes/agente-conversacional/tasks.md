@@ -7,7 +7,7 @@
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
 ## 2. Herramientas (pruebas primero)
-- [x] 2.1 Lectura: `buscar_paciente` con desambiguación, fichas, agenda, consulta.
+- [ ] 2.1 Lectura (hecho: `buscar_paciente`, `consulta_abierta`; falta fichas y agenda): `buscar_paciente` con desambiguación, fichas, agenda, consulta.
 - [ ] 2.2 Conocimiento con citas (`conocimiento`).
 - [ ] 2.3 Asistencia proactiva (006) y tratamiento/farmacología (007).
 - [x] 2.4 Escritura como `propuesta` + tarjeta de confirmación (antecedente de anamnesis, procedencia «inferida»).

@@ -4,12 +4,6 @@ import type { Attribution } from "@/lib/attribution/types";
 import { queryClient } from "@/lib/query/query-client";
 import { useSessionStore } from "@/stores/session-store";
 
-/**
- * Lo efímero del chat (asistente-conversacional · design.md D3 · D12): el borrador de cada hilo, los
- * mensajes que aún no son terminales («enviando», «pensando» o en error sin reintentar) y el contador
- * de no leído. La conversación persistida vive en TanStack Query; esto no sobrevive a la sesión de
- * acceso (Constitución V), como `asistente-store` y `conversation-store`.
- */
 /** Estado de confirmación de una propuesta del agente (solo de la sesión; la idempotencia es del servicio). */
 export type ProposalState = {
   busy: boolean;
@@ -18,6 +12,12 @@ export type ProposalState = {
   error: string | null;
 };
 
+/**
+ * Lo efímero del chat (asistente-conversacional · design.md D3 · D12): el borrador de cada hilo, los
+ * mensajes que aún no son terminales («enviando», «pensando» o en error sin reintentar) y el contador
+ * de no leído. La conversación persistida vive en TanStack Query; esto no sobrevive a la sesión de
+ * acceso (Constitución V), como `asistente-store` y `conversation-store`.
+ */
 export type ChatState = {
   proposals: Record<string, ProposalState>;
   setProposal: (id: string, state: ProposalState) => void;

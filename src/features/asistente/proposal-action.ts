@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import * as z from "zod";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
 import { listAnamnesisEntries, recordAnamnesisEntry } from "@/features/registro/anamnesis-service";
-import { anamnesisContentSchema } from "@/features/registro/schema";
+import { type AnamnesisField, anamnesisContentSchema } from "@/features/registro/schema";
 import type { Attribution } from "@/lib/attribution/types";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -21,12 +22,14 @@ export type ProposalAction = z.infer<typeof proposalActionSchema>;
 
 /** ¿La acción es válida contra el catálogo vigente? Lo que no lo es se descarta antes de mostrarse. */
 export const isValidAction = (action: ProposalAction) =>
+  !isLegacyAnamnesisField(action.field) &&
   anamnesisContentSchema.safeParse({ ...action, provenance: "inferida" }).success;
 
 /**
  * Ejecuta la acción. Idempotente por contenido: si la consulta ya tiene esa entrada exacta (p. ej. se
  * confirmó y se recargó la conversación), no duplica y devuelve `null` en vez de atribución.
  */
+// ponytail: comprobar-y-luego-insertar; dos pestañas pueden duplicar. Clave de idempotencia en servidor si importa.
 export async function executeProposal(
   client: SupabaseClient<Database>,
   clinicId: string,
@@ -39,7 +42,7 @@ export async function executeProposal(
   const { attribution } = await recordAnamnesisEntry(client, {
     clinicId,
     consultationId: action.consultationId,
-    field: action.field as never,
+    field: action.field as AnamnesisField,
     text: action.text,
     provenance: "inferida",
   });
