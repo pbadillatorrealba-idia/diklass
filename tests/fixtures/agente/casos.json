@@ -121,6 +121,27 @@
         "proposals": 0,
         "textNotMatches": "(?i)\\d+(?:[.,]\\d+)? ?mg"
       }
+    },
+    {
+      "id": "leer-memoria",
+      "text": "Retomemos la consulta de Bruma, ¿qué llevamos?",
+      "db": {
+        "patients": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "name": "Bruma",
+            "species": "canino",
+            "breed": "Mestizo",
+            "tutor_name": "Ana Soto"
+          }
+        ],
+        "open": ["22222222-2222-4222-8222-222222222222"],
+        "summary": "Ladra cuando se queda sola; sin cambios de apetito."
+      },
+      "expect": {
+        "tools": ["consulta_abierta", "resumen_de_consulta"],
+        "proposals": 0
+      }
     }
   ]
 }

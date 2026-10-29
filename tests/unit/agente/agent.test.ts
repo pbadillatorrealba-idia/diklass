@@ -8,6 +8,7 @@ const db = (
   open: string[] = [],
   hoy: { paciente: string; estado: string }[] = [],
 ) => ({
+  consultationSummary: async () => "Ladra de noche.",
   consultationsSince: async (since: string) => {
     vistos.push(since);
     return { consultas: hoy, truncado: false };
@@ -201,5 +202,55 @@ describe("makeModel", () => {
     process.env.OPENAI_API_KEY ??= "sk-test";
     expect((await makeModel("openai:gpt-5.5")).constructor.name).toBe("ChatOpenAI");
     await expect(makeModel("otro:modelo")).rejects.toThrow("no soportado");
+  });
+});
+
+describe("agente: memoria de la consulta", () => {
+  const cid = "123e4567-e89b-42d3-a456-426614174000";
+  it("lee el resumen vigente y propone uno nuevo solo sobre una consulta vista", async () => {
+    const lee = fakeModel()
+      .respondWithTools([{ name: "resumen_de_consulta", args: { consultaId: cid }, id: "1" }])
+      .respond(new AIMessage("Ya hablamos de los ladridos."));
+    const r1 = await runAgent({
+      model: lee,
+      db: db([]),
+      history: [],
+      text: "¿qué llevamos?",
+      patientId: null,
+    });
+    expect(r1.tools).toEqual(["resumen_de_consulta"]);
+
+    const sinVer = fakeModel()
+      .respondWithTools([
+        { name: "proponer_resumen", args: { consultaId: cid, texto: "Ladra de noche." }, id: "2" },
+      ])
+      .respond(new AIMessage("ok"));
+    const r2 = await runAgent({
+      model: sinVer,
+      db: db([], [cid]),
+      history: [],
+      text: "resume",
+      patientId: null,
+    });
+    expect(r2.proposals).toEqual([]);
+
+    const visto = fakeModel()
+      .respondWithTools([{ name: "consulta_abierta", args: { pacienteId: cid }, id: "1" }])
+      .respondWithTools([
+        { name: "proponer_resumen", args: { consultaId: cid, texto: "Ladra de noche." }, id: "2" },
+      ])
+      .respond(new AIMessage("ok"));
+    const r3 = await runAgent({
+      model: visto,
+      db: db([], [cid]),
+      history: [],
+      text: "resume",
+      patientId: null,
+    });
+    expect(r3.proposals[0]?.action).toEqual({
+      kind: "summary",
+      consultationId: cid,
+      text: "Ladra de noche.",
+    });
   });
 });

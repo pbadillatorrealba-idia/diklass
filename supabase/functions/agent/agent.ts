@@ -17,6 +17,8 @@ export { isAllowedRoute };
 export type Db = {
   /** Ids de las consultas abiertas del paciente (RLS: solo las de la clínica del usuario). */
   openConsultations: (patientId: string) => Promise<string[]>;
+  /** Texto del resumen vigente de la consulta (el más reciente), o null. */
+  consultationSummary: (consultationId: string) => Promise<string | null>;
   /** Consultas creadas desde `sinceIso` con el nombre del paciente (RLS: solo las de su clínica). */
   consultationsSince: (
     sinceIso: string,
@@ -37,7 +39,9 @@ export type Proposal = {
   id: string;
   summary: string;
   origin: string;
-  action: { kind: "anamnesis"; consultationId: string; field: string; text: string };
+  action:
+    | { kind: "anamnesis"; consultationId: string; field: string; text: string }
+    | { kind: "summary"; consultationId: string; text: string };
 };
 
 export type AgentResult = {
@@ -140,6 +144,35 @@ export function buildTools(
       "Lista las consultas de hoy (paciente y estado abierta/cerrada; si `truncado`, hay más). Úsala para el resumen del día.",
     schema: z.object({}),
   });
+  const resumenDeConsulta = tool(
+    async ({ consultaId }) => datos({ resumen: await db.consultationSummary(consultaId) }),
+    {
+      name: "resumen_de_consulta",
+      description:
+        "Lee el resumen vigente de una consulta (memoria de lo ya hablado). Úsala al retomar una consulta.",
+      schema: z.object({ consultaId: z.string().uuid() }),
+    },
+  );
+  const proponerResumen = tool(
+    ({ consultaId, texto }) => {
+      if (!vistas.has(consultaId)) {
+        return "Rechazada: usa consulta_abierta y propón solo sobre una consulta abierta que devolvió.";
+      }
+      proposals.push({
+        id: crypto.randomUUID(),
+        summary: `Guardar el resumen de la consulta: ${texto}`,
+        origin: "Redactado por el asistente a partir de la conversación: revísalo",
+        action: { kind: "summary", consultationId: consultaId, text: texto },
+      });
+      return "Propuesta preparada. NO está guardada: el veterinario debe confirmarla en la tarjeta.";
+    },
+    {
+      name: "proponer_resumen",
+      description:
+        "Propone guardar un resumen corto (hasta 2000 caracteres) de la consulta ABIERTA, para recordarlo después. No guarda nada.",
+      schema: z.object({ consultaId: z.string().uuid(), texto: z.string().min(1).max(2000) }),
+    },
+  );
   const proponerAntecedente = tool(
     ({ consultaId, campo, texto }) => {
       if (!vistas.has(consultaId)) {
@@ -168,7 +201,15 @@ export function buildTools(
       }),
     },
   );
-  return [buscarPaciente, navegar, consultaAbierta, consultasDeHoy, proponerAntecedente];
+  return [
+    buscarPaciente,
+    navegar,
+    consultaAbierta,
+    consultasDeHoy,
+    resumenDeConsulta,
+    proponerResumen,
+    proponerAntecedente,
+  ];
 }
 
 const MAX_STEPS = 8;

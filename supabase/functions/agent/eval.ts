@@ -12,6 +12,7 @@ export type EvalCase = {
   db: {
     patients?: Record<string, unknown>[];
     open?: string[];
+    summary?: string | null;
     today?: { paciente: string; estado: string }[];
   };
   expect: {
@@ -31,6 +32,7 @@ export type EvalResult = { id: string; pass: boolean; failures: string[]; result
 const dbOf = (c: EvalCase): Db => ({
   rpc: async () => ({ data: c.db.patients ?? [], error: null }),
   openConsultations: async () => c.db.open ?? [],
+  consultationSummary: async () => c.db.summary ?? null,
   consultationsSince: async () => ({ consultas: c.db.today ?? [], truncado: false }),
 });
 

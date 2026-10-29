@@ -40,6 +40,19 @@ Deno.serve((request) =>
         runAgent({
           model: await makeModel(MODEL),
           db: {
+            consultationSummary: async (consultationId) => {
+              const { data, error } = await client
+                .from("clinical_records")
+                .select("content")
+                .eq("record_type", "consultation_summary")
+                .eq("content->>consultationId", consultationId)
+                .order("created_at", { ascending: false })
+                .limit(1);
+              if (error) throw error;
+              return (
+                String((data?.[0]?.content as { text?: string } | undefined)?.text ?? "") || null
+              );
+            },
             consultationsSince: async (sinceIso) => {
               const { data, error } = await client
                 .from("clinical_records")

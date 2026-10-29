@@ -100,4 +100,36 @@ describe("proposal-action", () => {
     const parts = (out[0] as { parts: { type: string }[] }).parts;
     expect(parts.map((p) => p.type)).toEqual(["text", "proposal"]);
   });
+
+  const resumen = {
+    kind: "summary" as const,
+    consultationId: "123e4567-e89b-42d3-a456-426614174000",
+    text: "Ladra de noche.",
+  };
+
+  test("isValidAction del resumen exige uuid y texto de hasta 2000", () => {
+    expect(isValidAction(resumen)).toBe(true);
+    expect(isValidAction({ ...resumen, consultationId: "c1" })).toBe(false);
+    expect(isValidAction({ ...resumen, text: "x".repeat(2001) })).toBe(false);
+  });
+
+  test("el resumen se guarda como registro consultation_summary y no se repite si ya es el vigente", async () => {
+    const nuevo = fake([]);
+    const r = await executeProposal(nuevo.client, "clinic", resumen);
+    expect(r.attribution).not.toBeNull();
+    expect(nuevo.inserts[0]).toMatchObject({
+      record_type: "consultation_summary",
+      status: "draft",
+      content: { consultationId: resumen.consultationId, text: "Ladra de noche." },
+    });
+    const igual = fake([
+      {
+        id: "s1",
+        record_type: "consultation_summary",
+        content: { consultationId: resumen.consultationId, text: "Ladra de noche." },
+      },
+    ]);
+    expect((await executeProposal(igual.client, "clinic", resumen)).attribution).toBeNull();
+    expect(igual.inserts).toEqual([]);
+  });
 });

@@ -14,7 +14,7 @@
 - [ ] 2.4b Deshacer: pospuesto; el registro clínico es auditado y la anamnesis no admite correctivo (migración 009 solo exenta la epicrisis). Requiere diseño propio.
 - [x] 2.5 `navegar(ruta)` con lista blanca.
 - [ ] 2.6 Nota SOAP/resumen y seguimientos/recordatorios como propuestas.
-- [ ] 2.7 Memoria de la consulta (tabla con RLS + reinyección).
+- [x] 2.7 Memoria de la consulta: registro clínico auditado `consultation_summary` (migración 025, historial de solo agregar), tools `resumen_de_consulta` y `proponer_resumen` con confirmación. Verificado con pgTap y integración viva.
 
 ## 3. Voz
 - [x] 3.1 TTS: Edge Function `speak` (OpenAI, misma cuota y consentimiento que la transcripción) y `speaker.ts` en el cliente. Sin respaldo `expo-speech` (pospuesto). NO verificado en dispositivo: el audio va como data URL y iOS puede no reproducirlo (alternativa: archivo en caché).
