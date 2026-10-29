@@ -30,7 +30,9 @@ export type AgentResult = { text: string; ui: UiAction[] };
  * Lo recuperado (pacientes, documentos) va delimitado: es dato, no instrucciones. La defensa real es
  * que ninguna herramienta escribe; esto evita además que el modelo lo trate como órdenes.
  */
-export const datos = (value: unknown) => `<datos>${JSON.stringify(value)}</datos>`;
+export const datos = (value: unknown) =>
+  // `<` escapado: un nombre con «</datos>» no puede cerrar el delimitador.
+  `<datos>${JSON.stringify(value).replaceAll("<", "\\u003c")}</datos>`;
 
 export const SYSTEM_PROMPT = `Eres el asistente de una clínica veterinaria (etología canina). Respondes en español, breve y claro.
 Ayudas a buscar pacientes y a moverte por la app. Eres apoyo a la decisión: nunca das un diagnóstico ni una prescripción definitivos.
@@ -80,6 +82,20 @@ export function buildTools(db: Db, ui: UiAction[]) {
   return [buscarPaciente, navegar];
 }
 
+const MAX_STEPS = 8;
+const TIMEOUT_MS = 55_000;
+
+/** El contenido puede ser texto o bloques (Anthropic, Gemini): se concatenan los de texto. */
+function textOf(message: BaseMessage | undefined): string {
+  const c = message?.content;
+  if (typeof c === "string") return c.trim();
+  if (!Array.isArray(c)) return "";
+  return c
+    .map((b) => (typeof b === "string" ? b : b.type === "text" ? String(b.text ?? "") : ""))
+    .join("")
+    .trim();
+}
+
 type Model = Parameters<typeof createAgent>[0]["model"];
 
 export async function runAgent(opts: {
@@ -100,7 +116,12 @@ export async function runAgent(opts: {
   const messages = [...opts.history, { role: "user" as const, content: opts.text }].map((m) =>
     "text" in m ? { role: m.role, content: m.text } : m,
   );
-  const result = await agent.invoke({ messages });
-  const last = (result.messages as BaseMessage[]).at(-1);
-  return { text: typeof last?.content === "string" ? last.content : "", ui };
+  // Tope de pasos y de tiempo: un bucle de herramientas no puede gastar modelo sin límite.
+  const result = await agent.invoke(
+    { messages },
+    { recursionLimit: MAX_STEPS, signal: AbortSignal.timeout(TIMEOUT_MS) },
+  );
+  const text = textOf((result.messages as BaseMessage[]).at(-1));
+  if (!text) throw new Error("EmptyAgentResponse");
+  return { text, ui };
 }

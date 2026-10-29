@@ -4,7 +4,7 @@
 - [ ] 1.1 Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
 - [ ] 1.2 Phoenix autoalojado en `docker-compose` de desarrollo y variables de entorno.
 - [ ] 1.3 Puerto `ChatModel` (OpenAI/Claude/Gemini por env) con test de contrato.
-- [ ] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
+- [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
 ## 2. Herramientas (pruebas primero)
 - [ ] 2.1 Lectura: `buscar_paciente` con desambiguación, fichas, agenda, consulta.
@@ -30,6 +30,8 @@
 - [ ] 5.2 Anti prompt-injection: delimitación de datos recuperados y tests con documentos hostiles.
 - [ ] 5.3 Dataset de evaluación en Phoenix con casos anotados y experimento base.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
+- [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).
+- [ ] 5.7 Declarar el proveedor de modelo y minimizar datos enviados (Principio V) antes de usar datos reales.
 - [ ] 5.5 Aislamiento entre clínicas en cada herramienta.
 
 ## Diferido
