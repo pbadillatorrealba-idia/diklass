@@ -95,3 +95,18 @@ describe("compartido", () => {
     expect(calidad("hola")).toBe("ok");
   });
 });
+
+describe("eco del prompt", () => {
+  const {
+    esEcoDelPrompt,
+    GLOSARIO_ASR,
+  } = require("../../../supabase/functions/_shared/transcription");
+  test("el prompt devuelto como transcripción se descarta; un dictado real no", () => {
+    expect(esEcoDelPrompt(GLOSARIO_ASR)).toBe(true);
+    expect(esEcoDelPrompt("Consulta veterinaria de etología canina: ansiedad por separación")).toBe(
+      true,
+    );
+    expect(esEcoDelPrompt("fluoxetina")).toBe(false);
+    expect(esEcoDelPrompt("El perro tiene ansiedad por separación desde marzo")).toBe(false);
+  });
+});

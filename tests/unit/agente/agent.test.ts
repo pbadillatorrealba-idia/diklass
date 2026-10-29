@@ -2,12 +2,16 @@ import { describe, expect, it } from "bun:test";
 import { AIMessage, fakeModel } from "langchain";
 import { datos, isAllowedRoute, runAgent } from "../../../supabase/functions/agent/agent.ts";
 
+const vistos: string[] = [];
 const db = (
   rows: unknown[],
   open: string[] = [],
-  hoy: { paciente: string; estado: string; creada: string }[] = [],
+  hoy: { paciente: string; estado: string }[] = [],
 ) => ({
-  consultationsSince: async () => hoy,
+  consultationsSince: async (since: string) => {
+    vistos.push(since);
+    return { consultas: hoy, truncado: false };
+  },
   rpc: async () => ({ data: rows, error: null }),
   openConsultations: async () => open,
 });
@@ -180,11 +184,13 @@ describe("agente: resumen del día", () => {
       .respond(new AIMessage("Hoy tienes 1 consulta."));
     const r = await runAgent({
       model,
-      db: db([], [], [{ paciente: "Bruma", estado: "abierta", creada: "2026-10-29T10:00:00Z" }]),
+      db: db([], [], [{ paciente: "Bruma", estado: "abierta" }]),
       history: [],
       text: "resumen del día",
       patientId: null,
+      since: "2026-10-29T03:00:00.000Z",
     });
     expect(r.text).toBe("Hoy tienes 1 consulta.");
+    expect(vistos.at(-1)).toBe("2026-10-29T03:00:00.000Z");
   });
 });

@@ -18,6 +18,13 @@ const Body = z.object({
     .default([]),
 });
 
+/** «Hoy» lo fija el cliente, pero no puede pedir más de 48 h atrás ni el futuro: fuera de rango se ignora. */
+const MAX_ATRAS_MS = 48 * 3600_000;
+export const sinceValido = (since: string | undefined, now = Date.now()) => {
+  const t = since ? Date.parse(since) : Number.NaN;
+  return t >= now - MAX_ATRAS_MS && t <= now ? since : undefined;
+};
+
 export type AgentDependencies = {
   log: (line: string) => void;
   randomId: () => string;
@@ -60,7 +67,11 @@ export async function handleAgent(request: Request, deps: AgentDependencies): Pr
 
   const inicio = Date.now();
   try {
-    const result = await deps.run({ authorization, ...parsed.data });
+    const result = await deps.run({
+      authorization,
+      ...parsed.data,
+      since: sinceValido(parsed.data.since),
+    });
     deps.log(JSON.stringify({ event: "agent_done", requestId, durationMs: Date.now() - inicio }));
     return respond({ ...result, requestId }, 200);
   } catch (error) {

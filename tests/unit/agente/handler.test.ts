@@ -65,3 +65,14 @@ describe("handler del agente", () => {
     expect(logs.join()).not.toContain("SECRETO");
   });
 });
+
+describe("since del agente", () => {
+  const { sinceValido } = require("../../../supabase/functions/agent/handler.ts");
+  const ahora = Date.parse("2026-10-29T15:00:00Z");
+  it("acepta hoy, ignora lo muy antiguo, el futuro y lo ausente", () => {
+    expect(sinceValido("2026-10-29T03:00:00.000Z", ahora)).toBe("2026-10-29T03:00:00.000Z");
+    expect(sinceValido("1970-01-01T00:00:00.000Z", ahora)).toBeUndefined();
+    expect(sinceValido("2026-11-30T00:00:00.000Z", ahora)).toBeUndefined();
+    expect(sinceValido(undefined, ahora)).toBeUndefined();
+  });
+});
