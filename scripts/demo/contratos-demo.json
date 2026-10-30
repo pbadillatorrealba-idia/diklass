@@ -1,6 +1,6 @@
 {
   "revision": {
-    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado.",
+    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado. Renovación por la integración del agente conversacional y de 006 (2026-10-30): cambios aditivos revisados, sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset (listPatientsByIds de lectura, tipo de registro consultation_summary, tablas de cuota y asistencia). El dataset aún no cubre consultation_summary ni missing_information/hipótesis: cobertura pendiente. Las huellas no acreditan cobertura ni aceptación clínica.",
     "requirements": ["FR-128", "FR-129", "FR-130", "FR-131", "FR-132"]
   },
   "paths": [
@@ -36,14 +36,15 @@
     "src/features/registro/anamnesis-service.ts": "8c7635f312a215dde686130956de6e7bc793328cdfeed9e635111216738a69df",
     "src/features/registro/catalogs.ts": "9f6106efaa732adbab318e3ec024e81e30fcfc7750a42fccff5f955461d395fd",
     "src/features/registro/consultation-service.ts": "267b172dd0ac75f361c85b66a425fd06d779a21baa7922c32477a3bf66442db6",
+    "src/features/registro/consultation-summary-service.ts": "d79c493d03fe55fcc76dc0fc2b8b1b095c5aa8d0d725ec8bb127d8a799ed477e",
     "src/features/registro/diagnosis-service.ts": "1427d067036884a88375c3e940398cbcc809821c2b5579d4ba1bdf03bd7647f0",
     "src/features/registro/epicrisis-draft.ts": "1fa881b390d328a6f802c40539bd1a501f182f4b9dd0a40bd7cba59db1b85ff1",
     "src/features/registro/epicrisis-service.ts": "a65f6037be039ad3d847dc0a727244dd1bdf1275362eae96affe34a36bebbabd",
-    "src/features/registro/ficha-service.ts": "a72242fd4795786e94d98fa79fb4beadbd79f78d6a8ddc5f8252b007d57739f6",
+    "src/features/registro/ficha-service.ts": "25ad723c89ccbfa4df43b5808034c2badb9f5ab4fda38302c57a3db109112399",
     "src/features/registro/patient-search.ts": "46b7038ba7febbd84aab97bc5061f1050842b5525f65551e2cffc61e3c0b9a17",
     "src/features/registro/query-cache.ts": "98f4ba2648cd80b08a2b4e83717c94ddbd565f000def3402e613b081ca60f740",
     "src/features/registro/read-rows.ts": "ffc89fadd51120d07470307f8ae0fed5dfc26e6e4181a2efc117b50f3b62bb41",
-    "src/features/registro/schema.ts": "14785fbb4e3984f3193f116e014f1bf8e268fd65245c7fdbbe5db01806a278e1",
+    "src/features/registro/schema.ts": "3fc9e2c03791b55bf4ac86c521d53e06f3aa84458ba05078e83ca15c67d856ca",
     "src/features/registro/summaries.ts": "f1a8e43afa448606ec54c97887e3210fcd8edbff5e26178603bbedb2d232f33d",
     "src/features/registro/tutor-search.ts": "c987a2ab4b2a1ec4d149f32c8272090398454006288082f776ae892201ed1d90",
     "src/features/registro/tutor-service.ts": "56780c0619205d11601f18d17130e8f6f76c03e1cc6226a6bce40f8baf666626",
@@ -53,7 +54,7 @@
     "src/features/retroalimentacion/schema.ts": "b476351288871cf2dc136c3e78100d4fb2748abd5375ebe9fc8143779da373bc",
     "src/lib/attribution/clinical-mutations.ts": "b631d8ae3f55b83d8b2ae72797d3280830903000456e3dcc98e224daf0ab76ca",
     "src/lib/attribution/types.ts": "b84f10800f735e6789c98e337ca8d08722d5a06a616836c9966bb12af5ed5e87",
-    "src/lib/supabase/database.types.ts": "c0f88e931486b745416558eedce98e0b70478977d4e5b3338c9340b5184b868a",
+    "src/lib/supabase/database.types.ts": "1f9a792be5125da2c539582b93372e96fbc96e8c70ed16b63b9abd343c79f4e9",
     "supabase/migrations/001_identity_access.sql": "c1c63dfa830ae6799250321cf95b6dd9385955420c75bcfc7c734a20de3c1adf",
     "supabase/migrations/002_clinical_attribution.sql": "5bb000c4f3c3958e80bf1a60ce0436a00bd8d8e6bdfcb8826f3c84cd8c623ba0",
     "supabase/migrations/003_attribution_hardening.sql": "64ef68cf1e891ab7cef95ca093c7268243d9e22c12d85caf317f1c0a6b8858a1",
@@ -77,6 +78,9 @@
     "supabase/migrations/021_audio_voz_revision.sql": "b09906462c6991c1a29320c12bcc76884df5fb176491d197866078e02b9b89a4",
     "supabase/migrations/022_asistente_conversacional.sql": "51070416bea164cbfb0e17e9da1da30f911ee8430d53f01e9c7c02aaabc93bb3",
     "supabase/migrations/023_audio_asistente.sql": "b444516914cacf498129f29915ea6571cf94212d09d2eede908bdcff6074e743",
-    "supabase/migrations/024_purga_audio_asistente.sql": "f265ef966e1b0114d4810e3a6af601ef736d9f65ab0286358f53da21bf2664ad"
+    "supabase/migrations/024_purga_audio_asistente.sql": "f265ef966e1b0114d4810e3a6af601ef736d9f65ab0286358f53da21bf2664ad",
+    "supabase/migrations/025_resumen_consulta.sql": "250592c8dd6a49389ef801f17b0edee19cf19f21a87c8e4962a601a856c5fb31",
+    "supabase/migrations/026_asistencia_clinica.sql": "12a5057dff98bf5603f4bc1cc1b2787479c0bdd9f37d350c2925057310e50e22",
+    "supabase/migrations/027_cuota_agente.sql": "e405518c0031e020cdaef0738baef4a8d097c53f55a6adf2014f718cee00ce58"
   }
 }

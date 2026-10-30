@@ -26,6 +26,178 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
   });
 
+  test("la cápsula móvil flota a la derecha sin tapar contenido y devuelve el foco al cerrar", async ({
+    page,
+  }) => {
+    await page.goto("/settings");
+    for (const width of [320, 375, 768]) {
+      await page.setViewportSize({ width, height: 900 });
+      const capsule = page.getByTestId("panel-dock-open");
+      await expect(capsule.getByText("Asistente", { exact: true })).toBeVisible();
+      const box = await capsule.boundingBox();
+      const tabs = await page.getByTestId("app-tabbar").boundingBox();
+      const scroll = await page.getByTestId("settings-screen-scroll").boundingBox();
+      if (!scroll || !tabs) throw new Error("Falta el desplazamiento o la navegación");
+      expect(scroll.y + scroll.height).toBe(tabs.y);
+      if (!box || !tabs) throw new Error("Falta la cápsula o la navegación");
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(width - box.x - box.width).toBe(16);
+      expect(tabs.y - box.y - box.height).toBe(16);
+      const style = await capsule.evaluate((el) => {
+        const css = getComputedStyle(el);
+        return { radius: parseFloat(css.borderTopLeftRadius), background: css.backgroundColor };
+      });
+      expect(style.radius).toBeGreaterThanOrEqual(box.height / 2);
+      expect(style.background).not.toBe("rgba(0, 0, 0, 0)");
+      const blocksContent = await page.evaluate(
+        ({ y }) =>
+          Boolean(document.elementFromPoint(8, y + 22)?.closest('[data-testid="panel-dock"]')),
+        box,
+      );
+      expect(blocksContent).toBe(false);
+      const bar = page.getByTestId("screen-action-bar");
+      await expect(bar).toHaveCSS("position", "absolute");
+      await expect(bar).toHaveCSS("border-top-width", "0px");
+      await expect(bar).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      const logout = page.getByTestId("settings-session").getByTestId("logout-button");
+      await logout.scrollIntoViewIfNeeded();
+      const last = await logout.boundingBox();
+      if (!last) throw new Error("Falta el cierre de sesión");
+      expect(last.y + last.height).toBeLessThanOrEqual(box.y);
+      await capsule.click();
+      await expect(page.getByRole("dialog", { name: "Asistente", exact: true })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog", { name: "Asistente", exact: true })).toHaveCount(0);
+      await expect(capsule).toBeFocused();
+    }
+    await page.getByTestId("dock-start-consultation").click();
+    await expect(page).toHaveURL(/\/patients$/);
+    await page.goto("/knowledge");
+    await expect(page.getByTestId("panel-dock-open")).toHaveCount(0);
+    await expect(page.getByTestId("dock-start-consultation")).toBeVisible();
+    await page.goto("/home");
+    await expect(page.getByTestId("home-start-consultation")).toHaveCount(0);
+    await expect(page.getByTestId("dock-start-consultation")).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.getByTestId("panel-dock-open")).toHaveCount(0);
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
+  });
+
+  test("la marca móvil deja 24 px hasta el logo y la barra inferior omite Seguimiento", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.goto("/settings");
+    const logo = page.getByTestId("screen-brand").locator('[role="img"]');
+    await expect(logo).toBeVisible();
+    const box = await logo.boundingBox();
+    if (!box) throw new Error("Falta el logo móvil");
+    expect(box.y).toBe(24);
+    const tabbar = page.getByTestId("app-tabbar");
+    await expect(tabbar.getByRole("link", { name: "Seguimiento" })).toHaveCount(0);
+    for (const name of ["Inicio", "Pacientes", "Conocimiento", "Configuración"]) {
+      await expect(tabbar.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+  });
+
+  test("todos los destinos móviles muestran su etiqueta en una línea, incluida Configuración", async ({
+    page,
+  }) => {
+    await page.goto("/settings");
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      const tabbar = page.getByTestId("app-tabbar");
+      for (const name of ["Inicio", "Pacientes", "Conocimiento", "Configuración"]) {
+        const label = tabbar.getByText(name, { exact: true });
+        await expect(label).toBeVisible();
+        const lines = await label.evaluate((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return range.getClientRects().length;
+        });
+        expect(lines).toBe(1);
+      }
+    }
+  });
+
+  test("Configuración conserva título y perfil legibles con texto al 200 % en 320 px", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto("/settings");
+    await expect(page.getByTestId("settings-profile")).toBeVisible();
+    await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+    const title = await page
+      .getByRole("heading", { name: "Configuración", exact: true })
+      .boundingBox();
+    if (!title) throw new Error("Falta el título");
+    expect(title.x + title.width).toBeLessThanOrEqual(320);
+    const name = await page
+      .getByTestId("settings-profile")
+      .getByText(ANA.displayName, { exact: true })
+      .boundingBox();
+    if (!name) throw new Error("Falta el nombre del profesional");
+    expect(name.width).toBeGreaterThanOrEqual(150);
+    await page
+      .getByTestId("settings-session")
+      .getByTestId("logout-button")
+      .scrollIntoViewIfNeeded();
+    await expect(
+      page.getByTestId("settings-session").getByTestId("logout-button"),
+    ).toBeInViewport();
+  });
+
+  for (const origin of ["settings-session", "app-sidebar"]) {
+    test(`Cerrar sesión indica progreso y bloquea nuevas activaciones desde ${origin}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.goto("/settings");
+      let release = () => {};
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await page.route("**/rest/v1/rpc/revoke_current_access_session", async (route) => {
+        await pending;
+        await route.continue();
+      });
+      const button = page.getByTestId(origin).getByTestId("logout-button");
+      try {
+        await button.click();
+        await expect(button).toBeDisabled();
+        await expect(button).toHaveAttribute("aria-busy", "true");
+        await expect(button).toHaveText("Cerrando sesión…");
+      } finally {
+        release();
+      }
+      await expect(page).toHaveURL(/\/login$/);
+    });
+  }
+
+  test("Configuración mantiene las tres tarjetas en una columna en escritorio", async ({
+    page,
+  }) => {
+    for (const width of [1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/settings");
+      const boxes = [];
+      for (const id of ["settings-profile", "settings-appearance", "settings-session"]) {
+        await expect(page.getByTestId(id)).toBeVisible();
+        const box = await page.getByTestId(id).boundingBox();
+        if (!box) throw new Error(`Falta la tarjeta ${id}`);
+        boxes.push(box);
+      }
+      const [profile, appearance, session] = boxes;
+      if (!profile || !appearance || !session) throw new Error("Faltan tarjetas");
+      for (const box of [appearance, session]) {
+        expect(Math.abs(box.x - profile.x)).toBeLessThanOrEqual(1);
+        expect(Math.abs(box.width - profile.width)).toBeLessThanOrEqual(1);
+      }
+      expect(appearance.y).toBeGreaterThanOrEqual(profile.y + profile.height + 24);
+      expect(session.y).toBeGreaterThanOrEqual(appearance.y + appearance.height + 24);
+    }
+  });
+
   test("el botón cambia a oscuro sin recargar, persiste y «Sistema» lo devuelve", async ({
     page,
   }) => {
@@ -83,22 +255,35 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     }
   });
 
-  for (const width of [1280, 375]) {
-    test(`a ${width} px, Configuración queda a 1 activación desde una pantalla protegida`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 800 });
-      await page.goto("/patients");
-      await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
-      const entry =
-        width >= 1024
-          ? page.getByTestId("app-sidebar").getByRole("link", { name: "Configuración" })
-          : page.getByTestId("app-topbar").getByRole("link", { name: /Configuración/ });
-      await entry.click();
-      await expect(page).toHaveURL(/\/settings$/);
-      await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
-    });
-  }
+  test("a 1280 px, Configuración queda a 1 activación desde una pantalla protegida", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("app-sidebar").getByRole("link", { name: "Configuración" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
+  });
+
+  // En móvil, Configuración es la última pestaña de la barra inferior y reúne perfil, apariencia
+  // y «Cerrar sesión».
+  test("a 375 px, la pestaña Configuración muestra perfil, apariencia y cerrar sesión", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("patients-list")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("app-tabbar").getByRole("link", { name: "Configuración" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
+    // La barra lateral de escritorio también tiene uno, oculto a este ancho.
+    await expect(page.getByTestId("logout-button").filter({ visible: true })).toBeVisible();
+    await page.getByTestId("settings-theme").getByRole("radio", { name: "Oscuro" }).click();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await page.getByTestId("settings-edit-profile").click();
+    await expect(page).toHaveURL(/\/settings\/profile$/);
+  });
 
   // Revisión de la PR #38 (WCAG 4.1.2): sin acciones por día, los días no son botones ni paradas
   // de Tab; solo se enfocan «Mes anterior» y «Mes siguiente».

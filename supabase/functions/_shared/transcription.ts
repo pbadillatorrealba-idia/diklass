@@ -21,6 +21,26 @@ export const MIME_PERMITIDOS = new Set([
   "audio/x-m4a",
 ]);
 
+/** Vocabulario que orienta al reconocedor: etología clínica y fármacos habituales (no es una instrucción). */
+export const GLOSARIO_ASR =
+  "Consulta veterinaria de etología canina: ansiedad por separación, reactividad, fobia a ruidos, estereotipias, desensibilización, fluoxetina, clomipramina, trazodona, gabapentina, selegilina, meloxicam.";
+
+const plano = (t: string) =>
+  t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Con audio silencioso el modelo a veces devuelve el propio prompt: eso no es un dictado. */
+export function esEcoDelPrompt(texto: string): boolean {
+  const t = plano(texto);
+  const g = plano(GLOSARIO_ASR);
+  return t.length >= 30 && (g.includes(t) || t.includes(g.slice(0, 40)));
+}
+
 export const MODELO_TRANSCRIPCION = "gpt-transcribe";
 
 /** El proveedor excedió el tiempo máximo (FR-055): el cliente descarta el audio. */
@@ -56,6 +76,7 @@ export async function transcribeWithOpenAI(options: {
   form.set("file", audio, audio.type.includes("webm") ? "audio.webm" : "audio.m4a");
   form.set("model", MODELO_TRANSCRIPCION);
   form.set("language", "es");
+  form.set("prompt", GLOSARIO_ASR);
   form.set("response_format", "json");
   let respuesta: Response;
   try {
@@ -76,5 +97,5 @@ export async function transcribeWithOpenAI(options: {
     throw new Error(`OPENAI_${respuesta.status}`);
   }
   const { text } = (await respuesta.json()) as { text?: string };
-  return text ?? "";
+  return esEcoDelPrompt(text ?? "") ? "" : (text ?? "");
 }

@@ -41,6 +41,12 @@ verify_jwt = true
 [functions.transcribe-chat-audio]
 verify_jwt = true
 
+[functions.agent]
+verify_jwt = true
+
+[functions.speak]
+verify_jwt = true
+
 # La purga NO usa el JWT de un usuario: la invoca pg_cron con un secreto compartido (PURGE_CHAT_AUDIO_SECRET,
 # guardado en Vault) que la propia función comprueba en tiempo constante; sin él rechaza y no borra nada.
 [functions.purge-chat-audio]

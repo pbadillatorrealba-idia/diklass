@@ -1,7 +1,19 @@
 import type { CalendarEvent } from "@/features/agenda/calendar-event";
-import type { Message, Part } from "@/features/asistente/chat-model";
-import { answerAgenda, answerFecha, detectIntent } from "@/features/asistente/consultas-basicas";
+import {
+  type AgentSource,
+  type Message,
+  messageText,
+  type Part,
+} from "@/features/asistente/chat-model";
+import {
+  answerAgenda,
+  answerFecha,
+  detectIntent,
+  startOfDay,
+} from "@/features/asistente/consultas-basicas";
+import { isValidAction, type ProposalAction } from "@/features/asistente/proposal-action";
 import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
+import { isAllowedRoute } from "../../../supabase/functions/_shared/routes";
 
 /**
  * Puerto del asistente (asistente-conversacional · design.md D2): una respuesta es un iterable de
@@ -83,3 +95,76 @@ export function routeResponder(responders: {
       ),
   };
 }
+
+type AgentDeps = {
+  invoke: (body: {
+    text: string;
+    patientId: string | null;
+    since: string;
+    history: { role: "user" | "assistant"; text: string }[];
+  }) => Promise<{
+    text: string;
+    ui: { type: "navigate"; path: string }[];
+    proposals: { id: string; summary: string; origin: string; action: ProposalAction }[];
+    tools?: string[];
+    sources?: AgentSource[];
+    traceId?: string;
+  }>;
+  navigate: (path: string) => void;
+};
+
+/** Últimos turnos que se envían al agente como contexto. */
+const HISTORY_TURNS = 10;
+
+/**
+ * Agente LangChain (Edge Function `agent`). Solo lee y navega: la UI vuelve a validar la ruta contra la
+ * lista blanca antes de abrirla, porque lo que diga el servidor no es de confianza ciega.
+ */
+export class AgentResponder implements Responder {
+  constructor(private readonly deps: AgentDeps) {}
+
+  async *respond(history: readonly Message[], input: ChatInput, signal: AbortSignal) {
+    const turns = history
+      .filter((m) => m.status === "done")
+      .map((m) => ({ role: m.role, text: messageText(m) }))
+      .filter((m) => m.text !== "")
+      .slice(-HISTORY_TURNS);
+    const { text, ui, proposals, tools, sources, traceId } = await this.deps.invoke({
+      text: input.text,
+      patientId: input.patientId,
+      since: startOfDay(new Date()).toISOString(),
+      history: turns,
+    });
+    if (signal.aborted) return;
+    for (const action of ui) if (isAllowedRoute(action.path)) this.deps.navigate(action.path);
+    // Una propuesta que no cumple el catálogo vigente no llega a la pantalla.
+    const tarjetas: Part[] = proposals
+      .filter((p) => isValidAction(p.action))
+      .map((proposal) => ({ type: "proposal", proposal }));
+    const porque: Part[] = tools?.length
+      ? [
+          {
+            type: "why",
+            tools: [...new Set(tools)],
+            sources: sources?.length ? sources : undefined,
+            traceId,
+          },
+        ]
+      : [];
+    const listo: ResponseEvent = {
+      type: "ready",
+      parts: [{ type: "text", text }, ...porque, ...tarjetas],
+    };
+    yield listo;
+  }
+}
+
+/** Con agente, todo lo que no es consulta básica va a él; sin agente, a la base de conocimiento. */
+export const routeAgent = (responders: { basico: Responder; agente: Responder }): Responder => ({
+  respond: (history, input, signal) =>
+    (detectIntent(input.text) ? responders.basico : responders.agente).respond(
+      history,
+      input,
+      signal,
+    ),
+});

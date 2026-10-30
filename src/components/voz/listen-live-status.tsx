@@ -78,7 +78,10 @@ export function ListenLiveStatus({
     );
   }
   return (
-    <View className="w-full flex-row flex-wrap items-center gap-x-3" testID="listen-status-dock">
+    <View
+      className="w-full flex-row flex-wrap items-center gap-x-3 rounded-sm bg-card p-3"
+      testID="listen-status-dock"
+    >
       <View aria-live="polite" className="flex-row items-center gap-1" role="status">
         {estado}
       </View>

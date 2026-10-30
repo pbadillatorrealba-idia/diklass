@@ -1,16 +1,30 @@
+import { useState } from "react";
 import { Button, ButtonText } from "@/components/ui/button";
 
 type LogoutButtonProps = { onLogout: () => Promise<void> };
 
 export function LogoutButton({ onLogout }: LogoutButtonProps) {
+  const [isPending, setIsPending] = useState(false);
+  const handleLogout = async () => {
+    if (isPending) return;
+    setIsPending(true);
+    try {
+      await onLogout();
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   return (
     <Button
+      aria-busy={isPending}
       className="self-start"
-      onPress={() => void onLogout()}
+      isDisabled={isPending}
+      onPress={() => void handleLogout()}
       testID="logout-button"
       variant="outline"
     >
-      <ButtonText>Cerrar sesión</ButtonText>
+      <ButtonText>{isPending ? "Cerrando sesión…" : "Cerrar sesión"}</ButtonText>
     </Button>
   );
 }

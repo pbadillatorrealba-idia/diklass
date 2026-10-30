@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Message } from "@/features/asistente/chat-model";
+import { proposalActionSchema } from "@/features/asistente/proposal-action";
 import { knowledgeAnswerSchema } from "@/features/conocimiento/schema";
 import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { logEvent } from "@/lib/observability/logger";
@@ -25,6 +26,21 @@ export type MessagePage = {
 const partSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
   z.object({ type: z.literal("notice"), text: z.string() }),
+  z.object({
+    type: z.literal("why"),
+    tools: z.array(z.string()),
+    sources: z
+      .array(
+        z.object({
+          documentoId: z.string(),
+          ordinal: z.number(),
+          titulo: z.string(),
+          seccion: z.string().nullable(),
+        }),
+      )
+      .optional(),
+    traceId: z.string().optional(),
+  }),
   z.object({ type: z.literal("knowledge"), queryId: z.string(), answer: knowledgeAnswerSchema }),
   z.object({
     type: z.literal("audio"),
@@ -35,7 +51,12 @@ const partSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("proposal"),
-    proposal: z.object({ id: z.string(), summary: z.string(), origin: z.string() }),
+    proposal: z.object({
+      id: z.string(),
+      summary: z.string(),
+      origin: z.string(),
+      action: proposalActionSchema.optional(),
+    }),
   }),
 ]);
 

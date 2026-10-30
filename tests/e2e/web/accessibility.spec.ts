@@ -126,6 +126,8 @@ async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
       }
       for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
         if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) continue;
+        // Solo para lectores de pantalla (recorte de 1 px): recortar es su función, no un desborde.
+        if (el.clientWidth <= 1) continue;
         const overflowX = getComputedStyle(el).overflowX;
         if (overflowX === "visible" || el.clientWidth === 0) continue;
         if (el.scrollWidth > el.clientWidth + 1) {
@@ -167,7 +169,7 @@ test.describe("WCAG 2.2 AA gate", () => {
     test.skip(!hasBackend, "Requires local Supabase with the synthetic veterinarians provisioned.");
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expectNoViolations(page);
     // El workspace de consulta y el resto de pantallas del registro clínico se escanean
     // sobre un caso clínico sintético en el bloque de la tarea 5.1 (D12).
@@ -427,7 +429,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       const controles = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
           .filter((el) =>
-            /^(home-(patients|follow-up|knowledge)|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+            /^(home-start-consultation|home-consulta-.+|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
               el.dataset.testid ?? "",
             ),
           )
@@ -456,9 +458,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       expect.arrayContaining([
         "follow-up-open",
         "history-open",
-        "home-follow-up",
-        "home-knowledge",
-        "home-patients",
+        "home-start-consultation",
         "patient-open",
         "screen-back",
         "patients-register",
@@ -532,14 +532,12 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     expect(formulario?.width ?? 0).toBeLessThanOrEqual(720);
   });
 
-  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
-  test("Inicio y Configuración van a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
+  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM. Configuración
+  // va en una columna también en escritorio (tema.spec.ts).
+  test("Inicio va a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const pares = [
-      { url: "/home", izquierda: "home-patients", derecha: "home-agenda" },
-      { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
-    ];
+    const pares = [{ url: "/home", izquierda: "home-today", derecha: "home-agenda" }];
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 900 });
       for (const par of pares) {

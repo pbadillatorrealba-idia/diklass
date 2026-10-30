@@ -17,6 +17,8 @@ export type ChatDeps = {
     removePending: (id: string) => void;
     addUnread: () => void;
   };
+  /** Se avisa cuando la respuesta del asistente quedó guardada (p. ej. para locutarla). */
+  onAnswer?: (parts: Part[]) => void;
   getPending: () => readonly Message[];
   /**
    * Respuestas ya obtenidas por pregunta (id): si persistir falla y se reintenta, no se vuelve a
@@ -111,6 +113,7 @@ async function run(deps: ChatDeps, user: Message, signal: AbortSignal) {
     store.removePending(placeholderId);
     store.removePending(user.id);
     store.addUnread();
+    deps.onAnswer?.(parts);
   } catch (error) {
     store.removePending(placeholderId);
     if (deps.isAuthRequired(error)) {

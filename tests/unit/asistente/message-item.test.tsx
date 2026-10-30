@@ -33,6 +33,22 @@ describe("MessageItem", () => {
     expect(html).toMatch(/<[^>]*font-semibold[^>]*>doctora</);
   });
 
+  test("«¿Por qué?» aparece plegado: no muestra herramientas ni traza hasta abrirlo", () => {
+    const html = render(
+      <MessageItem
+        message={base({
+          parts: [
+            { type: "text", text: "Listo" },
+            { type: "why", tools: ["buscar_paciente"], traceId: "abc123" },
+          ],
+        })}
+      />,
+    );
+    expect(html).toContain("¿Por qué?");
+    expect(html).not.toContain("Buscó pacientes");
+    expect(html).not.toContain("abc123");
+  });
+
   test("la pregunta del veterinario va a la derecha, en bloque y sin markdown", () => {
     const html = render(
       <MessageItem

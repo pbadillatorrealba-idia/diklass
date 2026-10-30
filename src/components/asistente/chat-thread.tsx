@@ -225,10 +225,12 @@ export function ChatThread({ chat }: { chat: ChatController }) {
         isLoading={chat.isLoading}
         isLoadingOlder={chat.isLoadingOlder}
         messages={chat.messages}
+        onConfirmProposal={(id) => void chat.confirmProposal(id)}
         onCopy={(text) => void copiar(text)}
         onLoadOlder={() => void chat.loadOlder()}
         onPlayAudio={chat.playAudio}
         onRemoveAudio={(id) => setAudioToRemove(id)}
+        proposalState={chat.proposalState}
         onRetry={(id) => chat.retry(id)}
       />
 

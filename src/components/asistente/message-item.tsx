@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { PartView } from "@/components/asistente/message-parts";
+import { PartView, type PartContext as ProposalCtx } from "@/components/asistente/message-parts";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { type Message, messageText } from "@/features/asistente/chat-model";
@@ -13,6 +13,7 @@ export type MessageItemProps = {
   onRetry?: (messageId: string) => void;
   onRemoveAudio?: (messageId: string) => void;
   onConfirmProposal?: (proposalId: string) => void;
+  proposalState?: ProposalCtx["proposalState"];
   onPlayAudio?: (path: string) => Promise<string | null>;
 };
 
@@ -26,6 +27,7 @@ export function MessageItem({
   message,
   onCopy,
   onConfirmProposal,
+  proposalState,
   onPlayAudio,
   onRemoveAudio,
   onRetry,
@@ -56,7 +58,7 @@ export function MessageItem({
       <View className="gap-2">
         {message.parts.map((part, index) => (
           <PartView
-            ctx={{ role: message.role, onConfirmProposal, onPlayAudio }}
+            ctx={{ role: message.role, onConfirmProposal, proposalState, onPlayAudio }}
             // biome-ignore lint/suspicious/noArrayIndexKey: las partes de un mensaje no traen id y su orden es fijo
             key={`${part.type}-${index}`}
             part={part}

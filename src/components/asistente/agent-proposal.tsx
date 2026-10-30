@@ -7,6 +7,7 @@ import { ProvenanceMark } from "@/components/ui/provenance-mark";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import type { ProposalAction } from "@/features/asistente/proposal-action";
 import type { Attribution } from "@/lib/attribution/types";
 
 export type AgentProposalData = {
@@ -15,6 +16,8 @@ export type AgentProposalData = {
   summary: string;
   /** De dónde sale la propuesta (qué leyó el agente); se muestra siempre. */
   origin: string;
+  /** Qué escribe al confirmarse; sin ella la propuesta es solo informativa. */
+  action?: ProposalAction;
 };
 
 type AgentProposalProps = {
@@ -28,6 +31,10 @@ type AgentProposalProps = {
    * del cliente: FR-063). Presente, la propuesta ya no es sugerencia.
    */
   confirmedBy?: Attribution | null;
+  /** La entrada ya estaba registrada (confirmada antes): no se duplicó. */
+  alreadyRecorded?: boolean;
+  /** La confirmación falló; no se escribió nada y se puede reintentar. */
+  error?: string | null;
 };
 
 /**
@@ -43,6 +50,8 @@ export function AgentProposal({
   onConfirm,
   busy = false,
   confirmedBy = null,
+  alreadyRecorded = false,
+  error = null,
 }: AgentProposalProps) {
   const detalle = (
     <Box className="flex-row items-start gap-3">
@@ -55,8 +64,10 @@ export function AgentProposal({
   );
   return (
     <Card className="gap-2" testID="agent-proposal">
-      {confirmedBy ? detalle : <SuggestedBlock>{detalle}</SuggestedBlock>}
-      {confirmedBy ? (
+      {confirmedBy || alreadyRecorded ? detalle : <SuggestedBlock>{detalle}</SuggestedBlock>}
+      {alreadyRecorded ? (
+        <Text tone="muted">Ya estaba registrada; no se duplicó.</Text>
+      ) : confirmedBy ? (
         // Confirmada: deja de ser sugerencia y muestra quién la validó (FR-076).
         <VStack className="gap-2">
           <Box className="flex-row items-center gap-1">
@@ -68,15 +79,22 @@ export function AgentProposal({
           <AttributionBadge approved attribution={confirmedBy} />
         </VStack>
       ) : (
-        <Button
-          accessibilityLabel={`Confirmar la propuesta: ${proposal.summary}`}
-          className="self-start"
-          isDisabled={busy}
-          onPress={() => onConfirm(proposal.id)}
-          testID="agent-proposal-confirm"
-        >
-          <ButtonText>Confirmar</ButtonText>
-        </Button>
+        <>
+          {error ? (
+            <Text selectable tone="destructive">
+              {error}
+            </Text>
+          ) : null}
+          <Button
+            accessibilityLabel={`Confirmar la propuesta: ${proposal.summary}`}
+            className="self-start"
+            isDisabled={busy}
+            onPress={() => onConfirm(proposal.id)}
+            testID="agent-proposal-confirm"
+          >
+            <ButtonText>Confirmar</ButtonText>
+          </Button>
+        </>
       )}
     </Card>
   );

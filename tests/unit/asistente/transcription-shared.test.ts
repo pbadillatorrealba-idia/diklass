@@ -27,6 +27,7 @@ describe("transcribeWithOpenAI", () => {
     const form = visto.init?.body as FormData;
     expect(form.get("model")).toBe("gpt-transcribe");
     expect(form.get("language")).toBe("es");
+    expect(String(form.get("prompt"))).toContain("etología");
     const cabeceras = visto.init?.headers as Record<string, string> | undefined;
     expect(cabeceras?.Authorization).toBe("Bearer clave");
   });
@@ -92,5 +93,20 @@ describe("compartido", () => {
   test("calidad: menos de 3 letras es insufficient", () => {
     expect(calidad("ah")).toBe("insufficient");
     expect(calidad("hola")).toBe("ok");
+  });
+});
+
+describe("eco del prompt", () => {
+  const {
+    esEcoDelPrompt,
+    GLOSARIO_ASR,
+  } = require("../../../supabase/functions/_shared/transcription");
+  test("el prompt devuelto como transcripción se descarta; un dictado real no", () => {
+    expect(esEcoDelPrompt(GLOSARIO_ASR)).toBe(true);
+    expect(esEcoDelPrompt("Consulta veterinaria de etología canina: ansiedad por separación")).toBe(
+      true,
+    );
+    expect(esEcoDelPrompt("fluoxetina")).toBe(false);
+    expect(esEcoDelPrompt("El perro tiene ansiedad por separación desde marzo")).toBe(false);
   });
 });

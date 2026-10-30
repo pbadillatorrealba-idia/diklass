@@ -229,6 +229,16 @@ export const anamnesisContentSchema = z
     message: "Elige una de las respuestas.",
   });
 
+/** Resumen de la consulta (memoria del agente): historial de solo agregar; el vigente es el más reciente. */
+export const consultationSummaryContentSchema = z.object({
+  consultationId: z.string().uuid(),
+  text: z.string().trim().min(1).max(2000),
+  /** Lo redacta el asistente y el veterinario lo confirma (como las propuestas de anamnesis). */
+  provenance: z.literal("inferida"),
+});
+
+export type ConsultationSummaryContent = z.infer<typeof consultationSummaryContentSchema>;
+
 /** Contenido de un antecedente de anamnesis (FR-004, FR-021). */
 export type AnamnesisContent = z.infer<typeof anamnesisContentSchema>;
 

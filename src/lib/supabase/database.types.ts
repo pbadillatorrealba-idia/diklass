@@ -78,6 +78,29 @@ export type Database = {
           },
         ]
       }
+      assistant_agent_usage: {
+        Row: {
+          author_id: string
+          used_at: string
+        }
+        Insert: {
+          author_id: string
+          used_at?: string
+        }
+        Update: {
+          author_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_agent_usage_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_audio_usage: {
         Row: {
           author_id: string
@@ -644,6 +667,7 @@ export type Database = {
         }
         Returns: string
       }
+      consume_agent_quota: { Args: never; Returns: string }
       consume_assistant_audio_quota: { Args: never; Returns: string }
       consume_client_error_quota: {
         Args: { p_bucket_key: string; p_limit?: number }

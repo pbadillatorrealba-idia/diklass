@@ -5,7 +5,8 @@ import { Text } from "@/components/ui/text";
 import { CONTINUOUS_CURVE } from "./border-curve";
 
 export type FormSectionProps = {
-  number: number;
+  /** Sin número, la banda lleva solo el título: para hojas que no son un paso del protocolo. */
+  number?: number;
   title: string;
   /** Sección con foco o la última editada (D20): banda en `primary` sólido. */
   active?: boolean;
@@ -40,10 +41,12 @@ export function FormSection({
         testID={testID ? `${testID}-band` : undefined}
       >
         <Heading className={ink} level={2}>
-          <Text className="font-semibold" tone={active ? "onPrimary" : "primary"} variant="data">
-            {String(number)}
-          </Text>
-          {`  ${title}`}
+          {number === undefined ? null : (
+            <Text className="font-semibold" tone={active ? "onPrimary" : "primary"} variant="data">
+              {String(number)}
+            </Text>
+          )}
+          {number === undefined ? title : `  ${title}`}
         </Heading>
       </View>
       <View className="relative">

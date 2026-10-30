@@ -345,7 +345,7 @@ Composición con piezas que ya existen; no añade tokens, colores ni tipografía
 - **Panel acoplado** (≥ 1440 px, 360 px por defecto): borde izquierdo de 1 px en `border`, fondo `card`. Cabecera con los hilos («Escucha», solo con una consulta abierta, y «Asistente») como botones —el activo en `outline`, los demás en `ghost`—, o solo el nombre del hilo cuando es único, y el control de colapsar con `aria-expanded`; debajo, el hilo activo: el chat lleva su propia lista desplazable y su composer fijo al pie.
 - **Riel** (56 px): un icono por hilo con su contador de cosas por confirmar (recuadro con borde `primary`, número en `nav`), el estado de la escucha y el control de expandir. El estado es texto: punto `destructive`, «Grabando» en `nav` (el aviso completo «Grabando y conservando audio» es su nombre accesible), el tiempo en mono y «Detener».
 - **Cajón** (1024–1439 px): el mismo panel superpuesto sobre `bg-scrim/55`, que se cierra con Escape, con su control o tocando el `scrim`; el foco vuelve al control del riel.
-- **Cinta** (bajo 1024 px y nativo): vive en el contenedor de la barra al pie de `Screen` (borde superior de 1 px, fondo `card`, área segura), a cualquier ancho y sobre la barra de pestañas. Lleva el hilo activo, los contadores, y, con la captura en curso, el aviso completo en texto, el tiempo y «Detener»; todos sus controles miden al menos 44×44 px.
+- **Cápsula** (bajo 1024 px y nativo): acceso «Asistente» con icono estable de conversación, fondo `primary`, contenido `primary-foreground` y radio completo. Alineada a la derecha, a 16 px del lateral y de la barra de pestañas, superpuesta sobre el contenido de `Screen` y `ScreenList` sin franja en el flujo. Su altura medida añade padding solo al final del desplazamiento, para alcanzar los últimos controles; el espacio transparente permite tocar el contenido de debajo. Encima aparece un segundo FAB redondeado «Iniciar consulta», variante `outline`, que lleva a `/patients` como el botón de Inicio; sustituye ese botón en móvil y permanece aunque no haya hilos. La acción principal de otras pantallas mantiene su superficie propia. Los contadores, respuestas nuevas y estado de escucha aparecen debajo sobre fondo `card` cuando corresponden, para conservar legibilidad sobre el contenido; grabación, tiempo y «Detener» permanecen visibles. Todos sus controles miden al menos 44×44 px.
 - **Hoja** (cinta activada): modal con título «Asistente» y «Cerrar» en la primera fila y los hilos en la segunda; atrapa el foco, se cierra con Escape y devuelve el foco a la cinta.
 - **Hilo de escucha**: una columna cronológica; cada tramo con su hora en `data` y, debajo, sus borradores como `SuggestedBlock` con fragmento de origen, contradicción como `Callout` y Confirmar / Corregir / Descartar. No separa hablantes ni usa burbujas.
 - **Propuestas de un agente**: son `SuggestedBlock` con su origen y el código «I»; solo al confirmar pasan a timbre de firma con el nombre de quien confirmó. Hoy el hilo «Asistente» no propone: responde consultas básicas y de conocimiento; el contrato de propuesta es para el agente futuro.
@@ -425,3 +425,30 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Don't** convertir un aviso en caja flotante o temporal; es un renglón dentro de su sección.
 - **Don't** presentar el hilo de escucha como una conversación con el sistema: sin burbujas, sin hablantes, sin respuestas simuladas.
 - **Don't** añadir ilustraciones de perros, patitas ni gris clínico sin tinta.
+
+
+### Marca en web compacta
+
+Bajo 1024 px no hay barra superior de marca. Todas las pantallas protegidas muestran el logo
+pequeño (20 px), centrado y con 8 px adicionales de espacio superior al inicio de su contenido desplazable, antes del título y del retroceso.
+No lleva fondo propio ni borde. Desde 1024 px la marca permanece solo en la barra lateral.
+El login conserva su marca existente; las cabeceras nativas conservan su comportamiento.
+Decisión aprobada por el usuario e implementación: `marca-movil-sin-barra`; aceptación visual
+registrada en sus tareas, sin implicar verificación nativa.
+
+
+### Configuración y centrado del acceso
+
+Configuración conserva Perfil, Apariencia y Sesión en una sola columna a cualquier ancho,
+con 24 px entre tarjetas; aprovecha el ancho `wide` sin dividir el contenido en columnas.
+En el acceso web de escritorio, la tarjeta está centrada en ambos ejes cuando cabe en pantalla,
+con 32 px de espacio interior bajo el botón. El selector de tema no desplaza su centro;
+el desplazamiento permite acceder a todo el formulario en ventanas bajas.
+
+En web compacta, la barra inferior contiene Inicio, Pacientes, Conocimiento y Configuración,
+todos con el nombre visible debajo del icono.
+Seguimiento se conserva en escritorio y en las rutas existentes, pero se retira de esa barra.
+
+El título puede ajustarse al ancho con texto ampliado. En Perfil, avatar y datos pasan a filas
+separadas cuando no caben juntos. Cerrar sesión muestra «Cerrando sesión…», estado ocupado y
+botón deshabilitado mientras espera, tanto en Configuración como en la barra lateral.
