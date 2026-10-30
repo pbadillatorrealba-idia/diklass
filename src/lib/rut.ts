@@ -21,7 +21,7 @@ export function rutCheckDigit(body: string): string {
 /** Forma canónica de un RUT válido, o `null` si el formato o el dígito verificador fallan. */
 export function normalizeRut(value: string): string | null {
   const text = compact(value);
-  const match = /^(\d{7,8})([0-9K])$/.exec(text);
+  const match = /^([1-9]\d{6,7})([0-9K])$/.exec(text);
   if (!match) return null;
   const [, body = "", dv = ""] = match;
   return rutCheckDigit(body) === dv ? `${body}-${dv}` : null;

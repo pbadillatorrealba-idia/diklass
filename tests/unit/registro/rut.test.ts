@@ -22,6 +22,9 @@ describe("rut", () => {
     expect(normalizeRut("1234-5")).toBeNull();
     expect(normalizeRut("abc")).toBeNull();
     expect(normalizeRut("")).toBeNull();
+    // Un cero inicial no cambia el dígito verificador: `01234567-4` y `1234567-4` serían el mismo RUT.
+    expect(normalizeRut("1234567-4")).toBe("1234567-4");
+    expect(normalizeRut("01234567-4")).toBeNull();
   });
 
   test("formatea para mostrar", () => {
