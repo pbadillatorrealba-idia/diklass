@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { handleAgent } from "../../../supabase/functions/agent/handler.ts";
+import { handleAgent, type QuotaStatus } from "../../../supabase/functions/agent/handler.ts";
 
 const deps = (over: Record<string, unknown> = {}) => {
   const logs: string[] = [];
@@ -9,6 +9,7 @@ const deps = (over: Record<string, unknown> = {}) => {
       log: (l: string) => logs.push(l),
       randomId: () => "rid",
       canUse: async () => true,
+      consumeQuota: async (): Promise<QuotaStatus> => "ok",
       run: async () => ({ text: "hola", ui: [], proposals: [], tools: [], sources: [] }),
       ...over,
     },
@@ -30,7 +31,7 @@ describe("handler del agente", () => {
     let called = false;
     const run = async () => {
       called = true;
-      return { text: "", ui: [], proposals: [], tools: [] };
+      return { text: "", ui: [], proposals: [], tools: [], sources: [] };
     };
     const a = deps({ canUse: async () => false, run });
     expect((await handleAgent(post({ text: "a" }), a.d)).status).toBe(403);
@@ -54,6 +55,34 @@ describe("handler del agente", () => {
     expect(res.status).toBe(200);
     expect((await res.json()).text).toBe("hola");
     expect(logs.join()).not.toContain("secreto");
+  });
+  it("sin cuota: 429 con tope y 503 si no se puede contar; en ambos no llama al modelo", async () => {
+    let called = false;
+    const run = async () => {
+      called = true;
+      return { text: "", ui: [], proposals: [], tools: [], sources: [] };
+    };
+    const tope = deps({ consumeQuota: async () => "rate_limited", run });
+    expect((await handleAgent(post({ text: "a" }), tope.d)).status).toBe(429);
+    const caida = deps({
+      consumeQuota: async () => {
+        throw new Error("x");
+      },
+      run,
+    });
+    expect((await handleAgent(post({ text: "a" }), caida.d)).status).toBe(503);
+    expect(called).toBe(false);
+  });
+  it("una petición inválida no gasta cuota", async () => {
+    let gastada = false;
+    const { d } = deps({
+      consumeQuota: async () => {
+        gastada = true;
+        return "ok";
+      },
+    });
+    expect((await handleAgent(post({ text: "" }), d)).status).toBe(400);
+    expect(gastada).toBe(false);
   });
   it("fallo del modelo, 502 sin filtrar el mensaje", async () => {
     const { d, logs } = deps({

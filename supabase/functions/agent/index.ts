@@ -34,6 +34,10 @@ Deno.serve((request) =>
       const { data } = await asUser(authorization).rpc("is_active_access");
       return data === true;
     },
+    consumeQuota: async (authorization) => {
+      const { data, error } = await asUser(authorization).rpc("consume_agent_quota");
+      return !error && (data === "ok" || data === "rate_limited") ? data : "unavailable";
+    },
     run: async ({ authorization, ...input }) => {
       const client = asUser(authorization);
       const turno = async () =>

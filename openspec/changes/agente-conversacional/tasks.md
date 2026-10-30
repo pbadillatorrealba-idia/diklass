@@ -5,7 +5,7 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 
 - [~] 1.1 (verificado bajo Deno 2.9 incl. trazas en Phoenix: un solo trace por turno con `deno run`/`deno check`: el agente corre con `fakeModel` y los tres proveedores llegan a su API con clave falsa; llamada real con `openai:gpt-6-luna` y herramienta OK bajo Deno 2.9; falta streaming SSE y la traza en Phoenix) Prueba de humo: LangGraph.js + ChatOpenAI + instrumentación OpenInference en Edge Function (Deno), con streaming SSE y trace visible en Phoenix.
 - [x] 1.2 Phoenix autoalojado: `docker-compose.phoenix.yml` y variables en `supabase/functions/.env.example`.
-- [ ] 1.3 Puerto `ChatModel` (OpenAI/Claude/Gemini por env) con test de contrato.
+- [x] 1.3 Puerto `ChatModel` (`model.ts`): `proveedor:modelo` por env (OpenAI, Anthropic, Google) con test de contrato (instancia cada proveedor y admite herramientas). OpenAI va por la Responses API con `store: false`. Probado en vivo solo con OpenAI.
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
 ## 2. Herramientas (pruebas primero)
@@ -33,8 +33,8 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 - [x] 5.2 Anti prompt-injection: datos recuperados delimitados (`<datos>`, `<` escapado) y 5 casos hostiles con modelo real (delimitador cerrado, resumen, tutor, agenda y fragmento de conocimiento).
 - [~] 5.3 Casos anotados (`tests/fixtures/agente/casos.json`) y marcador (`agent/eval.ts`, `scripts/eval-agente.ts`) probados con `fakeModel` y corridos con `openai:gpt-6-luna` real (9/9 OK, 2026-10-30). Falta subirlos como dataset/experimento de Phoenix.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
-- [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).
-- [ ] 5.7 Declarar el proveedor de modelo y minimizar datos enviados (Principio V) antes de usar datos reales.
+- [x] 5.6 Cuota por usuario del agente en la base: `consume_agent_quota` (migración 027, 30 turnos cada 10 min, candado por usuario), usada por el handler antes de llamar al modelo (429/503, falla cerrado). pgTap 027 y test vivo con peticiones paralelas.
+- [~] 5.7 Proveedor y datos enviados declarados en `design.md` (OpenAI, `store: false`, ficha sin RUT ni contacto, qué sale y qué no). Falta, antes de datos reales: contrato con el proveedor y aviso de primer uso del agente (decisión de la clínica).
 - [x] 5.5 Aislamiento entre clínicas en cada herramienta: `makeDb` (`agent/db.ts`) usa el cliente del solicitante; `tests/integration/agente/aislamiento-clinicas.test.ts` prueba en vivo con dos clínicas (control + otra clínica). Corrige además que «hoy» devolvía las 50 consultas más antiguas y no las más recientes.
 
 ## Diferido

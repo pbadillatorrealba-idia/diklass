@@ -39,6 +39,23 @@
 - Riesgo: las trazas contienen datos clínicos y RUT. Se mantiene Phoenix en red privada y se deja diferida la
   redacción de PII; revisar antes de usar datos reales.
 
+## Proveedor del modelo y datos enviados (Principio V · tarea 5.7)
+
+- **Proveedor:** OpenAI, por defecto `gpt-6-luna` (`AGENT_MODEL=proveedor:modelo`; también Anthropic y Google
+  detrás del mismo puerto). Las claves viven solo en los secretos de la función.
+- **Retención:** la Responses API conserva por defecto lo enviado; el agente fija `store: false`
+  (`model.ts`, con test). Falta confirmar con el proveedor el contrato de tratamiento de datos (retención de
+  abuso, ZDR): es una decisión de la clínica, no del código.
+- **Sale hacia el proveedor** (por turno): lo que el veterinario escribe o dicta; los últimos 10 turnos de la
+  conversación; y lo que devuelven las herramientas que el modelo decide llamar: nombre, especie, raza, edad,
+  peso, sexo, estado reproductivo y antecedentes del paciente, **nombre** del tutor, ids de consulta, texto del
+  resumen de la consulta, pacientes de las consultas de hoy y fragmentos de la base de conocimiento.
+- **No sale:** RUT, teléfono ni correo del tutor (la ficha del agente los omite y un test vivo lo asevera), ni
+  el audio (la transcripción es otro flujo, con su propio aviso de primer uso).
+- **Acotado por usuario:** 30 turnos cada 10 minutos (`consume_agent_quota`, 027).
+- **Pendiente antes de datos reales:** contrato con el proveedor y aviso de primer uso del agente (el de voz
+  cubre solo el audio). Mientras tanto, solo datos sintéticos.
+
 ## Riesgos
 
 - LangChain en Deno: validar compatibilidad antes de comprometerse (tarea 1.1); plan B, bucle de

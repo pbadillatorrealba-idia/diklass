@@ -10,7 +10,12 @@ export async function makeModel(spec: string) {
   switch (provider) {
     case "openai":
       // Responses API: los modelos con razonamiento (gpt-6-luna) rechazan herramientas en Chat Completions.
-      return new (await import("@langchain/openai")).ChatOpenAI({ model, useResponsesApi: true });
+      // `store: false`: esa API conserva por defecto lo enviado en OpenAI; son datos clínicos (Principio V).
+      return new (await import("@langchain/openai")).ChatOpenAI({
+        model,
+        useResponsesApi: true,
+        modelKwargs: { store: false },
+      });
     case "anthropic":
       return new (await import("@langchain/anthropic")).ChatAnthropic({ model });
     case "google-genai":

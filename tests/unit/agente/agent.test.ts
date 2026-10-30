@@ -206,11 +206,37 @@ describe("agente: resumen del día", () => {
   });
 });
 
-describe("makeModel", () => {
-  it("instancia cada proveedor y rechaza uno desconocido", async () => {
-    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
+describe("makeModel (contrato del puerto ChatModel)", () => {
+  const casos = [
+    ["openai:gpt-6-luna", "ChatOpenAI"],
+    ["gpt-6-luna", "ChatOpenAI"],
+    ["anthropic:claude-sonnet-5-5", "ChatAnthropic"],
+    ["google-genai:gemini-2.5-pro", "ChatGoogleGenerativeAI"],
+    ["google:gemini-2.5-pro", "ChatGoogleGenerativeAI"],
+  ] as const;
+
+  it.each(casos)("%s instancia %s y admite herramientas", async (spec, clase) => {
     process.env.OPENAI_API_KEY ??= "sk-test";
-    expect((await makeModel("openai:gpt-5.5")).constructor.name).toBe("ChatOpenAI");
+    process.env.ANTHROPIC_API_KEY ??= "sk-test";
+    process.env.GOOGLE_API_KEY ??= "test";
+    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
+    const model = await makeModel(spec);
+    expect(model.constructor.name).toBe(clase);
+    // El agente solo funciona con modelos que enlazan herramientas.
+    expect(typeof model.bindTools).toBe("function");
+  });
+
+  it("OpenAI no deja los datos clínicos guardados en el proveedor (store: false)", async () => {
+    process.env.OPENAI_API_KEY ??= "sk-test";
+    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
+    const model = (await makeModel("openai:gpt-6-luna")) as unknown as {
+      invocationParams: (o: object) => Record<string, unknown>;
+    };
+    expect(model.invocationParams({}).store).toBe(false);
+  });
+
+  it("rechaza un proveedor desconocido", async () => {
+    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
     await expect(makeModel("otro:modelo")).rejects.toThrow("no soportado");
   });
 });

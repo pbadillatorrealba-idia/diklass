@@ -25,11 +25,15 @@ export const sinceValido = (since: string | undefined, now = Date.now()) => {
   return t >= now - MAX_ATRAS_MS && t <= now ? since : undefined;
 };
 
+export type QuotaStatus = "ok" | "rate_limited" | "unavailable";
+
 export type AgentDependencies = {
   log: (line: string) => void;
   randomId: () => string;
   /** Usuario autenticado de la clínica con acceso activo (con su JWT). */
   canUse: (authorization: string) => Promise<boolean>;
+  /** Gasta un turno de la cuota del usuario (30 cada 10 min); es lo que acota el gasto de modelo. */
+  consumeQuota: (authorization: string) => Promise<QuotaStatus>;
   run: (input: {
     authorization: string;
     text: string;
@@ -64,6 +68,16 @@ export async function handleAgent(request: Request, deps: AgentDependencies): Pr
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return fallo("INVALID_INPUT", 400);
+
+  // Fallo cerrado: sin poder contar el turno no se llama al modelo.
+  let cuota: QuotaStatus = "unavailable";
+  try {
+    cuota = await deps.consumeQuota(authorization);
+  } catch {
+    cuota = "unavailable";
+  }
+  if (cuota === "rate_limited") return fallo("RATE_LIMITED", 429);
+  if (cuota !== "ok") return fallo("QUOTA_UNAVAILABLE", 503);
 
   const inicio = Date.now();
   try {
