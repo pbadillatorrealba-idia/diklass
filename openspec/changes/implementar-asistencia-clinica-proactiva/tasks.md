@@ -36,7 +36,7 @@ RI-3 (compuerta de accesibilidad/e2e de las pantallas nuevas).
   `status ≠ 'draft'` rechazado (FR-010, D8). Verificación: la suite falla exactamente en las
   aserciones del trigger; «rojo» observado en `/tmp/verify-006/` y en el job `database` de CI con
   su URL registrada en `quickstart.md`.
-- [x] 1..2 Escribir `supabase/migrations/013_asistencia_clinica.sql`: función y trigger
+- [x] 1..2 Escribir `supabase/migrations/026_asistencia_clinica.sql`: función y trigger
   `guard_assistance_decisions` (`BEFORE INSERT OR UPDATE` sobre `clinical_records` acotado a
   `record_type in ('missing_information','hypothesis')`) con los invariantes de D8
   (`ASSISTANCE_STATUS_INVALID`, `ASSISTANCE_CONTENT_INVALID`, `HYPOTHESIS_DECISION_INVALID`,
