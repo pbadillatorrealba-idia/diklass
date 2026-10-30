@@ -43,7 +43,7 @@
 
 **Origen**: esta spec no existía en la partición original. Se añadió al decidir que el PoC incorpora
 sistema de usuarios, decisión que también elimina el conflicto entre el Principio V de la
-constitución y el supuesto de usuario único que tenía la especificación de [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+constitución y el supuesto de usuario único que tenía la especificación de [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md).
 
 **Iteración 1 — verificación programática**: cada FR con trazabilidad a escenarios existentes, sin
 identificadores colisionantes, aristas de dependencia coincidentes entre spec, tabla del brief y
@@ -56,7 +56,7 @@ de la iteración 1: fallaban 6 de los 16 criterios. Hallazgos corregidos:
   desactivación o eliminación de una cuenta, y de él colgaban SC-045 (histórico sobre supervivencia de atribución, distinto del SC-045 vigente sobre bypass de interfaz), un escenario, dos casos límite
   y el atributo `estado` de la entidad Veterinario — sin que ningún requisito permitiera desactivar
   cuentas ni ningún supuesto lo declarara. Peor: FR-059 era incondicional, de modo que una cuenta
-  desactivada podía seguir autenticándose. Es el mismo defecto que la especificación de [base de conocimiento trazable](../../implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md) ya había corregido en
+  desactivada podía seguir autenticándose. Es el mismo defecto que la especificación de [base de conocimiento trazable](../../../specs/base-conocimiento-trazable/spec.md) ya había corregido en
   FR-030 y que el Principio III prohíbe. El ciclo de vida de cuentas salió del alcance, como el
   brief ya lo situaba en Fase 2. FR-065 quedó retirado y no debe reutilizarse.
 - **Prohibiciones sin verificación real.** FR-060 trazaba su cláusula de indistinguibilidad a un
@@ -81,4 +81,4 @@ vida de cuentas. Las marcas `[x]` reflejan la iteración 2 y valen lo que valga 
 
 ### Dependencias
 
-Ninguna dependencia de construcción. Es la primera del orden de construcción. La aceptación de US12 y SC-040/SC-041/SC-042/SC-044 es conjunta con [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) y no añade una arista de construcción inversa.
+Ninguna dependencia de construcción. Es la primera del orden de construcción. La aceptación de US12 y SC-040/SC-041/SC-042/SC-044 es conjunta con [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md) y no añade una arista de construcción inversa.

@@ -1,4 +1,5 @@
-import type { AnamnesisField, AntecedentGroup, Provenance } from "@/features/registro/schema";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
+import type { AntecedentGroup, EpicrisisContent, Provenance } from "@/features/registro/schema";
 
 /**
  * Etiquetas de interfaz del registro clínico. Vocabulario visible en español; los valores
@@ -21,47 +22,7 @@ export const ANTECEDENT_GROUP_ORDER: AntecedentGroup[] = [
   "behavioralHistory",
 ];
 
-export const ANAMNESIS_FIELD_LABELS: Record<AnamnesisField, string> = {
-  motivo_consulta: "Motivo de consulta",
-  comportamiento_problematico: "Comportamiento problemático",
-  frecuencia: "Frecuencia",
-  duracion: "Duración",
-  contexto: "Contexto",
-  desencadenantes: "Desencadenantes",
-  cambios_recientes: "Cambios recientes",
-  ambiente: "Ambiente",
-  convivencia: "Convivencia",
-  alimentacion: "Alimentación",
-  actividad: "Actividad",
-  rutinas: "Rutinas",
-  tratamientos_anteriores: "Tratamientos anteriores",
-  respuesta_tratamientos: "Respuesta a tratamientos",
-  texto_libre: "Texto libre",
-};
-
-/** Orden de aparición de los campos estructurados de US2 (sin el texto libre de FR-004). */
-export const ANAMNESIS_STRUCTURED_ORDER: AnamnesisField[] = [
-  "motivo_consulta",
-  "comportamiento_problematico",
-  "frecuencia",
-  "duracion",
-  "contexto",
-  "desencadenantes",
-  "cambios_recientes",
-  "ambiente",
-  "convivencia",
-  "alimentacion",
-  "actividad",
-  "rutinas",
-  "tratamientos_anteriores",
-  "respuesta_tratamientos",
-];
-
-export const ANAMNESIS_FIELD_OPTIONS: { value: AnamnesisField; label: string }[] =
-  ANAMNESIS_STRUCTURED_ORDER.concat("texto_libre").map((value) => ({
-    value,
-    label: ANAMNESIS_FIELD_LABELS[value],
-  }));
+export { isLegacyAnamnesisField };
 
 export const PROVENANCE_LABELS: Record<Provenance, string> = {
   reportada: "Reportada",
@@ -79,5 +40,25 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   birthDate: "Fecha de nacimiento",
   ageMonths: "Edad (meses)",
   weightKg: "Peso (kg)",
+  origin: "Procedencia",
+  adoptionAge: "Edad con que fue adoptado",
   ...ANTECEDENT_GROUP_LABELS,
 };
+
+/**
+ * Rótulos de lectura de los campos de la epicrisis (FR-011), en el orden del formulario. Los de
+ * edición (`epicrisis-fields.tsx`) añaden la indicación «uno por línea».
+ */
+export const EPICRISIS_FIELD_LABELS = {
+  motivoConsulta: "Motivo de consulta",
+  antecedentesRelevantes: "Antecedentes relevantes",
+  hallazgosAnamnesis: "Hallazgos de la anamnesis",
+  hipotesis: "Hipótesis consideradas",
+  diagnostico: "Diagnóstico registrado",
+  examenesSolicitados: "Exámenes solicitados",
+  intervencionesPropuestas: "Intervenciones propuestas",
+  medicamentosAprobados: "Medicamentos aprobados",
+  recomendacionesTutor: "Recomendaciones al tutor",
+  planSeguimiento: "Pendientes del plan de seguimiento",
+  observaciones: "Observaciones",
+} as const satisfies Record<Exclude<keyof EpicrisisContent, "consultationId">, string>;

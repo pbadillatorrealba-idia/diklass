@@ -1,5 +1,10 @@
-import { Box } from "@/components/ui/box";
+import { useState } from "react";
+import { type EpicrisisField, epicrisisDisplay } from "@/components/registro/epicrisis-changes";
+import { EPICRISIS_FIELD_LABELS } from "@/components/registro/labels";
+import { linesToItems, visibleListText } from "@/components/registro/list-lines";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -85,8 +90,49 @@ const LIST_FIELDS: {
   },
 ];
 
-// Un ítem por línea es la representación editable de un `string[]` del contenido: la
-// conversión (partir, recortar y descartar líneas vacías) es idéntica en los cuatro campos.
+/**
+ * Campo de lista (un ítem por línea). Guarda localmente el texto tal como se escribe y
+ * entrega al contenido la lista ya limpia: si el campo mostrara la lista recortada, cada
+ * pulsación borraría el espacio o el salto de línea recién escrito.
+ */
+function ListField({
+  label,
+  testID,
+  items,
+  isEditable,
+  onChangeItems,
+}: {
+  label: string;
+  testID: string;
+  items: string[];
+  isEditable: boolean;
+  onChangeItems: (items: string[]) => void;
+}) {
+  const [typed, setTyped] = useState(() => items.join("\n"));
+  return (
+    <FormControl>
+      <FormControlLabel>
+        <FormControlLabelText>{label}</FormControlLabelText>
+      </FormControlLabel>
+      <Input>
+        <InputField
+          accessibilityLabel={label}
+          aria-label={label}
+          className="min-h-textarea"
+          editable={isEditable}
+          multiline
+          onChangeText={(text) => {
+            setTyped(text);
+            onChangeItems(linesToItems(text));
+          }}
+          testID={testID}
+          textAlignVertical="top"
+          value={visibleListText(typed, items)}
+        />
+      </Input>
+    </FormControl>
+  );
+}
 
 /**
  * Los 12 campos editables de FR-011 (las hipótesis con su estado cuentan cada uno):
@@ -97,6 +143,18 @@ const LIST_FIELDS: {
  * asociación a la consulta y no se edita aquí.
  */
 export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFieldsProps) {
+  // Lectura (epicrisis firmada): un campo del formulario por fila, sin controles (D20).
+  if (!isEditable) {
+    return (
+      <VStack className="w-full" testID="epicrisis-fields">
+        {(Object.keys(EPICRISIS_FIELD_LABELS) as EpicrisisField[]).map((field) => (
+          <Field key={field} label={EPICRISIS_FIELD_LABELS[field]}>
+            {epicrisisDisplay(content, field) || "Sin registro"}
+          </Field>
+        ))}
+      </VStack>
+    );
+  }
   return (
     <VStack className="w-full gap-4" testID="epicrisis-fields">
       {TEXT_FIELDS.map(({ name, label, testID }) => (
@@ -108,7 +166,7 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
             <InputField
               accessibilityLabel={label}
               aria-label={label}
-              className="min-h-[120px]"
+              className="min-h-textarea"
               editable={isEditable}
               multiline
               onChangeText={(text) => onChange?.({ ...content, [name]: text })}
@@ -120,15 +178,15 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
         </FormControl>
       ))}
       <VStack className="w-full gap-2">
-        <Text bold>Hipótesis consideradas con su estado</Text>
+        <Text variant="strong">Hipótesis consideradas con su estado</Text>
         {content.hipotesis.length === 0 ? (
           <Text testID="epicrisis-hipotesis-empty">
             Sin hipótesis consideradas: ese campo lo aporta otra funcionalidad.
           </Text>
         ) : (
           content.hipotesis.map((hipotesis, index) => (
-            <Box
-              className="rounded-xl border border-border bg-white p-4 gap-2"
+            <Card
+              className="gap-2"
               // biome-ignore lint/suspicious/noArrayIndexKey: filas controladas por el contenido, sin estado interno; dos hipótesis pueden repetir texto y estado.
               key={`hipotesis-${index}`}
               testID="epicrisis-hipotesis"
@@ -191,7 +249,7 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
                   <ButtonText>Quitar hipótesis</ButtonText>
                 </Button>
               ) : null}
-            </Box>
+            </Card>
           ))
         )}
         {isEditable ? (
@@ -210,34 +268,14 @@ export function EpicrisisFields({ content, isEditable, onChange }: EpicrisisFiel
         ) : null}
       </VStack>
       {LIST_FIELDS.map(({ name, label, testID, read, write }) => (
-        <FormControl key={name}>
-          <FormControlLabel>
-            <FormControlLabelText>{label}</FormControlLabelText>
-          </FormControlLabel>
-          <Input>
-            <InputField
-              accessibilityLabel={label}
-              aria-label={label}
-              className="min-h-[96px]"
-              editable={isEditable}
-              multiline
-              onChangeText={(text) =>
-                onChange?.(
-                  write(
-                    content,
-                    text
-                      .split("\n")
-                      .map((line) => line.trim())
-                      .filter((line) => line !== ""),
-                  ),
-                )
-              }
-              testID={testID}
-              textAlignVertical="top"
-              value={read(content).join("\n")}
-            />
-          </Input>
-        </FormControl>
+        <ListField
+          isEditable={isEditable}
+          items={read(content)}
+          key={name}
+          label={label}
+          onChangeItems={(lines) => onChange?.(write(content, lines))}
+          testID={testID}
+        />
       ))}
     </VStack>
   );

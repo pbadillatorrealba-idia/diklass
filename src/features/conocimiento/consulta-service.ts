@@ -53,7 +53,25 @@ export async function consultKnowledge(
     if (error) {
       throw error;
     }
-    const recuperados = z.array(fragmentoRecuperadoSchema).parse(data ?? []);
+    // Lectura tolerante, como listSources/listQueries: un fragmento ilegible se omite con
+    // log estructurado en vez de tumbar toda consulta que lo recupere (revisión de la PR #30).
+    const recuperados = (data ?? []).flatMap((fila) => {
+      const legible = fragmentoRecuperadoSchema.safeParse(fila);
+      if (!legible.success) {
+        logEvent(
+          "conocimiento.row_content_skipped",
+          {
+            requestId,
+            operation: "consultKnowledge",
+            recordId: `${fila.documento_id}#${fila.fragmento_ordinal}`,
+            errorName: "ZodError",
+          },
+          "error",
+        );
+        return [];
+      }
+      return [legible.data];
+    });
     const candidatos: CandidatoFragmento[] = recuperados.map((fila) => ({
       documentoId: fila.documento_id,
       fragmentoOrdinal: fila.fragmento_ordinal,
@@ -77,7 +95,8 @@ export async function consultKnowledge(
 
     const answer = composeAnswer({
       pregunta,
-      lemasPregunta: candidatos[0]?.lemasPregunta ?? [],
+      lemasPregunta: recuperados[0]?.lemas_pregunta ?? [],
+      terminosPregunta: recuperados[0]?.terminos_pregunta ?? [],
       candidatos,
       paciente,
     });

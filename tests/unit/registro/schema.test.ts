@@ -1,20 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ANAMNESIS_SECTIONS,
   AnamnesisField,
   anamnesisContentSchema,
   consultationContentSchema,
   diagnosisContentSchema,
   epicrisisContentSchema,
+  LEGACY_ANAMNESIS_FIELDS,
   patientContentSchema,
   tutorContentSchema,
 } from "@/features/registro/schema";
 
 const fichaBase = {
   name: "Luna",
-  species: "perro",
+  species: "canino",
   breed: "Mestizo",
   sex: "hembra",
-  reproductiveStatus: "esterilizada",
+  reproductiveStatus: "esterilizado",
   tutorId: "tutor-1",
 };
 
@@ -108,49 +110,103 @@ describe("patientContentSchema (FR-001, FR-044)", () => {
 });
 
 describe("tutorContentSchema (FR-027)", () => {
+  const rut = "12345678-5";
+
   test("exige al menos un medio de contacto no vacío", () => {
-    expect(tutorContentSchema.safeParse({ name: "María" }).success).toBe(false);
-    expect(tutorContentSchema.safeParse({ name: "María", phone: null, email: null }).success).toBe(
-      false,
-    );
-    expect(tutorContentSchema.safeParse({ name: "María", phone: "   " }).success).toBe(false);
-    expect(tutorContentSchema.safeParse({ name: "María", phone: "555-0101" }).success).toBe(true);
+    expect(tutorContentSchema.safeParse({ name: "María", rut }).success).toBe(false);
     expect(
-      tutorContentSchema.safeParse({ name: "María", email: "maria@example.test" }).success,
+      tutorContentSchema.safeParse({ name: "María", rut, phone: null, email: null }).success,
+    ).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "María", rut, phone: "   " }).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "María", rut, phone: "555-0101" }).success).toBe(
+      true,
+    );
+    expect(
+      tutorContentSchema.safeParse({ name: "María", rut, email: "maria@example.test" }).success,
     ).toBe(true);
   });
 
   test("acepta ambos medios y normaliza los vacíos a sin dato", () => {
-    const tutor = tutorContentSchema.parse({ name: "María", phone: " 555-0101 ", email: "" });
+    const tutor = tutorContentSchema.parse({
+      name: "María",
+      rut,
+      phone: " 555-0101 ",
+      email: "",
+    });
 
     expect(tutor.phone).toBe("555-0101");
     expect(tutor.email).toBeNull();
   });
 
   test("rechaza un tutor sin nombre", () => {
-    expect(tutorContentSchema.safeParse({ name: "", phone: "555-0101" }).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ name: "", rut, phone: "555-0101" }).success).toBe(false);
+  });
+
+  test("el RUT es obligatorio, válido y se guarda en forma canónica", () => {
+    const base = { name: "María", phone: "555-0101" };
+    expect(tutorContentSchema.safeParse(base).success).toBe(false);
+    expect(tutorContentSchema.safeParse({ ...base, rut: "12345678-4" }).success).toBe(false);
+    expect(tutorContentSchema.parse({ ...base, rut: "12.345.678-5" }).rut).toBe("12345678-5");
+    expect(tutorContentSchema.parse({ ...base, rut: " 10.000.013-k " }).rut).toBe("10000013-K");
+  });
+
+  test("el paciente solo admite las especies, sexos y estados del catálogo", () => {
+    for (const malo of [
+      { species: "perro" },
+      { species: "Canino" },
+      { sex: "M" },
+      { reproductiveStatus: "castrado" },
+    ]) {
+      expect(patientContentSchema.safeParse({ ...fichaBase, ...malo }).success).toBe(false);
+    }
+    expect(
+      patientContentSchema.safeParse({
+        ...fichaBase,
+        species: "felino",
+        sex: "hembra",
+        reproductiveStatus: "esterilizado",
+      }).success,
+    ).toBe(true);
   });
 });
 
 describe("anamnesisContentSchema (FR-021, US2)", () => {
-  test("el vocabulario AnamnesisField es el de US2 más texto_libre", () => {
-    expect(AnamnesisField).toEqual([
-      "motivo_consulta",
-      "comportamiento_problematico",
-      "frecuencia",
-      "duracion",
-      "contexto",
-      "desencadenantes",
-      "cambios_recientes",
-      "ambiente",
-      "convivencia",
-      "alimentacion",
-      "actividad",
-      "rutinas",
-      "tratamientos_anteriores",
-      "respuesta_tratamientos",
-      "texto_libre",
-    ]);
+  test("el vocabulario AnamnesisField es el catálogo de la hoja, los campos previos y texto_libre", () => {
+    const catalogo = ANAMNESIS_SECTIONS.flatMap((section) => section.fields.map((f) => f.id));
+
+    expect([...AnamnesisField]).toEqual([...catalogo, ...LEGACY_ANAMNESIS_FIELDS, "texto_libre"]);
+    expect(new Set(AnamnesisField).size).toBe(AnamnesisField.length);
+    expect(catalogo).toContain("motivo_consulta");
+    expect(LEGACY_ANAMNESIS_FIELDS).toContain("desencadenantes");
+    expect(catalogo).not.toContain("desencadenantes");
+  });
+
+  test("las preguntas cerradas solo admiten sus valores (FR-111)", () => {
+    const tri = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "soledad_vocaliza",
+      text: "a_veces",
+    });
+    const triInvalida = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "soledad_vocaliza",
+      text: "quizás",
+    });
+    const sinoConAVeces = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "familia_agresion",
+      text: "a_veces",
+    });
+    const sino = anamnesisContentSchema.safeParse({
+      ...anamnesisBase,
+      field: "familia_agresion",
+      text: "no",
+    });
+
+    expect(tri.success).toBe(true);
+    expect(triInvalida.success).toBe(false);
+    expect(sinoConAVeces.success).toBe(false);
+    expect(sino.success).toBe(true);
   });
 
   test("rechaza un campo fuera del vocabulario estructurado", () => {
@@ -190,11 +246,13 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
   });
 
   test("acepta el vocabulario canónico de procedencia y rechaza lo demás", () => {
-    for (const provenance of ["reportada", "inferida", "recuperada", "desconocida"]) {
-      expect(
-        anamnesisContentSchema.safeParse({ ...anamnesisBase, field: "frecuencia", provenance })
-          .success,
-      ).toBe(true);
+    for (const provenance of ["reportada", "inferida", "recuperada", "desconocida"] as const) {
+      const entrada = anamnesisContentSchema.parse({
+        ...anamnesisBase,
+        field: "frecuencia",
+        provenance,
+      });
+      expect(entrada.provenance).toBe(provenance);
     }
     expect(
       anamnesisContentSchema.safeParse({
@@ -203,16 +261,6 @@ describe("anamnesisContentSchema (FR-021, US2)", () => {
         provenance: "confirmada",
       }).success,
     ).toBe(false);
-  });
-
-  test("acepta la procedencia recuperada de una fuente (FR-021 canónico)", () => {
-    const entrada = anamnesisContentSchema.parse({
-      ...anamnesisBase,
-      field: "tratamientos_anteriores",
-      provenance: "recuperada",
-    });
-
-    expect(entrada.provenance).toBe("recuperada");
   });
 
   test("rechaza un antecedente sin texto", () => {
@@ -283,5 +331,121 @@ describe("epicrisisContentSchema (FR-011)", () => {
     expect(epicrisisContentSchema.safeParse(sinPlan).success).toBe(false);
     const { diagnostico: _sinDiagnostico, ...sinDiagnostico } = epicrisisBase;
     expect(epicrisisContentSchema.safeParse(sinDiagnostico).success).toBe(false);
+  });
+});
+
+describe("ampliación etológica de la ficha (FR-001, FR-027, FR-110)", () => {
+  test("los datos de procedencia y adopción son opcionales y quedan sin dato", () => {
+    const ficha = patientContentSchema.parse(fichaBase);
+
+    expect(ficha.fileNumber).toBeNull();
+    expect(ficha.firstVisitDate).toBeNull();
+    expect(ficha.origin).toBeNull();
+    expect(ficha.adoptionAge).toBeNull();
+    expect(ficha.adoptionState).toBeNull();
+    expect(ficha.neuterAge).toBeNull();
+    expect(ficha.litterInfo).toBeNull();
+    expect(ficha.referrer).toBeNull();
+  });
+
+  test("conserva procedencia, adopción y derivante", () => {
+    const ficha = patientContentSchema.parse({
+      ...fichaBase,
+      origin: " Protectora ",
+      adoptionAge: "3 meses",
+      firstVisitDate: "2026-09-01",
+      referrer: { refers: "si", center: "Clínica Norte", opinion: "Ansiedad" },
+    });
+
+    expect(ficha.origin).toBe("Protectora");
+    expect(ficha.adoptionAge).toBe("3 meses");
+    expect(ficha.referrer).toEqual({
+      refers: "si",
+      name: null,
+      center: "Clínica Norte",
+      phone: null,
+      insurance: null,
+      opinion: "Ansiedad",
+    });
+    expect(
+      patientContentSchema.safeParse({ ...fichaBase, firstVisitDate: "2026-02-30" }).success,
+    ).toBe(false);
+    expect(
+      patientContentSchema.safeParse({ ...fichaBase, referrer: { refers: "tal vez" } }).success,
+    ).toBe(false);
+  });
+
+  test("el tutor admite apellidos y dirección sin exigirlos, y sigue exigiendo contacto", () => {
+    const tutor = tutorContentSchema.parse({
+      name: "María",
+      rut: "12345678-5",
+      phone: "555-0101",
+      surname: "Pérez",
+      address: "Calle 1",
+      city: "Barcelona",
+      postalCode: "08001",
+    });
+
+    expect(tutor.surname).toBe("Pérez");
+    expect(tutor.postalCode).toBe("08001");
+    expect(
+      tutorContentSchema.parse({ name: "María", rut: "12345678-5", phone: "1" }).address,
+    ).toBeNull();
+    expect(
+      tutorContentSchema.safeParse({ name: "María", rut: "12345678-5", surname: "Pérez" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("plan de la consulta (FR-112)", () => {
+  const diagnosis = { consultationId: "consulta-1", text: "Ansiedad por separación" };
+
+  test("el plan es opcional y el diagnóstico presuntivo sigue siendo el texto", () => {
+    expect(diagnosisContentSchema.parse(diagnosis).plan).toBeNull();
+  });
+
+  test("acepta protocolo, hasta tres diferenciales y hasta dos principios activos", () => {
+    const ok = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: {
+        tests: ["analisis_sangre", "radiografia"],
+        differentials: ["Fobia", "Hiperapego"],
+        medication: [{ activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" }],
+        neuterSurgical: "no",
+      },
+    });
+    const cuatro = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: { differentials: ["a", "b", "c", "d"] },
+    });
+    const tres = diagnosisContentSchema.safeParse({
+      ...diagnosis,
+      plan: {
+        medication: [
+          { activeIngredient: "a", guideline: "x" },
+          { activeIngredient: "b", guideline: "x" },
+          { activeIngredient: "c", guideline: "x" },
+        ],
+      },
+    });
+    const prueba = diagnosisContentSchema.safeParse({ ...diagnosis, plan: { tests: ["magia"] } });
+
+    expect(ok.success).toBe(true);
+    expect(cuatro.success).toBe(false);
+    expect(tres.success).toBe(false);
+    expect(prueba.success).toBe(false);
+  });
+});
+
+describe("catálogo de anamnesis", () => {
+  test("los ids son únicos, no vacíos y cada sección tiene campos", () => {
+    const ids = ANAMNESIS_SECTIONS.flatMap((section) => section.fields.map((f) => f.id));
+
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ANAMNESIS_SECTIONS.every((section) => section.fields.length > 0)).toBe(true);
+    expect(LEGACY_ANAMNESIS_FIELDS.some((legacy) => (ids as string[]).includes(legacy))).toBe(
+      false,
+    );
   });
 });

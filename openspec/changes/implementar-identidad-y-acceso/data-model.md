@@ -1,7 +1,7 @@
 # Modelo de datos
 
 Este modelo contiene la infraestructura de identidad y atribución que habilita las especificaciones clínicas
-posteriores. Paciente, Tutor, Consulta, Anamnesis y Epicrisis se definen en [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md), no en identidad. Diagnóstico y Tratamiento se detallan en la capacidad que los introduzca; todas las entidades clínicas deberán
+posteriores. Paciente, Tutor, Consulta, Anamnesis y Epicrisis se definen en [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md), no en identidad. Diagnóstico y Tratamiento se detallan en la capacidad que los introduzca; todas las entidades clínicas deberán
 implementar el contrato común de atribución descrito aquí. Este modelo conserva el diseño documentado y no acredita por sí mismo implementación ni aceptación.
 
 ## Entidades

@@ -1,5 +1,4 @@
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
 import { type AuthStorage, createWebStorage } from "@/lib/storage/auth-storage";
 
 function createNativeStorage(): AuthStorage {
@@ -15,5 +14,5 @@ function createNativeStorage(): AuthStorage {
 }
 
 export function createPlatformAuthStorage(): AuthStorage {
-  return Platform.OS === "web" ? createWebStorage() : createNativeStorage();
+  return process.env.EXPO_OS === "web" ? createWebStorage() : createNativeStorage();
 }

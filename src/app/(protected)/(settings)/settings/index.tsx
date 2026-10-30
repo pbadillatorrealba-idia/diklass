@@ -1,0 +1,74 @@
+import { Link } from "expo-router";
+import { View } from "react-native";
+import { LogoutButton } from "@/components/auth/logout-button";
+import { OptionPicker } from "@/components/registro/option-picker";
+import { Avatar } from "@/components/ui/avatar";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
+import { Screen } from "@/components/ui/screen";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { useAuth } from "@/features/auth/auth-provider";
+import { useSessionStore } from "@/stores/session-store";
+import type { ThemePreference } from "@/theme/theme-preference";
+import { useThemePreference } from "@/theme/use-color-scheme";
+
+const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
+  { value: "system", label: "Sistema" },
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Oscuro" },
+];
+
+/** Configuración (FR-093): perfil, apariencia (FR-091) y sesión. */
+export default function SettingsScreen() {
+  const { signOut, user } = useAuth();
+  const displayName = useSessionStore((state) => state.displayName) ?? "";
+  const { preference, setPreference } = useThemePreference();
+
+  return (
+    <Screen testID="settings-screen" title="Configuración" width="wide">
+      <Card className="gap-4" testID="settings-profile">
+        <Heading level={2}>Perfil</Heading>
+        <View className="flex-row flex-wrap items-center gap-4">
+          <Avatar name={displayName} size="lg" />
+          <VStack className="min-w-0 flex-1 basis-40 gap-1">
+            <Text selectable variant="strong">
+              {displayName}
+            </Text>
+            <Text selectable tone="muted" variant="caption">
+              {user?.email ?? ""}
+            </Text>
+          </VStack>
+        </View>
+        <Link asChild href="/settings/profile">
+          <Button
+            accessibilityLabel="Editar datos personales"
+            testID="settings-edit-profile"
+            variant="outline"
+          >
+            <ButtonText>Editar datos personales</ButtonText>
+          </Button>
+        </Link>
+      </Card>
+      <Card className="gap-4" testID="settings-appearance">
+        <Heading level={2}>Apariencia</Heading>
+        <OptionPicker
+          label="Tema"
+          onChange={(value) => void setPreference(value)}
+          options={THEME_OPTIONS}
+          testID="settings-theme"
+          value={preference}
+        />
+        <Text tone="muted" variant="caption">
+          «Sistema» sigue el modo claro u oscuro de tu dispositivo. La preferencia se guarda solo en
+          este dispositivo.
+        </Text>
+      </Card>
+      <Card className="gap-4" testID="settings-session">
+        <Heading level={2}>Sesión</Heading>
+        <LogoutButton onLogout={signOut} />
+      </Card>
+    </Screen>
+  );
+}

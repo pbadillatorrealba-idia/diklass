@@ -362,7 +362,7 @@ describe("recordAnamnesisEntry (FR-004 · US2-AC2/AC3, FR-021)", () => {
             record_type: "anamnesis",
             content: {
               consultationId: "c-1",
-              field: "comportamiento_problematico",
+              field: "historia_problema",
               text: "Destroza objetos.",
               provenance: "inferida",
             },
@@ -375,7 +375,7 @@ describe("recordAnamnesisEntry (FR-004 · US2-AC2/AC3, FR-021)", () => {
     const registrada = await recordAnamnesisEntry(client, {
       clinicId: "clinica-1",
       consultationId: "c-1",
-      field: "comportamiento_problematico",
+      field: "historia_problema",
       text: "Destroza objetos.",
       provenance: "inferida",
     });
@@ -385,13 +385,43 @@ describe("recordAnamnesisEntry (FR-004 · US2-AC2/AC3, FR-021)", () => {
       record_type: "anamnesis",
       content: {
         consultationId: "c-1",
-        field: "comportamiento_problematico",
+        field: "historia_problema",
         text: "Destroza objetos.",
         provenance: "inferida",
       },
       status: "draft",
     });
     expect(registrada.record.id).toBe("a-1");
+  });
+
+  test("rechaza un campo previo a la hoja etológica sin escribir nada (D4)", async () => {
+    const { client, calls } = fakeClient({});
+
+    await expect(
+      recordAnamnesisEntry(client, {
+        clinicId: "clinica-1",
+        consultationId: "c-1",
+        field: "desencadenantes",
+        text: "Cuando sale",
+        provenance: "reportada",
+      }),
+    ).rejects.toThrow("previo a la hoja etológica");
+    expect(calls.filter((call) => call.method === "insert")).toHaveLength(0);
+  });
+
+  test("rechaza una respuesta fuera de las cerradas sin escribir nada (FR-111)", async () => {
+    const { client, calls } = fakeClient({});
+
+    await expect(
+      recordAnamnesisEntry(client, {
+        clinicId: "clinica-1",
+        consultationId: "c-1",
+        field: "soledad_vocaliza",
+        text: "quizás",
+        provenance: "reportada",
+      }),
+    ).rejects.toThrow();
+    expect(calls.filter((call) => call.method === "insert")).toHaveLength(0);
   });
 
   test("rechaza una procedencia fuera del vocabulario de FR-021", async () => {
@@ -468,7 +498,7 @@ describe("correctProvenance (FR-021 · US2-AC5)", () => {
   test("las correcciones sucesivas acumulan la historia recuperable", async () => {
     const previo = {
       consultationId: "c-1",
-      field: "alimentacion",
+      field: "alimentacion_dieta",
       text: "Sin datos sobre la dieta.",
       provenance: "reportada",
       provenanceHistory: [{ provenance: "inferida" }],
@@ -491,6 +521,30 @@ describe("correctProvenance (FR-021 · US2-AC5)", () => {
         provenanceHistory: [{ provenance: "inferida" }, { provenance: "reportada" }],
       },
     });
+  });
+
+  // Revisión de la PR #41: «corregir» a la procedencia vigente dejaba una entrada falsa en la
+  // historia y un `anamnesis_corrected` en la traza.
+  test("la misma procedencia vigente no es una corrección y no escribe nada", async () => {
+    const previo = {
+      consultationId: "c-1",
+      field: "alimentacion_dieta",
+      text: "Dieta seca.",
+      provenance: "reportada",
+    };
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ id: "a-1", record_type: "anamnesis", content: previo }), error: null },
+      ],
+    });
+
+    try {
+      await correctProvenance(client, "a-1", "reportada");
+      throw new Error("se esperaba el rechazo de la corrección sin cambio");
+    } catch (error) {
+      expect((error as Error).message).toMatch(/coincide con la vigente/i);
+    }
+    expect(calls.filter((call) => call.method === "update")).toEqual([]);
   });
 
   test("sin registro de anamnesis no hay nada que corregir", async () => {
@@ -529,7 +583,7 @@ describe("listAnamnesisEntries y recordDiagnosis (US2-AC6 · US3-AC1)", () => {
               created_by: "vet-beto",
               content: {
                 consultationId: "c-1",
-                field: "comportamiento_problematico",
+                field: "historia_problema",
                 text: "Destroza objetos.",
                 provenance: "reportada",
               },
@@ -545,7 +599,7 @@ describe("listAnamnesisEntries y recordDiagnosis (US2-AC6 · US3-AC1)", () => {
     expect(entradas.map((entrada) => entrada.record.created_by)).toEqual(["vet-ana", "vet-beto"]);
     expect(entradas.map((entrada) => entrada.content.field)).toEqual([
       "motivo_consulta",
-      "comportamiento_problematico",
+      "historia_problema",
     ]);
   });
 
@@ -572,7 +626,7 @@ describe("listAnamnesisEntries y recordDiagnosis (US2-AC6 · US3-AC1)", () => {
     expect(calls.filter((call) => call.method === "insert")[0]?.args[0]).toEqual({
       clinic_id: "clinica-1",
       record_type: "diagnosis",
-      content: { consultationId: "c-1", text: "Ansiedad por separación" },
+      content: { consultationId: "c-1", text: "Ansiedad por separación", plan: null },
       status: "draft",
     });
     expect(diagnostico.record.id).toBe("d-1");

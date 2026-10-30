@@ -222,7 +222,11 @@ export const fragmentoRecuperadoSchema = z.object({
   rank_cd: z.number(),
   lemas_cubiertos: z.array(z.string()),
   lemas_pregunta: z.array(z.string()),
+  terminos_pregunta: z.array(z.string()),
 });
 
-/** Fila devuelta por `search_knowledge_fragments` con su cobertura de lemas (D4). */
+/**
+ * Fila devuelta por `search_knowledge_fragments` con su cobertura de lemas (D4) y, paralela
+ * a `lemas_pregunta`, la palabra de la pregunta que originó cada lexema (FR-022 · US5-AC8).
+ */
 export type FragmentoRecuperado = z.infer<typeof fragmentoRecuperadoSchema>;

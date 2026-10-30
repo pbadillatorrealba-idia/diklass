@@ -10,8 +10,8 @@ import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from
 /**
  * Arnés de evaluación del conjunto anotado (D9 de design.md). Tarea 3.3.
  *
- * Mide los criterios medibles sobre el corpus y el conjunto **sintéticos** (decisión de
- * usuario; HD7): SC-002 (hit@5), SC-025 (ausencia de respaldo en preguntas fuera de
+ * Mide los criterios medibles sobre el corpus real inicial («Problemas de miedo en perros y
+ * gatos», cambio `corpus-miedo-perros-gatos`) y su conjunto anotado: SC-002 (hit@5), SC-025 (ausencia de respaldo en preguntas fuera de
  * dominio), SC-010 (cero afirmaciones respaldadas sin evidencia recuperable) y SC-003
  * (fidelidad automática por texto verbatim; su revisión manual y la evaluación de SC-015
  * con especialistas quedan como aceptación pendiente, no como verificado).
@@ -22,7 +22,7 @@ type ConjuntoAnotado = {
   preguntasFueraDeDominio: string[];
 };
 
-type CorpusSintetico = {
+type CorpusInicial = {
   fuentes: { clave: string; fuente: unknown }[];
 };
 
@@ -31,14 +31,14 @@ const conjunto = JSON.parse(
 ) as ConjuntoAnotado;
 
 const corpus = JSON.parse(
-  readFileSync(join(import.meta.dir, "../../fixtures/conocimiento/corpus-sintetico.json"), "utf8"),
-) as CorpusSintetico;
+  readFileSync(join(import.meta.dir, "../../fixtures/conocimiento/corpus-miedo.json"), "utf8"),
+) as CorpusInicial;
 
 function citas(answer: KnowledgeAnswer): SegmentoRespuesta[] {
   return answer.segmentos.filter((segmento) => segmento.kind === "evidencia");
 }
 
-describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado sintético", () => {
+describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado del corpus inicial", () => {
   let ana: LiveVeterinarian;
   let claves: Record<string, string>;
   const respuestasCubiertas: { pregunta: string; answer: KnowledgeAnswer }[] = [];
@@ -48,7 +48,7 @@ describe.skipIf(!isLiveSupabase)("evaluación sobre el conjunto anotado sintéti
     ana = await signedInVeterinarian(ANA);
 
     // Colección determinista por corrida: las copias de corridas previas se retiran (no se
-    // borra nada, FR-053) y el corpus sintético se incorpora por la puerta de escritura.
+    // borra nada, FR-053) y el corpus inicial se incorpora por la puerta de escritura.
     for (const entrada of await listSources(ana.client)) {
       if (entrada.record.status === "available") {
         await withdrawSource(ana.client, { documentId: entrada.record.id });

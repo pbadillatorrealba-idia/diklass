@@ -53,8 +53,11 @@ function instante(iso: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-/** Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo. */
-function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
+/**
+ * Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo.
+ * Criterio único de las lecturas clínicas: la retroalimentación (005) lo reutiliza.
+ */
+export function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
   return (
     instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
@@ -179,6 +182,13 @@ export function computeMissingFichaFields(content: PatientContent): MissingField
   }
   if (content.weightKg === null) {
     faltantes.push({ field: "weightKg", kind: "sin_dato" });
+  }
+  // Hoja etológica (FR-001 ampliado): la procedencia y la adopción pesan en el diagnóstico.
+  if ((content.origin ?? null) === null) {
+    faltantes.push({ field: "origin", kind: "sin_dato" });
+  }
+  if ((content.adoptionAge ?? null) === null) {
+    faltantes.push({ field: "adoptionAge", kind: "sin_dato" });
   }
   for (const group of ANTECEDENT_GROUPS) {
     if (content.antecedentes[group].length === 0) {

@@ -96,10 +96,10 @@ siguen el orden de construcción del PoC y no representan capacidades publicadas
 | Spec | Alcance | Depende de |
 |---|---|---|
 | [001 — Identidad y acceso](../openspec/changes/implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md) | Cuentas provisionadas, acceso autenticado, atribución verificable de acciones clínicas, clínica compartida | — |
-| [002 — Registro clínico longitudinal](../openspec/changes/implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
-| [003 — Base de conocimiento trazable](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
+| [002 — Registro clínico longitudinal](../openspec/specs/registro-clinico-longitudinal/spec.md) | Ficha de paciente y tutor, consulta, anamnesis estructurada, epicrisis validada, seguimiento entre consultas | 001 |
+| [003 — Base de conocimiento trazable](../openspec/specs/base-conocimiento-trazable/spec.md) | Colección documental, recuperación, citación de fuentes, separación dato/inferencia | 001, 002 |
 | [004 — Captura de voz hacia anamnesis](../openspec/changes/implementar-captura-voz-anamnesis/specs/captura-voz-anamnesis/spec.md) | Modo de escucha clínica, transcripción incremental, extracción a borrador confirmable | 001, 002 |
-| [005 — Retroalimentación clínica](../openspec/changes/implementar-retroalimentacion-clinica/specs/retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
+| [005 — Retroalimentación clínica](../openspec/specs/retroalimentacion-clinica/spec.md) | Registro estructurado de evolución, adherencia y eventos adversos | 001, 002 |
 | [006 — Asistencia clínica proactiva](../openspec/changes/implementar-asistencia-clinica-proactiva/specs/asistencia-clinica-proactiva/spec.md) | Identificación de información faltante, apoyo al diagnóstico diferencial | 001, 002, 003 |
 | [007 — Apoyo al tratamiento y farmacología](../openspec/changes/implementar-apoyo-tratamiento-farmacologia/specs/apoyo-tratamiento-farmacologia/spec.md) | Alternativas de manejo, restricciones farmacológicas, dosis para validación | 001, 002, 003, 006 |
 
@@ -297,6 +297,20 @@ El PoC se concentra en las dos capas inferiores.
 gestión robusta de pacientes, base de conocimiento ampliada, integración con fuentes externas,
 controles de privacidad, analítica básica y experiencia móvil consolidada.
 
+**Visión agéntica (evolución, no alcance del PoC)**: la interfaz del asistente se ha dispuesto como un
+panel presente en toda pantalla (hilos de escucha y del asistente, un chat que absorbe la consulta de conocimiento) para que, más
+adelante, un agente acompañe al veterinario. El principio no cambia: **el agente propone, el
+veterinario decide**. Toda propuesta se presenta como sugerencia con su origen y procedencia
+«Inferida», no escribe en el registro clínico ni ejecuta ninguna acción sin confirmación explícita, y la
+confirmación queda atribuida a quien la hizo (FR-010, FR-021, FR-063, FR-076). El agente real —modelo,
+herramientas, seguridad y la revisión de la decisión de conocimiento extractivo (HD1)— **no está
+implementado** y es un cambio futuro aparte; hoy el panel aloja la captura de voz de la consulta y un
+chat persistido (con contexto automático de paciente) que responde consultas básicas por reglas (fecha,
+agenda, pacientes de hoy) y consulta la base de conocimiento, sin ser un agente. La interacción con el
+asistente sigue siendo por texto (spec 003) y se admite además un mensaje de voz en el chat, que se
+transcribe con un proveedor externo tras un aviso aceptado por el veterinario y se conserva 90 días
+(cambio `chat-del-asistente`); la voz de la consulta sigue siendo solo captura de la conversación (spec 004).
+
 La autenticación y el soporte de múltiples veterinarios se adelantaron a la Fase 1: sin identidad
 verificada, la atribución de responsabilidad clínica que el PoC debe validar no es demostrable.
 
@@ -312,7 +326,7 @@ sobre datos agregados y herramientas educativas.
   con precisión suficiente. Afecta spec 003.
 - **R3 — Alucinaciones**: con qué frecuencia el sistema genera información clínica no respaldada.
   Afecta specs 002, 004, 005.
-  La obligación de [declarar la ausencia de respaldo documental y no presentar afirmaciones sin cita como respaldadas (FR-023)](../openspec/changes/implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md#requirement-fr-023)
+  La obligación de [declarar la ausencia de respaldo documental y no presentar afirmaciones sin cita como respaldadas (FR-023)](../openspec/specs/base-conocimiento-trazable/spec.md#requirement-fr-023)
   aporta trazabilidad normativa a este riesgo, sin sustituir la lista de ámbitos afectada en el texto histórico.
 - **R4 — Captura mediante voz**: si la transcripción de conversaciones reales tiene calidad
   suficiente en ambientes clínicos. Afecta spec 004.

@@ -4,6 +4,7 @@ import { consultKnowledge, getQuery, listQueries } from "@/features/conocimiento
 import type { FuenteContent } from "@/features/conocimiento/schema";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
+import { randomRut } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -38,13 +39,13 @@ function fuenteNueva(titulo: string, texto: string): FuenteContent {
 function fichaBase(nombre: string): Omit<PatientContent, "tutorId"> {
   return {
     name: nombre,
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 36,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -77,7 +78,14 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
 
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      tutor: { newTutor: { name: "Sra. Consulta", phone: "+56 9 1111 2222", email: null } },
+      tutor: {
+        newTutor: {
+          name: "Sra. Consulta",
+          rut: randomRut(),
+          phone: "+56 9 1111 2222",
+          email: null,
+        },
+      },
       ficha: fichaBase("Luna Consulta"),
     });
     patientId = ficha.record.id;
@@ -160,6 +168,43 @@ describe.skipIf(!isLiveSupabase)("consulta al asistente (US5)", () => {
     const segmentos = reconstruida?.answer.segmentos ?? [];
     expect(segmentos.some((s) => s.kind === "ficha")).toBe(true);
     expect(segmentos.some((s) => s.kind === "evidencia")).toBe(true);
+  });
+
+  test("la cobertura parcial nombra palabras de la pregunta, no tallos (FR-022 · US5-AC8 · revisión de la PR #30)", async () => {
+    const pregunta = `¿Cómo habituar de forma zurdísima ${termino} con quimioterapia?`;
+    const { answer } = await consultKnowledge(ana.client, {
+      clinicId: ana.clinicId,
+      pregunta,
+      patientId: null,
+    });
+    expect(answer.cobertura.estado).toBe("parcial");
+    expect(answer.cobertura.noCubiertos).toContain("quimioterapia");
+    const palabras = pregunta.split(/[\s¿?]+/);
+    for (const nombre of [...answer.cobertura.cubiertos, ...answer.cobertura.noCubiertos]) {
+      expect(palabras).toContain(nombre);
+    }
+  });
+
+  test("el contexto de paciente solo admite un paciente de la clínica (Principio V · revisión de la PR #30)", async () => {
+    const ficha = await createPatientFicha(ana.client, {
+      clinicId: ana.clinicId,
+      tutor: {
+        newTutor: {
+          name: "Sra. Contexto",
+          rut: randomRut(),
+          phone: "+56 9 3333 4444",
+          email: null,
+        },
+      },
+      ficha: fichaBase("Toby Contexto"),
+    });
+    await expect(
+      consultKnowledge(ana.client, {
+        clinicId: ana.clinicId,
+        pregunta: `¿Cómo habituar de forma zurdísima ${termino}?`,
+        patientId: ficha.tutorId,
+      }),
+    ).rejects.toMatchObject({ message: "KNOWLEDGE_QUERY_PATIENT_INVALID" });
   });
 
   test("una fuente retirada deja la cita identificable y marcada al reconstruir (FR-053 · US5-AC12)", async () => {

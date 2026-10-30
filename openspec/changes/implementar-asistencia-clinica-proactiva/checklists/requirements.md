@@ -50,7 +50,7 @@ dirección, requisito → escenario, sin recorrer nunca la inversa, y sin verifi
 de los requisitos compuestos ni las prohibiciones. Hallazgos:
 
 - **Escenario sin requisito y trazabilidad falsa**: US8/6 prometía que las hipótesis figuran en la
-  epicrisis, campo que la especificación de [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) no contemplaba, y la fila `FR-009 | US8/1, 6` atribuía a FR-009
+  epicrisis, campo que la especificación de [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md) no contemplaba, y la fila `FR-009 | US8/1, 6` atribuía a FR-009
   un escenario que no lo verifica. Se agregó FR-049, se amplió la epicrisis en FR-011 de la 002 y se
   corrigió la trazabilidad.
 - **Lenguaje normativo invertido**: FR-010 reescrito como MUST NOT.
@@ -60,7 +60,7 @@ de los requisitos compuestos ni las prohibiciones. Hallazgos:
 - **Dependencia no declarada**: SC-017 y SC-018 dependen del panel de especialistas, que el brief
   clasifica como dependencia externa. Declarado.
 - **Casos límite sin requisito**: el de dominio fuera de etología se delegó explícitamente a FR-023
-  y la especificación de [base de conocimiento trazable](../../implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md); los otros dos se eliminaron o se remitieron a FR-022.
+  y la especificación de [base de conocimiento trazable](../../../specs/base-conocimiento-trazable/spec.md); los otros dos se eliminaron o se remitieron a FR-022.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
@@ -77,4 +77,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md), [base de conocimiento trazable](../../implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md). Dependencia externa: panel de especialistas.
+Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md), [base de conocimiento trazable](../../../specs/base-conocimiento-trazable/spec.md). Dependencia externa: panel de especialistas.

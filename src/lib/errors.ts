@@ -59,12 +59,17 @@ export function normalizeAuthError(error: unknown, requestId?: string): Normaliz
   };
 }
 
-export class AccessDeniedError extends Error {
-  readonly code = "ACCESS_DENIED";
+/**
+ * The access session is no longer active although the read itself did not fail: RLS answers
+ * with zero rows instead of an error. Carries the same SQLSTATE the server raises with
+ * `AUTHENTICATION_REQUIRED`, so `isAuthenticationRequired` treats both alike.
+ */
+export class AuthenticationRequiredError extends Error {
+  readonly code = "42501";
 
-  constructor(message = "La sesión no permite realizar esta operación.") {
+  constructor(message = "AUTHENTICATION_REQUIRED") {
     super(message);
-    this.name = "AccessDeniedError";
+    this.name = "AuthenticationRequiredError";
   }
 }
 

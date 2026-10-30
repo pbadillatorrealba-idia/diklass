@@ -26,8 +26,8 @@ export function RespuestaConocimiento({ answer }: { answer: KnowledgeAnswer }) {
       {segmentos.map((segmento) => (
         <SegmentoRespuestaView key={segmento.id} segmento={segmento} />
       ))}
-      <Box className="rounded-lg bg-muted p-2">
-        <Text className="text-foreground/70 text-xs">
+      <Box className="rounded-sm bg-muted p-2">
+        <Text tone="muted" variant="caption">
           Lo documental va citado; lo de la ficha, etiquetado como ficha; lo derivado por el
           sistema, como inferencia. Toda decisión clínica es del profesional (FR-010).
         </Text>

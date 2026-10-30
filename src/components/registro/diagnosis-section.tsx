@@ -1,5 +1,5 @@
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
-import { Box } from "@/components/ui/box";
+import { PlanForm, type PlanFormValues, PlanSummary } from "@/components/registro/plan-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
   FormControl,
@@ -8,7 +8,6 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -29,6 +28,12 @@ type DiagnosisSectionProps = {
   /** Consulta cerrada (D5): sus registros son inmutables — sin altas. */
   isSealed?: boolean;
   onTextChange: (text: string) => void;
+  /** Plan de la consulta (FR-112): sus valores viven en la pantalla, como el texto. */
+  plan: {
+    values: PlanFormValues;
+    error: string | null;
+    onChange: (values: PlanFormValues) => void;
+  };
   onSubmit: () => void;
 };
 
@@ -40,11 +45,11 @@ export function DiagnosisSection({
   isBusy,
   isSealed = false,
   onTextChange,
+  plan,
   onSubmit,
 }: DiagnosisSectionProps) {
   return (
     <VStack className="w-full gap-4" testID="diagnosis-section">
-      <Heading size="lg">Diagnóstico</Heading>
       {isSealed ? null : (
         <FormControl isInvalid={Boolean(textError)}>
           <FormControlLabel>
@@ -54,7 +59,7 @@ export function DiagnosisSection({
             <InputField
               accessibilityLabel="Diagnóstico registrado por el veterinario"
               aria-label="Diagnóstico registrado por el veterinario"
-              className="min-h-[120px]"
+              className="min-h-textarea"
               editable={!isBusy}
               multiline
               onChangeText={onTextChange}
@@ -71,6 +76,14 @@ export function DiagnosisSection({
         </FormControl>
       )}
       {isSealed ? null : (
+        <PlanForm
+          error={plan.error}
+          isDisabled={isBusy}
+          onChange={plan.onChange}
+          values={plan.values}
+        />
+      )}
+      {isSealed ? null : (
         <Button
           accessibilityLabel="Registrar diagnóstico"
           isDisabled={isBusy}
@@ -83,15 +96,18 @@ export function DiagnosisSection({
       {entries.length === 0 ? (
         <Text testID="diagnosis-empty">Sin diagnósticos registrados en esta consulta.</Text>
       ) : (
-        entries.map((entry) => (
-          <Box
-            className="rounded-xl border border-border bg-white p-4 gap-2"
+        entries.map((entry, index) => (
+          <VStack
+            // La regla separa cada entrada de lo anterior; con la consulta cerrada, la primera no tiene
+            // nada encima y quedaría pegada a la banda.
+            className={`gap-2 ${isSealed && index === 0 ? "" : "border-t border-border pt-3"}`}
             key={entry.id}
             testID="diagnosis-entry"
           >
-            <Text>{entry.content.text}</Text>
+            <Text selectable>{entry.content.text}</Text>
+            {entry.content.plan ? <PlanSummary plan={entry.content.plan} /> : null}
             <AttributionBadge attribution={entry.attribution} />
-          </Box>
+          </VStack>
         ))
       )}
     </VStack>

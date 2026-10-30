@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { patientContent } from "../../support/rut";
 import {
   ANA,
   adminClient,
@@ -49,7 +50,12 @@ describe.skipIf(!isLiveSupabase)("access session lifecycle against local Supabas
     // rather than relying on another suite's side effects for a non-empty clinic.
     const inserted = await ana.client
       .from("clinical_records")
-      .insert({ clinic_id: ana.clinicId, record_type: "patient", content: {}, status: "draft" })
+      .insert({
+        clinic_id: ana.clinicId,
+        record_type: "patient",
+        content: patientContent("Luna sesión"),
+        status: "draft",
+      })
       .select("id")
       .single();
     expect(inserted.error).toBeNull();

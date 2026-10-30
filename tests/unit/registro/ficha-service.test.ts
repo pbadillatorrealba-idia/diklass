@@ -28,9 +28,11 @@ type FakeQuery = Promise<FakeResult> & {
   update: (...args: unknown[]) => FakeQuery;
   select: (...args: unknown[]) => FakeQuery;
   eq: (...args: unknown[]) => FakeQuery;
+  is: (...args: unknown[]) => FakeQuery;
   in: (...args: unknown[]) => FakeQuery;
   order: (...args: unknown[]) => FakeQuery;
   limit: (...args: unknown[]) => FakeQuery;
+  range: (...args: unknown[]) => FakeQuery;
   single: () => Promise<FakeResult>;
   maybeSingle: () => Promise<FakeResult>;
 };
@@ -72,9 +74,11 @@ function fakeClient(queues: Partial<Record<string, FakeResult[]>> = {}) {
         update: chain("update"),
         select: chain("select"),
         eq: chain("eq"),
+        is: chain("is"),
         in: chain("in"),
         order: chain("order"),
         limit: chain("limit"),
+        range: chain("range"),
         single: (): Promise<FakeResult> => {
           calls.push({ table, method: "single", args: [] });
           return query;
@@ -129,13 +133,13 @@ function ficha(
 ): Omit<PatientContent, "tutorId"> {
   return {
     name: "Luna",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 24,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -143,11 +147,28 @@ function ficha(
       knownAllergies: [],
       behavioralHistory: [],
     },
+    fileNumber: null,
+    firstVisitDate: null,
+    origin: null,
+    adoptionAge: null,
+    adoptionState: null,
+    neuterAge: null,
+    litterInfo: null,
+    referrer: null,
     ...cambios,
   };
 }
 
-const tutorNuevo: TutorContent = { name: "Sra. Pérez", phone: "+56 9 1111 1111", email: null };
+const tutorNuevo: TutorContent = {
+  name: "Sra. Pérez",
+  rut: "12345678-5",
+  phone: "+56 9 1111 1111",
+  email: null,
+  surname: null,
+  address: null,
+  city: null,
+  postalCode: null,
+};
 
 const contenidoFichaConTutor = {
   ...ficha(),
@@ -245,7 +266,7 @@ describe("createPatientFicha (FR-001 · US1-AC1, FR-027 · US1-AC4)", () => {
       await createPatientFicha(client, {
         clinicId: "clinica-1",
         ficha: ficha(),
-        tutor: { newTutor: { name: "Sra. Pérez", phone: null, email: null } },
+        tutor: { newTutor: { name: "Sra. Pérez", rut: "12345678-5", phone: null, email: null } },
       });
       throw new Error("se esperaba el rechazo del tutor sin contacto");
     } catch (error) {
@@ -335,13 +356,71 @@ describe("addAntecedentItem (FR-001 · US1-AC2, FR-044)", () => {
         ...previa,
         antecedentes: {
           medicalHistory: [{ text: "Displasia de cadera", negative: false }],
-          preexistingDiseases: [{ text: "Hipotiroidismo", negative: false }],
+          preexistingDiseases: [
+            { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
+          ],
           currentMedications: [],
           knownAllergies: [{ text: "Sin alergias conocidas", negative: true }],
           behavioralHistory: [],
         },
       },
     });
+  });
+
+  test("si otro veterinario editó la ficha entretanto, relee y apénda sobre su versión (revisión de la PR #27)", async () => {
+    const previa = { ...ficha(), tutorId: "tutor-1" };
+    const editadaPorOtro = {
+      ...previa,
+      antecedentes: {
+        ...previa.antecedentes,
+        knownAllergies: [{ text: "Penicilina", negative: false }],
+      },
+    };
+    const { client, calls } = fakeClient({
+      "clinical_records:select": [
+        { data: fila({ id: "paciente-1", record_type: "patient", content: previa }), error: null },
+        {
+          data: fila({
+            id: "paciente-1",
+            record_type: "patient",
+            content: editadaPorOtro,
+            updated_at: "2026-09-22T10:00:00.000000+00:00",
+          }),
+          error: null,
+        },
+      ],
+      "clinical_records:update": [
+        { data: null, error: null },
+        {
+          data: fila({ id: "paciente-1", record_type: "patient", content: editadaPorOtro }),
+          error: null,
+        },
+      ],
+    });
+
+    await addAntecedentItem(client, "paciente-1", "preexistingDiseases", {
+      text: "Hipotiroidismo",
+      negative: false,
+    });
+
+    const actualizaciones = calls.filter((call) => call.method === "update");
+    expect(actualizaciones).toHaveLength(2);
+    expect(actualizaciones[1]?.args[0]).toEqual({
+      content: {
+        ...editadaPorOtro,
+        antecedentes: {
+          ...editadaPorOtro.antecedentes,
+          preexistingDiseases: [
+            { text: "Hipotiroidismo", negative: false, recordedAt: expect.any(String) },
+          ],
+        },
+      },
+    });
+    // Cada UPDATE exige la versión que se acaba de leer.
+    expect(calls.filter((call) => call.method === "is")[0]?.args).toEqual(["updated_at", null]);
+    expect(
+      calls.filter((call) => call.method === "eq" && call.args[0] === "updated_at")[0]?.args,
+    ).toEqual(["updated_at", "2026-09-22T10:00:00.000000+00:00"]);
   });
 
   test("un grupo desconocido se rechaza sin tocar el servidor", async () => {
@@ -494,7 +573,12 @@ describe("tutor-service (FR-027)", () => {
             fila({
               id: "tutor-2",
               record_type: "tutor",
-              content: { name: "Sr. Soto", phone: null, email: "soto@example.test" },
+              content: {
+                name: "Sr. Soto",
+                rut: "10000013-K",
+                phone: null,
+                email: "soto@example.test",
+              },
             }),
           ],
           error: null,

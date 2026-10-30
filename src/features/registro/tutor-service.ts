@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseRows, readAllPages } from "@/features/registro/read-rows";
 import { type TutorContent, tutorContentSchema } from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createClinicalRecord, updateClinicalContent } from "@/lib/attribution/clinical-mutations";
@@ -23,6 +24,10 @@ import type { Database } from "@/lib/supabase/database.types";
 
 /** Tutor leído desde la traza clínica: fila cruda y contenido ya validado. */
 export type TutorEntry = { record: ClinicalRecordRow; content: TutorContent };
+
+/** «Nombre Apellido»; sin apellido, solo el nombre (igual que `search_patients`). */
+export const tutorFullName = (content: Pick<TutorContent, "name" | "surname">) =>
+  [content.name, content.surname].filter(Boolean).join(" ");
 
 export async function createTutor(
   client: SupabaseClient<Database>,
@@ -73,31 +78,51 @@ export async function updateTutor(
 export async function listTutors(client: SupabaseClient<Database>): Promise<TutorEntry[]> {
   const requestId = makeRequestId();
   try {
-    const { data, error } = await client
-      .from("clinical_records")
-      .select("*")
-      .eq("record_type", "tutor")
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true });
-    if (error) {
-      throw error;
-    }
-    return (data ?? []).flatMap((row) => {
-      const legible = tutorContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listTutors", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    const data = await readAllPages((from, to) =>
+      client
+        .from("clinical_records")
+        .select("*", { count: "exact" })
+        .eq("record_type", "tutor")
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    return parseRows(data, tutorContentSchema, "listTutors");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
       operation: "listTutors",
+      requestId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Un tutor por id (sistema-visual D20: encabezado de la consulta), sin cargar todos los de la
+ * clínica. Misma frontera tolerante que `listTutors`: un id inexistente o una fila ilegible
+ * resuelven `null`, con log estructurado en el segundo caso.
+ */
+export async function getTutor(
+  client: SupabaseClient<Database>,
+  tutorId: string,
+): Promise<TutorEntry | null> {
+  const requestId = makeRequestId();
+  try {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("*")
+      .eq("id", tutorId)
+      .eq("record_type", "tutor")
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ? (parseRows([data], tutorContentSchema, "getTutor")[0] ?? null) : null;
+  } catch (error) {
+    void captureClientError(client as unknown as ErrorReporterClient, {
+      error,
+      operation: "getTutor",
       requestId,
     });
     throw error;

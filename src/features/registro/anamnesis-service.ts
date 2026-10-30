@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isLegacyAnamnesisField } from "@/features/registro/anamnesis-catalog";
+import { parseRows } from "@/features/registro/read-rows";
 import {
   type AnamnesisContent,
   type AnamnesisField,
@@ -43,6 +45,10 @@ export async function recordAnamnesisEntry(
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();
   try {
+    // D4: los campos previos a la hoja etológica solo se leen.
+    if (isLegacyAnamnesisField(input.field)) {
+      throw new Error("Ese campo es previo a la hoja etológica: elige un campo vigente.");
+    }
     const content = anamnesisContentSchema.parse({
       consultationId: input.consultationId,
       field: input.field,
@@ -83,18 +89,7 @@ export async function listAnamnesisEntries(
     if (error) {
       throw error;
     }
-    return (data ?? []).flatMap((row) => {
-      const legible = anamnesisContentSchema.safeParse(row.content);
-      if (!legible.success) {
-        logEvent(
-          "registro.row_content_skipped",
-          { operation: "listAnamnesisEntries", recordId: row.id, errorName: "ZodError" },
-          "error",
-        );
-        return [];
-      }
-      return [{ record: row, content: legible.data }];
-    });
+    return parseRows(data, anamnesisContentSchema, "listAnamnesisEntries");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -128,6 +123,10 @@ export async function correctProvenance(
 
     // D7: la corrección es recuperable — la procedencia anterior se apéndice en la historia.
     const actual = anamnesisContentSchema.parse(data.content);
+    // Sin cambio no hay corrección: no se apéndice historia ni se deja traza.
+    if (nuevaProvenance === actual.provenance) {
+      throw new Error("La procedencia nueva coincide con la vigente.");
+    }
     const content = anamnesisContentSchema.parse({
       ...actual,
       provenance: nuevaProvenance,

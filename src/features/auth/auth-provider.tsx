@@ -1,12 +1,5 @@
 import type { Session, User } from "@supabase/supabase-js";
-import {
-  createContext,
-  type PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, type PropsWithChildren, use, useEffect, useMemo, useState } from "react";
 import {
   type AccessSessionRpcClient,
   getCurrentAccessSession,
@@ -183,7 +176,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 }
 
 export function useAuth(): AuthContextValue {
-  const value = useContext(AuthContext);
+  const value = use(AuthContext);
   if (!value) {
     throw new Error("useAuth debe usarse dentro de AuthProvider");
   }

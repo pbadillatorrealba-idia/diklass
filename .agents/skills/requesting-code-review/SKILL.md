@@ -46,7 +46,6 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
-
 **3. Publicar automáticamente el resultado en la PR:**
 
 El agente coordinador es el único responsable de publicar; el reviewer devuelve
@@ -81,6 +80,7 @@ un bot de CI ni dispara revisiones por cada push.
    español e indica que la publicación sigue pendiente y por qué. No afirmes
    que se publicó ni pierdas el archivo. Tras confirmar la publicación, elimina
    el archivo temporal y devuelve la URL del comentario al usuario.
+
 **4. Actuar sobre el resultado:**
 - Corregir problemas Críticos inmediatamente.
 - Corregir problemas Importantes antes de continuar.
@@ -99,7 +99,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: tarea 2 de openspec/changes/<cambio>/tasks.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
 

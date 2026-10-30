@@ -19,6 +19,7 @@ import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { EpicrisisContent } from "@/features/registro/schema";
 import { effectiveEpicrisis } from "@/features/registro/summaries";
 import type { Database } from "@/lib/supabase/database.types";
+import { randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
 /**
@@ -78,13 +79,13 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
       clinicId: ana.clinicId,
       ficha: {
         name: "Nala integración",
-        species: "perro",
+        species: "canino",
         breed: "Mestizo",
         birthDate: "2019-06-01",
         ageMonths: 84,
         weightKg: 18.5,
         sex: "hembra",
-        reproductiveStatus: "esterilizada",
+        reproductiveStatus: "esterilizado",
         antecedentes: {
           medicalHistory: [{ text: "Displasia de cadera", negative: false }],
           preexistingDiseases: [],
@@ -94,7 +95,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
         },
       },
       tutor: {
-        newTutor: { name: "Sra. Rojas", phone: "+56 9 5555 5555", email: null },
+        newTutor: { name: "Sra. Rojas", rut: randomRut(), phone: "+56 9 5555 5555", email: null },
       },
     });
     patientId = alta.record.id;
@@ -280,7 +281,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
     await recordAnamnesisEntry(ana.client, {
       clinicId: ana.clinicId,
       consultationId: consulta,
-      field: "frecuencia",
+      field: "historia_problema",
       text: "Todas las noches.",
       provenance: "reportada",
     });
@@ -298,7 +299,7 @@ describe.skipIf(!isLiveSupabase)("epicrisis contra Supabase viva", () => {
     expect(retomada?.consultation.content.status).toBe("open");
     expect(retomada?.anamnesis.map((entrada) => entrada.content.field)).toEqual([
       "motivo_consulta",
-      "frecuencia",
+      "historia_problema",
     ]);
     expect(retomada?.diagnoses.map((entrada) => entrada.content.text)).toEqual([
       "Ansiedad por separación",

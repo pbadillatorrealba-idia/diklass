@@ -78,6 +78,116 @@ export type Database = {
           },
         ]
       }
+      assistant_audio_usage: {
+        Row: {
+          author_id: string
+          used_at: string
+        }
+        Insert: {
+          author_id: string
+          used_at?: string
+        }
+        Update: {
+          author_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_audio_usage_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_messages: {
+        Row: {
+          audio_expires_at: string | null
+          audio_path: string | null
+          author_id: string
+          clinic_id: string
+          created_at: string
+          id: string
+          parts: Json
+          patient_id: string | null
+          role: string
+          status: string
+        }
+        Insert: {
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          author_id?: string
+          clinic_id: string
+          created_at?: string
+          id?: string
+          parts: Json
+          patient_id?: string | null
+          role: string
+          status: string
+        }
+        Update: {
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          author_id?: string
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          parts?: Json
+          patient_id?: string | null
+          role?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_voice_consent: {
+        Row: {
+          accepted_at: string
+          author_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          author_id?: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          author_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_voice_consent_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_audit_events: {
         Row: {
           action: string
@@ -280,6 +390,48 @@ export type Database = {
           },
         ]
       }
+      knowledge_fragments: {
+        Row: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion: string | null
+          texto: string
+          vector: unknown
+        }
+        Insert: {
+          clinic_id: string
+          documento_id: string
+          ordinal: number
+          seccion?: string | null
+          texto: string
+          vector?: unknown
+        }
+        Update: {
+          clinic_id?: string
+          documento_id?: string
+          ordinal?: number
+          seccion?: string | null
+          texto?: string
+          vector?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_fragments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_fragments_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_queries: {
         Row: {
           answer: Json
@@ -318,6 +470,108 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "clinical_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listening_sessions: {
+        Row: {
+          clinic_id: string
+          consultation_id: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          started_by: string
+          state: string
+        }
+        Insert: {
+          clinic_id: string
+          consultation_id: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Update: {
+          clinic_id?: string
+          consultation_id?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listening_sessions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listening_sessions_started_by_fkey"
+            columns: ["started_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_segments: {
+        Row: {
+          audio_path: string | null
+          clinic_id: string
+          created_at: string
+          ended_at: string
+          id: string
+          listening_session_id: string
+          processing_state: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Insert: {
+          audio_path?: string | null
+          clinic_id: string
+          created_at?: string
+          ended_at: string
+          id?: string
+          listening_session_id: string
+          processing_state?: string
+          quality: string
+          seq: number
+          started_at: string
+          text: string
+        }
+        Update: {
+          audio_path?: string | null
+          clinic_id?: string
+          created_at?: string
+          ended_at?: string
+          id?: string
+          listening_session_id?: string
+          processing_state?: string
+          quality?: string
+          seq?: number
+          started_at?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_segments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_segments_listening_session_id_fkey"
+            columns: ["listening_session_id"]
+            isOneToOne: false
+            referencedRelation: "listening_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -363,6 +617,24 @@ export type Database = {
     }
     Functions: {
       approve_clinical_record: { Args: { p_record_id: string }; Returns: Json }
+      assistant_audio_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          audio_path: string
+          message_id: string
+        }[]
+      }
+      assistant_audio_mark_purged: {
+        Args: { p_message_ids: string[] }
+        Returns: number
+      }
+      assistant_audio_object_count: { Args: never; Returns: number }
+      assistant_audio_orphans: {
+        Args: { p_limit?: number }
+        Returns: {
+          name: string
+        }[]
+      }
       clinical_record_action: {
         Args: {
           p_content?: Json
@@ -372,6 +644,7 @@ export type Database = {
         }
         Returns: string
       }
+      consume_assistant_audio_quota: { Args: never; Returns: string }
       consume_client_error_quota: {
         Args: { p_bucket_key: string; p_limit?: number }
         Returns: boolean
@@ -379,6 +652,7 @@ export type Database = {
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
+      delete_assistant_conversation: { Args: never; Returns: number }
       insert_clinical_audit_event: {
         Args: {
           p_action: string
@@ -400,6 +674,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      remove_assistant_audio: {
+        Args: { p_message_id: string }
+        Returns: string
+      }
       request_id: { Args: never; Returns: string }
       revoke_access_session: {
         Args: { p_session_id?: string }
@@ -407,6 +685,7 @@ export type Database = {
       }
       revoke_access_sessions: { Args: never; Returns: boolean }
       revoke_current_access_session: { Args: never; Returns: boolean }
+      rut_is_valid: { Args: { p_rut: string }; Returns: boolean }
       search_knowledge_fragments: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -419,31 +698,76 @@ export type Database = {
           licencia: Json
           rank_cd: number
           seccion: string
+          terminos_pregunta: string[]
           texto: string
+        }[]
+      }
+      search_patients: {
+        Args: {
+          p_breed?: string
+          p_dir?: string
+          p_limit?: number
+          p_name?: string
+          p_offset?: number
+          p_sort?: string
+          p_tutor_id?: string
+          p_visit_from?: string
+          p_visit_to?: string
+        }
+        Returns: {
+          breed: string
+          id: string
+          last_visit_at: string
+          name: string
+          species: string
+          total_count: number
+          tutor_id: string
+          tutor_name: string
+        }[]
+      }
+      search_tutors: {
+        Args: {
+          p_contact?: string
+          p_dir?: string
+          p_limit?: number
+          p_name?: string
+          p_offset?: number
+          p_sort?: string
+        }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          name: string
+          patient_count: number
+          phone: string
+          rut: string
+          surname: string
+          total_count: number
         }[]
       }
       start_access_session: { Args: never; Returns: Json }
       touch_access_session: { Args: { p_session_id: string }; Returns: boolean }
+      update_own_profile: {
+        Args: { p_display_name: string }
+        Returns: {
+          clinic_id: string
+          created_at: string
+          display_name: string
+          id: string
+          identifier: string
+          provisioned_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veterinarians"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       access_session_status: "active" | "expired" | "revoked"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  storage: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -576,9 +900,6 @@ export const Constants = {
     Enums: {
       access_session_status: ["active", "expired", "revoked"],
     },
-  },
-  storage: {
-    Enums: {},
   },
 } as const
 

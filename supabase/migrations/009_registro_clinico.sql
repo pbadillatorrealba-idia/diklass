@@ -13,7 +13,9 @@
 --     inmutable (CONSULTATION_LINK_IMMUTABLE, SQLSTATE 23514): re-apuntarlo o vaciarlo
 --     eludiría un sello evaluado sobre old (RLS permite actualizar filas no aprobadas de
 --     la clínica). Las fichas patient/tutor no llevan consultationId y siguen editables
---     entre consultas (caso límite «ficha ampliada entre consultas» de la spec).
+--     entre consultas (caso límite «ficha ampliada entre consultas» de la spec). La fila
+--     de la consulta cerrada también queda sellada: cerrar es irreversible (una consulta
+--     reabierta volvería editables todos sus registros de trabajo).
 --   * FR-002 · US4-AC4 y FR-013 · US4-AC1 + D10: las lecturas longitudinales por
 --     content->>'patientId' y content->>'consultationId' se apoyan en índices de expresión.
 --
@@ -55,9 +57,11 @@ begin
     -- longitudinales que solo REFERENCIAN la consulta (clinical_feedback de la spec 005,
     -- registrado legítimamente entre consultas sobre la consulta cerrada) son datos nuevos
     -- y no se sellan; su propia spec fija su inmutabilidad.
+    -- La exención correctiva es solo de la epicrisis (D8): una anamnesis o un diagnóstico
+    -- con status 'corrective' sobre una consulta cerrada haría crecer su workspace.
     if new.content ->> 'consultationId' is not null
-      and new.status <> 'corrective'
       and new.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
+      and not (new.record_type = 'epicrisis' and new.status = 'corrective')
     then
       begin
         consultation_id := (new.content ->> 'consultationId')::uuid;
@@ -66,11 +70,16 @@ begin
       end;
 
       if consultation_id is not null then
+        -- FOR SHARE serializa con el UPDATE que cierra la consulta en
+        -- approve_clinical_record: sin el bloqueo, bajo READ COMMITTED esta lectura vería
+        -- el 'open' confirmado mientras la aprobación aún no confirma, y la fila entraría
+        -- en una consulta que se cierra en paralelo.
         select target.content ->> 'status' into consultation_status
         from public.clinical_records target
         where target.id = consultation_id
           and target.record_type = 'consultation'
-          and target.clinic_id = new.clinic_id;
+          and target.clinic_id = new.clinic_id
+        for share;
 
         if consultation_status = 'closed' then
           raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
@@ -80,6 +89,15 @@ begin
   end if;
 
   if tg_op = 'UPDATE' then
+    -- FR-024 · US4-AC2 · SC-009 (revisión de la PR #27): la fila de una consulta cerrada es
+    -- inmutable. Sin esto, un UPDATE directo por PostgREST devolvía content->>'status' a
+    -- 'open' (RLS lo permite: la consulta no tiene approved_at) y el sello de sus registros
+    -- de trabajo dejaba de aplicar. approve_clinical_record solo cierra consultas 'open',
+    -- así que ningún camino legítimo actualiza una consulta ya cerrada.
+    if old.record_type = 'consultation' and old.content ->> 'status' = 'closed' then
+      raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
+    end if;
+
     -- El sello se evalúa sobre OLD: la pertenencia a la consulta es la que la fila tenía
     -- antes del UPDATE.
     previous_consultation := old.content ->> 'consultationId';
@@ -109,11 +127,13 @@ begin
       if consultation_id is not null
         and old.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
       then
+        -- FOR SHARE: misma serialización con el cierre que en la rama INSERT.
         select target.content ->> 'status' into consultation_status
         from public.clinical_records target
         where target.id = consultation_id
           and target.record_type = 'consultation'
-          and target.clinic_id = old.clinic_id;
+          and target.clinic_id = old.clinic_id
+        for share;
 
         if consultation_status = 'closed' then
           raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';

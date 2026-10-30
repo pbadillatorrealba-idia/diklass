@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  getSource,
   incorporateSource,
   listSources,
   withdrawSource,
 } from "@/features/conocimiento/coleccion-service";
 import { loadSyntheticCorpus } from "@/features/conocimiento/corpus-loader";
 import type { FuenteContent } from "@/features/conocimiento/schema";
+import { isAuthenticationRequired } from "@/lib/errors";
 import type { Database } from "@/lib/supabase/database.types";
 
 /**
@@ -218,6 +220,50 @@ describe("listSources (FR-030 · FR-069 · US5-AC9/AC13)", () => {
     expect(fuentes[0]?.record.created_by).toBe("vet-ana");
     expect(fuentes[0]?.content.bibliografia.titulo).toBe("Protocolo ficticio");
     expect(fuentes[0]?.content.licencia.tipo).toBe("CC BY 4.0 (ficticia)");
+  });
+});
+
+describe("getSource (FR-007 · US5-AC7 · tarea 7.12)", () => {
+  const id = "0f8b6f2e-3c1a-4c7e-9d2b-5a4e6f7a8b9c";
+
+  test("devuelve la fuente sin consultar el estado de la sesión", async () => {
+    const { client, calls } = fakeClient({
+      "knowledge_documents:select": [{ data: filaDocumento({ id }), error: null }],
+    });
+
+    const entrada = await getSource(client, id);
+
+    expect(entrada?.record.id).toBe(id);
+    expect(calls.some((call) => call.table === "rpc")).toBe(false);
+  });
+
+  test("cero filas con la sesión de acceso activa: la fuente no existe (null)", async () => {
+    const { client, calls } = fakeClient({
+      "knowledge_documents:select": [{ data: null, error: null }],
+      "rpc:is_active_access": [{ data: true, error: null }],
+    });
+
+    expect(await getSource(client, id)).toBeNull();
+    expect(calls.filter((call) => call.table === "rpc").map((call) => call.method)).toEqual([
+      "is_active_access",
+    ]);
+  });
+
+  // Con la sesión caducada la RLS no falla: devuelve cero filas. Sin distinguirlo, el visor
+  // mostraba «no encontrada» en vez de abrir el diálogo de sesión expirada.
+  test("cero filas con la sesión de acceso inactiva: error de autenticación requerida", async () => {
+    const { client } = fakeClient({
+      "knowledge_documents:select": [{ data: null, error: null }],
+      "rpc:is_active_access": [{ data: false, error: null }],
+    });
+
+    const error = await getSource(client, id).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+
+    expect(error).not.toBeNull();
+    expect(isAuthenticationRequired(error)).toBe(true);
   });
 });
 

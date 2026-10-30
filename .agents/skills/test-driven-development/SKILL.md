@@ -76,7 +76,7 @@ Write one minimal test showing what should happen.
 ```typescript
 test('retries failed operations 3 times', async () => {
   let attempts = 0;
-  const operation = () => {
+  const operation = async () => {
     attempts++;
     if (attempts < 3) throw new Error('fail');
     return 'success';
@@ -93,13 +93,15 @@ Clear name, tests real behavior, one thing
 
 <Bad>
 ```typescript
+import { mock, test, expect } from 'bun:test';
+
 test('retry works', async () => {
-  const mock = jest.fn()
+  const operation = mock()
     .mockRejectedValueOnce(new Error())
     .mockRejectedValueOnce(new Error())
     .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
+  await retryOperation(operation);
+  expect(operation).toHaveBeenCalledTimes(3);
 });
 ```
 Vague name, tests mock not code
@@ -115,7 +117,7 @@ Vague name, tests mock not code
 **MANDATORY. Never skip.**
 
 ```bash
-npm test path/to/test.test.ts
+bun test path/to/test.test.ts
 ```
 
 Confirm:
@@ -170,7 +172,7 @@ Don't add features, refactor other code, or "improve" beyond the test.
 **MANDATORY.**
 
 ```bash
-npm test path/to/test.test.ts
+bun test path/to/test.test.ts
 ```
 
 Confirm:
@@ -257,7 +259,7 @@ test('rejects empty email', async () => {
 
 **Verify RED**
 ```bash
-$ npm test
+$ bun test path/to/test.test.ts
 FAIL: expected 'Email required', got undefined
 ```
 
@@ -273,7 +275,7 @@ function submitForm(data: FormData) {
 
 **Verify GREEN**
 ```bash
-$ npm test
+$ bun test path/to/test.test.ts
 PASS
 ```
 

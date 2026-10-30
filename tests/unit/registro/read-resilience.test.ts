@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getPatient, listPatients } from "@/features/registro/ficha-service";
-import { listTutors } from "@/features/registro/tutor-service";
+import { getTutor, listTutors } from "@/features/registro/tutor-service";
 import type { Database } from "@/lib/supabase/database.types";
 
 type ClinicalRecordRow = Database["public"]["Tables"]["clinical_records"]["Row"];
@@ -27,6 +27,7 @@ function fakeClient(data: unknown): SupabaseClient<Database> {
     in: () => query,
     order: () => query,
     limit: () => query,
+    range: () => query,
     single: () => Promise.resolve(result),
     maybeSingle: () => Promise.resolve(result),
   });
@@ -45,7 +46,7 @@ const filaValida = {
     ageMonths: 24,
     weightKg: 12.5,
     sex: "macho",
-    reproductiveStatus: "castrado",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -81,7 +82,16 @@ const filaTutorValida = {
   ...filaValida,
   id: "tutor-valido",
   record_type: "tutor",
-  content: { name: "Sra. Tania", phone: "+56 9 5550 0001", email: null },
+  content: {
+    name: "Sra. Tania",
+    rut: "12345678-5",
+    phone: "+56 9 5550 0001",
+    email: null,
+    surname: null,
+    address: null,
+    city: null,
+    postalCode: null,
+  },
 } satisfies ClinicalRecordRow;
 
 describe("lecturas tolerantes a filas ajenas o malformadas", () => {
@@ -94,6 +104,17 @@ describe("lecturas tolerantes a filas ajenas o malformadas", () => {
   test("getPatient sobre una fila malformada resuelve null sin lanzar", async () => {
     const client = fakeClient(filaAjenaMinima);
     await expect(getPatient(client, "paciente-ajeno-1")).resolves.toBeNull();
+  });
+
+  test("getTutor devuelve el tutor legible y resuelve null ante una fila malformada", async () => {
+    await expect(getTutor(fakeClient(filaTutorValida), "tutor-valido")).resolves.toEqual({
+      record: filaTutorValida,
+      content: filaTutorValida.content,
+    });
+    await expect(
+      getTutor(fakeClient({ ...filaAjenaMinima, id: "tutor-ajeno" }), "tutor-ajeno"),
+    ).resolves.toBeNull();
+    await expect(getTutor(fakeClient(null), "tutor-inexistente")).resolves.toBeNull();
   });
 
   test("listTutors omite las filas malformadas y devuelve las válidas", async () => {

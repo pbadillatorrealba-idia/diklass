@@ -21,13 +21,13 @@ function diagnostico(text: string): DiagnosisContent {
 function ficha(cambios: Partial<PatientContent> = {}): PatientContent {
   return {
     name: "Luna",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 24,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [{ text: "Displasia de cadera", negative: false }],
       preexistingDiseases: [],
@@ -63,7 +63,7 @@ describe("buildEpicrisisDraft (FR-010, FR-011, FR-021 · US3-AC1)", () => {
     );
     expect(borrador.hallazgosAnamnesis).toBe(
       "Motivo de consulta: Aúlla cuando queda sola. [procedencia: reportada]\n" +
-        "Frecuencia: A diario [procedencia: inferida]\n" +
+        "Campo previo: Frecuencia: A diario [procedencia: inferida]\n" +
         "Tratamientos anteriores: Fluoxetina en 2024 [procedencia: recuperada]\n" +
         "Texto libre: Mudanza reciente [procedencia: desconocida]",
     );
@@ -163,5 +163,49 @@ describe("buildEpicrisisDraft (FR-010, FR-011, FR-021 · US3-AC1)", () => {
 
     expect(transcurrido).toBeLessThan(300);
     expect(borrador.diagnostico.split("\n")).toHaveLength(200);
+  });
+});
+
+describe("plan de la consulta en el borrador (FR-112)", () => {
+  test("recoge protocolo, tratamiento y diferenciales del veterinario sin tocar hipótesis ni aprobados", () => {
+    const borrador = buildEpicrisisDraft({
+      consultationId: "c-1",
+      anamnesis: [entrada("soledad_vocaliza", "a_veces")],
+      diagnoses: [
+        {
+          ...diagnostico("Ansiedad por separación"),
+          plan: {
+            tests: ["analisis_sangre"],
+            otherTests: "Perfil tiroideo",
+            video: null,
+            videoDetails: null,
+            differentials: ["Fobia", "Hiperapego"],
+            generalGuidelines: "Rutina de salidas",
+            specificGuidelines: null,
+            complementaryGuidelines: null,
+            neuterSurgical: null,
+            neuterMedical: null,
+            medication: [{ activeIngredient: "Fluoxetina", guideline: "1 mg/kg/24h" }],
+            followUp: "Control en 15 días",
+          },
+        },
+      ],
+      ficha: null,
+    });
+
+    expect(borrador.hallazgosAnamnesis).toContain(
+      "¿Ladra, llora y/o aúlla cuando se queda solo?: A veces",
+    );
+    expect(borrador.examenesSolicitados).toEqual(["Análisis de sangre", "Perfil tiroideo"]);
+    expect(borrador.intervencionesPropuestas).toEqual([
+      "Rutina de salidas",
+      "Medicación propuesta: Fluoxetina — 1 mg/kg/24h",
+    ]);
+    expect(borrador.observaciones).toBe(
+      "Diagnósticos diferenciales (veterinario): Fobia; Hiperapego",
+    );
+    expect(borrador.planSeguimiento.pendientes).toEqual(["Control en 15 días"]);
+    expect(borrador.hipotesis).toEqual([]);
+    expect(borrador.medicamentosAprobados).toEqual([]);
   });
 });
