@@ -177,18 +177,6 @@ components:
     backgroundColor: "{colors.warning-surface}"
     textColor: "{colors.foreground}"
     padding: "8px 12px"
-  severity-badge-grave:
-    backgroundColor: "{colors.destructive-surface}"
-    textColor: "{colors.foreground}"
-    typography: "{typography.body-strong}"
-    rounded: "{rounded.sm}"
-    padding: "4px 8px"
-  severity-badge-critico:
-    backgroundColor: "{colors.destructive}"
-    textColor: "{colors.destructive-foreground}"
-    typography: "{typography.body-strong}"
-    rounded: "{rounded.sm}"
-    padding: "4px 8px"
   avatar:
     backgroundColor: "{colors.primary-surface}"
     textColor: "{colors.foreground}"
@@ -216,7 +204,7 @@ La misma paleta sirve a iOS, Android y web, en claro y en oscuro (pizarra con ti
 - Los pliegos (canario y rosa) son el único color de superficie con significado de registro.
 - Datos en mono con cifras tabulares; UI y texto en Atkinson Hyperlegible Next.
 - Esquinas de 2 px en todo salvo el avatar; ninguna sombra; reglas de 1 px.
-- Toda distinción clínica lleva forma además de color: letra de procedencia, contorno, tachado, segmentos de severidad, etiqueta visible.
+- Toda distinción clínica lleva forma además de color: letra de procedencia, contorno, tachado, etiqueta visible.
 - Una única animación de autor: la firma.
 
 ## Colors
@@ -245,7 +233,7 @@ Tinta sobre papel con dos pliegos de color: estrategia restringida, en la que el
 - **Capa modal** (scrim): negro, solo con opacidad (`bg-scrim/55`) bajo los diálogos. Es el único token que admite transparencia.
 
 ### Estados
-- **Destructivo** (destructive, destructive-surface), **aviso** (warning, warning-surface: ocre anaranjado, para no confundirse con el canario), **correcto** (success, success-surface) e **información** (info, info-surface: pizarra azulada, más gris que el tampón). El tono sólido es texto, icono y borde sobre la hoja; la superficie es el fondo tintado con la tinta del veterinario encima; `destructive-foreground` es el texto sobre el relleno sólido de la severidad crítica.
+- **Destructivo** (destructive, destructive-surface), **aviso** (warning, warning-surface: ocre anaranjado, para no confundirse con el canario), **correcto** (success, success-surface) e **información** (info, info-surface: pizarra azulada, más gris que el tampón). El tono sólido es texto, icono y borde sobre la hoja; la superficie es el fondo tintado con la tinta del veterinario encima; `destructive-foreground` es el texto sobre el relleno sólido `destructive`.
 
 `accent` (teal de marca, `#1D7672`; oscuro `#6CC9C2`) y `secondary` sólidos están definidos y verificados en el tema, pero ningún componente los consume; no forman parte del vocabulario hasta que una superficie los necesite.
 
@@ -302,7 +290,7 @@ Sin sombras en ninguna superficie ni estado. La profundidad es la de papel sobre
 
 ## Shapes
 
-Esquinas casi rectas, como los recuadros de un formulario impreso: 2 px en todas las superficies y controles (secciones, tarjetas, botones, campos, pliegos, timbre, recuadro de procedencia, badge de severidad), con curva continua en iOS. El único círculo es el avatar. Reglas y contornos de 1 px; el recuadro de la procedencia `desconocida` va en trazo discontinuo, para que la forma, y no solo la letra, lo distinga. Los avisos (`Callout`) no son cajas: son renglones impresos con regla arriba y abajo. Los segmentos de la barra de severidad son rectángulos de 6 × 12 px, llenos (sólidos) o vacíos (solo contorno), para leerse también en escala de grises.
+Esquinas casi rectas, como los recuadros de un formulario impreso: 2 px en todas las superficies y controles (secciones, tarjetas, botones, campos, pliegos, timbre, recuadro de procedencia), con curva continua en iOS. El único círculo es el avatar. Reglas y contornos de 1 px; el recuadro de la procedencia `desconocida` va en trazo discontinuo, para que la forma, y no solo la letra, lo distinga. Los avisos (`Callout`) no son cajas: son renglones impresos con regla arriba y abajo.
 
 ### Named Rules
 **The Two-Pixel Rule.** `rounded-sm` (2 px) en todo; `rounded-full` solo en el avatar. `rounded-lg`, `rounded-xl` y `rounded-2xl` están prohibidos por la guarda.
@@ -376,9 +364,8 @@ Marco de tampón de 1 px en `stamp`, esquinas de 2 px, 8 × 12 px de padding, aj
 ### Provenance Mark
 Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, con la letra en `data` semibold: R (reportada), I (inferida), F (recuperada con fuente), ? (desconocida, con trazo discontinuo). Es una imagen con nombre «Procedencia: …». La `ProvenanceKey` con los cuatro códigos y su nombre está siempre visible en el encabezado de la consulta.
 
-### Callout y Severity Badge
+### Callout
 - **Callout:** renglón impreso con reglas de 1 px arriba y abajo en el tono del estado, superficie del tono, icono con nombre y texto en `foreground`; 8 × 12 px de padding. Nunca una caja flotante ni un toast.
-- **Severity Badge:** escala única de cuatro niveles sin tokens propios: leve (info), moderado (warning), grave (destructive-surface, nombre en semibold) y crítico (relleno `destructive`, texto `destructive-foreground`). Icono, nombre y una barra de cuatro segmentos con tantos llenos como su posición.
 
 ## Primitivas y convenciones de código
 
@@ -409,7 +396,7 @@ Recuadro de 24 × 24 px con esquinas de 2 px y contorno de 1 px en `primary`, co
 - **Do** poner lo que propone el sistema sin validar en un `SuggestedBlock` (pliego canario, contorno de 1 px y la etiqueta «Sugerencia del sistema · copia sin firmar» como primer hijo).
 - **Do** mostrar una corrección como `CorrectionLine`: «Reemplazado», el valor anterior tachado de una línea y legible, y el vigente en pliego rosa con su atribución.
 - **Do** llevar cifras, fechas, horas, dosis y códigos de procedencia en `data` (mono, cifras tabulares).
-- **Do** dar a cada distinción clínica una forma además del color: letra de procedencia, trazo discontinuo, tachado, segmentos de severidad, icono con nombre, etiqueta visible.
+- **Do** dar a cada distinción clínica una forma además del color: letra de procedencia, trazo discontinuo, tachado, icono con nombre, etiqueta visible.
 - **Do** usar solo tokens del tema, opacos y verificados AA en claro y oscuro en `tema.test.ts`; un token nuevo entra en los cuatro bloques de `global.css` y en el espejo `colors.ts`.
 - **Do** mantener la firma como la única animación de autor: ≤ 300 ms (hoy 240 ms), salida exponencial e inmediata con Reduce Motion. El panel, el cajón, la hoja y el aterrizaje de un borrador aparecen sin animación.
 - **Do** mostrar el estado de la escucha en texto, con su aviso de grabación, en el riel y en la cinta aunque el panel esté colapsado o la hoja cerrada.

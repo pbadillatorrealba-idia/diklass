@@ -13,7 +13,7 @@ En cada grupo, el test o el grep que debe fallar va antes del cambio.
 ## 2. Módulo de retroalimentación y severidad
 
 - [x] 2.1 Borrar `src/components/retroalimentacion/`, `src/features/retroalimentacion/`, `src/components/ui/severity-badge.tsx` y sus tests unitarios, de integración y e2e (`tests/unit/retroalimentacion/`, `tests/unit/ui/severity-badge.test.tsx`, `tests/integration/retroalimentacion/`, `tests/e2e/web/retroalimentacion.spec.ts`); verificar con `grep -rn "retroalimentacion\|SeverityBadge" src tests` sin resultados fuera de comentarios revisados.
-- [x] 2.2 Limpiar las referencias residuales de `src/components/registro/` (`patient-record.tsx`, `labels.ts`), `src/features/registro/summaries.ts` (comentario de la 005) y `tests/unit/ui/historiales-estados.test.tsx`, `screen-title.test.tsx`, `correction-line.test.tsx`; verificar con `bun run typecheck` y Biome.
+- [x] 2.2 Limpiar las referencias residuales: `src/features/registro/summaries.ts` (comentario de la 005), `tests/unit/ui/historiales-estados.test.tsx` y `screen-title.test.tsx` (`patient-record.tsx`, `labels.ts` y `correction-line.test.tsx` no necesitaron cambios: el grep está limpio); verificar con `bun run typecheck` y Biome.
 - [x] 2.3 Quitar la retroalimentación de `tests/e2e/web/caso-sintetico.ts` (insert REST de `clinical_feedback`, evento y testIDs `feedback-*`); verificar con `bun run test:e2e:smoke` en un worker.
 
 ## 3. BD sin cambios

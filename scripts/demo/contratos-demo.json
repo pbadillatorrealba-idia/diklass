@@ -44,7 +44,7 @@
     "src/features/registro/query-cache.ts": "98f4ba2648cd80b08a2b4e83717c94ddbd565f000def3402e613b081ca60f740",
     "src/features/registro/read-rows.ts": "ffc89fadd51120d07470307f8ae0fed5dfc26e6e4181a2efc117b50f3b62bb41",
     "src/features/registro/schema.ts": "3fc9e2c03791b55bf4ac86c521d53e06f3aa84458ba05078e83ca15c67d856ca",
-    "src/features/registro/summaries.ts": "82b45594f316ccbd2b02f54df6fb0263efebf5d853284c471c885540fd775435",
+    "src/features/registro/summaries.ts": "e172d4b7be8c051c9a014d167f029e6cc4e4bf5a0a2cae49f4be37e62bb6cc58",
     "src/features/registro/tutor-search.ts": "c987a2ab4b2a1ec4d149f32c8272090398454006288082f776ae892201ed1d90",
     "src/features/registro/tutor-service.ts": "56780c0619205d11601f18d17130e8f6f76c03e1cc6226a6bce40f8baf666626",
     "src/lib/attribution/clinical-mutations.ts": "b631d8ae3f55b83d8b2ae72797d3280830903000456e3dcc98e224daf0ab76ca",

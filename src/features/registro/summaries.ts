@@ -55,7 +55,6 @@ function instante(iso: string): number {
 
 /**
  * Criterio único de las lecturas clínicas.
- * Criterio único de las lecturas clínicas:.
  */
 export function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
   return (
