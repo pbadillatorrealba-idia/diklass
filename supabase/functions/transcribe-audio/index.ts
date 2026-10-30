@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { asUser } from "../_shared/supabase.ts";
 import { transcribeWithOpenAI } from "../_shared/transcription.ts";
 import { handleTranscribeAudio } from "./handler.ts";
 
@@ -11,12 +11,6 @@ const TIEMPO_MAXIMO_MS = 20_000;
 
 /** La clave vive solo en los secretos de la función (Principio V); nunca llega al cliente. */
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
-
-const asUser = (authorization: string) =>
-  createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-    global: { headers: { Authorization: authorization } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
 Deno.serve((request) =>
   handleTranscribeAudio(request, {

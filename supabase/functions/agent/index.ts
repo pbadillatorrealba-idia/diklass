@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { asUser } from "../_shared/supabase.ts";
 import { runAgent } from "./agent.ts";
 import { makeDb } from "./db.ts";
 import { handleAgent } from "./handler.ts";
@@ -19,17 +19,11 @@ const tracing = setupTracing({
   apiKey: Deno.env.get("PHOENIX_API_KEY"),
 });
 
-// El cliente actúa con el JWT del solicitante: RLS limita cada herramienta a su clínica.
-const asUser = (authorization: string) =>
-  createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-    global: { headers: { Authorization: authorization } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
 Deno.serve((request) =>
   handleAgent(request, {
     log: (line) => console.error(line),
     randomId: () => crypto.randomUUID(),
+    // `asUser` actúa con el JWT del solicitante: RLS limita cada herramienta a su clínica.
     canUse: async (authorization) => {
       const { data } = await asUser(authorization).rpc("is_active_access");
       return data === true;

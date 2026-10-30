@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { asUser } from "../_shared/supabase.ts";
 import { transcribeWithOpenAI } from "../_shared/transcription.ts";
 import { VOICE_CONSENT_VERSION } from "../_shared/voice-consent.ts";
 import { handleTranscribeChatAudio } from "./handler.ts";
@@ -20,28 +20,12 @@ Deno.serve((request) =>
     randomId: () => crypto.randomUUID(),
     // El cliente actúa con el JWT del solicitante: `is_active_access` solo responde por él mismo.
     canTranscribe: async (authorization) => {
-      const user = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-        {
-          global: { headers: { Authorization: authorization } },
-          auth: { persistSession: false, autoRefreshToken: false },
-        },
-      );
-      const { data } = await user.rpc("is_active_access");
+      const { data } = await asUser(authorization).rpc("is_active_access");
       return data === true;
     },
     // Cuota por usuario, en la base y con su JWT: un usuario activo no debe gastar la cuota del proveedor.
     consumeQuota: async (authorization) => {
-      const user = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-        {
-          global: { headers: { Authorization: authorization } },
-          auth: { persistSession: false, autoRefreshToken: false },
-        },
-      );
-      const { data, error } = await user.rpc("consume_assistant_audio_quota", {
+      const { data, error } = await asUser(authorization).rpc("consume_assistant_audio_quota", {
         p_version: VOICE_CONSENT_VERSION,
       });
       if (error) return "unavailable";

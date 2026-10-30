@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { asUser } from "../_shared/supabase.ts";
 import { VOICE_CONSENT_VERSION } from "../_shared/voice-consent.ts";
 import { handleSpeak } from "./handler.ts";
 
@@ -11,12 +11,6 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 const TTS_MODEL = Deno.env.get("TTS_MODEL") ?? "gpt-4o-mini-tts";
 const TTS_VOICE = Deno.env.get("TTS_VOICE") ?? "alloy";
 const TIEMPO_MAXIMO_MS = 30_000;
-
-const asUser = (authorization: string) =>
-  createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-    global: { headers: { Authorization: authorization } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
 Deno.serve((request) =>
   handleSpeak(request, {

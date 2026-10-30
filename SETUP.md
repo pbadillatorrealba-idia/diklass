@@ -232,9 +232,32 @@ staging antes que en el real. Orden:
    `supabase/config.toml`).
 4. **Cron de la purga del audio del chat**: ninguna migración lo programa (necesita `pg_cron`, `pg_net`
    y Vault del proyecto alojado). Sin él el audio del chat no se borra y no se cumple la retención de
-   90 días. El SQL y la verificación están en
-   `openspec/changes/chat-del-asistente/quickstart.md`, sección «Despliegue de la purga del audio».
-   El audio de consulta (`consultation-audio`) no tiene purga.
+   90 días. La función no usa el JWT de un usuario: `pg_cron` la invoca con `pg_net` y un secreto
+   compartido que comprueba en tiempo constante (sin secreto configurado responde 503). Con el mismo
+   valor de `PURGE_CHAT_AUDIO_SECRET` del paso 2, en el SQL del proyecto alojado:
+
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select vault.create_secret('<el mismo secreto>', 'purge_chat_audio_secret');
+   select cron.schedule(
+     'purge-chat-audio',
+     '17 3 * * *', -- a diario, 03:17 UTC
+     $$select net.http_post(
+         url := '<URL de las funciones>/purge-chat-audio',
+         headers := jsonb_build_object(
+           'x-purge-secret',
+           (select decrypted_secret from vault.decrypted_secrets where name = 'purge_chat_audio_secret')
+         ),
+         body := '{}'::jsonb
+       )$$
+   );
+   ```
+
+   Verifica invocando la función a mano con el secreto y buscando el registro `purge_chat_audio_done`
+   (`due`, `removed`, `failed`, `orphans`); el cron queda en `cron.job_run_details`. Para rotar el
+   secreto, cambia las dos copias (secreto de la función y Vault): hasta que coincidan la purga responde
+   401. El audio de consulta (`consultation-audio`) no tiene purga.
 5. Web: `bunx expo export --platform web` y servir `dist/` (la app no define aún un destino de hosting).
 
 ### Auth en el proyecto alojado
