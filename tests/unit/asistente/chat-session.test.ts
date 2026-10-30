@@ -327,3 +327,26 @@ describe("startTurn", () => {
     });
   });
 });
+
+describe("onAnswer", () => {
+  test("se avisa con las partes de la respuesta solo cuando quedó guardada", async () => {
+    const avisos: Part[][] = [];
+    const { deps, persistidos } = setup({
+      onAnswer: (parts) => {
+        // Ya está guardada la respuesta cuando se avisa.
+        expect(persistidos.at(-1)?.role).toBe("assistant");
+        avisos.push(parts);
+      },
+    });
+    await startTurn(deps, { text: "hola", patientId: null }, senal());
+    expect(avisos).toEqual([[{ type: "text", text: "eco: hola" }]]);
+  });
+  test("no se avisa si el turno se detuvo", async () => {
+    const avisos: Part[][] = [];
+    const { deps } = setup({ onAnswer: (p) => avisos.push(p) });
+    const c = new AbortController();
+    c.abort();
+    await startTurn(deps, { text: "hola", patientId: null }, c.signal);
+    expect(avisos).toEqual([]);
+  });
+});

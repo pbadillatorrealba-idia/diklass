@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import { canTransition, type Message, type MessageStatus } from "@/features/asistente/chat-model";
+import type { Attribution } from "@/lib/attribution/types";
 import { queryClient } from "@/lib/query/query-client";
 import { useSessionStore } from "@/stores/session-store";
+
+/** Estado de confirmación de una propuesta del agente (solo de la sesión; la idempotencia es del servicio). */
+export type ProposalState = {
+  busy: boolean;
+  confirmedBy: Attribution | null;
+  alreadyRecorded: boolean;
+  error: string | null;
+};
 
 /**
  * Lo efímero del chat (asistente-conversacional · design.md D3 · D12): el borrador de cada hilo, los
@@ -10,6 +19,8 @@ import { useSessionStore } from "@/stores/session-store";
  * acceso (Constitución V), como `asistente-store` y `conversation-store`.
  */
 export type ChatState = {
+  proposals: Record<string, ProposalState>;
+  setProposal: (id: string, state: ProposalState) => void;
   drafts: Record<string, string>;
   pending: Message[];
   unread: number;
@@ -23,7 +34,8 @@ export type ChatState = {
   reset: () => void;
 };
 
-const vacio = (): Pick<ChatState, "drafts" | "pending" | "unread"> => ({
+const vacio = (): Pick<ChatState, "drafts" | "pending" | "unread" | "proposals"> => ({
+  proposals: {},
   drafts: {},
   pending: [],
   unread: 0,
@@ -36,6 +48,7 @@ export const useChatStore = create<ChatState>()((set) => ({
       const { [threadId]: _anterior, ...resto } = state.drafts;
       return { drafts: text === "" ? resto : { ...resto, [threadId]: text } };
     }),
+  setProposal: (id, state) => set((s) => ({ proposals: { ...s.proposals, [id]: state } })),
   addPending: (message) => set((state) => ({ pending: [...state.pending, message] })),
   setPendingStatus: (id, status) =>
     set((state) => ({

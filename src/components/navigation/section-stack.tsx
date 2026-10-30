@@ -29,7 +29,9 @@ export function SectionStack({ root }: { root: string }) {
     >
       <Stack.Screen
         name={root}
-        options={{ headerLargeTitleEnabled: process.env.EXPO_OS === "ios" }}
+        options={{
+          headerLargeTitleEnabled: process.env.EXPO_OS === "ios",
+        }}
       />
     </Stack>
   );

@@ -61,12 +61,12 @@ describe("secciones", () => {
     }
   });
 
-  test("la barra inferior web lleva las 4 clínicas; Configuración va por el avatar (SC-059) y Tutores, por Pacientes", () => {
+  test("la barra inferior web conserva Inicio, Pacientes, Conocimiento y Configuración", () => {
     expect(TABBAR_SECTIONS.map((s) => s.label)).toEqual([
       "Inicio",
       "Pacientes",
-      "Seguimiento",
       "Conocimiento",
+      "Configuración",
     ]);
   });
 });

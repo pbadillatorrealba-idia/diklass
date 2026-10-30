@@ -324,13 +324,14 @@ describe("PanelDockView", () => {
   const dock = (active: string, pending: number) =>
     render(<PanelDockView activeId={active} onOpen={() => {}} threads={hilos(pending)} />);
 
-  test("nombra el hilo activo y abre la hoja con un control de al menos 44×44", () => {
+  test("mantiene el nombre Asistente aunque el hilo activo sea otro y conserva el área táctil", () => {
     const html = dock("conocimiento", 0);
     const abrir = html.match(/<[^>]*data-testid="panel-dock-open"[^>]*>/)?.[0] ?? "";
     expect(abrir).toContain("min-h-touch");
     expect(abrir).toContain('aria-haspopup="dialog"');
     expect(abrir).toContain('aria-label="Abrir el asistente: Conocimiento"');
-    expect(html).toContain("Conocimiento");
+    expect(html).toContain(">Asistente</");
+    expect(html).not.toContain(">Conocimiento</");
   });
 
   test("muestra la escucha aunque el hilo activo sea otro", () => {
@@ -349,7 +350,10 @@ describe("PanelDockView", () => {
     expect(dock("escucha", 0)).not.toContain("panel-dock-pending");
   });
 
-  test("sin hilos no pinta nada", () => {
-    expect(render(<PanelDockView activeId="x" onOpen={() => {}} threads={[]} />)).toBe("");
+  test("sin hilos conserva Iniciar consulta y no ofrece abrir el asistente", () => {
+    const html = render(<PanelDockView activeId="x" onOpen={() => {}} threads={[]} />);
+    expect(html).toContain('href="/patients"');
+    expect(html).toContain("Iniciar consulta");
+    expect(html).not.toContain('data-testid="panel-dock-open"');
   });
 });

@@ -23,7 +23,7 @@ cp .env.example .env
 supabase start
 supabase status -o env              # copia API_URL, ANON_KEY y SERVICE_ROLE_KEY en .env (ver SETUP.md)
 bun run provision:veterinarians     # veterinarios sintéticos para entrar
-bun run start                       # o: bun run web
+bun run start                       # o: bun run web; primer puerto libre de 9701 a 9710
 ```
 
 Nunca commitees `.env` ni compartas sus valores. El detalle del entorno (variables, base de datos

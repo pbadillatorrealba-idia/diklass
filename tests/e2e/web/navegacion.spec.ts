@@ -59,7 +59,8 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     const tabbar = page.getByTestId("app-tabbar");
     await expect(tabbar).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("app-sidebar")).toBeHidden();
-    for (const name of ["Inicio", "Pacientes", "Seguimiento", "Conocimiento"]) {
+    await expect(tabbar.getByRole("link", { name: "Seguimiento" })).toHaveCount(0);
+    for (const name of ["Inicio", "Pacientes", "Conocimiento", "Configuración"]) {
       await expect(tabbar.getByRole("link", { name })).toBeVisible();
     }
     await expect(tabbar.getByRole("link", { name: "Conocimiento" })).toHaveAttribute(
@@ -68,21 +69,14 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     );
   });
 
-  for (const [width, testID] of [
-    [1280, "app-sidebar"],
-    [375, "app-tabbar"],
-  ] as const) {
-    test(`a ${width} px, desde una consulta se llega a Seguimiento en 1 activación`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 800 });
-      await page.goto(`/consultations/${caso.openConsultationId}`);
-      await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
-      await page.getByTestId(testID).getByRole("link", { name: "Seguimiento" }).click();
-      await expect(page).toHaveURL(/\/follow-up$/);
-      await expect(page.getByTestId("follow-up-patient-list")).toBeVisible({ timeout: 15_000 });
-    });
-  }
+  test("a 1280 px, desde una consulta se llega a Seguimiento en 1 activación", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/consultations/${caso.openConsultationId}`);
+    await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("app-sidebar").getByRole("link", { name: "Seguimiento" }).click();
+    await expect(page).toHaveURL(/\/follow-up$/);
+    await expect(page.getByTestId("follow-up-patient-list")).toBeVisible({ timeout: 15_000 });
+  });
 
   test("a 1280 px, la consulta muestra el breadcrumb Pacientes › ficha y a 375 px solo «Volver»", async ({
     page,

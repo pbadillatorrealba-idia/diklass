@@ -1,11 +1,12 @@
 import { type Href, Link, Stack } from "expo-router";
 import Head from "expo-router/head";
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import { type PropsWithChildren, type ReactElement, type ReactNode, useState } from "react";
 import { FlatList, type FlatListProps, ScrollView, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDock } from "@/features/asistente/panel-dock";
 import { useContentWidth } from "@/features/asistente/use-content-width";
 import { Heading } from "./heading";
+import { Logo } from "./logo";
 import { Text } from "./text";
 
 const WIDTHS = { content: "max-w-content", wide: "max-w-wide" } as const;
@@ -17,6 +18,8 @@ export type ScreenProps = PropsWithChildren<{
   testID?: string;
   /** Título de la pantalla: en web, `h1` + `<title>`; en nativo, la cabecera del `Stack`. */
   title?: string;
+  /** Línea breve sobre el `h1` (p. ej. «Hola,»). Solo en web: en nativo la cabecera lleva el título. */
+  pretitle?: string;
   /**
    * Acción principal de la pantalla: en web desde 768 px, en la línea del `h1`; en nativo y en
    * ventanas estrechas, en una barra fija al pie a todo el ancho.
@@ -79,40 +82,61 @@ function useActionBar() {
 
 /**
  * Barra fija al pie, fuera del desplazamiento (FR-088 · design.md D7): la acción principal en
- * compacto y, a cualquier ancho, la cinta del asistente. Es un solo contenedor con borde, fondo
- * `card` y el área segura inferior (`SafeAreaView` mide su solape real con el indicador de inicio
- * o la barra de gestos); en iOS/Android queda sobre `NativeTabs` y en web sobre la barra inferior.
+ * compacto y, a cualquier ancho, la cinta del asistente. La acción mantiene borde y fondo `card`; el
+ * dock se superpone al contenido, que añade su altura al padding final para dejar accesibles los
+ * últimos controles. `SafeAreaView` mide su solape con el indicador de inicio
+ * o la barra de gestos; en iOS/Android queda sobre `NativeTabs` y en web sobre la barra inferior.
  */
 function ScreenBottomBar({
   action,
   dock,
   width,
+  onHeightChange,
 }: {
+  onHeightChange: (height: number) => void;
   action: ReactNode;
   dock: ReactNode;
   width: keyof typeof WIDTHS;
 }) {
   if (!(action || dock)) return null;
   return (
-    <View className="border-t border-border bg-card" testID="screen-action-bar">
-      <SafeAreaView edges={["bottom"]}>
+    <View
+      className="absolute bottom-0 left-0 right-0 z-10"
+      onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
+      pointerEvents="box-none"
+      testID="screen-action-bar"
+    >
+      <SafeAreaView edges={["bottom"]} pointerEvents="box-none">
         {action ? (
-          <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
+          <View className="border-t border-border bg-card">
+            <View className={`w-full ${WIDTHS[width]} self-center p-4`}>{action}</View>
+          </View>
         ) : null}
-        {dock ? <View testID="screen-dock">{dock}</View> : null}
+        {dock ? (
+          <View pointerEvents="box-none" testID="screen-dock">
+            {dock}
+          </View>
+        ) : null}
       </SafeAreaView>
     </View>
   );
 }
 
 /** En web, «‹ Volver a …» (o, desde `lg`, el breadcrumb) y el `h1`; en nativo, la cabecera. */
-function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "back" | "title">) {
+function ScreenHeading({
+  action,
+  back,
+  pretitle,
+  title,
+}: Pick<ScreenProps, "action" | "back" | "pretitle" | "title">) {
   const isWide = useWindowDimensions().width >= BREADCRUMB_FROM;
   if (process.env.EXPO_OS !== "web") return null;
-  if (!(back || title || action)) return null;
   const crumbs = back ? (back.crumbs ?? [{ href: back.href, label: back.label }]) : [];
   return (
     <View className="gap-2">
+      <View className="mb-4 items-center pt-2 lg:hidden" testID="screen-brand">
+        <Logo size="sm" />
+      </View>
       {back && isWide ? (
         <View role="navigation" aria-label="Ruta" className="flex-row flex-wrap gap-2">
           {crumbs.map((crumb, index) => (
@@ -143,7 +167,14 @@ function ScreenHeading({ action, back, title }: Pick<ScreenProps, "action" | "ba
       ) : null}
       {title || action ? (
         <View className="flex-row flex-wrap items-center justify-between gap-3">
-          {title ? <Heading level={1}>{title}</Heading> : <View />}
+          {title ? (
+            <View className="min-w-0 shrink">
+              {pretitle ? <Text tone="muted">{pretitle}</Text> : null}
+              <Heading level={1}>{title}</Heading>
+            </View>
+          ) : (
+            <View />
+          )}
           {action}
         </View>
       ) : null}
@@ -162,6 +193,7 @@ export function Screen({
   children,
   dock: dockProp,
   className,
+  pretitle,
   testID,
   title,
   width = "content",
@@ -169,12 +201,18 @@ export function Screen({
   const actionBar = useActionBar();
   const shellDock = useDock();
   const dock = dockProp ?? shellDock;
+  const [bottomHeight, setBottomHeight] = useState(0);
   const content = (
     <View
       className={`w-full ${WIDTHS[width]} self-center gap-6 p-4 md:p-6 ${className ?? ""}`.trim()}
       testID={testID}
     >
-      <ScreenHeading action={actionBar ? null : action} back={back} title={title} />
+      <ScreenHeading
+        action={actionBar ? null : action}
+        back={back}
+        pretitle={pretitle}
+        title={title}
+      />
       {children}
     </View>
   );
@@ -185,13 +223,19 @@ export function Screen({
       <ScrollView
         automaticallyAdjustKeyboardInsets
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: dock || (actionBar && action) ? bottomHeight : 0 }}
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
         testID={testID ? `${testID}-scroll` : undefined}
       >
         {content}
       </ScrollView>
-      <ScreenBottomBar action={actionBar ? action : null} dock={dock} width={width} />
+      <ScreenBottomBar
+        action={actionBar ? action : null}
+        dock={dock}
+        width={width}
+        onHeightChange={setBottomHeight}
+      />
     </ScreenFrame>
   );
 }
@@ -241,6 +285,7 @@ export function ScreenList<T>({
   const columns = listColumns(width, useContentWidth());
   const shellDock = useDock();
   const dock = dockProp ?? shellDock;
+  const [bottomHeight, setBottomHeight] = useState(0);
   return (
     <ScreenFrame title={title}>
       <FlatList
@@ -249,6 +294,7 @@ export function ScreenList<T>({
         // `columnWrapperClassName` solo existe con más de una columna.
         columnWrapperClassName={columns > 1 ? "gap-3" : undefined}
         contentContainerClassName={`w-full ${WIDTHS[width]} self-center gap-3 p-4 md:p-6`}
+        contentContainerStyle={{ paddingBottom: dock ? bottomHeight : 0 }}
         contentInsetAdjustmentBehavior="automatic"
         data={data}
         keyboardShouldPersistTaps="handled"
@@ -272,7 +318,7 @@ export function ScreenList<T>({
         }
         testID={testID}
       />
-      <ScreenBottomBar action={null} dock={dock} width={width} />
+      <ScreenBottomBar action={null} dock={dock} width={width} onHeightChange={setBottomHeight} />
     </ScreenFrame>
   );
 }

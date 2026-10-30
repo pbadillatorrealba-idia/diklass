@@ -84,6 +84,14 @@ Bun es el runtime y package manager (versión en `.bun-version`). Los scripts co
 La definición completa de CI está en `.github/workflows/ci.yml`; en cambios que solo tocan
 `**.md`, `docs/**` u `openspec/**` CI no corre y no hay nada que ejecutar.
 
+## Puertos de desarrollo
+
+Usa `bun run start`, `web`, `start:web`, `android` o `ios`: el lanzador elige el primer puerto
+libre entre **9701 y 9710**, en ese orden. Si todos están ocupados, informa el error; no inicia
+otra instancia fuera del rango. No reutilices un servidor de otro worktree. Los e2e conservan
+su puerto explícito independiente. Para una vista previa solicitada, deja el servidor en segundo
+plano y comunica la URL elegida.
+
 ## Desarrollo ligero
 
 La máquina de desarrollo tiene poca RAM: mientras se desarrolla se ejecuta lo mínimo que valida el

@@ -7,7 +7,9 @@ import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conoc
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { type AudioPlayback, createAudioPlayback } from "@/features/asistente/audio-playback";
-import type { Message, Part } from "@/features/asistente/chat-model";
+import type { AgentSource, Message, Part } from "@/features/asistente/chat-model";
+import type { ProposalState } from "@/features/asistente/chat-store";
+import { rotuloHerramienta } from "@/features/asistente/herramientas";
 import { formatElapsed } from "@/features/voz/use-elapsed";
 
 /**
@@ -18,6 +20,7 @@ export type PartContext = {
   role: Message["role"];
   /** Sin manejador, una propuesta guardada se ve como texto: persistir no es confirmar. */
   onConfirmProposal?: (proposalId: string) => void;
+  proposalState?: (proposalId: string) => ProposalState | undefined;
   /** URL firmada de corta vida para reproducir un audio vigente; `null` si ya no está disponible. */
   onPlayAudio?: (path: string) => Promise<string | null>;
 };
@@ -75,6 +78,52 @@ function MessageAudioPlayer({
   );
 }
 
+/** «¿Por qué?»: plegado por defecto; lista lo que consultó el agente y la traza del turno. */
+function WhyPart({
+  tools,
+  sources,
+  traceId,
+}: {
+  tools: string[];
+  sources?: AgentSource[];
+  traceId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View className="gap-1">
+      <Button
+        aria-expanded={open}
+        className="self-start"
+        onPress={() => setOpen(!open)}
+        size="sm"
+        testID="message-why-toggle"
+        variant="ghost"
+      >
+        <ButtonText>{open ? "Ocultar" : "¿Por qué?"}</ButtonText>
+      </Button>
+      {open ? (
+        <View className="gap-1" testID="message-why">
+          {tools.map((tool) => (
+            <Text key={tool} tone="muted" variant="caption">
+              {rotuloHerramienta(tool)}
+            </Text>
+          ))}
+          {sources?.map((fuente, i) => (
+            <Text key={`${fuente.documentoId}#${fuente.ordinal}`} tone="muted" variant="caption">
+              {`[F${i + 1}] ${fuente.titulo || "Fuente sin título"}${fuente.seccion ? ` · ${fuente.seccion}` : ""}`}
+            </Text>
+          ))}
+          {traceId ? (
+            <Text selectable tone="muted" variant="caption">
+              {`Traza: ${traceId}`}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 const AUDIO_MARCA = { expired: "audio vencido", deleted: "audio eliminado" } as const;
 
 const RENDERERS: Renderers = {
@@ -90,6 +139,7 @@ const RENDERERS: Renderers = {
       {part.text}
     </Text>
   ),
+  why: ({ part }) => <WhyPart sources={part.sources} tools={part.tools} traceId={part.traceId} />,
   knowledge: ({ part }) => (
     <>
       <RespuestaConocimiento answer={part.answer} />
@@ -115,12 +165,21 @@ const RENDERERS: Renderers = {
       )}
     </>
   ),
-  proposal: ({ part, ctx }) =>
-    ctx.onConfirmProposal ? (
-      <AgentProposal onConfirm={ctx.onConfirmProposal} proposal={part.proposal} />
+  proposal: ({ part, ctx }) => {
+    const estado = ctx.proposalState?.(part.proposal.id);
+    return ctx.onConfirmProposal ? (
+      <AgentProposal
+        alreadyRecorded={estado?.alreadyRecorded}
+        busy={estado?.busy}
+        confirmedBy={estado?.confirmedBy}
+        error={estado?.error}
+        onConfirm={ctx.onConfirmProposal}
+        proposal={part.proposal}
+      />
     ) : (
       <Text>{part.proposal.summary}</Text>
-    ),
+    );
+  },
 };
 
 export function PartView({ part, ctx }: { part: Part; ctx: PartContext }) {

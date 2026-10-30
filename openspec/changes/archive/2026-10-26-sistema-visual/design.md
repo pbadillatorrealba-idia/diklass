@@ -586,7 +586,7 @@ vacía junto a la barra lateral. El ancho pasa a depender del tipo de pantalla.
 | `/home` | `wide` | Panel de secciones y calendario lado a lado |
 | `/follow-up`, `/knowledge/sources` | `ScreenList width="wide"` | 2 columnas desde `xl` (1280 px de ventana) |
 | `/patients` | `Screen width="wide"` | Tabla desde 1024 px y tarjetas apiladas por debajo (`rediseno-pacientes` D3) |
-| `/settings` | `wide` | Tarjetas en 2 columnas |
+| `/settings` | `wide` | 1 columna de tarjetas (Perfil, Apariencia, Sesión) a cualquier ancho; revisado por `mejoras-ui-ux` (#80), antes eran 2 columnas |
 | `/patients/[id]` | `wide` | 1 columna de cards (revisado por `rediseno-pacientes` D4): cabecera, tutor, procedencia, derivante, antecedentes e historial |
 | Formularios, visor de fuente, `/knowledge`, `/follow-up/[id]`, `/login` | `content` (720 px) | Una columna de lectura |
 

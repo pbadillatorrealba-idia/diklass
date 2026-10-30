@@ -17,10 +17,9 @@ const backendOnly = "Requires local Supabase with the synthetic veterinarians pr
 test.describe("auth web shell", () => {
   test("shows the accessible login without a registration path", async ({ page }) => {
     await page.goto("/login");
-    await expect(
-      page.getByRole("heading", { name: "Acceso para profesionales veterinarios" }),
-    ).toBeVisible();
-    await expect(page.getByLabel("Correo de acceso")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Iniciar sesión" })).toBeAttached();
+    await expect(page.getByRole("img", { name: "Diklass" }).first()).toBeVisible();
+    await expect(page.getByLabel("Correo")).toBeVisible();
     await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
     await expect(page.getByText(/registr/i)).toHaveCount(0);
@@ -31,7 +30,7 @@ test.describe("auth web shell", () => {
     page,
   }) => {
     await page.goto("/login");
-    const emailField = page.getByLabel("Correo de acceso");
+    const emailField = page.getByLabel("Correo");
     // Tab desde el correo solo es fiable con React ya hidratado (el botón se habilita entonces).
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await emailField.click();
@@ -69,9 +68,7 @@ test.describe("auth against the local backend", () => {
     const startedAt = Date.now();
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toHaveText(
-      `Sesión activa: ${ANA.displayName}`,
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(ANA.displayName);
     expect(Date.now() - startedAt).toBeLessThan(30_000);
   });
 
