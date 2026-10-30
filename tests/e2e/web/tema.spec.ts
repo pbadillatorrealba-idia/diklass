@@ -60,7 +60,14 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
       await expect(bar).toHaveCSS("border-top-width", "0px");
       await expect(bar).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
       const logout = page.getByTestId("settings-session").getByTestId("logout-button");
-      await logout.scrollIntoViewIfNeeded();
+      // Al final del contenido: ahí el relleno inferior debe dejar el último control sobre la cápsula.
+      const scroller = page.getByTestId("settings-screen-scroll");
+      await scroller.evaluate((el) => {
+        el.scrollTop = el.scrollHeight;
+      });
+      await expect
+        .poll(() => scroller.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop))
+        .toBeLessThanOrEqual(1);
       const last = await logout.boundingBox();
       if (!last) throw new Error("Falta el cierre de sesión");
       expect(last.y + last.height).toBeLessThanOrEqual(box.y);
