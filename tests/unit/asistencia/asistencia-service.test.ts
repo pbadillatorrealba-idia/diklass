@@ -177,6 +177,7 @@ const fragmentoRecuperado = {
   rank_cd: 0.8,
   lemas_cubiertos: ["ansiedad", "separacion"],
   lemas_pregunta: ["ansiedad", "separacion"],
+  terminos_pregunta: ["ansiedad", "separación"],
 };
 
 describe("asistencia-service: información faltante (US7)", () => {

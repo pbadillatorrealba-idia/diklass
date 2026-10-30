@@ -21,7 +21,7 @@ import { VerRespaldo } from "./ver-respaldo";
 
 function LineaInsumo({ item }: { item: ItemAnalisis }) {
   return (
-    <Text className="text-foreground/70 text-xs">
+    <Text className="text-muted-foreground text-sm">
       [{item.ref} · {item.campo} · procedencia {item.provenance}] {item.texto}
     </Text>
   );
@@ -38,14 +38,14 @@ function Seccion({
 }) {
   return (
     <VStack className="gap-1" testID={testID}>
-      <Text bold className="text-foreground text-sm">
+      <Text variant="strong" className="text-foreground text-sm">
         {titulo}
       </Text>
       {seccion.items.map((item) => (
         <LineaInsumo item={item} key={`${item.ref}-${item.campo}-${item.papel}`} />
       ))}
       {seccion.ausencia !== null ? (
-        <Text className="text-foreground/70 text-xs">{seccion.ausencia}</Text>
+        <Text className="text-muted-foreground text-sm">{seccion.ausencia}</Text>
       ) : null}
     </VStack>
   );
@@ -63,14 +63,14 @@ export function TarjetaHipotesis({
   return (
     <Box
       accessibilityLabel={`Hipótesis ${hipotesis.texto}, estado ${etiquetaEstadoHipotesis(hipotesis.decision)}. ${hipotesis.descargo}`}
-      className="rounded-lg border border-border bg-white p-3"
+      className="rounded-sm border border-border bg-card p-3"
       testID={`hipotesis-${hipotesis.key}`}
     >
       <VStack className="gap-2">
-        <Text bold className="text-foreground">
+        <Text variant="strong" className="text-foreground">
           {hipotesis.texto}
         </Text>
-        <Text className="text-foreground/70 text-sm" testID={`estado-${hipotesis.key}`}>
+        <Text className="text-muted-foreground text-sm" testID={`estado-${hipotesis.key}`}>
           Estado: {etiquetaEstadoHipotesis(hipotesis.decision)} · Origen:{" "}
           {hipotesis.origen === "sistema"
             ? "propuesta por el sistema"
@@ -88,16 +88,16 @@ export function TarjetaHipotesis({
           titulo="Antecedentes en contra"
         />
         <VStack className="gap-1" testID={`faltante-${hipotesis.key}`}>
-          <Text bold className="text-foreground text-sm">
+          <Text variant="strong" className="text-foreground text-sm">
             Información faltante para evaluarla
           </Text>
           {hipotesis.analisis.faltante.campos.map((campo) => (
-            <Text className="text-foreground/70 text-xs" key={campo}>
+            <Text className="text-muted-foreground text-sm" key={campo}>
               {campo}
             </Text>
           ))}
           {hipotesis.analisis.faltante.ausencia !== null ? (
-            <Text className="text-foreground/70 text-xs">
+            <Text className="text-muted-foreground text-sm">
               {hipotesis.analisis.faltante.ausencia}
             </Text>
           ) : null}
@@ -110,7 +110,7 @@ export function TarjetaHipotesis({
           </Text>
         ) : (
           <VStack className="gap-1">
-            <Text bold className="text-foreground text-sm">
+            <Text variant="strong" className="text-foreground text-sm">
               Evidencia documental
             </Text>
             {hipotesis.respaldo.citas.map((cita) => (
@@ -119,7 +119,7 @@ export function TarjetaHipotesis({
           </VStack>
         )}
 
-        <Text className="text-muted-foreground text-xs italic" testID={`descargo-${hipotesis.key}`}>
+        <Text className="text-muted-foreground text-sm italic" testID={`descargo-${hipotesis.key}`}>
           {hipotesis.descargo}
         </Text>
 

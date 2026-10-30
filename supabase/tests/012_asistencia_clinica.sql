@@ -1,7 +1,7 @@
 -- Suite pgTap: asistencia clínica proactiva.
 --
 -- Cambio: openspec/changes/implementar-asistencia-clinica-proactiva (tasks.md 1.1).
--- Escrita ANTES que supabase/migrations/013_asistencia_clinica.sql (Constitución II:
+-- Escrita ANTES que supabase/migrations/026_asistencia_clinica.sql (Constitución II:
 -- pruebas primero). Su «rojo» previo y su «verde» posterior se observan en el clúster
 -- PostgreSQL scratch /tmp/verify-006 (patrón del quickstart de 002) y, como evidencia
 -- oficial, en el job `database` de CI; la constancia vive en quickstart.md.

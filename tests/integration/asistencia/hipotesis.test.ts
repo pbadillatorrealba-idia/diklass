@@ -13,6 +13,7 @@ import { openConsultation } from "@/features/registro/consultation-service";
 import { recordDiagnosis } from "@/features/registro/diagnosis-service";
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { PatientContent } from "@/features/registro/schema";
+import { randomRut } from "../../support/rut";
 import { ANA, isLiveSupabase, type LiveVeterinarian, signedInVeterinarian } from "../live-supabase";
 
 /**
@@ -48,13 +49,13 @@ function fuenteNueva(): FuenteContent {
 function fichaBase(): Omit<PatientContent, "tutorId"> {
   return {
     name: "Luna Soporte",
-    species: "perro",
+    species: "canino",
     breed: "Mestizo",
     birthDate: "2021-05-01",
     ageMonths: 36,
     weightKg: 12.4,
     sex: "hembra",
-    reproductiveStatus: "esterilizada",
+    reproductiveStatus: "esterilizado",
     antecedentes: {
       medicalHistory: [],
       preexistingDiseases: [],
@@ -75,7 +76,9 @@ describe.skipIf(!isLiveSupabase)("soporte diferencial (US8)", () => {
     await incorporateSource(ana.client, { clinicId: ana.clinicId, fuente: fuenteNueva() });
     const ficha = await createPatientFicha(ana.client, {
       clinicId: ana.clinicId,
-      tutor: { newTutor: { name: "Sra. Soporte", phone: "+56 9 5555 6666", email: null } },
+      tutor: {
+        newTutor: { name: "Sra. Soporte", rut: randomRut(), phone: "+56 9 5555 6666", email: null },
+      },
       ficha: fichaBase(),
     });
     patientId = ficha.record.id;

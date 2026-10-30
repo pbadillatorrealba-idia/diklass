@@ -31,21 +31,21 @@ export function TarjetaSugerencia({
   return (
     <Box
       accessibilityLabel={`Sugerencia: ${sugerencia.pregunta}. Estado: ${ETIQUETAS_ESTADO[sugerencia.estado]}.`}
-      className="rounded-lg border border-border bg-white p-3"
+      className="rounded-sm border border-border bg-card p-3"
       testID={`sugerencia-${sugerencia.key}`}
     >
       <VStack className="gap-2">
-        <Text bold className="text-foreground">
+        <Text variant="strong" className="text-foreground">
           {sugerencia.pregunta}
         </Text>
-        <Text className="text-foreground/70 text-sm" testID={`estado-${sugerencia.key}`}>
+        <Text className="text-muted-foreground text-sm" testID={`estado-${sugerencia.key}`}>
           Estado: {ETIQUETAS_ESTADO[sugerencia.estado]}
         </Text>
         {sugerencia.fundamento.kind === "fuente" ? (
           <CitaFragmento cita={sugerencia.fundamento.cita} />
         ) : (
           <Text
-            className="text-foreground/70 text-sm"
+            className="text-muted-foreground text-sm"
             testID={`criterio-general-${sugerencia.key}`}
           >
             Fundamento: criterio general del equipo clínico; no se apoya en un protocolo cargado.
@@ -76,7 +76,7 @@ export function TarjetaSugerencia({
             </Button>
           </VStack>
         ) : (
-          <Text className="text-foreground/70 text-xs">
+          <Text className="text-muted-foreground text-sm">
             Decisión registrada en esta consulta (la sugerencia no vuelve a proponerse aquí).
           </Text>
         )}
