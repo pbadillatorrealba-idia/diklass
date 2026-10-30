@@ -9,7 +9,7 @@ const deps = (over: Record<string, unknown> = {}) => {
       log: (l: string) => logs.push(l),
       randomId: () => "rid",
       canUse: async () => true,
-      run: async () => ({ text: "hola", ui: [], proposals: [], tools: [] }),
+      run: async () => ({ text: "hola", ui: [], proposals: [], tools: [], sources: [] }),
       ...over,
     },
   };

@@ -95,6 +95,12 @@ describe.skipIf(!isLiveSupabase)("lecturas del agente entre clínicas, contra Su
     expect((data as unknown[]).length).toBe(1);
     const hoy = await db.consultationsSince(HACE_UN_DIA);
     expect(hoy.consultas.some((c) => c.paciente === NOMBRE)).toBe(true);
+    const ficha = await db.patientFicha(pacienteId);
+    expect(ficha?.nombre).toBe(NOMBRE);
+    expect(ficha?.tutor).toBe("Sra. Aislada");
+    // Principio V: la ficha para el modelo no lleva RUT, teléfono ni correo del tutor.
+    expect(JSON.stringify(ficha)).not.toMatch(/rut|phone|email|@example/i);
+    expect(Array.isArray(await db.knowledge("ansiedad por separación"))).toBe(true);
   });
 
   test("otra clínica no ve consultas, resumen, búsqueda ni agenda del día", async () => {
@@ -105,5 +111,6 @@ describe.skipIf(!isLiveSupabase)("lecturas del agente entre clínicas, contra Su
     expect(data as unknown[]).toEqual([]);
     const hoy = await db.consultationsSince(HACE_UN_DIA);
     expect(hoy.consultas.some((c) => c.paciente === NOMBRE)).toBe(false);
+    expect(await db.patientFicha(pacienteId)).toBeNull();
   });
 });

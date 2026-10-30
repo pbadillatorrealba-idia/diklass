@@ -14,6 +14,8 @@ export type EvalCase = {
     open?: string[];
     summary?: string | null;
     today?: { paciente: string; estado: string }[];
+    ficha?: Record<string, unknown> | null;
+    knowledge?: { titulo: string; seccion?: string | null; texto: string }[];
   };
   expect: {
     /** Herramientas que deben haberse usado (en cualquier orden). */
@@ -33,6 +35,15 @@ const dbOf = (c: EvalCase): Db => ({
   rpc: async () => ({ data: c.db.patients ?? [], error: null }),
   openConsultations: async () => c.db.open ?? [],
   consultationSummary: async () => c.db.summary ?? null,
+  patientFicha: async () => c.db.ficha ?? null,
+  knowledge: async () =>
+    (c.db.knowledge ?? []).map((k, i) => ({
+      documentoId: `00000000-0000-4000-8000-00000000000${i}`,
+      ordinal: i + 1,
+      titulo: k.titulo,
+      seccion: k.seccion ?? null,
+      texto: k.texto,
+    })),
   consultationsSince: async () => ({ consultas: c.db.today ?? [], truncado: false }),
 });
 

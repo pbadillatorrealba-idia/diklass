@@ -5,6 +5,13 @@ import { proposalActionSchema } from "@/features/asistente/proposal-action";
 /** Tiempo máximo de un turno del agente (varias llamadas al modelo y a herramientas). */
 const AGENT_TIMEOUT_MS = 60_000;
 
+const fuenteSchema = z.object({
+  documentoId: z.string(),
+  ordinal: z.number(),
+  titulo: z.string(),
+  seccion: z.string().nullable(),
+});
+
 const respuestaSchema = z.object({
   text: z.string(),
   ui: z.array(z.object({ type: z.literal("navigate"), path: z.string() })).default([]),
@@ -19,6 +26,7 @@ const respuestaSchema = z.object({
     )
     .default([]),
   tools: z.array(z.string()).default([]),
+  sources: z.array(fuenteSchema).default([]),
   traceId: z.string().optional(),
 });
 

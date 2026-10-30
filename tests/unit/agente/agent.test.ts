@@ -7,7 +7,17 @@ const db = (
   rows: unknown[],
   open: string[] = [],
   hoy: { paciente: string; estado: string }[] = [],
+  conocimiento: { titulo: string; texto: string }[] = [],
 ) => ({
+  patientFicha: async () => ({ nombre: "Bruma", tutor: "Ana" }),
+  knowledge: async () =>
+    conocimiento.map((k, i) => ({
+      documentoId: `d${i}`,
+      ordinal: i + 1,
+      titulo: k.titulo,
+      seccion: null,
+      texto: k.texto,
+    })),
   consultationSummary: async () => "Ladra de noche.",
   consultationsSince: async (since: string) => {
     vistos.push(since);
@@ -252,5 +262,44 @@ describe("agente: memoria de la consulta", () => {
       consultationId: cid,
       text: "Ladra de noche.",
     });
+  });
+
+  it("ficha_paciente lee la ficha y conocimiento deja las fuentes que recuperó", async () => {
+    const model = fakeModel()
+      .respondWithTools([
+        {
+          name: "ficha_paciente",
+          args: { pacienteId: "11111111-1111-4111-8111-111111111111" },
+          id: "1",
+        },
+      ])
+      .respondWithTools([
+        { name: "conocimiento", args: { pregunta: "ansiedad por separación" }, id: "2" },
+      ])
+      .respond(new AIMessage("Según [F1], ..."));
+    const r = await runAgent({
+      model,
+      db: db(
+        [],
+        [],
+        [],
+        [{ titulo: "Manual de etología", texto: "La ansiedad por separación..." }],
+      ),
+      history: [],
+      text: "ficha de Bruma y qué dice la literatura",
+      patientId: null,
+    });
+    expect(r.tools).toEqual(["ficha_paciente", "conocimiento"]);
+    expect(r.sources).toEqual([
+      { documentoId: "d0", ordinal: 1, titulo: "Manual de etología", seccion: null },
+    ]);
+  });
+
+  it("sin evidencia no hay fuentes", async () => {
+    const model = fakeModel()
+      .respondWithTools([{ name: "conocimiento", args: { pregunta: "algo" }, id: "1" }])
+      .respond(new AIMessage("No encontré evidencia."));
+    const r = await runAgent({ model, db: db([]), history: [], text: "algo", patientId: null });
+    expect(r.sources).toEqual([]);
   });
 });

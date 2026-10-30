@@ -29,6 +29,16 @@ const partSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("why"),
     tools: z.array(z.string()),
+    sources: z
+      .array(
+        z.object({
+          documentoId: z.string(),
+          ordinal: z.number(),
+          titulo: z.string(),
+          seccion: z.string().nullable(),
+        }),
+      )
+      .optional(),
     traceId: z.string().optional(),
   }),
   z.object({ type: z.literal("knowledge"), queryId: z.string(), answer: knowledgeAnswerSchema }),

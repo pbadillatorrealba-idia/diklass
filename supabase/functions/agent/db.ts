@@ -2,9 +2,59 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Db } from "./agent.ts";
 
 const MAX_HOY = 50;
+const MAX_FRAGMENTOS = 5;
+const MAX_TEXTO_FRAGMENTO = 1200;
 
 /** Lecturas del agente con el cliente del solicitante (su JWT): RLS limita cada una a su clínica. */
 export const makeDb = (client: SupabaseClient): Db => ({
+  patientFicha: async (patientId) => {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("content")
+      .eq("record_type", "patient")
+      .eq("id", patientId)
+      .limit(1);
+    if (error) throw error;
+    const c = data?.[0]?.content as Record<string, unknown> | undefined;
+    if (!c) return null;
+    let tutor: string | null = null;
+    if (typeof c.tutorId === "string") {
+      const { data: t, error: e2 } = await client
+        .from("clinical_records")
+        .select("content")
+        .eq("record_type", "tutor")
+        .eq("id", c.tutorId)
+        .limit(1);
+      if (e2) throw e2;
+      tutor = String((t?.[0]?.content as { name?: string } | undefined)?.name ?? "") || null;
+    }
+    // Solo lo que el agente necesita (Principio V): sin RUT, teléfono ni correo del tutor.
+    return {
+      nombre: c.name,
+      especie: c.species,
+      raza: c.breed,
+      edadMeses: c.ageMonths,
+      pesoKg: c.weightKg,
+      sexo: c.sex,
+      estadoReproductivo: c.reproductiveStatus,
+      antecedentes: c.antecedentes,
+      tutor,
+    };
+  },
+  knowledge: async (question) => {
+    const { data, error } = await client.rpc("search_knowledge_fragments", {
+      p_query: question,
+      p_limit: MAX_FRAGMENTOS,
+    });
+    if (error) throw error;
+    return ((data as Record<string, unknown>[] | null) ?? []).map((f) => ({
+      documentoId: String(f.documento_id),
+      ordinal: Number(f.fragmento_ordinal),
+      titulo: String((f.bibliografia as { titulo?: string } | null)?.titulo ?? ""),
+      seccion: (f.seccion as string | null) ?? null,
+      texto: String(f.texto ?? "").slice(0, MAX_TEXTO_FRAGMENTO),
+    }));
+  },
   consultationSummary: async (consultationId) => {
     const { data, error } = await client
       .from("clinical_records")

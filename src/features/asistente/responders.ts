@@ -1,5 +1,10 @@
 import type { CalendarEvent } from "@/features/agenda/calendar-event";
-import { type Message, messageText, type Part } from "@/features/asistente/chat-model";
+import {
+  type AgentSource,
+  type Message,
+  messageText,
+  type Part,
+} from "@/features/asistente/chat-model";
 import {
   answerAgenda,
   answerFecha,
@@ -102,6 +107,7 @@ type AgentDeps = {
     ui: { type: "navigate"; path: string }[];
     proposals: { id: string; summary: string; origin: string; action: ProposalAction }[];
     tools?: string[];
+    sources?: AgentSource[];
     traceId?: string;
   }>;
   navigate: (path: string) => void;
@@ -123,7 +129,7 @@ export class AgentResponder implements Responder {
       .map((m) => ({ role: m.role, text: messageText(m) }))
       .filter((m) => m.text !== "")
       .slice(-HISTORY_TURNS);
-    const { text, ui, proposals, tools, traceId } = await this.deps.invoke({
+    const { text, ui, proposals, tools, sources, traceId } = await this.deps.invoke({
       text: input.text,
       patientId: input.patientId,
       since: startOfDay(new Date()).toISOString(),
@@ -136,7 +142,14 @@ export class AgentResponder implements Responder {
       .filter((p) => isValidAction(p.action))
       .map((proposal) => ({ type: "proposal", proposal }));
     const porque: Part[] = tools?.length
-      ? [{ type: "why", tools: [...new Set(tools)], traceId }]
+      ? [
+          {
+            type: "why",
+            tools: [...new Set(tools)],
+            sources: sources?.length ? sources : undefined,
+            traceId,
+          },
+        ]
       : [];
     const listo: ResponseEvent = {
       type: "ready",

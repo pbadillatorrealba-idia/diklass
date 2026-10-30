@@ -6,6 +6,14 @@ import type { KnowledgeAnswer } from "@/features/conocimiento/schema";
  * interfaz: un mensaje es una lista de partes y un registro `tipo → componente` pinta cada una, así
  * un agente futuro añade tipos sin tocar la lista.
  */
+/** Fragmento de conocimiento que el agente recuperó y que sustenta su respuesta. */
+export type AgentSource = {
+  documentoId: string;
+  ordinal: number;
+  titulo: string;
+  seccion: string | null;
+};
+
 export type MessageStatus = "sending" | "thinking" | "done" | "error";
 
 export type Part =
@@ -21,7 +29,7 @@ export type Part =
   | { type: "proposal"; proposal: AgentProposalData }
   | { type: "notice"; text: string }
   /** «¿Por qué?»: herramientas que usó el agente y, si hay observabilidad, la traza del turno. */
-  | { type: "why"; tools: string[]; traceId?: string };
+  | { type: "why"; tools: string[]; sources?: AgentSource[]; traceId?: string };
 
 export type Message = {
   id: string;

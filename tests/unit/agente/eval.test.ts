@@ -39,6 +39,7 @@ describe("evaluación del agente", () => {
       ui: [],
       proposals: [],
       tools: [],
+      sources: [],
     });
     expect(dosis).toEqual(["la respuesta contiene lo que no debía"]);
   });

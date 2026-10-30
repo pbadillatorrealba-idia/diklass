@@ -9,8 +9,8 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 - [x] 1.4 `Responder` del agente en `src/features/asistente/responders.ts`.
 
 ## 2. Herramientas (pruebas primero)
-- [ ] 2.1 Lectura (hecho: `buscar_paciente`, `consulta_abierta`; falta fichas y agenda): `buscar_paciente` con desambiguación, fichas, agenda, consulta.
-- [ ] 2.2 Conocimiento con citas (`conocimiento`).
+- [~] 2.1 Lectura: `buscar_paciente` (con desambiguación por el prompt), `ficha_paciente` (ficha mínima y nombre del tutor, sin RUT ni contacto) y `consulta_abierta`. Falta la agenda: no tiene fuente aún (FR-094).
+- [x] 2.2 Conocimiento con citas: tool `conocimiento` sobre `search_knowledge_fragments` (RLS y solo fuentes vigentes), fragmentos con ref F1…, `sources` en la respuesta y en «¿Por qué?». Sin evidencia el prompt exige decirlo. Verificado con modelo real (17/17).
 - [ ] 2.3 Asistencia proactiva (006) y tratamiento/farmacología (007).
 - [x] 2.4 Escritura como `propuesta` + tarjeta de confirmación (antecedente de anamnesis, procedencia «inferida»).
 - [ ] 2.4b Deshacer: pospuesto; el registro clínico es auditado y la anamnesis no admite correctivo (migración 009 solo exenta la epicrisis). Requiere diseño propio.
@@ -30,7 +30,7 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 
 ## 5. Calidad y seguridad
 - [x] 5.1 «¿Por qué?»: el mensaje lleva una parte plegable `why` con las herramientas del turno (rotuladas, sin repetir) y el `trace_id`; se persiste con el mensaje. Las fuentes con cita llegarán con `conocimiento` (2.2).
-- [~] 5.2 Anti prompt-injection: datos recuperados delimitados (`<datos>`, `<` escapado) y 4 casos hostiles con modelo real (delimitador cerrado, resumen, tutor y agenda; 13/13). Faltan los documentos hostiles de `conocimiento` (2.2).
+- [x] 5.2 Anti prompt-injection: datos recuperados delimitados (`<datos>`, `<` escapado) y 5 casos hostiles con modelo real (delimitador cerrado, resumen, tutor, agenda y fragmento de conocimiento).
 - [~] 5.3 Casos anotados (`tests/fixtures/agente/casos.json`) y marcador (`agent/eval.ts`, `scripts/eval-agente.ts`) probados con `fakeModel` y corridos con `openai:gpt-6-luna` real (9/9 OK, 2026-10-30). Falta subirlos como dataset/experimento de Phoenix.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
 - [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).

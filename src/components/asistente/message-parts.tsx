@@ -7,7 +7,7 @@ import { RespuestaConocimiento } from "@/components/conocimiento/respuesta-conoc
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { type AudioPlayback, createAudioPlayback } from "@/features/asistente/audio-playback";
-import type { Message, Part } from "@/features/asistente/chat-model";
+import type { AgentSource, Message, Part } from "@/features/asistente/chat-model";
 import type { ProposalState } from "@/features/asistente/chat-store";
 import { rotuloHerramienta } from "@/features/asistente/herramientas";
 import { formatElapsed } from "@/features/voz/use-elapsed";
@@ -79,7 +79,15 @@ function MessageAudioPlayer({
 }
 
 /** «¿Por qué?»: plegado por defecto; lista lo que consultó el agente y la traza del turno. */
-function WhyPart({ tools, traceId }: { tools: string[]; traceId?: string }) {
+function WhyPart({
+  tools,
+  sources,
+  traceId,
+}: {
+  tools: string[];
+  sources?: AgentSource[];
+  traceId?: string;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <View className="gap-1">
@@ -98,6 +106,11 @@ function WhyPart({ tools, traceId }: { tools: string[]; traceId?: string }) {
           {tools.map((tool) => (
             <Text key={tool} tone="muted" variant="caption">
               {rotuloHerramienta(tool)}
+            </Text>
+          ))}
+          {sources?.map((fuente, i) => (
+            <Text key={`${fuente.documentoId}#${fuente.ordinal}`} tone="muted" variant="caption">
+              {`[F${i + 1}] ${fuente.titulo || "Fuente sin título"}${fuente.seccion ? ` · ${fuente.seccion}` : ""}`}
             </Text>
           ))}
           {traceId ? (
@@ -126,7 +139,7 @@ const RENDERERS: Renderers = {
       {part.text}
     </Text>
   ),
-  why: ({ part }) => <WhyPart tools={part.tools} traceId={part.traceId} />,
+  why: ({ part }) => <WhyPart sources={part.sources} tools={part.tools} traceId={part.traceId} />,
   knowledge: ({ part }) => (
     <>
       <RespuestaConocimiento answer={part.answer} />

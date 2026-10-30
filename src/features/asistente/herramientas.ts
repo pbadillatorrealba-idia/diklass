@@ -1,6 +1,8 @@
 /** Cómo se nombra al veterinario cada herramienta del agente en «¿Por qué?». */
 const ROTULOS: Record<string, string> = {
   buscar_paciente: "Buscó pacientes",
+  ficha_paciente: "Leyó la ficha del paciente",
+  conocimiento: "Consultó la base de conocimiento",
   navegar: "Abrió una pantalla",
   consulta_abierta: "Revisó las consultas abiertas",
   consultas_de_hoy: "Revisó las consultas de hoy",
