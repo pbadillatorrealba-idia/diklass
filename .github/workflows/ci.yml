@@ -42,6 +42,7 @@ jobs:
           }
       - run: bunx biome ci --error-on-warnings .
       - run: bun run typecheck
+      - run: bun run check:skills
 
   unit:
     name: Unit and integration tests

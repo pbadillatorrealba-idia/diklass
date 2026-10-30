@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "gate": "sh scripts/gate.sh",
+    "check:skills": "bun scripts/check-skills.ts",
     "format": "biome format --write .",
     "test": "bun test tests/unit tests/integration",
     "test:integration": "bun scripts/run-isolated-tests.ts integration",

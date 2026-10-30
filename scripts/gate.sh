@@ -15,6 +15,7 @@ else
   run bunx biome ci --error-on-warnings .
 fi
 run bunx tsc --noEmit
+run bun scripts/check-skills.ts
 # Un proceso por directorio: el pico de memoria queda acotado al directorio más pesado y un
 # directorio con fuga no arrastra a los demás.
 for dir in tests/unit/*/ tests/integration; do

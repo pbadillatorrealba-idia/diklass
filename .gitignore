@@ -250,10 +250,6 @@ output/
 security_best_practices_report.md
 *-threat-model.md
 
-# Copia de impeccable para Copilot: no se versiona (AGENTS.md: dos espejos, .claude y .agents)
-.github/skills/
-.github/agents/
-.github/hooks/
 
 # Worktrees de agentes (AGENTS.md, «Worktrees»)
 .claude/worktrees/

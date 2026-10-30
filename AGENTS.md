@@ -108,7 +108,19 @@ e2e y las exportaciones corren de uno en uno, con un solo worker.
 | `src/lib/supabase/`, autenticación o atribución | lo de «Código» y `bun --env-file=test-results/backend.env run test:integration` | `gate` y `bun --env-file=test-results/backend.env run test:integration` |
 | Solo `**.md`, `docs/**` u `openspec/**` | nada | nada |
 
-Al declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
+## Pruebas, depuración y verificación
+
+- **Rojo primero** (Principio II, no negociable): la prueba se escribe antes del código y se observa
+  fallar por la razón prevista; un error abre con una prueba de regresión que falle. Ponytail fija el
+  tamaño, no el orden: una prueba mínima por comportamiento, sin suites por función ni fixtures que
+  el caso no necesite.
+- **Depuración:** reproduce, traza hacia atrás hasta la causa raíz, revisa todos los llamadores y
+  corrige una sola vez donde confluyen; sin arreglos a ciegas. Tras 3 intentos fallidos, para y
+  cuestiona el diseño. Espera condiciones, no `sleep`.
+- **Sin evidencia fresca no hay afirmación de éxito:** ejecuta en el mismo mensaje el comando que la
+  prueba y lee su salida y su código de salida («debería pasar» no cuenta). Una regresión se verifica
+  en rojo y verde (al revertir el arreglo debe fallar). Si un subagente informa éxito, comprueba el
+  diff. Al declarar algo terminado, di qué se ejecutó y qué no: «verificado» solo cubre lo ejecutado.
 
 ## Cierre de una PR
 
@@ -120,17 +132,39 @@ confirmación.
 2. **Si hay cambios de UI:** `impeccable` (`critique` o `audit`) antes de la prerrevisión.
 3. **`requesting-code-review`** sobre la rama, **en paralelo con el paso 1** (el revisor no consume
    RAM); publica el reporte en español en la PR, como exige la plantilla, con la sección
-   «Sobreingeniería» (criterio de ponytail). Se omite en el carril trivial y en cambios que solo
+   «Sobreingeniería» (criterio de ponytail; ver «Coordinación de la prerrevisión»). Se omite en el carril trivial y en cambios que solo
    tocan `**.md`, `docs/**` u `openspec/**` sin alterar requisitos. Es una prerrevisión de agente:
    la revisión por alguien distinto del autor que exige la constitución sigue siendo obligatoria.
-4. **`receiving-code-review`:** aplica los comentarios que sean correctos técnicamente,
-   verificando cada uno antes de implementarlo. Sin hallazgos: anótalo y sigue.
+4. **Aplica los comentarios que sean correctos técnicamente,** verificando cada uno antes de
+   implementarlo; sin agradecimientos de cortesía, y discrepa con argumentos técnicos. Sin hallazgos:
+   anótalo y sigue.
 5. **Pregunta al usuario ante una decisión difícil:** sugerencias contradictorias entre sí o con la
    constitución, cambios de alcance o de diseño, hallazgos que exigen tocar migraciones o
    contratos, o una sugerencia que no se comparte. No las decidas en silencio ni ignores un
    hallazgo sin decirlo.
 6. **Máximo 2 rondas** de revisión; si aún quedan hallazgos, para y pregunta. Repite la
    verificación solo sobre lo cambiado y resume qué se aplicó, qué se descartó y por qué.
+
+### Coordinación de la prerrevisión
+
+`requesting-code-review` se usa tal cual (copia de la skill global); lo propio del proyecto vive aquí.
+El agente coordinador, no el reviewer, es quien:
+
+- **Pasa al reviewer** `PLAN_OR_REQUIREMENTS` = la tarea de `openspec/changes/<cambio>/tasks.md`, y
+  añade a su prompt: el reporte entero en español (símbolos, rutas y comandos sin traducir); una
+  sección final «Sobreingeniería» solo sobre el diff, una línea por hallazgo
+  `N. archivo:L<línea>: <etiqueta> qué recortar. Con qué se reemplaza.` con las etiquetas `delete`,
+  `stdlib`, `native`, `reuse` (cita la ruta), `yagni` y `shrink`, cerrada con
+  `neto: -<N> líneas posibles.` o `Ya está ajustado.`; que no marque como sobrante la validación en
+  fronteras de confianza, el fallo cerrado, la accesibilidad, RLS ni un requisito del cambio, y que
+  un test o `assert` mínimo es el piso; y que no escriba en GitHub.
+- **Publica el reporte una sola vez**, sin pedir confirmación, incluso sin hallazgos. Lleva SHA base
+  y revisado, alcance, verificaciones realmente ejecutadas y limitaciones, sin secretos. Resuelve la
+  PR abierta de la rama con `gh pr list --repo <repo> --head <rama>` (nunca una inferida de otra
+  rama; en forks, confirma el propietario). Si su HEAD difiere del SHA revisado, revisa de nuevo.
+  Publica con `gh pr comment --body-file` (comentario, no aprobación), comprueba que existe y no lo
+  dupliques. Sin PR todavía: conserva el reporte y publícalo al crearla, sin crearla solo para eso.
+  Sin `gh`, permisos o red: entrega el reporte e indica que la publicación sigue pendiente.
 
 ## Worktrees
 
@@ -142,26 +176,34 @@ dentro del worktree `ln -s ../../../node_modules node_modules` y `ln -s ../../..
 ## Skills de agentes
 
 - `.claude/skills/` es la fuente de las skills del proyecto; `.agents/skills/` es su espejo para
-  Codex y Oh My Pi. Toda alta, baja o edición se aplica en ambos en el mismo commit; difiere la
-  invocación (`/` frente a `$`) y los subagentes de `impeccable`, que solo existen en `.claude/agents/`.
+  Codex y Oh My Pi. Toda alta, baja o edición se aplica en ambos en el mismo commit y
+  `bun run check:skills` (también en `gate` y CI) falla si derivan: solo se admite la invocación
+  (`/` frente a `$`) y las rutas; `openspec-*` e `impeccable` se regeneran con su herramienta y solo
+  se vigilan sus archivos, nombre y descripción.
+- Las skills genéricas (TDD, depuración, verificación, worktrees, `expo-*`) no se copian al repo: las
+  reglas de trabajo viven en este archivo y las guías de Expo, en el plugin `expo`.
 - `security-best-practices` y `security-threat-model`: solo cuando se pidan expresamente.
-- UI: `expo-native-ui` y `expo-router` para crearla; `impeccable` y sus estándares son la autoridad
-  visual (`DESIGN.md`, `PRODUCT.md` y `.impeccable/`, que hacen cumplir `tema.test.ts` y la compuerta
-  axe), subordinada a la constitución y al brief; un cambio de identidad se propone por OpenSpec. No se usan `frontend-design` ni `expo-design-system` (ni la del plugin `expo`).
+- UI: `impeccable` y sus estándares son la autoridad visual (`DESIGN.md`, `PRODUCT.md` y
+  `.impeccable/`, que hacen cumplir `tema.test.ts` y la compuerta axe), subordinada a la constitución
+  y al brief; un cambio de identidad se propone por OpenSpec. No se usan `frontend-design` ni
+  `expo-design-system`. Solo se usa la copia de `impeccable` del repo: el plugin global está
+  desactivado (`claude plugin disable impeccable@impeccable`).
 - Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; `bolder`,
   `colorize`, `overdrive`, `delight`, `typeset` y `shape` solo con confirmación del usuario y paso
   por OpenSpec. Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`)
-  se invocan solo desde esa skill; se usa la copia del repo, no el plugin global.
+  se invocan solo desde esa skill.
 
 ## Ponytail
 
-Ponytail (plugin global, modo `full`) fija **cuánto** se escribe, no **qué** se hace ni **qué** se
+Ponytail (skill `ponytail` copiada de la 5.3.3 en ambos espejos; el plugin global añade los hooks de
+modo siempre activo; para actualizarla, copia `skills/ponytail/` del plugin, modo `full`) fija **cuánto** se escribe, no **qué** se hace ni **qué** se
 verifica. Precedencia: constitución > este archivo > cambio OpenSpec > ponytail.
 
 - No recorta requisitos ni criterios del cambio activo, IDs FR/US/SC, validación en fronteras de
-  confianza, fallo cerrado, accesibilidad, RLS ni la verificación que exige la constitución; el TDD
-  sigue vigente (su excepción para «one-liners» no aplica).
-- Una simplificación con techo conocido lleva un comentario `ponytail:`, que no sustituye a la deuda
+  confianza, fallo cerrado, accesibilidad, RLS ni la verificación que exige la constitución; el
+  rojo primero sigue vigente aunque ponytail exima de prueba a lo trivial.
+- Una simplificación con techo conocido lleva un comentario `shortcut: <techo>, <cuándo mejorar>` (ponytail 5.x; los `ponytail:` antiguos
+  siguen vigentes), que no sustituye a la deuda
   de tests (sigue siendo una tarea). No interviene en `explore`, `sync-specs` ni `archive-change`.
 - La sección «Sobreingeniería» de `requesting-code-review` es la única pasada de ponytail al cerrar
   una PR; no lances además `ponytail-review` ni `simplify`.

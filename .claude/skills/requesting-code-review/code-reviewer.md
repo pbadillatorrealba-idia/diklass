@@ -30,6 +30,23 @@ Subagent (general-purpose):
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
+    ## The spec is a vision document
+
+    The spec says what the software must do. It does not enumerate every
+    input, environment, or condition the software will meet. For behavior
+    the spec is silent on, judge by what a reasonable person using this
+    software would expect: a reasonable person's expectation is a
+    requirement, and a spec's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the spec
+    mentions the trigger.
+
+    ## Declined to judge
+
+    Before your verdict, list every behavior you considered and set aside
+    as outside the plan or spec, one line each, with the reason. The
+    executor rules on each line; nothing you set aside is dropped
+    silently. An empty list means you set nothing aside.
+
     ## Read-Only Review
 
     Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
@@ -75,16 +92,6 @@ Subagent (general-purpose):
     - Documentation complete?
     - No obvious bugs?
 
-    **Sobreingeniería (criterio ponytail):** busca qué se puede borrar o
-    acortar, solo en el diff. Etiquetas: `delete` (código muerto, flexibilidad
-    sin uso), `stdlib` (reinventa la librería estándar), `native` (código o
-    dependencia que ya cubre la plataforma), `reuse` (ya existe un helper en
-    el repo; cita la ruta), `yagni` (abstracción con una sola implementación,
-    configuración que nadie cambia), `shrink` (misma lógica, menos líneas).
-    No marques como sobrante la validación en fronteras de confianza, el fallo
-    cerrado, la accesibilidad, RLS, ni un requisito del cambio OpenSpec activo.
-    Un único test o `assert` mínimo es el piso, no sobreingeniería.
-
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
@@ -96,49 +103,36 @@ Subagent (general-purpose):
     If you find issues with the plan itself rather than the implementation,
     say so.
 
-    ## Idioma y entrega
+    ## Output Format
 
-    Escribe TODO el reporte en español, incluidos encabezados, hallazgos y
-    veredicto. Conserva nombres de símbolos, rutas y comandos sin traducir.
-    Devuelve el reporte completo al agente coordinador; él lo publicará
-    automáticamente en la PR según SKILL.md. No publiques comentarios desde
-    este subagente: debe existir un único responsable de la publicación.
+    ### Strengths
+    [What's well done? Be specific.]
 
-    ## Formato de salida
+    ### Issues
 
-    ### Fortalezas
-    [¿Qué está bien hecho? Sé específico.]
+    #### Critical (Must Fix)
+    [Bugs, security issues, data loss risks, broken functionality]
 
-    ### Problemas
+    #### Important (Should Fix)
+    [Architecture problems, missing features, poor error handling, test gaps]
 
-    #### Crítico (Debe corregirse)
-    [Bugs, problemas de seguridad, riesgos de pérdida de datos, funcionalidad rota]
+    #### Minor (Nice to Have)
+    [Code style, optimization opportunities, documentation polish]
 
-    #### Importante (Debería corregirse)
-    [Problemas de arquitectura, funcionalidad faltante, manejo de errores deficiente, huecos de pruebas]
+    For each issue:
+    - File:line reference
+    - What's wrong
+    - Why it matters
+    - How to fix (if not obvious)
 
-    #### Menor (Deseable)
-    [Estilo de código, oportunidades de optimización, pulido de documentación]
+    ### Recommendations
+    [Improvements for code quality, architecture, or process]
 
-    Para cada problema:
-    - Referencia archivo:línea
-    - Qué está mal
-    - Por qué importa
-    - Cómo corregirlo (si no es obvio)
+    ### Assessment
 
-    ### Sobreingeniería
-    [Una línea por hallazgo, numerada: `N. archivo:L<línea>: <etiqueta> qué
-    recortar. Con qué se reemplaza.` Cierra con `neto: -<N> líneas posibles.`
-    Si no hay nada: `Ya está ajustado.`]
+    **Ready to merge?** [Yes | No | With fixes]
 
-    ### Recomendaciones
-    [Mejoras de calidad de código, arquitectura o proceso]
-
-    ### Veredicto
-
-    **¿Listo para fusionar?** [Sí | No | Con correcciones]
-
-    **Justificación:** [Evaluación técnica de 1-2 oraciones]
+    **Reasoning:** [1-2 sentence technical assessment]
 
     ## Critical Rules
 
@@ -163,34 +157,42 @@ Subagent (general-purpose):
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 
-**El reviewer devuelve:** Fortalezas, Problemas (Crítico / Importante / Menor), Sobreingeniería, Recomendaciones y Veredicto, siempre en español.
+**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
-## Ejemplo de salida
+## Example Output
 
-```markdown
-### Fortalezas
-- La migración conserva los datos existentes (db.ts:15-42).
+```
+### Strengths
+- Clean database schema with proper migrations (db.ts:15-42)
+- Comprehensive test coverage (18 tests, all edge cases)
+- Good error handling with fallbacks (summarizer.ts:85-92)
 
-### Problemas
+### Issues
 
-#### Crítico (Debe corregirse)
-- Ninguno identificado.
+#### Important
+1. **Missing help text in CLI wrapper**
+   - File: index-conversations:1-31
+   - Issue: No --help flag, users won't discover --concurrency
+   - Fix: Add --help case with usage examples
 
-#### Importante (Debería corregirse)
-1. **Falta validar las fechas**
-   - Archivo: search.ts:25-27.
-   - Problema: las fechas inválidas devuelven resultados vacíos sin explicar el error.
-   - Impacto: el usuario no puede distinguir una entrada inválida de una búsqueda sin resultados.
-   - Corrección: validar el formato y devolver un error con un ejemplo válido.
+2. **Date validation missing**
+   - File: search.ts:25-27
+   - Issue: Invalid dates silently return no results
+   - Fix: Validate ISO format, throw error with example
 
-#### Menor (Deseable)
-- Ninguno identificado.
+#### Minor
+1. **Progress indicators**
+   - File: indexer.ts:130
+   - Issue: No "X of Y" counter for long operations
+   - Impact: Users don't know how long to wait
 
-### Recomendaciones
-- Verificar el caso de fecha inválida después de corregirlo.
+### Recommendations
+- Add progress reporting for user experience
+- Consider config file for excluded projects (portability)
 
-### Veredicto
-**¿Listo para fusionar?** Con correcciones.
+### Assessment
 
-**Justificación:** La migración conserva los datos, pero falta validar las fechas.
+**Ready to merge: With fixes**
+
+**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```
