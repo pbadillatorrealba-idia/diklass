@@ -22,6 +22,6 @@ bun test tests/unit/scripts/deepmerge-patch.test.ts
 ```
 
 El parche conserva el número de versión: la auditoría por avisos sigue detectando 4.3.1.
-Esta entrega no omite el aviso en CI; ese tratamiento queda pendiente de decisión explícita.
+El aviso se omite en CI (`bun audit --ignore GHSA-gcqx-w48m-w2h4`) porque el parche lo mitiga.
 Retirar el parche cuando una publicación oficial supere las mismas regresiones, o cuando
 Expo deje de consumir esta dependencia. Antes de revertirlo, tener presente que vuelve el bypass.
