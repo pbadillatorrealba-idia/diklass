@@ -6,7 +6,6 @@ import { CorrectionLine } from "@/components/clinical/correction-line";
 import type { EpicrisisChange } from "@/components/registro/epicrisis-changes";
 import { EpicrisisFields } from "@/components/registro/epicrisis-fields";
 import type { useSignatureMotion } from "@/components/registro/signature-motion";
-import type { ClinicalGuardOutcome } from "@/components/registro/use-clinical-guard";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { SuggestedBlock } from "@/components/ui/suggested-block";
@@ -28,7 +27,8 @@ type EpicrisisSectionProps = {
   onDraftChange: (content: EpicrisisContent) => void;
   onSaveDraft: () => void;
   onApprove: () => void;
-  onSubmitCorrection: (content: EpicrisisContent) => Promise<ClinicalGuardOutcome>;
+  /** Resuelve `true` si la corrección quedó registrada; entonces se cierra el editor. */
+  onSubmitCorrection: (content: EpicrisisContent) => Promise<boolean>;
 };
 
 /**
@@ -55,7 +55,7 @@ export function EpicrisisSection({
     if (correctionContent === null) {
       return;
     }
-    if ((await onSubmitCorrection(correctionContent)) === "ok") {
+    if (await onSubmitCorrection(correctionContent)) {
       setCorrectionContent(null);
     }
   };

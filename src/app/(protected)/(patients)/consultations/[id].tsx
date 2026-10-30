@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
 import { attributionFromRow } from "@/components/clinical/attribution-from-row";
@@ -23,10 +23,7 @@ import {
   type PlanFormValues,
 } from "@/components/registro/plan-form";
 import { useSignatureMotion } from "@/components/registro/signature-motion";
-import {
-  type ClinicalGuardOutcome,
-  useClinicalGuard,
-} from "@/components/registro/use-clinical-guard";
+import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
 import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Box } from "@/components/ui/box";
 import { Callout } from "@/components/ui/callout";
@@ -333,23 +330,34 @@ export default function ConsultationScreen() {
     setDraft({ notes: text, updatedAt: new Date().toISOString() });
   };
 
+  // `isBusy` solo deshabilita los botones tras el siguiente render: un doble toque llega antes. Lo
+  // registrado es inmutable (D4), así que el cerrojo es síncrono y el segundo toque se ignora sin
+  // tocar el estado. `useClinicalGuard` nunca lanza, por eso el cerrojo siempre se suelta.
+  const locked = useRef(false);
+
   // Operación clínica con su estado: deshabilita la pantalla mientras corre y deja el mensaje según
   // el desenlace. `action` devuelve la atribución del registro, que solo acompaña al éxito.
+  // Devuelve si la operación tuvo éxito; `false` también cuando se ignoró por estar otra en curso.
   const run = async (
     operation: string,
     // biome-ignore lint/suspicious/noConfusingVoidType: las acciones sin atribución no devuelven nada
     action: () => Promise<Attribution | void>,
     success: string,
     failure: string,
-  ): Promise<ClinicalGuardOutcome> => {
+  ): Promise<boolean> => {
+    if (locked.current) {
+      return false;
+    }
+    locked.current = true;
     setIsBusy(true);
     let attribution: Attribution | null = null;
     const outcome = await guard(operation, async () => {
       attribution = (await action()) ?? null;
     });
+    locked.current = false;
     setIsBusy(false);
     setStatus(operationStatus(outcome, success, failure, attribution));
-    return outcome;
+    return outcome === "ok";
   };
 
   const submitAnamnesis = async () => {
@@ -364,9 +372,10 @@ export default function ConsultationScreen() {
       return;
     }
     setComposerError(null);
-    if (!clinicId) {
+    if (!clinicId || locked.current) {
       return;
     }
+    locked.current = true;
     setIsBusy(true);
     let attribution: Attribution | null = null;
     const outcome = await guard("record_anamnesis", async () => {
@@ -393,6 +402,7 @@ export default function ConsultationScreen() {
       setDraft(null);
       await refetchWorkspace();
     });
+    locked.current = false;
     setIsBusy(false);
     if (outcome === "ok") {
       setStatus({ text: "Antecedente de anamnesis registrado.", attribution });
@@ -532,9 +542,9 @@ export default function ConsultationScreen() {
     );
   };
 
-  const submitCorrection = async (content: EpicrisisContent): Promise<ClinicalGuardOutcome> => {
+  const submitCorrection = async (content: EpicrisisContent): Promise<boolean> => {
     if (effectiveEntry === null) {
-      return "error";
+      return false;
     }
     return run(
       "correct_epicrisis",
