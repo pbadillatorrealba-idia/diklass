@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { transcribeWithOpenAI } from "../_shared/transcription.ts";
+import { VOICE_CONSENT_VERSION } from "../_shared/voice-consent.ts";
 import { handleTranscribeChatAudio } from "./handler.ts";
 
 declare const Deno: {
@@ -40,7 +41,9 @@ Deno.serve((request) =>
           auth: { persistSession: false, autoRefreshToken: false },
         },
       );
-      const { data, error } = await user.rpc("consume_assistant_audio_quota");
+      const { data, error } = await user.rpc("consume_assistant_audio_quota", {
+        p_version: VOICE_CONSENT_VERSION,
+      });
       if (error) return "unavailable";
       if (data === "ok" || data === "rate_limited" || data === "consent_required") return data;
       // `no_access` ya lo atrapó `canTranscribe`; cualquier otra cosa es un estado inesperado.

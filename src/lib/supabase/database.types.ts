@@ -701,7 +701,10 @@ export type Database = {
         Returns: string
       }
       consume_agent_quota: { Args: never; Returns: string }
-      consume_assistant_audio_quota: { Args: never; Returns: string }
+      consume_assistant_audio_quota: {
+        Args: { p_version?: string }
+        Returns: string
+      }
       consume_client_error_quota: {
         Args: { p_bucket_key: string; p_limit?: number }
         Returns: boolean

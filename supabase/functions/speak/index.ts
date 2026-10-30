@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { VOICE_CONSENT_VERSION } from "../_shared/voice-consent.ts";
 import { handleSpeak } from "./handler.ts";
 
 declare const Deno: {
@@ -27,7 +28,9 @@ Deno.serve((request) =>
     },
     // Misma cuota y aviso de primer uso que la transcripción del chat.
     consumeQuota: async (authorization) => {
-      const { data, error } = await asUser(authorization).rpc("consume_assistant_audio_quota");
+      const { data, error } = await asUser(authorization).rpc("consume_assistant_audio_quota", {
+        p_version: VOICE_CONSENT_VERSION,
+      });
       if (error) return "unavailable";
       return data === "ok" || data === "rate_limited" || data === "consent_required"
         ? data

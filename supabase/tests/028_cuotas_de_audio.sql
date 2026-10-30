@@ -2,7 +2,7 @@
 -- Patrón: supabase/tests/027_cuota_agente.sql.
 
 begin;
-select plan(11);
+select plan(12);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -41,8 +41,12 @@ select is(public.consume_assistant_audio_quota(), 'consent_required',
 
 insert into public.assistant_voice_consent (version) values ('v1');
 
+-- Subir la versión del aviso obliga a aceptarlo de nuevo: la aceptación de la v1 no vale para la v2.
+select is(public.consume_assistant_audio_quota('v2'), 'consent_required',
+  'una versión del aviso no aceptada exige el consentimiento, aunque exista la de una anterior');
+
 select is(
-  (select count(*)::int from (select public.consume_assistant_audio_quota() as r from generate_series(1, 20)) t where r = 'ok'),
+  (select count(*)::int from (select public.consume_assistant_audio_quota('v1') as r from generate_series(1, 20)) t where r = 'ok'),
   20,
   'con el aviso aceptado, el chat admite 20 transcripciones en la ventana'
 );
