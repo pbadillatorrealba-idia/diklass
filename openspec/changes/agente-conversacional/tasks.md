@@ -30,7 +30,7 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 
 ## 5. Calidad y seguridad
 - [ ] 5.1 «¿Por qué?»: herramientas, fuentes y `trace_id` en el mensaje.
-- [ ] 5.2 Anti prompt-injection: delimitación de datos recuperados y tests con documentos hostiles.
+- [~] 5.2 Anti prompt-injection: datos recuperados delimitados (`<datos>`, `<` escapado) y 4 casos hostiles con modelo real (delimitador cerrado, resumen, tutor y agenda; 13/13). Faltan los documentos hostiles de `conocimiento` (2.2).
 - [~] 5.3 Casos anotados (`tests/fixtures/agente/casos.json`) y marcador (`agent/eval.ts`, `scripts/eval-agente.ts`) probados con `fakeModel` y corridos con `openai:gpt-6-luna` real (9/9 OK, 2026-10-30). Falta subirlos como dataset/experimento de Phoenix.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
 - [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).
