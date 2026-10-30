@@ -174,6 +174,23 @@ describe("agente: salvaguardas de propuestas", () => {
     expect(ajeno.proposals[0]?.origin).toStartWith("Redactado por el asistente");
   });
 
+  it.each([
+    ["un texto que normaliza a vacío", ".", "anota algo"],
+    ["una palabra corta que aparece en el mensaje", "de", "anota algo de ladrido"],
+  ])("no rotula como dictado %s", async (_caso, texto, mensaje) => {
+    const r = await runAgent({
+      model: fakeModel()
+        .respondWithTools([{ name: "consulta_abierta", args: { pacienteId: cid }, id: "1" }])
+        .respondWithTools([{ name: "proponer_antecedente", args: { ...args, texto }, id: "2" }])
+        .respond(new AIMessage("ok")),
+      db: db([], [cid]),
+      history: [],
+      text: mensaje,
+      patientId: null,
+    });
+    expect(r.proposals[0]?.origin).toStartWith("Redactado por el asistente");
+  });
+
   it("los campos permitidos coinciden con los de texto del catálogo del cliente", async () => {
     const { ANAMNESIS_SECTIONS } = await import(
       "../../../src/features/registro/anamnesis-catalog.ts"
@@ -233,6 +250,17 @@ describe("makeModel (contrato del puerto ChatModel)", () => {
       invocationParams: (o: object) => Record<string, unknown>;
     };
     expect(model.invocationParams({}).store).toBe(false);
+  });
+
+  it("OpenAI acota el coste: un reintento y un tope de tokens de salida", async () => {
+    process.env.OPENAI_API_KEY ??= "sk-test";
+    const { makeModel } = await import("../../../supabase/functions/agent/model.ts");
+    const model = (await makeModel("openai:gpt-6-luna")) as unknown as {
+      caller: { maxRetries: number };
+      invocationParams: (o: object) => Record<string, unknown>;
+    };
+    expect(model.caller.maxRetries).toBe(1);
+    expect(model.invocationParams({}).max_output_tokens).toBeGreaterThan(0);
   });
 
   it("rechaza un proveedor desconocido", async () => {

@@ -15,6 +15,10 @@ export async function makeModel(spec: string) {
         model,
         useResponsesApi: true,
         modelKwargs: { store: false },
+        // Coste acotado: por defecto reintenta 6 veces dentro de la ventana de 55 s y no limita la salida.
+        // shortcut: 8192 tokens de salida por paso (incluye el razonamiento), subir si trunca respuestas.
+        maxRetries: 1,
+        maxTokens: 8192,
       });
     case "anthropic":
       return new (await import("@langchain/anthropic")).ChatAnthropic({ model });

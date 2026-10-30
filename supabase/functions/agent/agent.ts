@@ -96,6 +96,9 @@ const norm = (t: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** Por debajo de esto, que el texto «figure» en el mensaje no prueba que el veterinario lo dictó. */
+const DICTADO_MIN_CARACTERES = 12;
+
 export function buildTools(
   db: Db,
   ui: UiAction[],
@@ -227,7 +230,10 @@ export function buildTools(
         return "Rechazada: usa consulta_abierta y propón solo sobre una consulta abierta que devolvió.";
       }
       // El origen se dice con verdad: lo que figura en el mensaje del usuario, o redacción del asistente.
-      const dictado = norm(userText).includes(norm(texto));
+      // shortcut: umbral por longitud en vez de coincidencia por palabra, un dictado corto se rotula como redactado (lado seguro); afinar si estorba.
+      const propuesto = norm(texto);
+      const dictado =
+        propuesto.length >= DICTADO_MIN_CARACTERES && norm(userText).includes(propuesto);
       proposals.push({
         id: crypto.randomUUID(),
         summary: `Registrar en la anamnesis «${campo}»: ${texto}`,
