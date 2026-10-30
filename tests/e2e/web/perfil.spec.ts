@@ -29,10 +29,10 @@ test.describe("perfil profesional", () => {
       await expect(page.getByTestId("profile-history")).toContainText(
         `${ANA.displayName} → ${nuevo}`,
       );
-      await expect(page.getByTestId("account-link").first()).toHaveAttribute(
-        "aria-label",
-        `Configuración de ${nuevo}`,
-      );
+      // En escritorio el enlace muestra el nombre (es su nombre accesible); en móvil lo da el aria-label.
+      await expect(
+        page.getByTestId("account-link").filter({ visible: true }).first(),
+      ).toContainText(nuevo);
     } finally {
       // Otras suites buscan «Dra. Ana Torres» (tasks 2.3).
       await guardar(page, ANA.displayName);

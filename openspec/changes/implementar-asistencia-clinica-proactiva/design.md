@@ -66,7 +66,7 @@ Restricciones de esta ejecución y de la coordinación entre ramas hermanas:
   `src/app/(protected)/consultations/[id].tsx`, `src/app/(protected)/home.tsx`,
   `supabase/migrations/001-012*`, `supabase/tests/001-011*`, `supabase/seed.sql`. Toda necesidad
   de editarlos se reporta como requisito de integración (RI-1/RI-2, ver Riesgos).
-- Números propios: migración `supabase/migrations/013_asistencia_clinica.sql`, suite pgTap
+- Números propios: migración `supabase/migrations/026_asistencia_clinica.sql`, suite pgTap
   `supabase/tests/012_asistencia_clinica.sql`, código en `src/features/asistencia/**` y
   `src/components/asistencia/**`, rutas propias en `src/app/(protected)/support/**`, pruebas en
   `tests/unit/asistencia/**` e `tests/integration/asistencia/**` con fixtures en
@@ -281,7 +281,7 @@ leer un campo que puede no estar persistido.
 
 ### D8. La base de las asistencias es inmutable en el servidor; la asistencia nunca es registro definitivo
 
-Migración `013_asistencia_clinica.sql`: trigger `guard_assistance_decisions` (`BEFORE INSERT OR
+Migración `026_asistencia_clinica.sql`: trigger `guard_assistance_decisions` (`BEFORE INSERT OR
 UPDATE` sobre `clinical_records`, acotado a `record_type in ('missing_information','hypothesis')`).
 Premisa de amenaza: la política T055 permite a **cualquier** veterinario activo de la clínica hacer
 `UPDATE` directo por PostgREST sobre el contenido de filas no aprobadas; sin este trigger, un
@@ -435,7 +435,7 @@ acredita el mecanismo de SC-029 y las invariantes de SC-019/SC-030/SC-031 por co
 
 ## Migration Plan
 
-Una única migración aditiva `supabase/migrations/013_asistencia_clinica.sql`: la función y el
+Una única migración aditiva `supabase/migrations/026_asistencia_clinica.sql`: la función y el
 trigger `guard_assistance_decisions` (D8). Sin DDL sobre tablas, sin cambios en la enumeración de
 FR-063 y sin grants nuevos (`update (content)` de 004 basta para las transiciones de
 `decision`/`estado`): `supabase gen types` debe confirmarse sin diff sobre

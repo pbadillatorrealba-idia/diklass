@@ -18,7 +18,7 @@ test.describe("auth web shell", () => {
   test("shows the accessible login without a registration path", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { level: 1, name: "Iniciar sesión" })).toBeAttached();
-    await expect(page.getByRole("img", { name: "Diklass" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Diklass" }).first()).toBeVisible();
     await expect(page.getByLabel("Correo")).toBeVisible();
     await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
