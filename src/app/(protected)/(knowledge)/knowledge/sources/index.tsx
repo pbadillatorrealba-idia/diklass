@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
-import { useEffect } from "react";
 import { AttributionBadge } from "@/components/clinical/attribution-badge";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,38 +9,20 @@ import { QueryState } from "@/components/ui/query-state";
 import { ScreenList } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { listSources } from "@/features/conocimiento/coleccion-service";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
-import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Colección documental (FR-028, FR-030, FR-069 · US5-AC6/AC9/AC13): cada fuente con su
  * bibliografía, licencia, estado y la atribución de quién y cuándo la incorporó.
  */
 export default function KnowledgeCollectionScreen() {
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const fuentesQuery = useQuery({
     queryKey: ["conocimiento", "sources"],
     queryFn: () => listSources(supabase),
   });
 
   const queryError = fuentesQuery.error;
-  useEffect(() => {
-    if (!queryError) return;
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "listSources",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "listSources");
 
   const fuentes = fuentesQuery.data ?? [];
   // Sin fuentes, la acción vive en el vacío (US14-AC5): una sola en pantalla.

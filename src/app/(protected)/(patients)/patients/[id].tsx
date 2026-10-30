@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { AntecedentsPanel } from "@/components/registro/antecedents-panel";
 import {
@@ -19,6 +19,7 @@ import {
   ReferrerFields,
 } from "@/components/registro/patient-record";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout, type CalloutTone } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
@@ -39,20 +40,15 @@ import {
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { AntecedentGroup, AntecedentItem } from "@/features/registro/schema";
 import { listTutors, tutorFullName } from "@/features/registro/tutor-service";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const patientId = String(id);
   const router = useRouter();
   const clinicId = useSessionStore((state) => state.clinicId);
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const queryClient = useQueryClient();
   const guard = useClinicalGuard();
   const [status, setStatusState] = useState<{ text: string; tone: CalloutTone } | null>(null);
@@ -78,21 +74,7 @@ export default function PatientDetailScreen() {
   });
 
   const queryError = patientQuery.error ?? tutorsQuery.error ?? historyQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "load_patient",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "load_patient");
 
   const history = historyQuery.data ?? [];
   const lastVisitAt =

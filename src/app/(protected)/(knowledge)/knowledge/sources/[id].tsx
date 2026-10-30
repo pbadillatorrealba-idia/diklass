@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { VisorDocumento } from "@/components/conocimiento/visor-documento";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
@@ -43,19 +44,7 @@ export default function KnowledgeSourceScreen() {
   // Una lectura con la sesión caducada abre el diálogo, como en la colección (revisión de la
   // PR #30); cualquier otro fallo se reporta y se muestra, nunca queda en «Cargando…».
   const queryError = fuenteQuery.error;
-  useEffect(() => {
-    if (!queryError) return;
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "getSource",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "getSource");
 
   const retirar = async () => {
     setConfirmandoRetiro(false);

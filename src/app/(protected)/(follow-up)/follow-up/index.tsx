@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
-import { useEffect } from "react";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LinkText } from "@/components/ui/link-text";
@@ -8,11 +8,7 @@ import { QueryState } from "@/components/ui/query-state";
 import { ScreenList } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { listPatients } from "@/features/registro/ficha-service";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
-import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Selector de paciente para el panel de evolución del seguimiento (montaje mínimo de
@@ -20,29 +16,13 @@ import { useUiStore } from "@/stores/ui-store";
  * de integración (archivo compartido): esta ruta es alcanzable por URL documentada.
  */
 export default function FollowUpIndexScreen() {
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const patientsQuery = useQuery({
     queryKey: ["registro", "patients"],
     queryFn: () => listPatients(supabase),
   });
 
   const queryError = patientsQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "follow_up_list_patients",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "follow_up_list_patients");
 
   return (
     <ScreenList

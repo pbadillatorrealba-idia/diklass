@@ -3,6 +3,7 @@ import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 import { TutorsTable } from "@/components/registro/tutors-table";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, InputField } from "@/components/ui/input";
@@ -16,12 +17,8 @@ import {
   TUTOR_SORT_COLUMNS,
   type TutorSortColumn,
 } from "@/features/registro/tutor-search";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { hrefWithParams, useDebouncedParam } from "@/lib/url-filters";
-import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 type Params = { name?: string; contact?: string; sort?: string; dir?: string; page?: string };
 
@@ -41,8 +38,6 @@ function FilterField({ children, label }: { children: ReactNode; label: string }
 export default function TutorsScreen() {
   const router = useRouter();
   const raw = useLocalSearchParams<Params>();
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
 
   const sort: TutorSortColumn = TUTOR_SORT_COLUMNS.find((c) => c === raw.sort) ?? "name";
   const dir: SortDirection = raw.dir === "desc" ? "desc" : "asc";
@@ -64,21 +59,7 @@ export default function TutorsScreen() {
   });
 
   const queryError = tutorsQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "list_tutors_page",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "list_tutors_page");
 
   const rows = queryError ? [] : (tutorsQuery.data?.rows ?? []);
   const total = tutorsQuery.data?.total ?? 0;
