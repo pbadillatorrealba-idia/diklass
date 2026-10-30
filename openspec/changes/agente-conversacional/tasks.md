@@ -35,7 +35,7 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.
 - [ ] 5.6 Cuota por usuario del agente en la base (patrón `consume_assistant_audio_quota`).
 - [ ] 5.7 Declarar el proveedor de modelo y minimizar datos enviados (Principio V) antes de usar datos reales.
-- [ ] 5.5 Aislamiento entre clínicas en cada herramienta.
+- [x] 5.5 Aislamiento entre clínicas en cada herramienta: `makeDb` (`agent/db.ts`) usa el cliente del solicitante; `tests/integration/agente/aislamiento-clinicas.test.ts` prueba en vivo con dos clínicas (control + otra clínica). Corrige además que «hoy» devolvía las 50 consultas más antiguas y no las más recientes.
 
 ## Diferido
 Límites de coste, modo degradado sin LLM, redacción de PII en trazas, sugerencias durante el dictado.
