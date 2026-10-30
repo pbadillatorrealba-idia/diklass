@@ -507,17 +507,19 @@ literales de color.
 
 ### Requirement: FR-082
 
-Toda pantalla protegida MUST ofrecer navegación global a las secciones Inicio, Pacientes,
-Seguimiento y Conocimiento:
+Toda pantalla protegida MUST ofrecer navegación global según la plataforma:
 
 - En web, desde 1024 px CSS, MUST ser una barra lateral fija que incluya la cuenta y el cierre de
-  sesión.
-- Por debajo de ese ancho, y en iOS/Android, MUST ser una barra de pestañas inferior con la
+  sesión y los accesos a Inicio, Pacientes, Seguimiento y Conocimiento.
+- En web bajo 1024 px, MUST mostrar una barra inferior con Inicio, Pacientes, Conocimiento y
+  Configuración. Seguimiento MUST NOT aparecer en esa barra; su ruta y su acceso de escritorio
+  MUST conservarse.
+- En iOS/Android, MUST conservar sus secciones y ser una barra de pestañas inferior con la
   convención de la plataforma: la barra de pestañas en iOS y la barra de navegación de Material 3
   en Android.
 
 La sección actual MUST indicarse con algo más que el color (peso, indicador y `aria-current`/estado
-seleccionado). Cada entrada MUST tener icono y nombre visible. La navegación MUST NOT ser operable
+seleccionado). Cada entrada MUST tener icono y nombre visible, incluida Configuración en web compacta. La navegación MUST NOT ser operable
 mientras el diálogo de sesión expirada está abierto.
 
 #### Scenario: US14-AC1
@@ -531,8 +533,9 @@ mientras el diálogo de sesión expirada está abierto.
 
 - **GIVEN** una ventana de 375 px con la sesión iniciada
 - **WHEN** se abre `/knowledge`
-- **THEN** la barra de pestañas inferior muestra las cuatro secciones con icono y nombre, y
-  Conocimiento está seleccionada
+- **THEN** la barra de pestañas inferior muestra Inicio, Pacientes y Conocimiento con icono y nombre,
+  Configuración con icono y nombre visible, y Conocimiento está seleccionada
+- **AND** Seguimiento no aparece en la barra inferior
 
 ### Requirement: FR-083
 
@@ -907,3 +910,47 @@ tarjetas de la lista.
 - **WHEN** se abre una consulta
 - **THEN** el contexto del paciente (`consultation-aside`) queda sobre el registro
   (`consultation-main`) y ambos ocupan el mismo ancho, sin columnas lado a lado.
+
+### Requirement: Marca en el contenido web compacto (FR-079 · FR-082)
+
+En web bajo 1024 px, toda pantalla protegida MUST mostrar el logo pequeño y centrado, con 8 px adicionales de espacio superior, al inicio del contenido desplazable, antes del título y del retroceso. El shell MUST NOT mostrar una barra superior de marca. En escritorio el logo MUST verse solo en la barra lateral. El login MUST conservar su marca existente. El dock, los títulos y el retroceso MUST conservar su funcionamiento.
+
+#### Scenario: Marca en pantalla y lista compactas
+
+- **GIVEN** una sesión iniciada y una ventana web de 375 px
+- **WHEN** se abre cualquier pantalla protegida, incluida una lista o un detalle
+- **THEN** hay un solo logo visible, centrado sobre el contenido y dentro de su desplazamiento
+- **AND** no existe una barra superior independiente
+- **AND** al desplazar el contenido la marca se desplaza con él
+
+#### Scenario: Escritorio sin duplicación
+
+- **GIVEN** una ventana web de 1280 px
+- **WHEN** se abre una pantalla protegida
+- **THEN** la marca de la barra lateral está visible y la marca del contenido está oculta
+
+#### Scenario: Acceso sin duplicación
+
+- **GIVEN** la pantalla de inicio de sesión
+- **WHEN** se abre en móvil o escritorio
+- **THEN** conserva su único logo existente
+
+### Requirement: Cápsula del asistente en compacto
+
+En compacto MUST mostrarse dos FAB redondeados y superpuestos, Asistente e Iniciar consulta, sin franja en el flujo. MUST conservar controles táctiles de 44 × 44 px y permitir desplazar el último contenido por encima de los FAB. Iniciar consulta MUST abrir /patients sin crear registros. El panel de escritorio MUST conservar su presentación.
+
+#### Scenario: Abrir y cerrar desde móvil
+
+- **GIVEN** una pantalla compacta con hilos disponibles
+- **WHEN** se activa la cápsula Asistente
+- **THEN** se abre la hoja con el hilo seleccionado y al cerrarla el foco vuelve a la cápsula
+- **AND** la cápsula tiene icono de conversación, fondo primary, contenido primary-foreground y separación de 16 px respecto al lateral y la navegación inferior
+- **AND** el contenido pasa bajo los FAB y su último control puede desplazarse por encima de ellos
+- **AND** Iniciar consulta abre /patients y sustituye al botón móvil duplicado de Inicio
+
+#### Scenario: Escucha en curso
+
+- **GIVEN** una captura de voz en curso, incluso con otro hilo seleccionado
+- **WHEN** la hoja está cerrada
+- **THEN** el acceso sigue llamándose Asistente y la grabación, el tiempo y Detener permanecen visibles
+- **AND** los avisos de respuesta nueva y pendientes se conservan cuando correspondan
