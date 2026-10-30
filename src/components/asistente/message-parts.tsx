@@ -9,6 +9,7 @@ import { Text } from "@/components/ui/text";
 import { type AudioPlayback, createAudioPlayback } from "@/features/asistente/audio-playback";
 import type { Message, Part } from "@/features/asistente/chat-model";
 import type { ProposalState } from "@/features/asistente/chat-store";
+import { rotuloHerramienta } from "@/features/asistente/herramientas";
 import { formatElapsed } from "@/features/voz/use-elapsed";
 
 /**
@@ -77,6 +78,39 @@ function MessageAudioPlayer({
   );
 }
 
+/** «¿Por qué?»: plegado por defecto; lista lo que consultó el agente y la traza del turno. */
+function WhyPart({ tools, traceId }: { tools: string[]; traceId?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View className="gap-1">
+      <Button
+        aria-expanded={open}
+        className="self-start"
+        onPress={() => setOpen(!open)}
+        size="sm"
+        testID="message-why-toggle"
+        variant="ghost"
+      >
+        <ButtonText>{open ? "Ocultar" : "¿Por qué?"}</ButtonText>
+      </Button>
+      {open ? (
+        <View className="gap-1" testID="message-why">
+          {tools.map((tool) => (
+            <Text key={tool} tone="muted" variant="caption">
+              {rotuloHerramienta(tool)}
+            </Text>
+          ))}
+          {traceId ? (
+            <Text selectable tone="muted" variant="caption">
+              {`Traza: ${traceId}`}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 const AUDIO_MARCA = { expired: "audio vencido", deleted: "audio eliminado" } as const;
 
 const RENDERERS: Renderers = {
@@ -92,6 +126,7 @@ const RENDERERS: Renderers = {
       {part.text}
     </Text>
   ),
+  why: ({ part }) => <WhyPart tools={part.tools} traceId={part.traceId} />,
   knowledge: ({ part }) => (
     <>
       <RespuestaConocimiento answer={part.answer} />

@@ -19,7 +19,9 @@ export type Part =
       audioState: "ready" | "expired" | "deleted";
     }
   | { type: "proposal"; proposal: AgentProposalData }
-  | { type: "notice"; text: string };
+  | { type: "notice"; text: string }
+  /** «¿Por qué?»: herramientas que usó el agente y, si hay observabilidad, la traza del turno. */
+  | { type: "why"; tools: string[]; traceId?: string };
 
 export type Message = {
   id: string;

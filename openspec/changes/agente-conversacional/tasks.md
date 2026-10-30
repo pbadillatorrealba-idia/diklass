@@ -29,7 +29,7 @@ Modelo por defecto: `openai:gpt-6-luna` (vía Responses API: con razonamiento no
 - [ ] 4.2 Lectura mostrada como texto revisable antes de usarse.
 
 ## 5. Calidad y seguridad
-- [ ] 5.1 «¿Por qué?»: herramientas, fuentes y `trace_id` en el mensaje.
+- [x] 5.1 «¿Por qué?»: el mensaje lleva una parte plegable `why` con las herramientas del turno (rotuladas, sin repetir) y el `trace_id`; se persiste con el mensaje. Las fuentes con cita llegarán con `conocimiento` (2.2).
 - [~] 5.2 Anti prompt-injection: datos recuperados delimitados (`<datos>`, `<` escapado) y 4 casos hostiles con modelo real (delimitador cerrado, resumen, tutor y agenda; 13/13). Faltan los documentos hostiles de `conocimiento` (2.2).
 - [~] 5.3 Casos anotados (`tests/fixtures/agente/casos.json`) y marcador (`agent/eval.ts`, `scripts/eval-agente.ts`) probados con `fakeModel` y corridos con `openai:gpt-6-luna` real (9/9 OK, 2026-10-30). Falta subirlos como dataset/experimento de Phoenix.
 - [ ] 5.4 Presupuesto de latencia voz a voz < 2 s al primer audio.

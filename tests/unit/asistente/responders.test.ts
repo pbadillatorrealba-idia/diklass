@@ -208,6 +208,35 @@ describe("AgentResponder", () => {
     expect(out).toEqual([{ type: "ready", parts: [{ type: "text", text: "ok" }] }]);
   });
 
+  test("«¿Por qué?»: las herramientas del turno (sin repetir) y la traza van en el mensaje", async () => {
+    const r = new AgentResponder({
+      invoke: async () => ({
+        text: "ok",
+        proposals: [],
+        ui: [],
+        tools: ["buscar_paciente", "buscar_paciente", "consulta_abierta"],
+        traceId: "abc123",
+      }),
+      navigate: () => {},
+    });
+    const out = [];
+    for await (const e of r.respond(
+      [],
+      { text: "busca", patientId: null },
+      new AbortController().signal,
+    ))
+      out.push(e);
+    expect(out).toEqual([
+      {
+        type: "ready",
+        parts: [
+          { type: "text", text: "ok" },
+          { type: "why", tools: ["buscar_paciente", "consulta_abierta"], traceId: "abc123" },
+        ],
+      },
+    ]);
+  });
+
   test("enruta lo básico al local y el resto al agente", async () => {
     const r = routeAgent({ basico: stub("basico"), agente: stub("agente") });
     const get = async (text: string) => {

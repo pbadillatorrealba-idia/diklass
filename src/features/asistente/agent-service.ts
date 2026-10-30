@@ -18,6 +18,8 @@ const respuestaSchema = z.object({
       }),
     )
     .default([]),
+  tools: z.array(z.string()).default([]),
+  traceId: z.string().optional(),
 });
 
 type AgentClient = Pick<SupabaseClient, "functions">;

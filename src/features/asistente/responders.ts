@@ -101,6 +101,8 @@ type AgentDeps = {
     text: string;
     ui: { type: "navigate"; path: string }[];
     proposals: { id: string; summary: string; origin: string; action: ProposalAction }[];
+    tools?: string[];
+    traceId?: string;
   }>;
   navigate: (path: string) => void;
 };
@@ -121,7 +123,7 @@ export class AgentResponder implements Responder {
       .map((m) => ({ role: m.role, text: messageText(m) }))
       .filter((m) => m.text !== "")
       .slice(-HISTORY_TURNS);
-    const { text, ui, proposals } = await this.deps.invoke({
+    const { text, ui, proposals, tools, traceId } = await this.deps.invoke({
       text: input.text,
       patientId: input.patientId,
       since: startOfDay(new Date()).toISOString(),
@@ -133,7 +135,13 @@ export class AgentResponder implements Responder {
     const tarjetas: Part[] = proposals
       .filter((p) => isValidAction(p.action))
       .map((proposal) => ({ type: "proposal", proposal }));
-    const listo: ResponseEvent = { type: "ready", parts: [{ type: "text", text }, ...tarjetas] };
+    const porque: Part[] = tools?.length
+      ? [{ type: "why", tools: [...new Set(tools)], traceId }]
+      : [];
+    const listo: ResponseEvent = {
+      type: "ready",
+      parts: [{ type: "text", text }, ...porque, ...tarjetas],
+    };
     yield listo;
   }
 }

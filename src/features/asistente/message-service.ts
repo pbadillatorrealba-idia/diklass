@@ -26,6 +26,11 @@ export type MessagePage = {
 const partSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
   z.object({ type: z.literal("notice"), text: z.string() }),
+  z.object({
+    type: z.literal("why"),
+    tools: z.array(z.string()),
+    traceId: z.string().optional(),
+  }),
   z.object({ type: z.literal("knowledge"), queryId: z.string(), answer: knowledgeAnswerSchema }),
   z.object({
     type: z.literal("audio"),
