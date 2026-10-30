@@ -1,8 +1,9 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { type ReactNode, useEffect } from "react";
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import { PatientsTable } from "@/components/registro/patients-table";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, InputField } from "@/components/ui/input";
@@ -17,12 +18,8 @@ import {
   searchPatients,
   validDateOnly,
 } from "@/features/registro/patient-search";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { hrefWithParams, useDebouncedParam } from "@/lib/url-filters";
-import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 type Params = {
   name?: string;
@@ -50,8 +47,6 @@ const patientsHref = (params: Record<string, string | undefined>) =>
 export default function PatientsScreen() {
   const router = useRouter();
   const raw = useLocalSearchParams<Params>();
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
 
   const sort: PatientSortColumn = PATIENT_SORT_COLUMNS.find((c) => c === raw.sort) ?? "name";
   const dir: SortDirection = raw.dir === "desc" ? "desc" : "asc";
@@ -97,21 +92,7 @@ export default function PatientsScreen() {
   });
 
   const queryError = patientsQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "list_patients",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "list_patients");
 
   const rows = queryError ? [] : (patientsQuery.data?.rows ?? []);
   const total = patientsQuery.data?.total ?? 0;

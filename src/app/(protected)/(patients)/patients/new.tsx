@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   emptyFichaFormValues,
   type FichaField,
@@ -16,6 +16,7 @@ import {
   type TutorFormValues,
 } from "@/components/registro/tutor-form";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlError, FormControlErrorText } from "@/components/ui/form-control";
 import { Screen } from "@/components/ui/screen";
@@ -26,12 +27,9 @@ import { invalidateRegistro } from "@/features/registro/query-cache";
 import type { PatientContent, TutorContent } from "@/features/registro/schema";
 import { findTutorByRut } from "@/features/registro/tutor-search";
 import { listTutors } from "@/features/registro/tutor-service";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { formatRut } from "@/lib/rut";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 const EMPTY_ANTECEDENTES: PatientContent["antecedentes"] = {
   medicalHistory: [],
@@ -49,8 +47,6 @@ const TUTOR_MODE_OPTIONS: { value: "existing" | "new"; label: string }[] = [
 export default function NewPatientScreen() {
   const router = useRouter();
   const clinicId = useSessionStore((state) => state.clinicId);
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const guard = useClinicalGuard();
   const [fichaValues, setFichaValues] = useState<FichaFormValues>(emptyFichaFormValues);
   const [fichaErrors, setFichaErrors] = useState<Record<string, string>>({});
@@ -68,21 +64,7 @@ export default function NewPatientScreen() {
   });
 
   const queryError = tutorsQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "list_tutors",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "list_tutors");
 
   // `isSaving` llega en el siguiente render y hay un `await` antes de escribir: esta guarda frena
   // un doble toque inmediato.

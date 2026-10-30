@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
-import { useEffect } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { ConsultasDeHoy } from "@/components/home/consultas-de-hoy";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormSection } from "@/components/ui/form-section";
@@ -12,11 +12,8 @@ import { QueryState } from "@/components/ui/query-state";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { consultasDeHoy, resumenDelDia } from "@/features/agenda/consultas-de-hoy";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 const fechaDeHoy = (now: Date) =>
   new Intl.DateTimeFormat("es-CL", { dateStyle: "full" }).format(now);
@@ -30,27 +27,13 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const compact = process.env.EXPO_OS !== "web" || width < 1024;
   const displayName = useSessionStore((state) => state.displayName);
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
 
   const hoy = useQuery({
     queryKey: ["agenda", "consultas-de-hoy"],
     queryFn: () => consultasDeHoy(supabase, new Date()),
   });
   const queryError = hoy.error;
-  useEffect(() => {
-    if (!queryError) return;
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "consultas_de_hoy",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "consultas_de_hoy");
   const consultas = hoy.data ?? [];
 
   return (

@@ -10,6 +10,7 @@ import {
   tutorValuesFromContent,
 } from "@/components/registro/tutor-form";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
@@ -22,20 +23,14 @@ import { searchPatients } from "@/features/registro/patient-search";
 import { invalidateRegistro } from "@/features/registro/query-cache";
 import { findTutorByRut } from "@/features/registro/tutor-search";
 import { getTutor, tutorFullName, updateTutor } from "@/features/registro/tutor-service";
-import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
 import { formatRut } from "@/lib/rut";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { isUuid } from "@/lib/uuid";
-import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 /** Ficha del tutor: contacto (editable, FR-123) y los pacientes que tiene a su cargo. */
 export default function TutorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const tutorId = String(id);
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const queryClient = useQueryClient();
   const guard = useClinicalGuard();
   const [values, setValues] = useState<TutorFormValues | null>(null);
@@ -53,21 +48,7 @@ export default function TutorScreen() {
   });
 
   const queryError = tutorQuery.error ?? patientsQuery.error;
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "tutor_screen",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "tutor_screen");
 
   // Otro tutor en la misma pantalla no hereda el formulario abierto ni el aviso del anterior.
   // biome-ignore lint/correctness/useExhaustiveDependencies: se reinicia solo al cambiar de tutor

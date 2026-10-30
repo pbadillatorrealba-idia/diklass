@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { OptionPicker } from "@/components/registro/option-picker";
 import { useClinicalGuard } from "@/components/registro/use-clinical-guard";
+import { useReportQueryError } from "@/components/registro/use-report-query-error";
 import { FeedbackForm } from "@/components/retroalimentacion/feedback-form";
 import { FeedbackTimeline } from "@/components/retroalimentacion/feedback-timeline";
 import { Box } from "@/components/ui/box";
@@ -37,11 +38,9 @@ import {
   collectAdverseEvents,
 } from "@/features/retroalimentacion/feedback-summary";
 import { isAuthenticationRequired } from "@/lib/errors";
-import { captureClientError, makeRequestId } from "@/lib/observability/client-error-reporter";
-import { errorReporter, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { isUuid } from "@/lib/uuid";
 import { useSessionStore } from "@/stores/session-store";
-import { useUiStore } from "@/stores/ui-store";
 
 /**
  * Panel de evolución del seguimiento del paciente (US10 en la superficie propia de D10):
@@ -54,8 +53,6 @@ export default function FollowUpPanelScreen() {
   const { patientId: routePatientId } = useLocalSearchParams<{ patientId: string }>();
   const patientId = String(routePatientId);
   const clinicId = useSessionStore((state) => state.clinicId);
-  const setAccessState = useSessionStore((state) => state.setAccessState);
-  const openExpiredDialog = useUiStore((state) => state.openSessionExpiredDialog);
   const queryClient = useQueryClient();
   const guard = useClinicalGuard();
 
@@ -126,23 +123,7 @@ export default function FollowUpPanelScreen() {
   const queryError =
     patientQuery.error ?? consultationsQuery.error ?? feedbackQuery.error ?? epicrisisQuery.error;
   const sesionExpirada = queryError ? isAuthenticationRequired(queryError) : false;
-  // Patrón de `follow-up/index.tsx`: la sesión caducada abre su diálogo; el resto se reporta.
-  // El aviso de carga se deriva del error vigente, así que desaparece al recuperarse.
-  useEffect(() => {
-    if (!queryError) {
-      return;
-    }
-    if (isAuthenticationRequired(queryError)) {
-      setAccessState("expired");
-      openExpiredDialog();
-      return;
-    }
-    void captureClientError(errorReporter, {
-      error: queryError,
-      operation: "follow_up_panel_load",
-      requestId: makeRequestId(),
-    });
-  }, [queryError, openExpiredDialog, setAccessState]);
+  useReportQueryError(queryError, "follow_up_panel_load");
 
   const cambiarCampo = (patch: Partial<FeedbackFormValues>) => {
     setFormValues((prev) => ({ ...prev, ...patch }));
@@ -286,10 +267,6 @@ export default function FollowUpPanelScreen() {
                   Sin evolución registrada para este paciente.
                 </Text>
               ) : null}
-              <Text tone="muted">
-                Este es el antecedente que el resumen de la consulta posterior integrará cuando se
-                extienda `buildFollowUpSummary` (requisito de integración D9).
-              </Text>
             </VStack>
           </Card>
         </>
