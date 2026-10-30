@@ -20,10 +20,10 @@ const GENERATED = /^(openspec-|impeccable$)/;
 // compara lo que decide la invocación.
 // shortcut: el resto del front-matter no se vigila, comparar más claves si deriva
 function split(text: string): { head: string; body: string } {
-  const m = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!m) return { head: "", body: text };
-  const keep = (k: string) => m[1].match(new RegExp(`^${k}: .*$`, "m"))?.[0] ?? "";
-  return { head: `${keep("name")}|${keep("description")}`, body: m[2] };
+  const [, front = "", body] = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/) ?? [];
+  if (body === undefined) return { head: "", body: text };
+  const keep = (k: string) => front.match(new RegExp(`^${k}: .*$`, "m"))?.[0] ?? "";
+  return { head: `${keep("name")}|${keep("description")}`, body };
 }
 
 // `agents/` de una skill generada trae los subagentes propios de cada harness (.toml de Codex...).
