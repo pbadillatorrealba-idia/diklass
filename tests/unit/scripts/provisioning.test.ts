@@ -14,12 +14,14 @@ describe("isLocalSupabaseUrl", () => {
     },
   );
 
-  test.each(["https://abcd.supabase.co", "http://127.0.0.1.evil.test", "not a url"])(
-    "%s is not local",
-    (url) => {
-      expect(isLocalSupabaseUrl(url)).toBe(false);
-    },
-  );
+  test.each([
+    "https://abcd.supabase.co",
+    "http://127.0.0.1.evil.test",
+    "http://host.docker.internal:54321",
+    "not a url",
+  ])("%s is not local", (url) => {
+    expect(isLocalSupabaseUrl(url)).toBe(false);
+  });
 });
 
 describe("findUserIdByEmail", () => {

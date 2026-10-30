@@ -1,4 +1,5 @@
-const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "localhost", "::1", "[::1]", "host.docker.internal"]);
+// Sin `host.docker.internal`: según el entorno resuelve a un host remoto o tunelado.
+const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 
 /** Synthetic accounts with known passwords must never reach a real project by accident. */
 export function isLocalSupabaseUrl(url: string): boolean {
