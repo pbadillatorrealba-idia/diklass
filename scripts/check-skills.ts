@@ -5,10 +5,12 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 export function normalize(text: string, skills: string[]): string {
-  return text
+  const paths = text
     .replace(/\.agents\/skills/g, ".claude/skills")
-    .replace(/\$([a-z][\w-]*) \(Codex\) or \/\1 \(other agents\)/g, "/$1")
-    .replace(new RegExp(`\\$(${skills.join("|")})(?![\\w-])`, "g"), "/$1");
+    .replace(/\$([a-z][\w-]*) \(Codex\) or \/\1 \(other agents\)/g, "/$1");
+  return skills.length
+    ? paths.replace(new RegExp(`\\$(${skills.join("|")})(?![\\w-])`, "g"), "/$1")
+    : paths;
 }
 
 // openspec e impeccable regeneran cada espejo con su propia herramienta (el texto cambia con el
@@ -16,8 +18,8 @@ export function normalize(text: string, skills: string[]): string {
 // shortcut: de ellas solo se vigilan archivos, nombre y descripción, regenerar si el cuerpo importa
 const GENERATED = /^(openspec-|impeccable$)/;
 
-// El front-matter de impeccable difiere por harness (user-invocable, metadata...): solo se
-// compara lo que decide la invocación.
+// El front-matter de impeccable difiere por harness (user-invocable, metadata...): en todas las
+// skills solo se compara lo que decide la invocación (name y description).
 // shortcut: el resto del front-matter no se vigila, comparar más claves si deriva
 function split(text: string): { head: string; body: string } {
   const [, front = "", body] = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/) ?? [];

@@ -26,6 +26,7 @@ describe("normalize", () => {
     expect(
       normalize("`$openspec-apply-change (Codex) or /openspec-apply-change (other agents)`", []),
     ).toBe("`/openspec-apply-change`");
+    expect(normalize("cuesta $ 5 y $1", [])).toBe("cuesta $ 5 y $1");
   });
 });
 

@@ -113,7 +113,8 @@ e2e y las exportaciones corren de uno en uno, con un solo worker.
 - **Rojo primero** (Principio II, no negociable): la prueba se escribe antes del código y se observa
   fallar por la razón prevista; un error abre con una prueba de regresión que falle. Ponytail fija el
   tamaño, no el orden: una prueba mínima por comportamiento, sin suites por función ni fixtures que
-  el caso no necesite.
+  el caso no necesite. Las pruebas ejercen código real: se simula solo lo lento o externo, tras ver
+  qué efectos tiene, y nunca se afirma sobre el propio mock.
 - **Depuración:** reproduce, traza hacia atrás hasta la causa raíz, revisa todos los llamadores y
   corrige una sola vez donde confluyen; sin arreglos a ciegas. Tras 3 intentos fallidos, para y
   cuestiona el diseño. Espera condiciones, no `sleep`.
@@ -136,8 +137,9 @@ confirmación.
    tocan `**.md`, `docs/**` u `openspec/**` sin alterar requisitos. Es una prerrevisión de agente:
    la revisión por alguien distinto del autor que exige la constitución sigue siendo obligatoria.
 4. **Aplica los comentarios que sean correctos técnicamente,** verificando cada uno antes de
-   implementarlo; sin agradecimientos de cortesía, y discrepa con argumentos técnicos. Sin hallazgos:
-   anótalo y sigue.
+   implementarlo (ante un «implementa bien» algo, comprueba con grep que se usa de verdad); aplícalos
+   de a uno y prueba cada cambio; sin agradecimientos de cortesía, y discrepa con argumentos
+   técnicos. Sin hallazgos: anótalo y sigue.
 5. **Pregunta al usuario ante una decisión difícil:** sugerencias contradictorias entre sí o con la
    constitución, cambios de alcance o de diseño, hallazgos que exigen tocar migraciones o
    contratos, o una sugerencia que no se comparte. No las decidas en silencio ni ignores un
@@ -187,8 +189,8 @@ dentro del worktree `ln -s ../../../node_modules node_modules` y `ln -s ../../..
 - UI: `impeccable` y sus estándares son la autoridad visual (`DESIGN.md`, `PRODUCT.md` y
   `.impeccable/`, que hacen cumplir `tema.test.ts` y la compuerta axe), subordinada a la constitución
   y al brief; un cambio de identidad se propone por OpenSpec. No se usan `frontend-design` ni
-  `expo-design-system`. Solo se usa la copia de `impeccable` del repo: el plugin global está
-  desactivado (`claude plugin disable impeccable@impeccable`).
+  `expo-design-system`. Solo se usa la copia de `impeccable` del repo: desactiva el plugin global
+  (`claude plugin disable impeccable@impeccable`) para no duplicarla.
 - Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; cualquier
   otro (`bolder`, `colorize`, `overdrive`, `delight`, `typeset`, `shape`, `layout`, `live`...) solo con
   confirmación del usuario y paso por OpenSpec. Sus subagentes (`.claude/agents/impeccable-*`) se
@@ -203,8 +205,8 @@ verifica. Precedencia: constitución > este archivo > cambio OpenSpec > ponytail
 - No recorta requisitos ni criterios del cambio activo, IDs FR/US/SC, validación en fronteras de
   confianza, fallo cerrado, accesibilidad, RLS ni la verificación que exige la constitución; el
   rojo primero sigue vigente aunque ponytail exima de prueba a lo trivial.
-- Una simplificación con techo conocido lleva un comentario `shortcut: <techo>, <cuándo mejorar>` (ponytail 5.x; los `ponytail:` antiguos
-  siguen vigentes), que no sustituye a la deuda
-  de tests (sigue siendo una tarea). No interviene en `explore`, `sync-specs` ni `archive-change`.
+- Una simplificación con techo conocido lleva un comentario `shortcut: <techo>, <cuándo mejorar>` (ponytail 5.x;
+  los `ponytail:` antiguos siguen vigentes), que no sustituye a la deuda de tests (sigue siendo una
+  tarea). No interviene en `explore`, `sync-specs` ni `archive-change`.
 - La sección «Sobreingeniería» de `requesting-code-review` es la única pasada de ponytail al cerrar
   una PR; no lances además `ponytail-review` ni `simplify`.
