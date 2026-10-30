@@ -9,15 +9,23 @@ const URL_FUNCION = "http://localhost:54321/functions/v1/transcribe-audio";
 const SESION = "59999999-0000-4000-8000-000000000001";
 const CLAVE_SECRETA = "sk-test-secreta-no-debe-filtrarse";
 
+type EstadoCuota = "ok" | "rate_limited" | "unavailable";
+
 type Opciones = {
   autoriza?: boolean;
+  cuota?: EstadoCuota;
   texto?: string;
   falla?: Error;
 };
 
-function harness({ autoriza = true, texto = "Ladra todos los días", falla }: Opciones = {}) {
+function harness({
+  autoriza = true,
+  cuota = "ok" as EstadoCuota,
+  texto = "Ladra todos los días",
+  falla,
+}: Opciones = {}) {
   const lineas: string[] = [];
-  const llamadas = { autorizar: 0, transcribir: 0 };
+  const llamadas = { autorizar: 0, cuota: 0, transcribir: 0 };
   return {
     lineas,
     llamadas,
@@ -29,6 +37,10 @@ function harness({ autoriza = true, texto = "Ladra todos los días", falla }: Op
       canTranscribe: async () => {
         llamadas.autorizar += 1;
         return autoriza;
+      },
+      consumeQuota: async () => {
+        llamadas.cuota += 1;
+        return cuota;
       },
       transcribe: async () => {
         llamadas.transcribir += 1;
@@ -84,7 +96,7 @@ describe("transcribe-audio · handler", () => {
     const h = harness();
     const res = await handleTranscribeAudio(peticion({ conAuth: false }), h.deps);
     expect(res.status).toBe(401);
-    expect(h.llamadas).toEqual({ autorizar: 0, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 0, cuota: 0, transcribir: 0 });
   });
 
   test("entradas inválidas responden 400 sin llamar al proveedor", async () => {
@@ -128,14 +140,14 @@ describe("transcribe-audio · handler", () => {
     const res = await handleTranscribeAudio(request, h.deps);
     expect(res.status).toBe(413);
     expect(leido).toBe(false);
-    expect(h.llamadas).toEqual({ autorizar: 0, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 0, cuota: 0, transcribir: 0 });
   });
 
   test("FR-014: sesión ajena, cerrada o de consulta cerrada responde 403 sin llamar al proveedor", async () => {
     const h = harness({ autoriza: false });
     const res = await handleTranscribeAudio(peticion(), h.deps);
     expect(res.status).toBe(403);
-    expect(h.llamadas).toEqual({ autorizar: 1, transcribir: 0 });
+    expect(h.llamadas).toEqual({ autorizar: 1, cuota: 0, transcribir: 0 });
   });
 
   test("FR-055: el tiempo máximo del proveedor responde 504 y el error 502", async () => {
@@ -177,6 +189,37 @@ describe("transcribe-audio · handler", () => {
     expect(res.status).toBe(413);
     expect(h.llamadas.transcribir).toBe(0);
     expect(enviados).toBeLessThan(tope);
+  });
+
+  test("un tramo válido consume una unidad de la cuota del dictado", async () => {
+    const h = harness();
+    await handleTranscribeAudio(peticion(), h.deps);
+    expect(h.llamadas.cuota).toBe(1);
+  });
+
+  test("sin cuota responde 429 y no llama al proveedor", async () => {
+    const h = harness({ cuota: "rate_limited" });
+    const res = await handleTranscribeAudio(peticion(), h.deps);
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as { code: string }).code).toBe("RATE_LIMITED");
+    expect(h.llamadas.transcribir).toBe(0);
+  });
+
+  test("si la cuota no se puede comprobar (estado o excepción) responde 503, sin proveedor", async () => {
+    const estado = harness({ cuota: "unavailable" });
+    expect((await handleTranscribeAudio(peticion(), estado.deps)).status).toBe(503);
+    const lanza = harness();
+    lanza.deps.consumeQuota = async () => {
+      throw new Error("base caída");
+    };
+    expect((await handleTranscribeAudio(peticion(), lanza.deps)).status).toBe(503);
+    expect(estado.llamadas.transcribir + lanza.llamadas.transcribir).toBe(0);
+  });
+
+  test("la cuota solo se consume si la sesión de escucha está autorizada", async () => {
+    const h = harness({ autoriza: false });
+    await handleTranscribeAudio(peticion(), h.deps);
+    expect(h.llamadas.cuota).toBe(0);
   });
 
   test("Principio V/IV: no registra audio ni texto ni la credencial", async () => {

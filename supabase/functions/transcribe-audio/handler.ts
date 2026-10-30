@@ -22,11 +22,15 @@ const sessionIdSchema = z.string().uuid();
 
 export { TranscriptionTimeoutError };
 
+export type QuotaStatus = "ok" | "rate_limited" | "unavailable";
+
 export type TranscribeDependencies = {
   log: (line: string) => void;
   randomId: () => string;
   /** FR-014: la sesión existe, es de la clínica del solicitante, está activa y su consulta abierta. */
   canTranscribe: (authorization: string, listeningSessionId: string) => Promise<boolean>;
+  /** Cuota de tramos del usuario (evita gastar la del proveedor): `ok`, `rate_limited` (429) o `unavailable` (503). */
+  consumeQuota: (authorization: string) => Promise<QuotaStatus>;
   /** Devuelve el texto transcrito; lanza TranscriptionTimeoutError al exceder el tiempo máximo. */
   transcribe: (audio: Blob) => Promise<string>;
 };
@@ -90,6 +94,16 @@ export async function handleTranscribeAudio(
   if (!permitido) {
     return fallo("FORBIDDEN", 403);
   }
+
+  let cuota: QuotaStatus = "unavailable";
+  try {
+    cuota = await deps.consumeQuota(authorization);
+  } catch {
+    cuota = "unavailable";
+  }
+  // Un error de infraestructura no es «demasiadas peticiones»: es un 503 que el cliente puede reintentar.
+  if (cuota === "rate_limited") return fallo("RATE_LIMITED", 429);
+  if (cuota !== "ok") return fallo("QUOTA_UNAVAILABLE", 503);
 
   const inicio = Date.now();
   try {
