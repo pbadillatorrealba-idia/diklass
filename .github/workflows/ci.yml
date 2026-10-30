@@ -192,8 +192,13 @@ jobs:
       # All three are build/dev-toolchain only and never ship in the app bundle.
       # GHSA-mrhx-c7xc-m3w5 (zod): the direct dependency is on the fixed 4.6.x; the remaining hit is
       # the zod@3.25.76 pinned by @expo/cli, which has no 3.x fix and is build tooling only.
+      # GHSA-gcqx-w48m-w2h4 (deepmerge): sin versión corregida; mitigado con patches/deepmerge@4.3.1.patch.
+      # GHSA-qr28-fpjm-wq7f (decode-uri-component): query-string@7 de expo-router pide ^0.2.2 y la 0.5.1
+      # corregida es solo ESM, así que un override rompe `require`; DoS por entrada local, sin superficie de servidor.
       - run: >
           bun audit
+          --ignore GHSA-gcqx-w48m-w2h4
+          --ignore GHSA-qr28-fpjm-wq7f
           --ignore GHSA-vcc3-ghjq-m6fr
           --ignore GHSA-w3rx-r6r6-pgpr
           --ignore GHSA-5p2g-fcmc-qvqq
