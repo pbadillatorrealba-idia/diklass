@@ -1,7 +1,7 @@
 {
   "revision": {
-    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado. Renovación por la integración del agente conversacional y de 006 (2026-10-30): cambios aditivos revisados, sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset (listPatientsByIds de lectura, tipo de registro consultation_summary, tablas de cuota y asistencia). El dataset aún no cubre consultation_summary ni missing_information/hipótesis: cobertura pendiente. Las huellas no acreditan cobertura ni aceptación clínica.",
-    "requirements": ["FR-128", "FR-129", "FR-130", "FR-131", "FR-132"]
+    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado. Renovación por la integración del agente conversacional y de 006 (2026-10-30): cambios aditivos revisados, sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset (listPatientsByIds de lectura, tipo de registro consultation_summary, tablas de cuota y asistencia). El dataset aún no cubre consultation_summary ni missing_information/hipótesis: cobertura pendiente. Las huellas no acreditan cobertura ni aceptación clínica. Renovación por el endurecimiento de la auditoría del backend (migraciones 028 y 029, 2026-10-30): cambios revisados sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset. La auditoría se lee solo dentro de la clínica (el dataset es de una sola clínica), el sello rechaza vincular por UPDATE un borrador suelto a una consulta cerrada (el dataset vincula la consulta al insertar), el RUT rechaza el cero inicial (los RUT demo son de 7 dígitos y empiezan en 5; verificado con normalizeRut), y se añaden cuota de dictado, versión del aviso de voz, created_by sellado en knowledge_queries e índices. Las huellas no acreditan cobertura ni aceptación clínica.",
+    "requirements": ["FR-024", "FR-063", "FR-128", "FR-129", "FR-130", "FR-131", "FR-132"]
   },
   "paths": [
     "src/features/registro",
@@ -54,7 +54,7 @@
     "src/features/retroalimentacion/schema.ts": "b476351288871cf2dc136c3e78100d4fb2748abd5375ebe9fc8143779da373bc",
     "src/lib/attribution/clinical-mutations.ts": "b631d8ae3f55b83d8b2ae72797d3280830903000456e3dcc98e224daf0ab76ca",
     "src/lib/attribution/types.ts": "b84f10800f735e6789c98e337ca8d08722d5a06a616836c9966bb12af5ed5e87",
-    "src/lib/supabase/database.types.ts": "1f9a792be5125da2c539582b93372e96fbc96e8c70ed16b63b9abd343c79f4e9",
+    "src/lib/supabase/database.types.ts": "02e00304012eb8b3e32ba956a5e4100697602f7f57d04742a017401882502a4b",
     "supabase/migrations/001_identity_access.sql": "c1c63dfa830ae6799250321cf95b6dd9385955420c75bcfc7c734a20de3c1adf",
     "supabase/migrations/002_clinical_attribution.sql": "5bb000c4f3c3958e80bf1a60ce0436a00bd8d8e6bdfcb8826f3c84cd8c623ba0",
     "supabase/migrations/003_attribution_hardening.sql": "64ef68cf1e891ab7cef95ca093c7268243d9e22c12d85caf317f1c0a6b8858a1",
@@ -81,6 +81,8 @@
     "supabase/migrations/024_purga_audio_asistente.sql": "f265ef966e1b0114d4810e3a6af601ef736d9f65ab0286358f53da21bf2664ad",
     "supabase/migrations/025_resumen_consulta.sql": "250592c8dd6a49389ef801f17b0edee19cf19f21a87c8e4962a601a856c5fb31",
     "supabase/migrations/026_asistencia_clinica.sql": "12a5057dff98bf5603f4bc1cc1b2787479c0bdd9f37d350c2925057310e50e22",
-    "supabase/migrations/027_cuota_agente.sql": "e405518c0031e020cdaef0738baef4a8d097c53f55a6adf2014f718cee00ce58"
+    "supabase/migrations/027_cuota_agente.sql": "e405518c0031e020cdaef0738baef4a8d097c53f55a6adf2014f718cee00ce58",
+    "supabase/migrations/028_endurecimiento_auditoria.sql": "2a4aba78c52a4dc97a446166ae4c2b42ee613d5b8a64189c88bb55db2a7cbacc",
+    "supabase/migrations/029_version_aviso_voz.sql": "92908ee85427b1bf1ac00aed22841ed4799b105b4436e45dc72557dd7c29a220"
   }
 }
