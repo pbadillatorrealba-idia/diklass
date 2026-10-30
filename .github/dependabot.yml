@@ -1,23 +1,12 @@
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      react-native-stack:
-        patterns:
-          - "react-native*"
-          - "expo*"
-      dev-tooling:
-        patterns:
-          - "@biomejs/*"
-          - "bun-types"
-          - "typescript"
-          - "@types/*"
-          - "@playwright/*"
-          - "@axe-core/*"
+  # Sin actualizaciones de versiones npm: las versiones del stack (react, react-native, expo…)
+  # las fija el SDK de Expo y se suben con `bunx expo install --fix`; las vulnerabilidades las
+  # cubre `bun audit` en CI y las alertas de seguridad de GitHub. Con el ecosistema `npm`,
+  # además, Dependabot no regeneraba bun.lock y sus PRs nunca pasaban `Quality`.
+  #
+  # Las acciones de CI sí: están fijadas por SHA (tests/unit/ci/pinned-actions.test.ts) y sin
+  # Dependabot nunca se actualizarían. Mensual y agrupado para limitar el ruido.
   - package-ecosystem: github-actions
     directory: /
     schedule:

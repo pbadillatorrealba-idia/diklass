@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { type DiagnosisContent, diagnosisContentSchema } from "@/features/registro/schema";
+import { parseRows } from "@/features/registro/read-rows";
+import {
+  type ConsultationPlanInput,
+  type DiagnosisContent,
+  diagnosisContentSchema,
+} from "@/features/registro/schema";
 import type { ClinicalRecordRow } from "@/features/registro/summaries";
 import { createClinicalRecord } from "@/lib/attribution/clinical-mutations";
 import type { ClinicalMutationResult } from "@/lib/attribution/types";
@@ -24,13 +29,19 @@ export type DiagnosisEntry = { record: ClinicalRecordRow; content: DiagnosisCont
 
 export async function recordDiagnosis(
   client: SupabaseClient<Database>,
-  input: { clinicId: string; consultationId: string; text: string },
+  input: {
+    clinicId: string;
+    consultationId: string;
+    text: string;
+    plan?: ConsultationPlanInput;
+  },
 ): Promise<ClinicalMutationResult<ClinicalRecordRow>> {
   const requestId = makeRequestId();
   try {
     const content = diagnosisContentSchema.parse({
       consultationId: input.consultationId,
       text: input.text,
+      plan: input.plan,
     });
     const registrado = await createClinicalRecord(client, {
       clinic_id: input.clinicId,
@@ -66,10 +77,7 @@ export async function listDiagnoses(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: diagnosisContentSchema.parse(row.content),
-    }));
+    return parseRows(data, diagnosisContentSchema, "listDiagnoses");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,

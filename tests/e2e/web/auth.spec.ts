@@ -1,6 +1,7 @@
 import { request as apiRequest } from "@playwright/test";
 import {
   ANA,
+  calloutText,
   expect,
   hasBackend,
   readSupabaseSession,
@@ -16,21 +17,12 @@ const backendOnly = "Requires local Supabase with the synthetic veterinarians pr
 test.describe("auth web shell", () => {
   test("shows the accessible login without a registration path", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "Diklass" })).toBeVisible();
-    await expect(page.getByLabel("Correo de acceso")).toBeVisible();
-    await expect(page.getByLabel("Contraseña")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Iniciar sesión" })).toBeAttached();
+    await expect(page.getByRole("img", { name: "Diklass" }).first()).toBeVisible();
+    await expect(page.getByLabel("Correo")).toBeVisible();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
     await expect(page.getByText(/registr/i)).toHaveCount(0);
-  });
-
-  test("uses client-side validation before any credential request", async ({ page }) => {
-    await page.goto("/login");
-    const submit = page.getByRole("button", { name: "Iniciar sesión" });
-    await expect(submit).toBeEnabled();
-    await submit.click();
-    await expect(page.getByTestId("login-error")).toHaveText(
-      "Revisa los campos marcados antes de continuar.",
-    );
   });
 
   // T071: what an axe scan cannot check — focus movement and the error announcement.
@@ -38,20 +30,27 @@ test.describe("auth web shell", () => {
     page,
   }) => {
     await page.goto("/login");
-    const emailField = page.getByLabel("Correo de acceso");
-    // The fields stay read-only until React hydrates; a click before that lands on a
-    // non-focusable input and Tab starts from body instead of moving to the password field.
-    await expect(emailField).toBeEditable();
+    const emailField = page.getByLabel("Correo");
+    // Tab desde el correo solo es fiable con React ya hidratado (el botón se habilita entonces).
+    await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await emailField.click();
     await page.keyboard.press("Tab");
-    await expect(page.getByLabel("Contraseña")).toBeFocused();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeFocused();
+    // sistema-visual FR-090: «Mostrar contraseña» va dentro del campo, antes del envío.
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Mostrar contraseña" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeFocused();
 
+    const credentialRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/auth/v1/token")) credentialRequests.push(request.url());
+    });
     await page.keyboard.press("Enter");
     const error = page.getByTestId("login-error");
-    await expect(error).toHaveText("Revisa los campos marcados antes de continuar.");
-    await expect(error).toHaveAttribute("aria-live", "polite");
+    await expect(error).toContainText("Revisa los campos marcados antes de continuar.");
+    await expect(error).toHaveAttribute("role", "alert");
+    expect(credentialRequests).toEqual([]);
   });
 
   test("denies a direct protected route without an authenticated session", async ({ page }) => {
@@ -69,9 +68,7 @@ test.describe("auth against the local backend", () => {
     const startedAt = Date.now();
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toHaveText(
-      `Sesión activa: ${ANA.displayName}`,
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(ANA.displayName);
     expect(Date.now() - startedAt).toBeLessThan(30_000);
   });
 
@@ -91,7 +88,7 @@ test.describe("auth against the local backend", () => {
         status: response.status(),
         errorCode: body.error_code,
         providerMessage: body.msg,
-        shownMessage: await error.textContent(),
+        shownMessage: await calloutText(error),
       };
     };
 
@@ -149,7 +146,7 @@ test.describe("auth against the local backend", () => {
 
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const { accessToken } = await readSupabaseSession(page);
+    const { accessToken, userId } = await readSupabaseSession(page);
     // Age only this page's access session: other tests hold Ana's sessions in parallel (D1).
     const authSessionId = (
       JSON.parse(Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8")) as {
@@ -160,8 +157,68 @@ test.describe("auth against the local backend", () => {
       throw new Error("The access token carries no session_id claim.");
     }
 
+    // US11/AC5 sobre la superficie 002: el workspace solo compone sobre consultas reales
+    // (D11 de su design), así que se provisionan ficha y consulta con el token de ANA —
+    // los triggers de atribución exigen `auth.uid()`, nunca service role. El contrato del
+    // borrador local (editing → restored → saved) es el mismo de la 001.
+    const patientId = crypto.randomUUID();
+    const anaApi = await apiRequest.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SUPABASE_ANON_KEY as string,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    try {
+      const vet = await anaApi.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
+      const rows = (await vet.json()) as Array<{ clinic_id: string }>;
+      const clinicId = rows[0]?.clinic_id;
+      if (!clinicId) {
+        throw new Error("No se encontró la clínica del veterinario.");
+      }
+      const patient = await anaApi.post("/rest/v1/clinical_records", {
+        data: {
+          id: patientId,
+          clinic_id: clinicId,
+          record_type: "patient",
+          content: {
+            name: "Luna",
+            species: "canino",
+            breed: "Mestizo",
+            birthDate: null,
+            ageMonths: 48,
+            weightKg: 12.5,
+            sex: "hembra",
+            reproductiveStatus: "entero",
+            antecedentes: {
+              medicalHistory: [],
+              preexistingDiseases: [],
+              currentMedications: [],
+              knownAllergies: [],
+              behavioralHistory: [],
+            },
+            tutorId: crypto.randomUUID(),
+          },
+          status: "draft",
+        },
+      });
+      expect(patient.ok()).toBeTruthy();
+      const consultation = await anaApi.post("/rest/v1/clinical_records", {
+        data: {
+          id: consultationId,
+          clinic_id: clinicId,
+          record_type: "consultation",
+          content: { patientId, status: "open" },
+          status: "draft",
+        },
+      });
+      expect(consultation.ok()).toBeTruthy();
+    } finally {
+      await anaApi.dispose();
+    }
+
     await page.goto(`/consultations/${consultationId}`);
-    const notesField = page.getByLabel("Notas de la consulta");
+    const notesField = page.getByLabel("Texto del antecedente");
     await notesField.click();
     await page.keyboard.type(notes, { delay: 5 });
     await expect(notesField).toHaveValue(notes);
@@ -200,8 +257,25 @@ test.describe("auth against the local backend", () => {
       const agedRows = (await aged.json()) as Array<{ id: string }>;
       expect(agedRows).toHaveLength(1);
 
-      await page.getByRole("button", { name: "Guardar anamnesis" }).click();
+      await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
       await expect(page.getByText("Sesión expirada")).toBeVisible();
+      // sistema-visual 7.5 (caso límite de US14): el diálogo queda por encima de la navegación
+      // global, que no recibe clics ni foco mientras está abierto.
+      const sidebarLink = page.getByTestId("app-sidebar").getByRole("link", { name: "Pacientes" });
+      await expect(sidebarLink.click({ timeout: 2_000 })).rejects.toThrow();
+      await expect(page).toHaveURL(new RegExp(`/consultations/${consultationId}$`));
+      for (let step = 0; step < 6; step += 1) {
+        await page.keyboard.press("Tab");
+        const insideSidebar = await page.evaluate(
+          () =>
+            document
+              .querySelector('[data-testid="app-sidebar"]')
+              ?.contains(document.activeElement) ?? false,
+        );
+        expect(insideSidebar, "el foco llegó a la barra lateral con el diálogo abierto").toBe(
+          false,
+        );
+      }
       await expect(page.getByTestId("consultation-status")).toHaveText(
         "La sesión ya no es válida. El borrador se conservó.",
       );
@@ -217,14 +291,23 @@ test.describe("auth against the local backend", () => {
       await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
 
       await page.goto(`/consultations/${consultationId}`);
-      await expect(page.getByLabel("Notas de la consulta")).toHaveValue(notes);
+      await expect(page.getByLabel("Texto del antecedente")).toHaveValue(notes);
       await expect(page.getByTestId("consultation-status")).toHaveText(
-        "Se recuperó un borrador no guardado.",
+        "Se recuperó un borrador no guardado de esta consulta.",
       );
 
-      await page.getByRole("button", { name: "Guardar anamnesis" }).click();
-      await expect(page.getByTestId("consultation-status")).toHaveText("Anamnesis guardada.");
-      await expect(page.getByTestId("attribution-badge")).toContainText(ANA.displayName);
+      await page.getByRole("button", { name: "Registrar antecedente de anamnesis" }).click();
+      await expect(page.getByTestId("consultation-status")).toHaveText(
+        "Antecedente de anamnesis registrado.",
+      );
+      // Desde la 002 hay dos insignias tras registrar: la de lo recién guardado y la del
+      // antecedente en la lista (llega con la recarga del workspace). Se acota a la entrada
+      // registrada para que la aserción no dependa de qué recarga llegue antes.
+      const registrada = page
+        .getByTestId("anamnesis-entry")
+        .filter({ visible: true, hasText: notes });
+      await expect(registrada).toHaveCount(1);
+      await expect(registrada.getByTestId("attribution-badge")).toContainText(ANA.displayName);
       await expect
         .poll(() =>
           page.evaluate(() =>

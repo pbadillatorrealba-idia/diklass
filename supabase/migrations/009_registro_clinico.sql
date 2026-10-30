@@ -13,7 +13,9 @@
 --     inmutable (CONSULTATION_LINK_IMMUTABLE, SQLSTATE 23514): re-apuntarlo o vaciarlo
 --     eludiría un sello evaluado sobre old (RLS permite actualizar filas no aprobadas de
 --     la clínica). Las fichas patient/tutor no llevan consultationId y siguen editables
---     entre consultas (caso límite «ficha ampliada entre consultas» de la spec).
+--     entre consultas (caso límite «ficha ampliada entre consultas» de la spec). La fila
+--     de la consulta cerrada también queda sellada: cerrar es irreversible (una consulta
+--     reabierta volvería editables todos sus registros de trabajo).
 --   * FR-002 · US4-AC4 y FR-013 · US4-AC1 + D10: las lecturas longitudinales por
 --     content->>'patientId' y content->>'consultationId' se apoyan en índices de expresión.
 --
@@ -41,7 +43,61 @@ declare
   consultation_id uuid;
   consultation_status text;
 begin
+  if tg_op = 'INSERT' then
+    -- FR-024 · US4-AC2 · SC-009 (revisión de la PR #27): el sellado también cubre INSERT.
+    -- Una fila de trabajo no puede anexarse a una consulta cerrada por el camino directo
+    -- de PostgREST (T055): el conjunto que muestra el workspace de una consulta cerrada no
+    -- puede crecer tras el cierre. La epicrisis correctiva (status 'corrective', D8 ·
+    -- US3-AC4) queda exenta: corregir una epicrisis aprobada crea legítimamente un registro
+    -- adicional sobre la consulta cerrada. Un consultationId que no resuelve a ninguna
+    -- consulta se tolera (huérfanos: riesgo documentado D1/D6), pero si resuelve y está
+    -- cerrada, se rechaza.
+    -- El sellado protege el conjunto de REGISTROS DE TRABAJO de la consulta cerrada
+    -- (anamnesis, diagnosis, epicrisis — el set que fija SC-009). Los registros
+    -- longitudinales que solo REFERENCIAN la consulta (clinical_feedback de la spec 005,
+    -- registrado legítimamente entre consultas sobre la consulta cerrada) son datos nuevos
+    -- y no se sellan; su propia spec fija su inmutabilidad.
+    -- La exención correctiva es solo de la epicrisis (D8): una anamnesis o un diagnóstico
+    -- con status 'corrective' sobre una consulta cerrada haría crecer su workspace.
+    if new.content ->> 'consultationId' is not null
+      and new.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
+      and not (new.record_type = 'epicrisis' and new.status = 'corrective')
+    then
+      begin
+        consultation_id := (new.content ->> 'consultationId')::uuid;
+      exception when invalid_text_representation then
+        consultation_id := null;
+      end;
+
+      if consultation_id is not null then
+        -- FOR SHARE serializa con el UPDATE que cierra la consulta en
+        -- approve_clinical_record: sin el bloqueo, bajo READ COMMITTED esta lectura vería
+        -- el 'open' confirmado mientras la aprobación aún no confirma, y la fila entraría
+        -- en una consulta que se cierra en paralelo.
+        select target.content ->> 'status' into consultation_status
+        from public.clinical_records target
+        where target.id = consultation_id
+          and target.record_type = 'consultation'
+          and target.clinic_id = new.clinic_id
+        for share;
+
+        if consultation_status = 'closed' then
+          raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
+        end if;
+      end if;
+    end if;
+  end if;
+
   if tg_op = 'UPDATE' then
+    -- FR-024 · US4-AC2 · SC-009 (revisión de la PR #27): la fila de una consulta cerrada es
+    -- inmutable. Sin esto, un UPDATE directo por PostgREST devolvía content->>'status' a
+    -- 'open' (RLS lo permite: la consulta no tiene approved_at) y el sello de sus registros
+    -- de trabajo dejaba de aplicar. approve_clinical_record solo cierra consultas 'open',
+    -- así que ningún camino legítimo actualiza una consulta ya cerrada.
+    if old.record_type = 'consultation' and old.content ->> 'status' = 'closed' then
+      raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
+    end if;
+
     -- El sello se evalúa sobre OLD: la pertenencia a la consulta es la que la fila tenía
     -- antes del UPDATE.
     previous_consultation := old.content ->> 'consultationId';
@@ -65,12 +121,19 @@ begin
         consultation_id := null;
       end;
 
-      if consultation_id is not null then
+      -- Mismo alcance que en INSERT: solo los registros de TRABAJO quedan sellados. Una
+      -- fila longitudinal (p. ej. clinical_feedback) que apunta a la consulta cerrada puede
+      -- seguir rigiéndose por su propia spec (005 la hace inmutable con su trigger).
+      if consultation_id is not null
+        and old.record_type in ('anamnesis', 'diagnosis', 'epicrisis')
+      then
+        -- FOR SHARE: misma serialización con el cierre que en la rama INSERT.
         select target.content ->> 'status' into consultation_status
         from public.clinical_records target
         where target.id = consultation_id
           and target.record_type = 'consultation'
-          and target.clinic_id = old.clinic_id;
+          and target.clinic_id = old.clinic_id
+        for share;
 
         if consultation_status = 'closed' then
           raise exception 'CLINICAL_RECORD_SEALED' using errcode = '23514';
@@ -84,7 +147,7 @@ end;
 $$;
 
 create trigger clinical_records_guard_sealed
-before update on public.clinical_records
+before insert or update on public.clinical_records
 for each row execute function public.guard_consultation_sealed();
 
 -- ---------------------------------------------------------------------------

@@ -1,18 +1,143 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import { ANA, expect, hasBackend, submitLogin, test } from "./fixtures";
+import { type Page, request } from "@playwright/test";
+import { randomRut } from "../../support/rut";
+import {
+  provisionClinicalCase,
+  type SyntheticCase,
+  type SyntheticScreen,
+  syntheticScreens,
+} from "./caso-sintetico";
+import {
+  ANA,
+  expect,
+  hasBackend,
+  readSupabaseSession,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+  submitLogin,
+  test,
+} from "./fixtures";
+import { abrirHilo, limpiarConversacion } from "./panel";
+import { prepararPaciente } from "./preparar-paciente";
 
 const WCAG_22_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 async function expectNoViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_22_AA).analyze();
-  expect(
-    violations.map(({ id, help, nodes }) => ({
+  // Exclusión documentada del gate: `#error-toast` es el overlay de desarrollo de
+  // `@expo/log-box` (`renderInShadowRoot('error-toast', …)`, solo con NODE_ENV=development;
+  // no existe en builds de producción). Su marcado —contenedor `.toast` con focables
+  // anidados y botón dismiss sin nombre— pertenece al runtime, no a la superficie de la
+  // aplicación, y no es editable desde este repo.
+  const sobreLaAplicacion = violations
+    .map(({ id, help, nodes }) => ({
       id,
       help,
-      nodes: nodes.map((node) => ({ target: node.target, why: node.failureSummary })),
-    })),
-  ).toEqual([]);
+      nodes: nodes
+        .filter((node) => !node.target.some((part) => String(part).includes("#error-toast")))
+        .map((node) => ({ target: node.target, why: node.failureSummary })),
+    }))
+    .filter((violation) => violation.nodes.length > 0);
+  expect(sobreLaAplicacion).toEqual([]);
+}
+
+/**
+ * Recorrido mínimo por teclado (D12): se recorre todo control alcanzable por Tab y se
+ * afirma que cada uno muestra un indicador de foco visible (WCAG 2.2 AA 2.4.7).
+ */
+async function walkKeyboard(page: Page, expectedTestIDs: string[]) {
+  const reached: string[] = [];
+  let firstStop: string | null = null;
+  // La navegación global suma ~10 paradas por pantalla (sistema-visual D12/D17).
+  for (let step = 0; step < 250; step += 1) {
+    await page.keyboard.press("Tab");
+    const stop = await page.evaluate(() => {
+      const element = document.activeElement as HTMLElement | null;
+      if (!element || element === document.body || element === document.documentElement) {
+        return null;
+      }
+      // Misma exclusión documentada que en `expectNoViolations`: `#error-toast` es el overlay de
+      // desarrollo de `@expo/log-box`, que no existe en producción. Firefox lo enfoca cuando la
+      // app registra un error en consola (p. ej., filas sintéticas omitidas en una base local).
+      if (element.closest("#error-toast")) {
+        return { testID: null, identity: "#error-toast", focusVisible: true, devOverlay: true };
+      }
+      const style = getComputedStyle(element);
+      const outlineWidth = Number.parseFloat(style.outlineWidth || "0");
+      const outlineVisible =
+        style.outlineStyle !== "none" &&
+        style.outlineStyle !== "hidden" &&
+        outlineWidth > 0 &&
+        style.outlineColor !== "transparent" &&
+        style.outlineColor !== "rgba(0, 0, 0, 0)";
+      const shadowVisible = style.boxShadow !== "none" && style.boxShadow !== "";
+      const identity = `${element.tagName}#${element.getAttribute("data-testid") ?? element.getAttribute("aria-label") ?? ""}`;
+      return {
+        testID: element.getAttribute("data-testid"),
+        identity,
+        focusVisible: outlineVisible || shadowVisible,
+      };
+    });
+    if (stop === null) {
+      break;
+    }
+    if ("devOverlay" in stop) {
+      continue;
+    }
+    if (firstStop === null) {
+      firstStop = stop.identity;
+    } else if (stop.identity === firstStop) {
+      // Dio la vuelta al conjunto de controles de la pantalla.
+      break;
+    }
+    expect(stop.focusVisible, `Foco sin indicador visible en ${stop.identity}`).toBeTruthy();
+    if (stop.testID !== null) {
+      reached.push(stop.testID);
+    }
+  }
+  for (const testID of expectedTestIDs) {
+    // El mensaje lleva las paradas alcanzadas: el fallo intermitente de sistema-visual 8.2/8.4
+    // no se ha podido reproducir a demanda (quickstart.md).
+    expect(
+      reached,
+      `El recorrido por teclado no alcanzó el control ${testID} en ${page.url()} (primera parada ${firstStop}; alcanzó ${reached.join(", ")})`,
+    ).toContain(testID);
+  }
+}
+
+/**
+ * Adaptabilidad al viewport (D12; sistema-visual FR-079 · SC-052): sin desbordamiento horizontal
+ * desde 320 px (WCAG 1.4.10), en móvil y en escritorio.
+ */
+async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
+  for (const width of [320, 375, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto(screen.url);
+    await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+    // El `ScrollView` de RN Web es un contenedor con scroll propio: un desborde dentro de él no
+    // agranda el documento. Se mide también cada contenedor que recorta o desplaza en horizontal
+    // (salvo campos de texto, cuyo contenido desplazable es esperable).
+    const desbordes = await page.evaluate(() => {
+      const hallazgos: string[] = [];
+      const root = document.documentElement;
+      if (root.scrollWidth > root.clientWidth) {
+        hallazgos.push(`documento ${root.scrollWidth} > ${root.clientWidth}`);
+      }
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) continue;
+        // Solo para lectores de pantalla (recorte de 1 px): recortar es su función, no un desborde.
+        if (el.clientWidth <= 1) continue;
+        const overflowX = getComputedStyle(el).overflowX;
+        if (overflowX === "visible" || el.clientWidth === 0) continue;
+        if (el.scrollWidth > el.clientWidth + 1) {
+          const id = el.getAttribute("data-testid") ?? el.tagName.toLowerCase();
+          hallazgos.push(`${id} ${el.scrollWidth} > ${el.clientWidth}`);
+        }
+      }
+      return hallazgos;
+    });
+    expect(desbordes, `Desbordamiento horizontal a ${width} px en ${screen.name}`).toEqual([]);
+  }
 }
 
 test.describe("WCAG 2.2 AA gate", () => {
@@ -20,6 +145,16 @@ test.describe("WCAG 2.2 AA gate", () => {
     await page.goto("/login");
     await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     await expectNoViolations(page);
+  });
+
+  // sistema-visual FR-090 · US15-AC3: la tarjeta de acceso no desborda desde 320 px.
+  test("el acceso no desborda horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    await expectNoHorizontalOverflow(page, {
+      name: "acceso",
+      url: "/login",
+      readyTestID: "login-submit",
+      keyboardTestIDs: [],
+    });
   });
 
   test("the login error state has no automatically detectable violations", async ({ page }) => {
@@ -33,11 +168,407 @@ test.describe("WCAG 2.2 AA gate", () => {
     test.skip(!hasBackend, "Requires local Supabase with the synthetic veterinarians provisioned.");
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    await expect(page.getByTestId("authenticated-identity")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expectNoViolations(page);
+    // El workspace de consulta y el resto de pantallas del registro clínico se escanean
+    // sobre un caso clínico sintético en el bloque de la tarea 5.1 (D12).
+  });
+});
 
-    await page.goto(`/consultations/${crypto.randomUUID()}`);
-    await expect(page.getByLabel("Notas de la consulta")).toBeVisible();
+test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.1)", () => {
+  test.skip(!hasBackend, "Requiere Supabase con las veterinarias sintéticas provisionadas.");
+
+  let caso: SyntheticCase = { patientId: "", openConsultationId: "", closedConsultationId: "" };
+
+  test.beforeAll(async ({ browser }) => {
+    caso = await provisionClinicalCase(browser);
+  });
+
+  test("las pantallas nuevas no tienen violaciones axe (WCAG 2.2 AA)", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    for (const screen of syntheticScreens(caso)) {
+      await page.goto(screen.url);
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+      await expectNoViolations(page);
+    }
+  });
+
+  // sistema-visual FR-080 · D19: un grupo de opciones es una sola parada de Tab y se recorre con
+  // flechas (patrón ARIA radio group).
+  test("un grupo de opciones es una parada de Tab y las flechas cambian la selección", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.goto("/settings");
+    const sistema = page.getByTestId("settings-theme-system");
+    const claro = page.getByTestId("settings-theme-light");
+    const oscuro = page.getByTestId("settings-theme-dark");
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+    await expect(sistema).toHaveAttribute("tabindex", "0");
+    await expect(claro).toHaveAttribute("tabindex", "-1");
+    await expect(oscuro).toHaveAttribute("tabindex", "-1");
+
+    await sistema.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(claro).toBeFocused();
+    await expect(claro).toHaveAttribute("aria-checked", "true");
+    await expect(claro).toHaveAttribute("tabindex", "0");
+    await page.keyboard.press("End");
+    await expect(oscuro).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(sistema, "la flecha da la vuelta").toBeFocused();
+    await expect(sistema).toHaveAttribute("aria-checked", "true");
+
+    await page.keyboard.press("Tab");
+    const dentro = await page.evaluate(
+      () => document.activeElement?.closest('[data-testid="settings-theme"]') !== null,
+    );
+    expect(dentro, "el siguiente Tab sale del grupo").toBe(false);
+  });
+
+  test("recorrido por teclado con foco visible en cada control interactivo", async ({ page }) => {
+    // 12 pantallas con decenas de paradas cada una: en Firefox supera los 30 s por defecto.
+    test.setTimeout(90_000);
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    for (const screen of syntheticScreens(caso)) {
+      await page.goto(screen.url);
+      await expect(page.getByTestId(screen.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+      await walkKeyboard(page, screen.keyboardTestIDs);
+    }
+  });
+
+  // shell-asistente-tres-zonas 7.1 (D1/D2/D7/D8): el panel acoplado, el riel, el cajón, la cinta y la
+  // hoja cumplen WCAG 2.2 AA en claro (`chromium`) y en oscuro (`chromium-dark`).
+  test("el shell con el panel acoplado, el riel, el cajón y la cinta con su hoja no tienen violaciones axe", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const abrirConsulta = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/consultations/${caso.openConsultationId}`);
+      await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
+    };
+
+    // 1440 px: panel acoplado, con cada uno de sus hilos.
+    await abrirConsulta(1440);
+    await expect(page.getByTestId("assistant-panel")).toBeVisible();
+    for (const hilo of ["escucha", "asistente"]) {
+      await abrirHilo(page, hilo);
+      await expectNoViolations(page);
+    }
+    // Panel colapsado a riel.
+    await page.getByTestId("assistant-toggle").click();
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
     await expectNoViolations(page);
+    await page.getByTestId("assistant-toggle").click();
+
+    // 1280 px: riel y cajón abierto.
+    await abrirConsulta(1280);
+    await expect(page.getByTestId("assistant-rail")).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByTestId("assistant-toggle").click();
+    await expect(page.getByTestId("assistant-drawer")).toBeVisible();
+    await expectNoViolations(page);
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("assistant-drawer")).toHaveCount(0);
+
+    // 375 px: cinta y hoja abierta.
+    await abrirConsulta(375);
+    await expect(page.getByTestId("panel-dock")).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByTestId("panel-dock-open").click();
+    await expect(page.getByTestId("panel-sheet")).toBeVisible();
+    await expectNoViolations(page);
+  });
+
+  // chat-del-asistente 8.1: el chat con mensajes (markdown), el error con «Reintentar» y la
+  // confirmación de borrar no tienen violaciones axe (WCAG 2.2 AA), en claro y oscuro según el proyecto.
+  test("el chat con mensajes, error y confirmación de borrado no tiene violaciones axe", async ({
+    page,
+  }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await limpiarConversacion(page);
+
+    const { accessToken, userId } = await readSupabaseSession(page);
+    const api = await request.newContext({
+      baseURL: SUPABASE_URL,
+      extraHTTPHeaders: {
+        apikey: SUPABASE_ANON_KEY as string,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    try {
+      const perfil = await api.get(`/rest/v1/veterinarians?select=clinic_id&id=eq.${userId}`);
+      const clinicId = ((await perfil.json()) as Array<{ clinic_id: string }>)[0]?.clinic_id;
+      const sembrar = (role: string, text: string) =>
+        api.post("/rest/v1/assistant_messages", {
+          data: {
+            clinic_id: clinicId,
+            author_id: userId,
+            role,
+            status: "done",
+            parts: [{ type: "text", text }],
+          },
+        });
+      await sembrar("user", "¿Qué dosis uso de maropitant?");
+      await sembrar(
+        "assistant",
+        [
+          "## Resumen",
+          "",
+          "El paciente presenta **vómitos** y *letargo*.",
+          "",
+          "| Fármaco | Dosis |",
+          "|---|---|",
+          "| Maropitant | 1 mg/kg |",
+          "",
+          "- Ayuno 12 h",
+          "- Fluidos",
+          "",
+          "> Fuente: protocolo de manejo de vómito agudo",
+          "",
+          "```",
+          "meloxicam 0,1 mg/kg",
+          "```",
+          "",
+          "Ver [la guía](https://example.org/guia).",
+        ].join("\n"),
+      );
+      await page.reload();
+      const panel = page.getByTestId("assistant-panel");
+      await expect(panel.getByTestId("message-assistant")).toBeVisible({ timeout: 15_000 });
+      await expectNoViolations(page);
+
+      // Error al enviar: la persistencia falla y la pregunta queda con «Reintentar».
+      await page.route(/assistant_messages/, (route) =>
+        route.request().method() === "POST" ? route.abort() : route.continue(),
+      );
+      await panel.getByTestId("composer-input").fill("¿Qué eventos tengo agendados?");
+      await panel.getByTestId("composer-send").click();
+      await expect(panel.getByTestId("message-retry")).toBeVisible({ timeout: 15_000 });
+      await expectNoViolations(page);
+
+      // Confirmación de «Borrar conversación».
+      await panel.getByTestId("chat-clear").click();
+      await expect(panel.getByTestId("chat-clear-confirm")).toBeVisible();
+      await expectNoViolations(page);
+    } finally {
+      await api.post("/rest/v1/rpc/delete_assistant_conversation", { data: {} });
+      await api.dispose();
+    }
+  });
+
+  // shell-asistente-tres-zonas 2.3: el control del panel y sus hilos se alcanzan por teclado, con
+  // foco visible.
+  test("el panel acoplado se recorre por teclado con foco visible", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/patients");
+    await expect(page.getByTestId("assistant-panel")).toBeVisible({ timeout: 15_000 });
+    // Con un solo hilo el panel no lleva pestañas: el control y el composer del chat.
+    await walkKeyboard(page, ["assistant-toggle", "composer-input"]);
+  });
+
+  // rediseno-pacientes: la consulta va en una sola columna, con el contexto antes del registro.
+  test("la consulta usa una sola columna a 1280 px y a 375 px", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const cajas = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/consultations/${caso.closedConsultationId}`);
+      await expect(page.getByTestId("epicrisis-correction-history")).toBeVisible({
+        timeout: 15_000,
+      });
+      // El resumen de seguimiento llega después: se mide con la red en reposo y ambas cajas a la
+      // vez, para no comparar una columna antes y otra después de que crezca.
+      await page.waitForLoadState("networkidle");
+      return page.evaluate(() => {
+        const caja = (id: string) => {
+          const el = document.querySelector(`[data-testid="${id}"]`);
+          if (!el) throw new Error(`Falta ${id}`);
+          const { x, y, width, height } = el.getBoundingClientRect();
+          return { x, y, width, height };
+        };
+        return { principal: caja("consultation-main"), lateral: caja("consultation-aside") };
+      });
+    };
+
+    // Una sola columna en cualquier ancho: el contexto va encima del registro.
+    for (const width of [1280, 375]) {
+      const { principal, lateral } = await cajas(width);
+      expect(lateral.y + lateral.height).toBeLessThanOrEqual(principal.y + 1);
+      expect(Math.abs(lateral.x - principal.x)).toBeLessThan(2);
+    }
+  });
+
+  // sistema-visual FR-084 · SC-055 (design.md D13): navegar es un enlace real (`<a href>`), que
+  // se puede abrir en otra pestaña y se anuncia como enlace; nunca un botón con `router.push`.
+  test("los controles de navegación son enlaces y no botones", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pantallas = [
+      { url: "/home", readyTestID: "home-agenda" },
+      ...syntheticScreens(caso).map(({ url, readyTestID }) => ({ url, readyTestID })),
+    ];
+    const encontrados = new Set<string>();
+    for (const pantalla of pantallas) {
+      await page.goto(pantalla.url);
+      await expect(page.getByTestId(pantalla.readyTestID).first()).toBeVisible({ timeout: 15_000 });
+      await page.waitForLoadState("networkidle");
+      const controles = await page.evaluate(() =>
+        Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
+          .filter((el) =>
+            /^(home-start-consultation|home-consulta-.+|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+              el.dataset.testid ?? "",
+            ),
+          )
+          .map((el) => ({
+            testID: el.dataset.testid ?? "",
+            tag: el.tagName.toLowerCase(),
+            href: el.getAttribute("href"),
+            role: el.getAttribute("role"),
+          })),
+      );
+      for (const control of controles) {
+        const nombre = control.testID.replace(/-[0-9a-f-]{36}.*$/, "-<id>");
+        encontrados.add(nombre);
+        expect(
+          { ...control, pantalla: pantalla.url },
+          `${control.testID} en ${pantalla.url} debe ser un enlace`,
+        ).toMatchObject({ tag: "a", href: expect.stringMatching(/^\//) });
+        expect(control.role, `${control.testID} en ${pantalla.url} tiene rol button`).not.toBe(
+          "button",
+        );
+      }
+    }
+    // La prueba no vale si las pantallas no pintaron los controles que vigila. `ver-fuente-*`
+    // depende de que la base local tenga fuentes, así que no se exige.
+    expect([...encontrados]).toEqual(
+      expect.arrayContaining([
+        "follow-up-open",
+        "history-open",
+        "home-start-consultation",
+        "patient-open",
+        "screen-back",
+        "patients-register",
+        "conocimiento-incorporar",
+      ]),
+    );
+  });
+
+  // rediseno-pacientes: la lista de pacientes es una tabla desde 1024 px y tarjetas debajo; el
+  // formulario conserva el ancho de lectura.
+  test("la lista de pacientes es tabla a 1280 px y tarjetas a 768 px; el formulario sigue en 720 px", async ({
+    page,
+  }) => {
+    // La lista necesita dos filas; en una base recién reseteada no hay pacientes.
+    const { crear } = await prepararPaciente(page, "Lista E2E uno");
+    const tutorId = await crear("tutor", {
+      name: "Tutor lista E2E",
+      rut: randomRut(),
+      phone: "+56 9 5550 0102",
+      email: null,
+    });
+    await crear("patient", {
+      name: "Lista E2E dos",
+      species: "felino",
+      breed: "Siamés",
+      birthDate: "2022-05-01",
+      ageMonths: null,
+      weightKg: 4,
+      sex: "macho",
+      reproductiveStatus: "esterilizado",
+      antecedentes: {
+        medicalHistory: [],
+        preexistingDiseases: [],
+        currentMedications: [],
+        knownAllergies: [],
+        behavioralHistory: [],
+      },
+      tutorId,
+    });
+    const medir = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/patients");
+      await expect(page.getByTestId("patient-item").nth(1)).toBeVisible({ timeout: 15_000 });
+      return page.evaluate(() => {
+        const [a, b] = Array.from(document.querySelectorAll('[data-testid="patient-item"]'))
+          .slice(0, 2)
+          .map((el) => el.getBoundingClientRect());
+        const lista = document.querySelector('[data-testid="patients-list"]');
+        if (!a || !b || !lista) throw new Error("faltan filas o lista");
+        return {
+          filaApilada: b.y > a.y,
+          rolTabla: lista.getAttribute("role") === "table",
+          contenido: lista.getBoundingClientRect().width,
+        };
+      });
+    };
+
+    const ancho = await medir(1280);
+    expect(ancho.rolTabla, "tabla a 1280 px").toBe(true);
+    expect(ancho.filaApilada, "una fila por paciente").toBe(true);
+    expect(ancho.contenido).toBeGreaterThan(720);
+
+    const angosto = await medir(768);
+    expect(angosto.rolTabla, "tarjetas a 768 px").toBe(false);
+    expect(angosto.filaApilada).toBe(true);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/patients/new");
+    await expect(page.getByTestId("patient-form")).toBeVisible({ timeout: 15_000 });
+    const formulario = await page.getByTestId("patient-form").boundingBox();
+    expect(formulario?.width ?? 0).toBeLessThanOrEqual(720);
+  });
+
+  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM. Configuración
+  // va en una columna también en escritorio (tema.spec.ts).
+  test("Inicio va a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    const pares = [{ url: "/home", izquierda: "home-today", derecha: "home-agenda" }];
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const par of pares) {
+        await page.goto(par.url);
+        const izquierda = page.getByTestId(par.izquierda).filter({ visible: true });
+        const derecha = page.getByTestId(par.derecha).filter({ visible: true });
+        await expect(derecha).toBeVisible({ timeout: 15_000 });
+        await page.waitForLoadState("networkidle");
+        const a = await izquierda.boundingBox();
+        const b = await derecha.boundingBox();
+        if (!a || !b) throw new Error(`faltan cajas en ${par.url}`);
+        if (width === 1280) {
+          expect(b.x, `${par.url}: ${par.derecha} a la derecha`).toBeGreaterThanOrEqual(
+            a.x + a.width,
+          );
+          expect(b.y, `${par.url}: columnas alineadas arriba`).toBeLessThan(a.y + a.height);
+        } else {
+          expect(b.y, `${par.url}: ${par.derecha} debajo a 375 px`).toBeGreaterThanOrEqual(
+            a.y + a.height,
+          );
+        }
+      }
+    }
+  });
+
+  test("las pantallas no desbordan horizontalmente a 320, 375 ni 1280 px", async ({ page }) => {
+    // 36 cargas (12 pantallas × 3 anchos): aislado tarda ~23 s y roza el límite de 30 s por
+    // defecto cuando corre tras el resto de la suite (sistema-visual 8.7, quickstart.md).
+    test.setTimeout(90_000);
+    await submitLogin(page, ANA);
+    await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+    for (const screen of syntheticScreens(caso)) {
+      await expectNoHorizontalOverflow(page, screen);
+    }
   });
 });

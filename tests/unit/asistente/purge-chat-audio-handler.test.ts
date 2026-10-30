@@ -1,0 +1,272 @@
+import { describe, expect, test } from "bun:test";
+import {
+  handlePurgeChatAudio,
+  type PurgeDependencies,
+} from "../../../supabase/functions/purge-chat-audio/handler";
+
+const SECRETO = "secreto-compartido-de-la-purga";
+const URL_FUNCION = "http://localhost:54321/functions/v1/purge-chat-audio";
+
+type Cfg = {
+  tandas?: Array<Array<{ message_id: string; audio_path: string }>>;
+  huerfanosTandas?: string[][];
+  vencidos?: Array<{ message_id: string; audio_path: string }>;
+  huerfanos?: string[];
+  fallanRutas?: string[];
+  listaFalla?: boolean;
+};
+
+const reloj = { valor: 1_000_000 };
+
+function harness({
+  tandas,
+  huerfanosTandas,
+  vencidos = [],
+  huerfanos = [],
+  fallanRutas = [],
+  listaFalla = false,
+}: Cfg = {}) {
+  const cola = tandas ? [...tandas] : [vencidos];
+  const colaHuerfanos = huerfanosTandas ? [...huerfanosTandas] : [huerfanos];
+  const lineas: string[] = [];
+  const llamadas = { borrados: [] as string[][], marcados: [] as string[][], listas: 0 };
+  const deps: PurgeDependencies = {
+    secret: SECRETO,
+    log: (l) => {
+      lineas.push(l);
+    },
+    randomId: () => "id-generado",
+    now: () => reloj.valor,
+    batchSize: 2,
+    listDue: async () => {
+      llamadas.listas++;
+      if (listaFalla) throw new Error("base caída");
+      return cola.shift() ?? [];
+    },
+    listOrphans: async () => colaHuerfanos.shift() ?? [],
+    removeObjects: async (rutas) => {
+      llamadas.borrados.push([...rutas]);
+      return { failed: rutas.filter((r) => fallanRutas.includes(r)) };
+    },
+    markPurged: async (ids) => {
+      llamadas.marcados.push([...ids]);
+    },
+  };
+  return { deps, lineas, llamadas };
+}
+
+const peticion = (secreto: string | null = SECRETO, metodo = "POST") =>
+  new Request(URL_FUNCION, {
+    method: metodo,
+    headers: secreto === null ? {} : { "x-purge-secret": secreto },
+    body: metodo === "POST" ? "{}" : undefined,
+  });
+
+// asistente-conversacional «Acceso y purga del audio» y «Registro estructurado del chat»
+// (design.md D6 · tarea 7.6a).
+describe("purge-chat-audio · handler", () => {
+  test("sin el secreto compartido se rechaza y no se borra nada", async () => {
+    const h = harness({ vencidos: [{ message_id: "m1", audio_path: "c/a/m1.webm" }] });
+    const res = await handlePurgeChatAudio(peticion(null), h.deps);
+    expect(res.status).toBe(401);
+    expect(h.llamadas.borrados).toEqual([]);
+    expect(h.llamadas.listas).toBe(0);
+  });
+
+  test("con un secreto incorrecto se rechaza, sin importar su longitud", async () => {
+    for (const malo of ["x", `${SECRETO}x`, SECRETO.slice(0, -1), ""]) {
+      const h = harness();
+      expect((await handlePurgeChatAudio(peticion(malo), h.deps)).status).toBe(401);
+      expect(h.llamadas.listas).toBe(0);
+    }
+  });
+
+  test("el JWT de un usuario no sirve: solo vale el secreto", async () => {
+    const h = harness();
+    const req = new Request(URL_FUNCION, {
+      method: "POST",
+      headers: { Authorization: "Bearer jwt-de-un-usuario" },
+      body: "{}",
+    });
+    expect((await handlePurgeChatAudio(req, h.deps)).status).toBe(401);
+  });
+
+  test("sin secreto configurado la función no opera (falla cerrado)", async () => {
+    const h = harness();
+    h.deps.secret = "";
+    expect((await handlePurgeChatAudio(peticion(""), h.deps)).status).toBe(503);
+    expect((await handlePurgeChatAudio(peticion(SECRETO), h.deps)).status).toBe(503);
+    expect(h.llamadas.listas).toBe(0);
+  });
+
+  test("405 a un método distinto de POST", async () => {
+    const h = harness();
+    expect((await handlePurgeChatAudio(peticion(SECRETO, "GET"), h.deps)).status).toBe(405);
+  });
+
+  test("borra el audio vencido y marca sus mensajes", async () => {
+    const h = harness({
+      vencidos: [
+        { message_id: "m1", audio_path: "c/a/m1.webm" },
+        { message_id: "m2", audio_path: "c/a/m2.m4a" },
+      ],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ due: 2, removed: 2, failed: 0, orphans: 0 });
+    expect(h.llamadas.borrados[0]).toEqual(["c/a/m1.webm", "c/a/m2.m4a"]);
+    expect(h.llamadas.marcados).toEqual([["m1", "m2"]]);
+  });
+
+  test("solo marca los mensajes cuyo objeto se pudo borrar (los demás se reintentan)", async () => {
+    const h = harness({
+      vencidos: [
+        { message_id: "m1", audio_path: "c/a/m1.webm" },
+        { message_id: "m2", audio_path: "c/a/m2.webm" },
+      ],
+      fallanRutas: ["c/a/m2.webm"],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ due: 2, removed: 1, failed: 1 });
+    expect(h.llamadas.marcados).toEqual([["m1"]]);
+  });
+
+  test("barre también los objetos huérfanos, sin fila que marcar", async () => {
+    const h = harness({ huerfanos: ["c/a/sin-mensaje.webm"] });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ due: 0, orphans: 1 });
+    expect(h.llamadas.borrados).toContainEqual(["c/a/sin-mensaje.webm"]);
+    expect(h.llamadas.marcados).toEqual([]);
+  });
+
+  test("sin nada por purgar responde 200 con ceros y no llama a Storage", async () => {
+    const h = harness();
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ due: 0, removed: 0, failed: 0, orphans: 0 });
+    expect(h.llamadas.borrados).toEqual([]);
+  });
+
+  test("si falla la lectura de lo pendiente responde 500 y lo registra, sin silenciarlo", async () => {
+    const h = harness({ listaFalla: true });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(res.status).toBe(500);
+    expect(h.lineas.some((l) => l.includes("purge_chat_audio_failed"))).toBe(true);
+  });
+
+  // Constitución IV y Principio V: registro estructurado con requestId, cuántos objetos se eliminaron y
+  // cuáles fallaron, sin secretos ni contenido.
+  test("registra con requestId el total eliminado y los fallos, nunca el secreto", async () => {
+    const h = harness({
+      vencidos: [
+        { message_id: "m1", audio_path: "c/a/m1.webm" },
+        { message_id: "m2", audio_path: "c/a/m2.webm" },
+      ],
+      fallanRutas: ["c/a/m2.webm"],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    const todo = h.lineas.join("\n") + (await res.text());
+    expect(todo).not.toContain(SECRETO);
+    const fin = h.lineas.map((l) => JSON.parse(l)).find((l) => l.event === "purge_chat_audio_done");
+    expect(fin).toMatchObject({ requestId: "id-generado", due: 2, removed: 1, failed: 1 });
+    expect(fin.failedMessageIds).toEqual(["m2"]);
+  });
+
+  test("un secreto rechazado también se registra (sin el secreto) para detectar abusos", async () => {
+    const h = harness();
+    await handlePurgeChatAudio(peticion("incorrecto"), h.deps);
+    const linea = h.lineas
+      .map((l) => JSON.parse(l))
+      .find((l) => l.event === "purge_chat_audio_rejected");
+    expect(linea).toMatchObject({ requestId: "id-generado", code: "UNAUTHENTICATED" });
+    expect(h.lineas.join("\n")).not.toContain("incorrecto");
+  });
+
+  // Hallazgo 7: con más de un lote pendiente se repite hasta vaciar (con tope) y se avisa si no alcanzó.
+  describe("varias tandas", () => {
+    const fila = (n: number) => ({ message_id: `m${n}`, audio_path: `c/a/m${n}.webm` });
+
+    test("repite mientras la tanda venga llena y se detiene al vaciarse", async () => {
+      const h = harness({ tandas: [[fila(1), fila(2)], [fila(3), fila(4)], [fila(5)]] });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      expect(await res.json()).toMatchObject({ due: 5, removed: 5, truncated: false });
+      expect(h.llamadas.marcados).toEqual([["m1", "m2"], ["m3", "m4"], ["m5"]]);
+    });
+
+    test("si no avanza (todo falla) no repite sin fin", async () => {
+      const lote = [fila(1), fila(2)];
+      const h = harness({
+        tandas: [lote, lote, lote, lote],
+        fallanRutas: ["c/a/m1.webm", "c/a/m2.webm"],
+      });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      expect(await res.json()).toMatchObject({ removed: 0, failed: 2 });
+      expect(h.llamadas.listas).toBe(1);
+    });
+
+    test("al llegar al tope de tandas avisa «truncated» para que no se pospongan en silencio", async () => {
+      const llena = [fila(1), fila(2)];
+      const h = harness({ tandas: Array.from({ length: 30 }, () => llena) });
+      const res = await handlePurgeChatAudio(peticion(), h.deps);
+      const cuerpo = (await res.json()) as { truncated: boolean };
+      expect(cuerpo.truncated).toBe(true);
+      const fin = h.lineas
+        .map((l) => JSON.parse(l))
+        .find((l) => l.event === "purge_chat_audio_done");
+      expect(fin.truncated).toBe(true);
+    });
+  });
+
+  test("los huérfanos que no se pudieron borrar se registran por ruta", async () => {
+    const h = harness({ huerfanos: ["c/a/h1.webm", "c/a/h2.webm"], fallanRutas: ["c/a/h2.webm"] });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ orphans: 1 });
+    const fin = h.lineas.map((l) => JSON.parse(l)).find((l) => l.event === "purge_chat_audio_done");
+    expect(fin.failedOrphanPaths).toEqual(["c/a/h2.webm"]);
+  });
+
+  // Un `rejected` por cada intento sin secreto inundaría los registros: se limita por ventana.
+  test("los rechazos repetidos no inundan el registro: uno por minuto con el conteo suprimido", async () => {
+    const h = harness();
+    for (let i = 0; i < 5; i++) await handlePurgeChatAudio(peticion("mal"), h.deps);
+    expect(h.lineas.filter((l) => l.includes("purge_chat_audio_rejected"))).toHaveLength(1);
+    reloj.valor += 61_000;
+    await handlePurgeChatAudio(peticion("mal"), h.deps);
+    const rechazos = h.lineas
+      .filter((l) => l.includes("purge_chat_audio_rejected"))
+      .map((l) => JSON.parse(l));
+    expect(rechazos).toHaveLength(2);
+    expect(rechazos[1].suppressed).toBe(4);
+  });
+
+  // Los fallos persistentes reaparecen en cada tanda: se cuentan una sola vez, no inflan `due`.
+  test("un mensaje que sigue fallando entre tandas se cuenta una sola vez", async () => {
+    const f = (n: number) => ({ message_id: `m${n}`, audio_path: `c/a/m${n}.webm` });
+    const h = harness({
+      tandas: [[f(1), f(2)], [f(1), f(3)], []],
+      fallanRutas: ["c/a/m1.webm"],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ due: 3, removed: 2, failed: 1 });
+  });
+
+  // Los huérfanos también van en tandas y avisan si no alcanzó (antes: una sola tanda de 500 en silencio).
+  test("los huérfanos se purgan en varias tandas", async () => {
+    const h = harness({
+      huerfanosTandas: [
+        ["c/a/h1.webm", "c/a/h2.webm"],
+        ["c/a/h3.webm", "c/a/h4.webm"],
+        ["c/a/h5.webm"],
+      ],
+    });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(await res.json()).toMatchObject({ orphans: 5, truncated: false });
+  });
+
+  test("si quedan huérfanos al llegar al tope de tandas avisa «truncated»", async () => {
+    const llena = ["c/a/h1.webm", "c/a/h2.webm"];
+    const h = harness({ huerfanosTandas: Array.from({ length: 30 }, () => llena) });
+    const res = await handlePurgeChatAudio(peticion(), h.deps);
+    expect(((await res.json()) as { truncated: boolean }).truncated).toBe(true);
+  });
+});

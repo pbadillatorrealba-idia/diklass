@@ -1,3 +1,282 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Atkinson Hyperlegible Next (Braille Institute, OFL 1.1): distingue caracteres confundibles
+ * (1 l I, 0 O, rn m) en dosis, pesos e identificadores. En web se sirve desde `public/fonts` y
+ * `+html.tsx` precarga los pesos del primer pintado; en iOS/Android la embebe el config plugin
+ * de `expo-font` (app.json) con el mismo nombre de familia.
+ */
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_400Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_500Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_600SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext_700Bold.woff2") format("woff2");
+}
+
+/*
+ * Atkinson Hyperlegible Mono (OFL 1.1), solo para datos: número de consulta, fechas y horas, peso,
+ * edad, dosis y códigos de procedencia (sistema-visual, design.md D20). En web se sirve el
+ * subconjunto latino y no se precarga: no aparece en el primer pintado de `/login`. Mientras carga,
+ * el respaldo ajusta Courier al avance (632/1000) y a la altura de la mono para que el cambio de
+ * fuente no desplace la maquetación.
+ */
+@font-face {
+  font-family: "Atkinson Hyperlegible Mono";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleMono_400Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Mono";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleMono_600SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Mono Fallback";
+  src: local("Courier New"), local("Liberation Mono"), local("Cousine");
+  size-adjust: 105.33%;
+  ascent-override: 93.42%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
+/*
+ * Tema de la app: canales RGB separados por espacio para que Tailwind admita opacidad
+ * (solo `scrim` la usa: `bg-scrim/55`). Es la fuente de verdad del color; `src/theme/colors.ts` lo replica para
+ * los pocos estilos inline y `tests/unit/theme/tema.test.ts` verifica que ambos coincidan y que
+ * cada par cumpla WCAG 2.2 AA. Una misma paleta para iOS, Android y web.
+ *
+ * Identidad «Formulario en copias» (sistema-visual, design.md D20): el tono de cada token lo fija
+ * la tabla de D20 y solo la luminosidad se ajustó hasta AA. La hoja (`card`) es papel; la tinta
+ * del veterinario, `foreground`; la tinta preimpresa del formulario (reglas, rótulos, acción
+ * principal), `primary`; `border` es esa tinta al ~25 % sobre la hoja, opaca.
+ *
+ * Estados (FR-075): `{estado}` es texto, icono y borde sobre card/fondo; `{estado}-foreground`,
+ * el texto sobre su relleno sólido; `{estado}-surface`, el fondo tintado con `foreground`
+ * encima. `warning` es ocre anaranjado e `info` pizarra, para no confundirse con los pliegos.
+ * `primary-surface`/`secondary-surface` son tintes opacos al 12 % sobre `card` (banda preimpresa,
+ * evidencia citada, ficha); un tinte translúcido no se puede verificar.
+ *
+ * Pliegos (el único color de superficie): `suggested-surface` + contorno `suggested` para lo que
+ * propone el sistema sin validar (FR-076); `correction-surface` + marca `correction` para lo
+ * corregido (FR-098), separado en tono de `destructive-surface` (ΔE*ab ≥ 10); `stamp` es la tinta
+ * del timbre de firma, solo junto al nombre de un profesional (FR-099). `scrim` es la capa modal.
+ */
+@layer base {
+  :root {
+    --background: 241 240 246;
+    --foreground: 37 17 52;
+    --card: 255 255 255;
+    --card-foreground: 37 17 52;
+    --popover: 255 255 255;
+    --popover-foreground: 37 17 52;
+    --primary: 62 56 136;
+    --primary-foreground: 255 255 255;
+    --primary-surface: 232 230 244;
+    --secondary: 70 92 104;
+    --secondary-foreground: 255 255 255;
+    --secondary-surface: 232 236 238;
+    --muted: 235 233 242;
+    --muted-foreground: 84 79 104;
+    --accent: 29 118 114;
+    --accent-foreground: 255 255 255;
+    --destructive: 176 40 24;
+    --destructive-foreground: 255 255 255;
+    --destructive-surface: 251 227 214;
+    --warning: 150 84 0;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 245 238 220;
+    --success: 38 108 58;
+    --success-foreground: 255 255 255;
+    --success-surface: 229 241 231;
+    --info: 70 94 124;
+    --info-foreground: 255 255 255;
+    --info-surface: 230 235 241;
+    --suggested: 122 97 0;
+    --suggested-surface: 251 239 168;
+    --correction: 158 43 69;
+    --correction-surface: 246 221 232;
+    --stamp: 31 78 158;
+    --scrim: 0 0 0;
+    --border: 211 208 227;
+    --input: 112 106 146;
+    --ring: 62 56 136;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 20 18 28;
+      --foreground: 236 234 244;
+      --card: 29 26 41;
+      --card-foreground: 236 234 244;
+      --popover: 38 35 52;
+      --popover-foreground: 236 234 244;
+      --primary: 185 179 242;
+      --primary-foreground: 20 18 28;
+      --primary-surface: 38 35 58;
+      --secondary: 150 172 184;
+      --secondary-foreground: 17 20 20;
+      --secondary-surface: 40 46 48;
+      --muted: 38 35 50;
+      --muted-foreground: 170 166 186;
+      --accent: 108 201 194;
+      --accent-foreground: 20 18 28;
+      --destructive: 255 140 120;
+      --destructive-foreground: 17 20 20;
+      --destructive-surface: 61 30 18;
+      --warning: 236 164 84;
+      --warning-foreground: 17 20 20;
+      --warning-surface: 50 40 28;
+      --success: 124 200 140;
+      --success-foreground: 17 20 20;
+      --success-surface: 28 50 36;
+      --info: 152 174 204;
+      --info-foreground: 17 20 20;
+      --info-surface: 32 40 52;
+      --suggested: 232 207 92;
+      --suggested-surface: 58 51 18;
+      --correction: 242 154 174;
+      --correction-surface: 54 28 48;
+      --stamp: 140 178 245;
+      --scrim: 0 0 0;
+      --border: 58 54 80;
+      --input: 122 116 154;
+      --ring: 185 179 242;
+    }
+  }
+
+  /* Modo forzado en web (FR-091 · D17): gana a la media query por especificidad. El script de
+   * `+html.tsx` pone la clase antes del primer pintado. `tema.test.ts` exige que repitan los
+   * valores de arriba. En nativo, el modo se fija con `Appearance.setColorScheme`. */
+  :root.light {
+    --background: 241 240 246;
+    --foreground: 37 17 52;
+    --card: 255 255 255;
+    --card-foreground: 37 17 52;
+    --popover: 255 255 255;
+    --popover-foreground: 37 17 52;
+    --primary: 62 56 136;
+    --primary-foreground: 255 255 255;
+    --primary-surface: 232 230 244;
+    --secondary: 70 92 104;
+    --secondary-foreground: 255 255 255;
+    --secondary-surface: 232 236 238;
+    --muted: 235 233 242;
+    --muted-foreground: 84 79 104;
+    --accent: 29 118 114;
+    --accent-foreground: 255 255 255;
+    --destructive: 176 40 24;
+    --destructive-foreground: 255 255 255;
+    --destructive-surface: 251 227 214;
+    --warning: 150 84 0;
+    --warning-foreground: 255 255 255;
+    --warning-surface: 245 238 220;
+    --success: 38 108 58;
+    --success-foreground: 255 255 255;
+    --success-surface: 229 241 231;
+    --info: 70 94 124;
+    --info-foreground: 255 255 255;
+    --info-surface: 230 235 241;
+    --suggested: 122 97 0;
+    --suggested-surface: 251 239 168;
+    --correction: 158 43 69;
+    --correction-surface: 246 221 232;
+    --stamp: 31 78 158;
+    --scrim: 0 0 0;
+    --border: 211 208 227;
+    --input: 112 106 146;
+    --ring: 62 56 136;
+  }
+
+  :root.dark {
+    --background: 20 18 28;
+    --foreground: 236 234 244;
+    --card: 29 26 41;
+    --card-foreground: 236 234 244;
+    --popover: 38 35 52;
+    --popover-foreground: 236 234 244;
+    --primary: 185 179 242;
+    --primary-foreground: 20 18 28;
+    --primary-surface: 38 35 58;
+    --secondary: 150 172 184;
+    --secondary-foreground: 17 20 20;
+    --secondary-surface: 40 46 48;
+    --muted: 38 35 50;
+    --muted-foreground: 170 166 186;
+    --accent: 108 201 194;
+    --accent-foreground: 20 18 28;
+    --destructive: 255 140 120;
+    --destructive-foreground: 17 20 20;
+    --destructive-surface: 61 30 18;
+    --warning: 236 164 84;
+    --warning-foreground: 17 20 20;
+    --warning-surface: 50 40 28;
+    --success: 124 200 140;
+    --success-foreground: 17 20 20;
+    --success-surface: 28 50 36;
+    --info: 152 174 204;
+    --info-foreground: 17 20 20;
+    --info-surface: 32 40 52;
+    --suggested: 232 207 92;
+    --suggested-surface: 58 51 18;
+    --correction: 242 154 174;
+    --correction-surface: 54 28 48;
+    --stamp: 140 178 245;
+    --scrim: 0 0 0;
+    --border: 58 54 80;
+    --input: 122 116 154;
+    --ring: 185 179 242;
+  }
+}
+
+/*
+ * WCAG 2.2 AA (2.4.7 foco visible): indicación de foco en TODO elemento enfocable.
+ * React Native Web renderiza Pressable/Button como <div tabindex>, y Firefox además hace
+ * enfocables los contenedores con desplazamiento (el `ScrollView` de `Screen`), sin tabindex ni
+ * rol. Por eso la regla no enumera selectores: cualquier elemento que reciba foco por teclado
+ * lo muestra, y el contenedor conserva su foco (quitarlo impediría desplazarse con el teclado).
+ * Por defecto el anillo va hacia dentro: un contenedor que ocupa toda la ventana recortaría un
+ * anillo exterior. Los controles lo llevan fuera, separado de su borde.
+ */
+:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: -2px;
+}
+
+[tabindex]:not([tabindex="-1"]):focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="checkbox"]:focus-visible {
+  outline-offset: 2px;
+}

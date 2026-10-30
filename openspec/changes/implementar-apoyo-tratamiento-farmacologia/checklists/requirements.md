@@ -68,7 +68,7 @@ Es la spec de mayor riesgo clínico y la que llegó peor. Tres huecos de segurid
 - **Frontera indefinida** entre FR-019 (toda sugerencia farmacológica cita fuente) y FR-023
   (alternativa sin respaldo declarándolo): se acotó FR-023 a lo no farmacológico.
 - **Colisión de identificador**: el requisito de la epicrisis se numeró FR-045, ya usado por otro
-  requisito distinto en la especificación de [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md). Renumerado a FR-058.
+  requisito distinto en la especificación de [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md). Renumerado a FR-058.
 
 **Iteración 3 — corrección y revalidación.** Todos los hallazgos anteriores corregidos. Verificación
 programática sobre la familia completa: cada FR con trazabilidad, cada escenario referenciado
@@ -85,4 +85,4 @@ garantía: valen lo que valga la próxima revisión que las cuestione.
 
 ### Dependencias
 
-Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md), [base de conocimiento trazable](../../implementar-base-conocimiento-trazable/specs/base-conocimiento-trazable/spec.md), [asistencia clínica proactiva](../../implementar-asistencia-clinica-proactiva/specs/asistencia-clinica-proactiva/spec.md). Es la funcionalidad de mayor riesgo clínico del PoC.
+Dependencias directas de construcción: [identidad y acceso](../../implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md), [registro clínico longitudinal](../../../specs/registro-clinico-longitudinal/spec.md), [base de conocimiento trazable](../../../specs/base-conocimiento-trazable/spec.md), [asistencia clínica proactiva](../../implementar-asistencia-clinica-proactiva/specs/asistencia-clinica-proactiva/spec.md). Es la funcionalidad de mayor riesgo clínico del PoC.

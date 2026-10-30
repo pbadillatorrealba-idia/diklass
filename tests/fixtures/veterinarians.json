@@ -8,5 +8,10 @@
     "email": "vet.bruno@example.test",
     "password": "synthetic-password-bruno",
     "displayName": "Dr. Bruno Silva"
+  },
+  {
+    "email": "vet.camila@example.test",
+    "password": "synthetic-password-camila",
+    "displayName": "Dra. Camila Fuentes"
   }
 ]

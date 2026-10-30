@@ -1,0 +1,155 @@
+# SETUP
+
+Guía del entorno de desarrollo. Para el arranque rápido, ver [README.md](README.md).
+
+## Dependencias
+
+La versión de Bun queda fijada en `.bun-version`, y `bun.lock` es la fuente de verdad de las
+dependencias:
+
+```bash
+bun install --frozen-lockfile
+```
+
+Repite la instalación cada vez que `bun.lock` cambie (después de un pull o un merge). Si
+`node_modules` queda desfasado, las herramientas fallan con errores que no vienen del código; por
+ejemplo, Biome rechaza un `biome.json` escrito para una versión más nueva de su CLI.
+
+## Variables de entorno
+
+Copia `.env.example` a `.env`. `.env` está en `.gitignore` y no se commitea.
+
+| Variable | Dónde se usa | ¿Pública? |
+|---|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | Cliente (bundle) | Sí |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Cliente (bundle) | Sí: la protegen las políticas RLS |
+| `EXPO_PUBLIC_APP_ENV` | Reservada: la define `eas.json`, pero todavía no la lee el código | Sí |
+| `SUPABASE_URL` | Scripts de servidor, tests de integración y e2e | — |
+| `SUPABASE_SERVICE_ROLE_KEY` | Scripts de servidor, tests de integración y e2e | **No**: nunca como `EXPO_PUBLIC_*` |
+| `SUPABASE_LIVE_TESTS` | `bun run test:integration`: `1` activa las suites contra Supabase | — |
+| `CORPUS_VET_EMAIL` / `CORPUS_VET_PASSWORD` | `scripts/cargar-corpus-conocimiento.ts`: veterinario sintético que incorpora el corpus | **No**: nunca como `EXPO_PUBLIC_*` |
+| `EXPO_PUBLIC_VOZ_MODO` | `real` activa micrófono y transcripción reales en el modo de escucha; vacío usa el guion simulado | Sí |
+| `EXPO_PUBLIC_VOZ_VENTANA_MS` | Duración de cada ventana de captura (por defecto 30 000 ms); acortarla baja la latencia | Sí |
+| `OPENAI_API_KEY` | Solo en `supabase/functions/.env` (secreto de la función `transcribe-audio`) | **No**: nunca en `.env` del cliente ni como `EXPO_PUBLIC_*` |
+| `E2E_CLEAR_CACHE` | `1` limpia la caché de Metro en el export del e2e (al cambiar de modo de voz) | — |
+| `PLAYWRIGHT_BASE_URL` | Playwright (opcional) | — |
+
+Expo inlinea toda variable `EXPO_PUBLIC_*` en el bundle: cualquier valor con ese prefijo es público.
+**Después de cambiar una, limpia la caché de Metro**, o el bundle seguirá usando el valor anterior
+sin avisar:
+
+```bash
+bun run start -- -c
+bunx expo export --clear -p web     # al exportar
+```
+
+## Servidor de desarrollo
+
+`bun run start`, `bun run web` (también `start:web`), `bun run android` y `bun run ios`
+seleccionan el primer puerto disponible entre **9701 y 9710**, empezando por 9701.
+Si todos están ocupados, el comando falla con un mensaje; no busca fuera del rango.
+La URL web habitual es `http://localhost:9701`; revisa la salida si hay otras instancias.
+Los comandos que pasan `--port` expresamente (como los e2e) mantienen ese puerto.
+
+## Supabase local
+
+```bash
+supabase start           # levanta la pila local
+supabase status -o env   # API_URL, ANON_KEY y SERVICE_ROLE_KEY para .env
+supabase db reset        # aplica migraciones y seed.sql desde cero
+supabase test db         # pgTap: RLS, triggers, caducidad de sesión y atribución
+bun run db:types         # regenera src/lib/supabase/database.types.ts
+```
+
+En `.env`, `EXPO_PUBLIC_SUPABASE_URL` y `SUPABASE_URL` toman `API_URL`,
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` toma `ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` toma
+`SERVICE_ROLE_KEY`, igual que en CI.
+
+Después de tocar una migración, regenera los tipos y commitéalos: CI falla si
+`database.types.ts` no coincide con las migraciones.
+
+### Voz real (micrófono + transcripción)
+
+`bun run db:start` ya levanta Storage (el audio de cada tramo vive en el bucket privado
+`consultation-audio`). La transcripción usa la Edge Function `transcribe-audio` con OpenAI
+`gpt-transcribe`; su clave va solo en un secreto de la función:
+
+```bash
+cp supabase/functions/.env.example supabase/functions/.env   # ignorado por git; pon OPENAI_API_KEY
+supabase functions serve --env-file supabase/functions/.env  # sirve las funciones locales
+```
+
+Para usar la app con voz real, exporta `EXPO_PUBLIC_VOZ_MODO=real` (y limpia la caché de Metro). El
+navegador solo da micrófono en `localhost` o HTTPS. Sin esa variable el modo de escucha usa el guion
+simulado. Es un PoC con voces sintéticas: el audio sale a un tercero (OpenAI) y no hay política de
+retención ni consentimiento formal todavía.
+
+### Veterinarios sintéticos
+
+```bash
+bun run provision:veterinarians                                   # fixture por defecto
+bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+```
+
+El script falla cerrado: rechaza cualquier `SUPABASE_URL` que no sea local, salvo que se pase
+`--allow-remote` de forma explícita. No lo uses contra un entorno con datos reales.
+
+### Clínica de demostración (datos de prueba)
+
+```bash
+bun run provision:demo   # 15 tutores, 25 pacientes (perros y gatos) y 8 consultas
+bun run demo:reset       # base local desde cero + veterinarios + demo (borra TODO lo local)
+```
+
+Los datos están en `scripts/demo/datos-demo.ts`: nombres y apellidos comunes en Chile combinados
+al azar (no apuntan a personas reales), correos `@example.test`, teléfonos `+56 9 5550 xxxx` y RUT
+con dígito verificador válido sobre cuerpos `5.000.0NN`. Se escriben con la sesión de cada
+veterinario del fixture, por los mismos servicios que la interfaz, así que pasan las mismas
+validaciones. Si la clínica ya está cargada, el script lo dice y no duplica nada. Mismas
+salvaguardas que el provisioning: rechaza cualquier Supabase no local salvo `--allow-remote`.
+
+### Corpus inicial de la base de conocimiento
+
+```bash
+bun --env-file=.env scripts/cargar-corpus-conocimiento.ts
+```
+
+Incorpora `tests/fixtures/conocimiento/corpus-miedo.json` (la presentación «Problemas de miedo en
+perros y gatos», de S. Le Brech, AWEC-UAB; licencia por confirmar) con la identidad de
+`CORPUS_VET_EMAIL`/`CORPUS_VET_PASSWORD` (un veterinario ya provisionado; ambas variables son
+obligatorias). Igual que el provisioning, falla cerrado: rechaza cualquier Supabase no local salvo
+`--allow-remote`, y avisa por consola cuando ese flag está activo.
+
+## Tests
+
+| Nivel | Comando | Requisitos |
+|---|---|---|
+| Unitarios e integración | `bun run test` | Ninguno; las suites vivas se omiten |
+| Integración viva | `SUPABASE_LIVE_TESTS=1 bun run test:integration` | Supabase local y veterinarios provisionados |
+| Base de datos | `supabase test db` | Supabase local |
+| E2E web | `bun --env-file=.env run test:e2e:web` | Supabase local, veterinarios provisionados y navegadores de Playwright |
+| E2E nativo | `bun run test:e2e:native` | Build nativo instalado; ver `tests/e2e/native/README.md` |
+
+Playwright corre con Node, que no carga `.env`. Sin `--env-file=.env`, los escenarios de login y la
+compuerta de accesibilidad con sesión se omiten y la ejecución sale verde sin haberlos probado.
+
+En local, Playwright corre con un worker y solo Chromium (`PLAYWRIGHT_ALL_BROWSERS=1` añade Firefox
+y WebKit). La app se exporta una vez (`expo export`, pico de ~1,2 GB) y se sirve estática en vez de
+mantener Metro; `E2E_DEV_SERVER=1` vuelve a `expo start`. En CI, Chromium corre dentro del job
+`database` (un solo Supabase, tras un `db reset`) y las variables pasan por `GITHUB_ENV`.
+`bun run gate` ejecuta `biome ci`, `tsc` y todos los tests en secuencia, con tope de 3 GB si hay
+systemd; `--changed` solo acota Biome.
+
+## CI
+
+`.github/workflows/ci.yml` se ejecuta en cada PR y en cada push a `main`:
+
+- **Quality and types**: comprueba que `bun.lock` está sincronizado, `biome ci --error-on-warnings`
+  (los warnings también fallan) y `typecheck`.
+- **Unit and integration tests**: `bun run test`, sin Supabase.
+- **Supabase database tests**: pgTap, diff de tipos generados e integración viva.
+- **Web E2E**: Chromium en cada PR; Firefox y WebKit solo en push a `main`.
+- **Dependency audit**: `bun audit`, con las excepciones justificadas en el propio workflow.
+
+`.github/workflows/native-e2e.yml` ejecuta Maestro Cloud en push a `main`, cada noche y a demanda.
+Si faltan sus secretos, termina con un aviso y sin producir evidencia.

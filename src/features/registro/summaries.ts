@@ -53,8 +53,11 @@ function instante(iso: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-/** Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo. */
-function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
+/**
+ * Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo.
+ * Criterio único de las lecturas clínicas: la retroalimentación (005) lo reutiliza.
+ */
+export function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
   return (
     instante(a.created_at) - instante(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
@@ -75,11 +78,12 @@ function consultaDelContenido(content: ClinicalRecordRow["content"]): string | n
  * borrador ('draft') nunca es efectivo: nada entra al historial sin validación explícita.
  *
  * Cadena de supersede (D8): una corrección es una fila 'corrective' cuyo `supersedes_event_id`
- * apunta al evento que supersede (el `epicrisis_approved` del original o el
- * `corrective_record_created` de la corrección anterior). Esos ids viven en
- * `clinical_audit_events`, no en la fila, así que dentro de esta vista pura la cadena se
- * resuelve por orden cronológico: la candidata más reciente (`created_at`; empate por `id`) es
- * el extremo de la cadena y por tanto la efectiva. Una fila 'corrective' sin
+ * apunta al evento `epicrisis_approved` del ORIGINAL (todas las correcciones sucesivas apuntan
+ * al mismo evento original; nunca al `corrective_record_created` de una corrección anterior —
+ * `correctEpicrisis` siempre repunta al original, y este docstring debe reflejarlo). Esos ids
+ * viven en `clinical_audit_events`, no en la fila, así que dentro de esta vista pura la cadena
+ * se resuelve por orden cronológico: la candidata más reciente (`created_at`; empate por `id`)
+ * es el extremo de la cadena y por tanto la efectiva. Una fila 'corrective' sin
  * `supersedes_event_id` no es una corrección válida y queda fuera de la cadena. El original
  * superseded permanece legible y recuperable en la traza (FR-024).
  */
@@ -178,6 +182,13 @@ export function computeMissingFichaFields(content: PatientContent): MissingField
   }
   if (content.weightKg === null) {
     faltantes.push({ field: "weightKg", kind: "sin_dato" });
+  }
+  // Hoja etológica (FR-001 ampliado): la procedencia y la adopción pesan en el diagnóstico.
+  if ((content.origin ?? null) === null) {
+    faltantes.push({ field: "origin", kind: "sin_dato" });
+  }
+  if ((content.adoptionAge ?? null) === null) {
+    faltantes.push({ field: "adoptionAge", kind: "sin_dato" });
   }
   for (const group of ANTECEDENT_GROUPS) {
     if (content.antecedentes[group].length === 0) {

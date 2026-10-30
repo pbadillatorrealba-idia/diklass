@@ -65,7 +65,7 @@ function registro(overrides: Partial<Record<string, unknown>> = {}) {
 
 const contenidoAnamnesis = {
   consultationId: "c-1",
-  field: "frecuencia",
+  field: "historia_problema",
   text: "A diario",
   provenance: "reportada",
 };
@@ -169,6 +169,60 @@ describe("updateClinicalContent (D9 · FR-063)", () => {
     expect(result.attribution).toEqual({
       actorId: "vet-ana",
       occurredAt: "2026-09-22T09:00:00.000Z",
+      action: null,
+      supersedesEventId: null,
+    });
+  });
+
+  test("un UPDATE sin evento propio atribuye a quien editó, no a quien creó (revisión de la PR #27)", async () => {
+    const { client } = makeClient({
+      record: {
+        data: registro({
+          record_type: "epicrisis",
+          updated_at: "2026-09-22T11:00:00.000Z",
+          updated_by: "vet-beto",
+        }),
+        error: null,
+      },
+      event: { data: null, error: null },
+    });
+
+    const result = await updateClinicalContent(client, "record-1", contenidoAnamnesis);
+
+    expect(result.attribution).toEqual({
+      actorId: "vet-beto",
+      occurredAt: "2026-09-22T11:00:00.000Z",
+      action: null,
+      supersedesEventId: null,
+    });
+  });
+
+  test("un evento anterior al UPDATE no se atribuye a la edición (revisión de la PR #27)", async () => {
+    const { client } = makeClient({
+      record: {
+        data: registro({
+          record_type: "epicrisis",
+          updated_at: "2026-09-22T11:00:00.000Z",
+          updated_by: "vet-beto",
+        }),
+        error: null,
+      },
+      event: {
+        data: {
+          action: "epicrisis_drafted",
+          actor_id: "vet-ana",
+          occurred_at: "2026-09-22T09:00:00.000Z",
+          supersedes_event_id: null,
+        },
+        error: null,
+      },
+    });
+
+    const result = await updateClinicalContent(client, "record-1", contenidoAnamnesis);
+
+    expect(result.attribution).toEqual({
+      actorId: "vet-beto",
+      occurredAt: "2026-09-22T11:00:00.000Z",
       action: null,
       supersedesEventId: null,
     });

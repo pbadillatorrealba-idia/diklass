@@ -86,7 +86,7 @@ compartidos y que cada acción conserve actor y momento inmutables, incluyendo c
 
 **Independent Test**: Dos contextos autenticados crean/leen un registro clínico de prueba, intentan
 suplantar al actor y modificar atribución, y verifican el evento correctivo separado. La integración
-con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).
 
 ### Tests for User Story 12 (TDD: write first and observe failing)
 
@@ -103,7 +103,7 @@ con Paciente/Consulta/Epicrisis se cierra junto con la especificación de [regis
 - [x] 4.8 T040 [US12] Add deterministic shared-clinic attribution fixture and verification query in `supabase/seed.sql` and `supabase/tests/fixtures/attribution.sql`
 - [x] 4.9 T041 [US12] Render actor, timestamp and immutable/correction states in `src/components/clinical/attribution-badge.tsx` and `src/components/clinical/correction-history.tsx`
 
-**Checkpoint (declaración histórica, no aceptación conjunta)**: US12 infrastructure is independently verified; domain screens from especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) can
+**Checkpoint (declaración histórica, no aceptación conjunta)**: US12 infrastructure is independently verified; domain screens from especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md) can
 reuse the contract without changing attribution rules.
 
 ---
@@ -128,7 +128,7 @@ reuse the contract without changing attribution rules.
 - **Foundational**: Depends on Setup and blocks all stories.
 - **US11**: Depends on Foundational; it is the MVP.
 - **US12**: Depends on Foundational and can be developed after US11 for the first integrated demo;
-  its domain verification completes with especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+  its domain verification completes with especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).
 - **Polish**: Depends on the desired story checkpoints.
 
 ### Parallel Opportunities
@@ -156,7 +156,7 @@ sequential even when its phase is otherwise parallelizable.
 ### Incremental Delivery
 
 1. Add US12 attribution infrastructure and verify it with synthetic records.
-2. Integrate Paciente/Consulta/Epicrisis when implementing especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md) without changing the attribution
+2. Integrate Paciente/Consulta/Epicrisis when implementing especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md) without changing the attribution
    contract.
 3. Run all cross-cutting quality gates and native/web acceptance flows.
 
@@ -199,7 +199,7 @@ sequential even when its phase is otherwise parallelizable.
 - [x] 7.11 T060 Constrain `public.clinical_audit_events.action` and `entity_type` to the taxative enumeration of `data-model.md` with a CHECK constraint in the new migration, and change `public.audit_clinical_record()` in `supabase/migrations/002_clinical_attribution.sql` to emit those actions instead of the out-of-enumeration `clinical_record_created`/`clinical_record_updated` it writes today per FR-063, data-model.md (partial)
 - [x] 7.12 T061 Extend `tests/e2e/web/auth.spec.ts` with a successful login for a provisioned account, an explicit logout followed by a denied protected operation, and identical error output for a wrong password and an unknown identifier against the local backend — the file currently covers only client-side validation and an unauthenticated redirect per US11/AC1–AC4, quickstart escenarios 1–2 (partial)
 - [x] 7.13 T062 Add a regression test (pgTap in `supabase/tests/` or integration in `tests/integration/auth/`) proving that an account self-registered through Supabase Auth — possible since `supabase/config.toml` sets `enable_signup = true` — cannot start an access session nor read or write clinical records, so the "sin autoregistro" assumption is enforced by a check rather than by a comment per spec Assumptions, FR-062 (partial)
-- [ ] 7.14 T063 Make the native e2e evidence of T045 obtainable: add `eas.json` with an `e2e` build profile, document and register the `EXPO_TOKEN` and `MAESTRO_CLOUD_API_KEY` secrets used by `.github/workflows/native-e2e.yml`, then run the flows in `tests/e2e/native/auth.yaml` and `tests/e2e/native/attribution.yaml` and record the result in `quickstart.md` per T045, quickstart "Evidencia mínima" (partial)
+- [ ] 7.14 T063 Make the native e2e evidence of T045 obtainable: add `eas.json` with an `e2e` build profile, document and register the `EXPO_TOKEN` and `MAESTRO_CLOUD_API_KEY` secrets used by `.github/workflows/native-e2e.yml`, ejecutar `tests/e2e/native/auth.yaml` y el flujo real de US12 pendiente (véase «Deuda nativa identificada al depurar la suite»), y registrar el resultado in `quickstart.md` per T045, quickstart "Evidencia mínima" (partial)
 - [x] 7.15 T064 Add a measurement of the login-to-operational budget to the web suite (`tests/e2e/web/auth.spec.ts` or a dedicated spec) asserting the veterinarian is able to operate in under 30 s, since no performance budget from `design.md` is verified anywhere today per SC-043, plan: Performance Goals (missing)
 - [x] 7.16 T065 Add an automated accessibility gate to the web suite and to `.github/workflows/ci.yml` (for example an axe-core scan of `/login` and `/home`) so WCAG 2.2 AA is enforced by a check rather than by hand-written labels alone per Constitution: Restricciones de Aplicación Web (missing)
 
@@ -236,3 +236,7 @@ sequential even when its phase is otherwise parallelizable.
 - [x] 9.9 T081 Handle the CORS preflight, restrict to `POST`, cap the body size and validate the payload with Zod in `supabase/functions/report-client-error` per Constitution IV (partial)
 - [x] 9.10 T082 Rate-limit `report-client-error` per caller IP with `public.consume_client_error_quota` in `supabase/migrations/007_client_error_quota.sql` (missing)
 - [x] 9.11 T083 Make `scripts/provision-veterinarians.ts` refuse non-local URLs without `--allow-remote`, match emails case-insensitively across every page and resync passwords on re-run, and drop the dead `clinical_records` insert from `supabase/seed.sql` (partial)
+
+## Deuda nativa identificada al depurar la suite
+
+- [ ] Implementar el flujo Maestro real de US12 con dos cuentas provisionadas: crear un registro como Ana, abrirlo como Bruno y comprobar visibilidad compartida, autoría original y rechazo de atribución manipulada. Ejecutar en dispositivo/build nativo y registrar plataforma, build, comando y resultado en `quickstart.md` (FR-063; SC-041/SC-042/SC-044). T036 es una marca histórica: el archivo que citaba solo comprobaba textos de login y no acreditaba US12. T045 y T063 permanecen pendientes; el smoke `auth.yaml` no sustituye esta evidencia.

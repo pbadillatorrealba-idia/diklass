@@ -3,7 +3,7 @@
 > **Estado trasladado el 2026-09-16:** las marcas y la evidencia proceden del registro anterior y no han sido verificadas por esta migración documental. Se conservan 49 tareas, 48 marcadas y T045 pendiente. La aceptación de US12 y SC-040/SC-041/SC-042/SC-044 es conjunta con registro clínico longitudinal; identidad sigue parcialmente implementada y pendiente de aceptación. Ninguna marca ni declaración histórica de compuerta constituye una nueva prueba de la aplicación.
 
 Esta guía valida el flujo universal de identidad y acceso en Expo para móvil y web. US11 se puede
-validar de forma independiente; US12 se completa con las entidades de la especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+validar de forma independiente; US12 se completa con las entidades de la especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).
 
 ## Prerrequisitos
 
@@ -102,7 +102,7 @@ cliente no autenticado.
 controles en Expo Router no altera el resultado de RLS. El mismo flujo se ejecuta en Playwright web
 y en Maestro nativo.
 
-### 5. Clínica compartida y atribución (cierre con especificación de [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md))
+### 5. Clínica compartida y atribución (cierre con especificación de [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md))
 
 1. En el contexto de Ana, registrar el paciente sintético.
 2. En otro contexto como Bruno, listar el paciente y abrir una consulta.
@@ -260,4 +260,4 @@ Estas limitaciones se trasladan como observaciones de la revisión, no como resu
 - **Attribution web:** tiene un caso sin ejercicio efectivo.
 - **Flows Maestro:** no cubren lo prometido.
 
-T045 permanece pendiente. Ni la matriz web histórica ni las marcas de tareas resuelven estas discrepancias o sustituyen las comprobaciones nativas pendientes y la aceptación conjunta de US12 y SC-040/SC-041/SC-042/SC-044 con [registro clínico longitudinal](../implementar-registro-clinico-longitudinal/specs/registro-clinico-longitudinal/spec.md).
+T045 permanece pendiente. Ni la matriz web histórica ni las marcas de tareas resuelven estas discrepancias o sustituyen las comprobaciones nativas pendientes y la aceptación conjunta de US12 y SC-040/SC-041/SC-042/SC-044 con [registro clínico longitudinal](../../specs/registro-clinico-longitudinal/spec.md).

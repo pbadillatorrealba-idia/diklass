@@ -1,5 +1,6 @@
 import type { Browser, Page } from "@playwright/test";
 import { request as apiRequest } from "@playwright/test";
+import { patientContent } from "../../support/rut";
 import {
   ANA,
   BRUNO,
@@ -75,7 +76,7 @@ test.describe("attribution web contract", () => {
         data: {
           clinic_id: anaProfile.clinic_id,
           record_type: "patient",
-          content: { name: "Luna E2E" },
+          content: patientContent("Luna E2E"),
           status: "draft",
         },
         headers: { Prefer: "return=representation" },
@@ -99,7 +100,7 @@ test.describe("attribution web contract", () => {
         data: {
           clinic_id: anaProfile.clinic_id,
           record_type: "patient",
-          content: { name: "Rex E2E" },
+          content: patientContent("Rex E2E"),
           status: "draft",
           created_by: ana.userId,
         },

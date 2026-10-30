@@ -66,7 +66,7 @@ Restricciones de esta ejecución y de la coordinación entre ramas hermanas:
   `src/app/(protected)/consultations/[id].tsx`, `src/app/(protected)/home.tsx`,
   `supabase/migrations/001-012*`, `supabase/tests/001-011*`, `supabase/seed.sql`. Toda necesidad
   de editarlos se reporta como requisito de integración (RI-1/RI-2, ver Riesgos).
-- Números propios: migración `supabase/migrations/013_asistencia_clinica.sql`, suite pgTap
+- Números propios: migración `supabase/migrations/026_asistencia_clinica.sql`, suite pgTap
   `supabase/tests/012_asistencia_clinica.sql`, código en `src/features/asistencia/**` y
   `src/components/asistencia/**`, rutas propias en `src/app/(protected)/support/**`, pruebas en
   `tests/unit/asistencia/**` e `tests/integration/asistencia/**` con fixtures en
@@ -144,7 +144,7 @@ escritura, trigger de base inmutable (D8) y pruebas de integración.
 | `record_type` | `content` |
 |---|---|
 | `missing_information` | `{ consultationId, suggestionKey, pregunta, estado: 'formulada' \| 'ignorada' \| 'no_aplicable', fundamento: { kind: 'fuente', cita: Cita } \| { kind: 'criterio_general' }, camposRelacionados: string[] }` |
-| `hypothesis` | `{ consultationId, texto, decision: 'added' \| 'accepted' \| 'discarded', origen: 'sistema' \| 'veterinario', reglaId: string \| null, insumos: { anamnesis: [{ recordId, field, text, provenance, papel: 'aFavor' \| 'enContra' }], ficha: [{ fichaRef, valor }], faltante: string[], terminosMatch: string[] }, respaldo: { knowledgeQueryId: string \| null, citas: Cita[], avisos: string[], cobertura: { cubiertos: string[], noCubiertos: string[], estado } \| null } }` |
+| `hypothesis` | `{ consultationId, texto, decision: 'added' \| 'accepted' \| 'discarded', origen: 'sistema' \| 'veterinario', reglaId: string \| null, insumos: { anamnesis: [{ recordId, field, text, provenance, papel: 'aFavor' \| 'enContra' }], ficha: [{ fichaRef, valor, papel: 'aFavor' \| 'enContra' }], faltante: string[], terminosMatch: string[] }, respaldo: { knowledgeQueryId: string \| null, citas: Cita[], avisos: string[], cobertura: { cubiertos: string[], noCubiertos: string[], estado } \| null } }` |
 
 - `Cita` es la cita documento+fragmento de 003 (`{ documentoId, ordinal, textoCitado }`), con el
   texto citado verbatim: una cita hacia una fuente posteriormente retirada sigue resolviéndose
@@ -281,7 +281,7 @@ leer un campo que puede no estar persistido.
 
 ### D8. La base de las asistencias es inmutable en el servidor; la asistencia nunca es registro definitivo
 
-Migración `013_asistencia_clinica.sql`: trigger `guard_assistance_decisions` (`BEFORE INSERT OR
+Migración `026_asistencia_clinica.sql`: trigger `guard_assistance_decisions` (`BEFORE INSERT OR
 UPDATE` sobre `clinical_records`, acotado a `record_type in ('missing_information','hypothesis')`).
 Premisa de amenaza: la política T055 permite a **cualquier** veterinario activo de la clínica hacer
 `UPDATE` directo por PostgREST sobre el contenido de filas no aprobadas; sin este trigger, un
@@ -294,16 +294,26 @@ reescribir `pregunta`/`fundamento` tras registrar la decisión. Invariantes (tod
 | INSERT de ambos tipos | `status = 'draft'` (la asistencia nunca nace como registro definitivo ni correctivo: FR-010) | `ASSISTANCE_STATUS_INVALID` |
 | INSERT de `hypothesis` | `decision = 'added'` (nacer aceptado emitiría `hypothesis_added` mintiendo el contenido), `texto` no vacío y `origen` en enum | `HYPOTHESIS_DECISION_INVALID` / `ASSISTANCE_CONTENT_INVALID` |
 | INSERT de `missing_information` | `estado` decidido en enum y `pregunta` no vacía | `MISSING_INFORMATION_STATE_INVALID` / `ASSISTANCE_CONTENT_INVALID` |
+| INSERT de ambos tipos | el `consultationId` resuelve a una consulta cerrada | `CLINICAL_RECORD_SEALED` |
+| UPDATE de ambos tipos | el `consultationId` de `old` resuelve a una consulta cerrada (sello sobre `old`, como 002) | `CLINICAL_RECORD_SEALED` |
 | UPDATE de `hypothesis` | solo puede cambiar `decision` (comparación `new.content - 'decision' = old.content - 'decision'`): `texto`, `origen`, `reglaId`, `insumos`, `respaldo`, `consultationId` son base inmutable | `HYPOTHESIS_BASIS_IMMUTABLE` |
 | UPDATE de `missing_information` | solo puede cambiar `estado`: `pregunta`, `suggestionKey`, `fundamento`, `camposRelacionados`, `consultationId` son base inmutable | `MISSING_INFORMATION_BASIS_IMMUTABLE` |
 | UPDATE de `hypothesis` | transiciones de D7; volver a `added` | `HYPOTHESIS_DECISION_IRREVERSIBLE` / `HYPOTHESIS_DECISION_INVALID` |
 
 Corregir la base de una hipótesis o de una decisión = crear una fila nueva (convención de HD3 de
 003: la corrección es un registro adicional, no una reescritura). Heredado y **no duplicado**:
-`consultationId` inmutable y sellado por consulta cerrada (002, D5), atribución inamovible y
+`consultationId` inmutable (002/009, `CONSULTATION_LINK_IMMUTABLE`), atribución inamovible y
 `update (content)` como única concesión de actualización (001/004), aprobación solo por RPC y solo
 de epicrisis (001): una hipótesis o sugerencia **no puede** convertirse jamás en `approved` — la
 aserción correspondiente vive en la suite 012.
+
+**Corrección de alcance sobre lo heredado (detectada en la suite 012, tarea 1.1)**: el sellado por
+consulta cerrada NO hereda para estas entidades — `guard_consultation_sealed` (009) acota su sello
+a `('anamnesis', 'diagnosis', 'epicrisis')`, el set de registros de trabajo que fija SC-009 de la
+spec 002—. Por eso el trigger 013 implementa el sello de `missing_information`/`hypothesis` con la
+misma semántica (evaluado sobre `old`, mismo error `CLINICAL_RECORD_SEALED`, alcance INSERT+UPDATE):
+las decisiones de sugerencias e hipótesis son de la consulta en curso (supuesto de la spec 006) y el
+conjunto de una consulta cerrada no crece ni se modifica.
 
 ### D9. Toda mutación cruza el contrato de atribución
 
@@ -425,7 +435,7 @@ acredita el mecanismo de SC-029 y las invariantes de SC-019/SC-030/SC-031 por co
 
 ## Migration Plan
 
-Una única migración aditiva `supabase/migrations/013_asistencia_clinica.sql`: la función y el
+Una única migración aditiva `supabase/migrations/026_asistencia_clinica.sql`: la función y el
 trigger `guard_assistance_decisions` (D8). Sin DDL sobre tablas, sin cambios en la enumeración de
 FR-063 y sin grants nuevos (`update (content)` de 004 basta para las transiciones de
 `decision`/`estado`): `supabase gen types` debe confirmarse sin diff sobre

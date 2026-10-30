@@ -3,6 +3,7 @@ import { listAnamnesisEntries } from "@/features/registro/anamnesis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import { buildEpicrisisDraft } from "@/features/registro/epicrisis-draft";
 import { getPatient } from "@/features/registro/ficha-service";
+import { parseRows } from "@/features/registro/read-rows";
 import {
   consultationContentSchema,
   type EpicrisisContent,
@@ -62,9 +63,11 @@ export async function generateEpicrisisDraft(
     }
     const consulta = consultationContentSchema.parse(filaConsulta.content);
 
-    const paciente = await getPatient(client, consulta.patientId);
-    const anamnesis = await listAnamnesisEntries(client, input.consultationId);
-    const diagnoses = await listDiagnoses(client, input.consultationId);
+    const [paciente, anamnesis, diagnoses] = await Promise.all([
+      getPatient(client, consulta.patientId),
+      listAnamnesisEntries(client, input.consultationId),
+      listDiagnoses(client, input.consultationId),
+    ]);
 
     const content = epicrisisContentSchema.parse(
       buildEpicrisisDraft({
@@ -219,10 +222,7 @@ export async function listEpicrisisByConsultation(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: epicrisisContentSchema.parse(row.content),
-    }));
+    return parseRows(data, epicrisisContentSchema, "listEpicrisisByConsultation");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,

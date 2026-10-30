@@ -2,7 +2,7 @@ appId: com.diklass.app
 ---
 - launchApp
 - assertVisible: "Diklass"
-- assertVisible: "Correo de acceso"
+- assertVisible: "Correo"
 - assertVisible: "Contraseña"
 - assertVisible: "Iniciar sesión"
 - tapOn: "Iniciar sesión"

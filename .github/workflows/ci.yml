@@ -1,9 +1,12 @@
 name: CI
 
+# Docs-only changes run nothing: no code, so nothing to verify (and no required checks to leave pending).
 on:
   pull_request:
+    paths-ignore: ["**.md", "docs/**", "openspec/**"]
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**", "openspec/**"]
 
 permissions:
   contents: read
@@ -18,10 +21,15 @@ jobs:
     name: Quality and types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
       # Not --frozen-lockfile on purpose: install and diff, so a drifted bun.lock fails with a
       # fix hint instead of the opaque "lockfile had changes" (Dependabot bumps package.json
       # without regenerating bun.lock). Every other job keeps --frozen-lockfile.
@@ -32,37 +40,52 @@ jobs:
             echo "::error::bun.lock is out of sync with package.json. Run 'bun install' with the pinned Bun (.bun-version) and commit bun.lock."
             exit 1
           }
-      - run: bunx biome ci .
+      - run: bunx biome ci --error-on-warnings .
       - run: bun run typecheck
 
   unit:
     name: Unit and integration tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       # The live suites under tests/integration skip here: there is no Supabase in this job.
       - run: bun run test
 
+  # One Supabase for everything that needs it: pgTap, type drift, live integration and the
+  # Chromium web E2E (previously a second job and three shards, each booting its own stack).
   database:
-    name: Supabase database tests
+    name: Supabase database tests and web E2E
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.117.0
+      # Deliberately after setup-cli: v3 runs its own setup-bun and would shadow the job's Bun.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          version: 2.117.0
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
+      # `db:start` skips the services nothing here uses (same flags as local development); a fresh
+      # `supabase start` already applies migrations and seed, so no `db reset` before the tests.
+      # `gen types` and `test db` run their own one-off containers, not the excluded services.
       - name: Start local Supabase
         run: |
-          supabase start
-          supabase db reset
+          bun run db:start
           status=$(supabase status -o json)
           {
             echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
@@ -81,65 +104,57 @@ jobs:
         run: bun run test:integration
         env:
           SUPABASE_LIVE_TESTS: "1"
-
-  web-e2e:
-    name: Web E2E
-    runs-on: ubuntu-latest
-    needs: quality
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
-        with:
-          version: 2.117.0
-      - run: bun install --frozen-lockfile
-      - name: Start local Supabase and provision synthetic veterinarians
+      # The live suites leave rows in the shared clinic (the source of an earlier flake in the
+      # read-resilience tests), so the E2E starts from a freshly reset database.
+      - name: Reset the database for the E2E
         run: |
-          supabase start
           supabase db reset
-          status=$(supabase status -o json)
-          {
-            echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r .ANON_KEY)"
-            echo "SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
-          } >> "$GITHUB_ENV"
-      - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
+          bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
       # Browser downloads dominate this job's setup time; cache them across runs.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-chromium-${{ hashFiles('bun.lock') }}
       - run: bunx playwright install --with-deps chromium
       # Includes tests/e2e/web/accessibility.spec.ts: the axe WCAG 2.2 AA gate.
       - run: bun run test:e2e:web -- --project=chromium
+      # Voice capture with the real (fake-device) microphone: the app is re-exported in real mode
+      # with short windows; the transcription function is intercepted, so no OpenAI key is needed.
+      - name: Web E2E with the real microphone (listen mode)
+        run: bun run test:e2e:web -- modo-escucha-real.spec.ts --project=chromium
+        env:
+          E2E_CLEAR_CACHE: "1"
+          EXPO_PUBLIC_VOZ_MODO: real
+          EXPO_PUBLIC_VOZ_VENTANA_MS: "2000"
 
   # Firefox and WebKit run only on push to main to keep pull-request feedback fast, per
-  # plan.md's CI design; Chromium above still covers every pull request.
+  # plan.md's CI design; Chromium above still covers every pull request. One job and one
+  # Supabase for both browsers (they run one after the other).
   web-e2e-full-matrix:
     name: Web E2E (Firefox/WebKit)
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: quality
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [firefox, webkit]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.117.0
+      # Deliberately after setup-cli: v3 runs its own setup-bun and would shadow the job's Bun.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          version: 2.117.0
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
+      # A fresh `supabase start` already applies migrations and seed, so no `db reset` here.
+      # E2E only needs Postgres, Auth, PostgREST, Kong and Edge Functions (client error
+      # reporting); `bun run db:start` skips the rest (same flags as local development).
       - name: Start local Supabase and provision synthetic veterinarians
         run: |
-          supabase start
-          supabase db reset
+          bun run db:start
           status=$(supabase status -o json)
           {
             echo "EXPO_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r .API_URL)"
@@ -148,29 +163,47 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r .SERVICE_ROLE_KEY)"
           } >> "$GITHUB_ENV"
       - run: bun run provision:veterinarians -- --fixture tests/fixtures/veterinarians.json
-      # Browser downloads dominate this job's setup time; cache them across runs.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.project }}-${{ hashFiles('bun.lock') }}
-      - run: bunx playwright install --with-deps ${{ matrix.project }}
-      - run: bun run test:e2e:web -- --project=${{ matrix.project }}
+          key: playwright-${{ runner.os }}-firefox-webkit-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install --with-deps firefox webkit
+      - run: bun run test:e2e:web -- --project=firefox --project=webkit
 
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       # Expo/Metro currently pins these vulnerable transitive versions. Bun cannot
       # upgrade them without breaking the parent dependency ranges, so keep the
       # exceptions explicit until the Expo toolchain publishes compatible fixes.
+      # GHSA-vfj7-8cjw-p6xm (braces) and GHSA-86w9-cpqp-85rv (node-forge) have no published fixed
+      # version yet; GHSA-rj75-hqrm-r3gf is postcss-selector-parser@6, pinned by tailwindcss@3.
+      # All three are build/dev-toolchain only and never ship in the app bundle.
+      # GHSA-mrhx-c7xc-m3w5 (zod): the direct dependency is on the fixed 4.6.x; the remaining hit is
+      # the zod@3.25.76 pinned by @expo/cli, which has no 3.x fix and is build tooling only.
+      # GHSA-gcqx-w48m-w2h4 (deepmerge): sin versión corregida; mitigado con patches/deepmerge@4.3.1.patch.
+      # GHSA-qr28-fpjm-wq7f (decode-uri-component): query-string@7 de expo-router pide ^0.2.2 y la 0.5.1
+      # corregida es solo ESM, así que un override rompe `require`; DoS por entrada local, sin superficie de servidor.
       - run: >
           bun audit
+          --ignore GHSA-gcqx-w48m-w2h4
+          --ignore GHSA-qr28-fpjm-wq7f
           --ignore GHSA-vcc3-ghjq-m6fr
           --ignore GHSA-w3rx-r6r6-pgpr
           --ignore GHSA-5p2g-fcmc-qvqq
           --ignore GHSA-w5hq-g745-h8pq
+          --ignore GHSA-vfj7-8cjw-p6xm
+          --ignore GHSA-86w9-cpqp-85rv
+          --ignore GHSA-rj75-hqrm-r3gf
+          --ignore GHSA-mrhx-c7xc-m3w5

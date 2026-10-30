@@ -48,7 +48,7 @@ retried 5 times and the 6th attempt never happens."
 contains an exact line proves only that the source is the source. Run
 scripts against controlled inputs and assert outputs, side effects, or
 exit codes. Documents that instruct agents are tested by the consuming
-agent's behavior (superpowers:writing-skills); prose for humans earns no
+agent's behavior; prose for humans earns no
 test at all.
 
 **Your code, not the framework.** Test the contract your code makes at
@@ -87,10 +87,10 @@ are checking, unmock it or delete the assertion.
 
 ```typescript
 // ✅ Real behavior
-expect(screen.getByRole('navigation')).toBeInTheDocument();
+expect(screen.getByRole('navigation')).toBeTruthy();
 
 // ❌ Mock existence
-expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
+expect(screen.getByTestId('sidebar-mock')).toBeTruthy();
 ```
 
 **your human partner's correction:** "Are we testing the behavior of a
@@ -102,13 +102,17 @@ the test depends on real. When unsure, run the test against the real
 implementation first and observe what actually needs to happen.
 
 ```typescript
+import { mock } from 'bun:test';
+
 // ❌ The mock swallows the config write that duplicate detection reads
-vi.mock('ToolCatalog', () => ({
-  discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
+mock.module('./tool-catalog', () => ({
+  discoverAndCacheTools: mock().mockResolvedValue(undefined)
 }));
 
 // ✅ Mock only the slow server startup; the config write stays real
-vi.mock('MCPServerManager');
+mock.module('./mcp-server-manager', () => ({
+  startServer: mock().mockResolvedValue(undefined)
+}));
 ```
 
 **Make doubles specific.** When arguments, call counts, or ordering are

@@ -5,7 +5,12 @@ import type { DiagnosisEntry } from "@/features/registro/diagnosis-service";
 import { listDiagnoses } from "@/features/registro/diagnosis-service";
 import type { EpicrisisEntry } from "@/features/registro/epicrisis-service";
 import { listEpicrisisByConsultation } from "@/features/registro/epicrisis-service";
-import { type ConsultationContent, consultationContentSchema } from "@/features/registro/schema";
+import { parseRows } from "@/features/registro/read-rows";
+import {
+  type ConsultationContent,
+  consultationContentSchema,
+  epicrisisContentSchema,
+} from "@/features/registro/schema";
 import {
   buildFollowUpSummary,
   buildPatientHistory,
@@ -91,7 +96,19 @@ export async function getConsultation(
     if (error) {
       throw error;
     }
-    return data ? { record: data, content: consultationContentSchema.parse(data.content) } : null;
+    if (!data) {
+      return null;
+    }
+    const legible = consultationContentSchema.safeParse(data.content);
+    if (!legible.success) {
+      logEvent(
+        "registro.row_content_skipped",
+        { operation: "getConsultation", recordId: consultationId, errorName: "ZodError" },
+        "error",
+      );
+      return null;
+    }
+    return { record: data, content: legible.data };
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
@@ -118,14 +135,39 @@ export async function listConsultationsByPatient(
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      record: row,
-      content: consultationContentSchema.parse(row.content),
-    }));
+    return parseRows(data, consultationContentSchema, "listConsultationsByPatient");
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
       operation: "listConsultationsByPatient",
+      requestId,
+    });
+    throw error;
+  }
+}
+
+/** Consultas creadas desde `sinceIso` (p. ej. el inicio del día): quién se atiende hoy. */
+export async function listConsultationsSince(
+  client: SupabaseClient<Database>,
+  sinceIso: string,
+): Promise<ConsultationEntry[]> {
+  const requestId = makeRequestId();
+  try {
+    const { data, error } = await client
+      .from("clinical_records")
+      .select("*")
+      .eq("record_type", "consultation")
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
+    if (error) {
+      throw error;
+    }
+    return parseRows(data, consultationContentSchema, "listConsultationsSince");
+  } catch (error) {
+    void captureClientError(client as unknown as ErrorReporterClient, {
+      error,
+      operation: "listConsultationsSince",
       requestId,
     });
     throw error;
@@ -143,9 +185,11 @@ export async function resumeConsultation(
       return null;
     }
 
-    const anamnesis = await listAnamnesisEntries(client, consultationId);
-    const diagnoses = await listDiagnoses(client, consultationId);
-    const versiones = await listEpicrisisByConsultation(client, consultationId);
+    const [anamnesis, diagnoses, versiones] = await Promise.all([
+      listAnamnesisEntries(client, consultationId),
+      listDiagnoses(client, consultationId),
+      listEpicrisisByConsultation(client, consultationId),
+    ]);
     const borradores = versiones.filter((version) => version.record.status === "draft");
 
     return {
@@ -185,7 +229,11 @@ export async function listPatientTimeline(
       if (error) {
         throw error;
       }
-      epicrisis = data ?? [];
+      // Misma frontera de lectura tolerante que las listas: una fila de epicrisis ajena o
+      // malformada se omite con log en vez de tumbar el historial y el resumen completos.
+      epicrisis = parseRows(data, epicrisisContentSchema, "listPatientTimeline").map(
+        (entrada) => entrada.record,
+      );
     }
 
     const history = buildPatientHistory({

@@ -92,32 +92,29 @@ utilizables sin saltos de maquetación dependientes de JavaScript en el primer p
 presupuestos de rendimiento se fijan por funcionalidad en su `design.md` y se verifican antes de
 integrar; una funcionalidad que degrada un presupuesto acordado no se publica.
 
-El stack del PoC queda fijado en TypeScript con Bun 1.4.0 como runtime y package manager, Expo
+El stack del PoC queda fijado en TypeScript con Bun como runtime y package manager, Expo
 SDK 57 sobre React Native con Expo Router para iOS, Android y web, gluestack-ui v3 para la UI,
 Supabase Auth/PostgreSQL con Row Level Security, TanStack Query, Zustand, TanStack Form y Zod.
 Biome se usa para formato/lint/imports y `tsc --noEmit` para verificación estática de tipos. Bun
-test cubre pruebas rápidas, Playwright 1.61.0 cubre la aplicación web y Maestro cubre los flujos
+test cubre pruebas rápidas, Playwright cubre la aplicación web y Maestro cubre los flujos
 e2e nativos. GitHub Actions ejecuta las compuertas de calidad, tipos, pruebas, base de datos local
-y e2e web; los builds móviles y Maestro Cloud se gestionan en ejecuciones seleccionadas.
-
-La fijación en Expo SDK 57 formaliza una decisión ya adoptada en el diseño de la primera
-funcionalidad: SDK 56 presentaba una regresión conocida de memoria de Hermes V1 que motivó
-trabajar directamente sobre SDK 57. Ningún principio cambia por esta fijación.
+y e2e web; los builds móviles y Maestro Cloud se gestionan en ejecuciones seleccionadas. Las
+versiones exactas las fijan `.bun-version`, `package.json` y `bun.lock`; solo la versión mayor de
+Expo SDK es decisión de esta constitución.
 
 La matriz mínima es iOS 16 o posterior, Android API 26 o posterior, Chrome y Edge actuales más las
 dos versiones mayores anteriores, Firefox actual más las dos versiones mayores anteriores, y Safari
 17 o posterior en macOS/iOS. Los flujos protegidos y los controles interactivos DEBEN verificarse
-como mínimo en Chromium, Firefox y WebKit mediante la suite web; la app no puede depender de una
-comprobación exclusivamente del cliente para garantizar seguridad en ninguna plataforma.
+mediante la suite web en Chromium en cada cambio y también en Firefox y WebKit en la suite de la
+rama principal; la app no puede depender de una comprobación exclusivamente del cliente para
+garantizar seguridad en ninguna plataforma.
 
 ## Flujo de Trabajo de Desarrollo
 
-El trabajo avanza en el perfil core de OpenSpec: se propone el cambio, se explora cuando el
-enfoque no está claro, se actualizan especificación y diseño, se aplican las tareas, y se cierra
-sincronizando la especificación aprobada y archivando el cambio. La revisión cruzada de
-especificaciones, diseño y tareas DEBERÍA ejecutarse antes de comenzar la implementación de
-cualquier funcionalidad que abarque más de un puñado de tareas. El archivo de un cambio exige
-aceptación demostrada y tareas completas, aunque la herramienta permita archivar con menos.
+El trabajo sigue el perfil core de OpenSpec con la secuencia del Principio I. La revisión cruzada de
+especificaciones, diseño y tareas DEBERÍA ejecutarse antes de implementar cualquier funcionalidad
+que abarque más de un puñado de tareas. El archivo de un cambio exige aceptación demostrada y
+tareas completas, aunque la herramienta permita archivar con menos.
 
 Todo cambio propuesto para integración DEBE ser revisado por alguien distinto de su autor, y la
 revisión DEBE verificar explícitamente el cumplimiento de los Principios Fundamentales anteriores.
@@ -126,9 +123,8 @@ análisis de vulnerabilidades en dependencias— DEBEN pasar antes de que conclu
 tubería en rojo no se anula con la aprobación de un revisor.
 
 El desarrollo asistido por agentes se somete a las mismas compuertas que el trabajo escrito por
-personas. La guía común de agentes vive en `AGENTS.md`, en la raíz del repositorio, y la entrada
-específica de Claude en `CLAUDE.md`; ambos archivos describen cómo trabajar en esta base de código
-y nunca prevalecen sobre las reglas de esta constitución.
+personas; `AGENTS.md` y `CLAUDE.md` describen cómo trabajar y nunca prevalecen sobre esta
+constitución.
 
 ## Gobernanza
 
@@ -150,13 +146,9 @@ complejidad se elimina.
 
 ## Registro de enmiendas
 
-- 2026-09-10 — v1.3.0 (MENOR), desde v1.2.0: actualización del stack fijado de Expo SDK 56
-  a SDK 57. Identidad y acceso ya se había implementado sobre SDK 57 para evitar la regresión
-  conocida de memoria de Hermes V1 en SDK 56; la decisión estaba documentada en su investigación
-  y diseño y esta enmienda la formalizó en la constitución. No se modificaron principios ni se
-  eliminaron secciones; no quedaron elementos diferidos.
-- 2026-09-16 — v1.3.1 (PARCHE): adaptación de herramientas. La secuencia normativa se expresa en
-  el perfil core vigente y los destinos operativos pasan a `design.md`. Ninguna obligación de los
-  principios cambia de sustancia; la guía de agentes se declara en `AGENTS.md` y `CLAUDE.md`.
+- 2026-09-10 — v1.3.0 (MENOR): Expo SDK 56 → 57 (regresión de memoria de Hermes V1 en SDK 56).
+- 2026-09-16 — v1.3.1 (PARCHE): secuencia normativa en el perfil core de OpenSpec; guía de agentes.
+- 2026-10-27 — v1.4.0 (MENOR): sin versiones exactas de Bun y Playwright; Firefox y WebKit se
+  verifican en la rama principal (Chromium en cada cambio); flujo compactado.
 
-**Versión**: 1.3.1 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-09-16
+**Versión**: 1.4.0 | **Ratificada**: 2026-09-09 | **Última enmienda**: 2026-10-27

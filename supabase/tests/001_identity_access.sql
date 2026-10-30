@@ -35,7 +35,7 @@ select set_config('request.jwt.claims',
 
 insert into public.clinical_records (id, clinic_id, record_type, content, status)
 values ('dddddddd-0000-0000-0000-00000000000d', 'cccccccc-0000-0000-0000-00000000000c',
-        'patient', '{"name":"Luna"}', 'draft');
+        'patient', '{"name":"Luna","species":"canino","breed":"Mestizo","sex":"hembra","reproductiveStatus":"esterilizado","tutorId":"t"}', 'draft');
 
 -- ---------------------------------------------------------------------------
 -- SC-039 / FR-062: no session at all -> no clinical data.

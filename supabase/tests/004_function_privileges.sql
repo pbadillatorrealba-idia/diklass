@@ -77,7 +77,9 @@ select ok(
 
 -- ---------------------------------------------------------------------------
 -- Enumerate rather than name one at a time: authenticated can execute exactly
--- the nine functions granted across this migration and 006_access_session_binding,
+-- the eighteen functions granted across this migration, 006_access_session_binding,
+-- 010_base_conocimiento, 014_perfil_profesional, 015_busqueda_pacientes,
+-- 017_administracion_tutores, 018_catalogos_y_rut, 022_asistente_conversacional and 023_audio_asistente,
 -- no others -- this catches a function nobody thought to list above.
 -- ---------------------------------------------------------------------------
 
@@ -95,9 +97,18 @@ select set_eq(
       'public.revoke_access_sessions()',
       'public.approve_clinical_record(uuid)',
       'public.current_access_session()',
-      'public.revoke_current_access_session()'
+      'public.revoke_current_access_session()',
+      'public.search_knowledge_fragments(text, integer)',
+      'public.update_own_profile(text)',
+      'public.search_patients(text, text, uuid, timestamp with time zone, timestamp with time zone, text, text, integer, integer)',
+      'public.search_tutors(text, text, text, text, integer, integer)',
+      'public.rut_is_valid(text)',
+      'public.delete_assistant_conversation()',
+      'public.remove_assistant_audio(uuid)',
+      'public.consume_assistant_audio_quota()',
+      'public.assistant_audio_object_count()'
     ]::regprocedure[])::oid$$,
-  'authenticated can execute exactly the nine granted functions, no more'
+  'authenticated can execute exactly the eighteen granted functions, no more'
 );
 
 -- ---------------------------------------------------------------------------

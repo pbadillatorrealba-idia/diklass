@@ -1,5 +1,6 @@
 export type LogContext = {
   requestId?: string;
+  recordId?: string;
   userId?: string;
   clinicId?: string;
   operation?: string;

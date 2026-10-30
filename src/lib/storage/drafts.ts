@@ -59,12 +59,18 @@ export type DraftSession = {
   restore: () => Promise<ConsultationDraft | null>;
   /** `saved` transition: the content reached the clinical record. */
   markSaved: () => Promise<void>;
+  /**
+   * Transición `discarded`: la consulta se cerró de forma explícita (spec 002) y el
+   * borrador local se descarta a propósito — nada pendiente sobrevive, ni en memoria
+   * ni en storage.
+   */
+  discard: () => Promise<void>;
 };
 
 /**
- * One consultation's draft for one veterinarian, following the data-model cycle
- * `editing → restored → saved`; `discarded` arrives with the explicit consultation close
- * of spec 002, which has no caller yet.
+ * El borrador de una consulta para un veterinario, siguiendo el ciclo del modelo de
+ * datos `editing → restored → saved → discarded`; `discarded` llega con el cierre
+ * explícito de consulta de la spec 002.
  */
 export function createDraftSession(
   storage: AuthStorage,
@@ -105,5 +111,6 @@ export function createDraftSession(
     },
     restore: () => drafts.load(veterinarianId, consultationId),
     markSaved: clear,
+    discard: clear,
   };
 }

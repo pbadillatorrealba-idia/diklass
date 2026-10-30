@@ -75,6 +75,16 @@ Subagent (general-purpose):
     - Documentation complete?
     - No obvious bugs?
 
+    **Sobreingeniería (criterio ponytail):** busca qué se puede borrar o
+    acortar, solo en el diff. Etiquetas: `delete` (código muerto, flexibilidad
+    sin uso), `stdlib` (reinventa la librería estándar), `native` (código o
+    dependencia que ya cubre la plataforma), `reuse` (ya existe un helper en
+    el repo; cita la ruta), `yagni` (abstracción con una sola implementación,
+    configuración que nadie cambia), `shrink` (misma lógica, menos líneas).
+    No marques como sobrante la validación en fronteras de confianza, el fallo
+    cerrado, la accesibilidad, RLS, ni un requisito del cambio OpenSpec activo.
+    Un único test o `assert` mínimo es el piso, no sobreingeniería.
+
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
@@ -116,6 +126,11 @@ Subagent (general-purpose):
     - Por qué importa
     - Cómo corregirlo (si no es obvio)
 
+    ### Sobreingeniería
+    [Una línea por hallazgo, numerada: `N. archivo:L<línea>: <etiqueta> qué
+    recortar. Con qué se reemplaza.` Cierra con `neto: -<N> líneas posibles.`
+    Si no hay nada: `Ya está ajustado.`]
+
     ### Recomendaciones
     [Mejoras de calidad de código, arquitectura o proceso]
 
@@ -124,6 +139,7 @@ Subagent (general-purpose):
     **¿Listo para fusionar?** [Sí | No | Con correcciones]
 
     **Justificación:** [Evaluación técnica de 1-2 oraciones]
+
     ## Critical Rules
 
     **DO:**
@@ -147,7 +163,7 @@ Subagent (general-purpose):
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 
-**El reviewer devuelve:** Fortalezas, Problemas (Crítico / Importante / Menor), Recomendaciones y Veredicto, siempre en español.
+**El reviewer devuelve:** Fortalezas, Problemas (Crítico / Importante / Menor), Sobreingeniería, Recomendaciones y Veredicto, siempre en español.
 
 ## Ejemplo de salida
 
