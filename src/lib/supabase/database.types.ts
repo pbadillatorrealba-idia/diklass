@@ -358,6 +358,29 @@ export type Database = {
         }
         Relationships: []
       }
+      dictation_usage: {
+        Row: {
+          author_id: string
+          used_at: string
+        }
+        Insert: {
+          author_id: string
+          used_at?: string
+        }
+        Update: {
+          author_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dictation_usage_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_documents: {
         Row: {
           clinic_id: string
@@ -460,6 +483,7 @@ export type Database = {
           answer: Json
           clinic_id: string
           created_at: string
+          created_by: string | null
           id: string
           patient_id: string | null
           question: string
@@ -468,6 +492,7 @@ export type Database = {
           answer: Json
           clinic_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           patient_id?: string | null
           question: string
@@ -476,6 +501,7 @@ export type Database = {
           answer?: Json
           clinic_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           patient_id?: string | null
           question?: string
@@ -486,6 +512,13 @@ export type Database = {
             columns: ["clinic_id"]
             isOneToOne: false
             referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_queries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "veterinarians"
             referencedColumns: ["id"]
           },
           {
@@ -673,6 +706,7 @@ export type Database = {
         Args: { p_bucket_key: string; p_limit?: number }
         Returns: boolean
       }
+      consume_dictation_quota: { Args: never; Returns: string }
       current_access_session: { Args: never; Returns: Json }
       current_auth_session_id: { Args: never; Returns: string }
       current_clinic_id: { Args: never; Returns: string }

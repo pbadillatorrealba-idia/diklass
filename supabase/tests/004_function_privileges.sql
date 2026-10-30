@@ -77,9 +77,9 @@ select ok(
 
 -- ---------------------------------------------------------------------------
 -- Enumerate rather than name one at a time: authenticated can execute exactly
--- the nineteen functions granted across this migration, 006_access_session_binding,
+-- the twenty functions granted across this migration, 006_access_session_binding,
 -- 010_base_conocimiento, 014_perfil_profesional, 015_busqueda_pacientes,
--- 017_administracion_tutores, 018_catalogos_y_rut, 022_asistente_conversacional and 023_audio_asistente,
+-- 017_administracion_tutores, 018_catalogos_y_rut, 022_asistente_conversacional, 023_audio_asistente and 028_endurecimiento_auditoria,
 -- no others -- this catches a function nobody thought to list above.
 -- ---------------------------------------------------------------------------
 
@@ -107,9 +107,10 @@ select set_eq(
       'public.remove_assistant_audio(uuid)',
       'public.consume_assistant_audio_quota()',
       'public.consume_agent_quota()',
-      'public.assistant_audio_object_count()'
+      'public.assistant_audio_object_count()',
+      'public.consume_dictation_quota()'
     ]::regprocedure[])::oid$$,
-  'authenticated can execute exactly the nineteen granted functions, no more'
+  'authenticated can execute exactly the twenty granted functions, no more'
 );
 
 -- ---------------------------------------------------------------------------

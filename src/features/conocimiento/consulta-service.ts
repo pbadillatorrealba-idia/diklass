@@ -118,7 +118,7 @@ export async function consultKnowledge(
       throw errorRegistro ?? new Error("No se pudo registrar la consulta de conocimiento.");
     }
     logEvent("conocimiento.query_recorded", { requestId, operation: "consultKnowledge" });
-    return { queryId: (fila as KnowledgeQueryRow).id, answer };
+    return { queryId: fila.id, answer };
   } catch (error) {
     void captureClientError(client as unknown as ErrorReporterClient, {
       error,
