@@ -217,6 +217,38 @@ perros y gatos», de S. Le Brech, AWEC-UAB; licencia por confirmar) con la ident
 obligatorias). Igual que el provisioning, falla cerrado: rechaza cualquier Supabase no local salvo
 `--allow-remote`, y avisa por consola cuando ese flag está activo.
 
+## Despliegue de un entorno alojado
+
+No hay un workflow de despliegue: el primer entorno se monta a mano, siempre en un proyecto de
+staging antes que en el real. Orden:
+
+1. `supabase link --project-ref <ref>` y `supabase db push`: aplica las migraciones 001 en adelante
+   en orden. No hay migraciones de vuelta; un error se corrige con una migración nueva.
+2. Secretos de las funciones: `supabase secrets set OPENAI_API_KEY=... PURGE_CHAT_AUDIO_SECRET=...`
+   (y `PHOENIX_COLLECTOR_ENDPOINT` solo si se trazan, hacia un Phoenix en red privada).
+3. `supabase functions deploy` (`purge-chat-audio` es la única con `verify_jwt = false`; ya está en
+   `supabase/config.toml`).
+4. **Cron de la purga del audio del chat**: ninguna migración lo programa (necesita `pg_cron`, `pg_net`
+   y Vault del proyecto alojado). Sin él el audio del chat no se borra y no se cumple la retención de
+   90 días. El SQL y la verificación están en
+   `openspec/changes/chat-del-asistente/quickstart.md`, sección «Despliegue de la purga del audio».
+   El audio de consulta (`consultation-audio`) no tiene purga.
+5. Web: `bunx expo export --platform web` y servir `dist/` (la app no define aún un destino de hosting).
+
+### Auth en el proyecto alojado
+
+`supabase/config.toml` solo rige el entorno local y no se sube al proyecto alojado. En el panel de
+Auth del proyecto hay que fijar a mano, porque los valores locales no son seguros para producción:
+
+- **Confirmación de email activa** (`enable_confirmations = false` es solo local) y SMTP propio.
+- **Site URL y redirect URLs** del dominio real y de `diklass://auth/callback` (no `127.0.0.1`).
+- **Registro público**: la app aprovisiona a los veterinarios y no expone pantalla de registro. Quien se
+  registre con la clave anon no tiene acceso clínico, pero sí es un usuario autenticado que puede llamar
+  a las funciones con `verify_jwt = true` (modelo y transcripción de pago). Valora cerrar el signup en el
+  panel y comprueba después que el login por email sigue funcionando: en el CLI local `enable_signup`
+  también apaga el login (ver el comentario de `supabase/config.toml`), y en el alojado no se ha verificado.
+- Límites de tasa y expiración del JWT revisados (no están en `config.toml`).
+
 ## Tests
 
 | Nivel | Comando | Requisitos |
