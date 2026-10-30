@@ -11,7 +11,7 @@ declare const Deno: {
 
 /** `proveedor:modelo` (openai, anthropic, google-genai); las claves viven solo en los secretos (Principio V). */
 const MAX_HOY = 50;
-const MODEL = Deno.env.get("AGENT_MODEL") ?? "openai:gpt-5.5";
+const MODEL = Deno.env.get("AGENT_MODEL") ?? "openai:gpt-6-luna";
 
 /** Phoenix es opt-in: sin `PHOENIX_COLLECTOR_ENDPOINT` no se instrumenta nada. */
 const tracing = setupTracing({

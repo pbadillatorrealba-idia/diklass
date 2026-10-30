@@ -9,7 +9,8 @@ export async function makeModel(spec: string) {
   const model = i < 0 ? spec : spec.slice(i + 1);
   switch (provider) {
     case "openai":
-      return new (await import("@langchain/openai")).ChatOpenAI({ model });
+      // Responses API: los modelos con razonamiento (gpt-6-luna) rechazan herramientas en Chat Completions.
+      return new (await import("@langchain/openai")).ChatOpenAI({ model, useResponsesApi: true });
     case "anthropic":
       return new (await import("@langchain/anthropic")).ChatAnthropic({ model });
     case "google-genai":
