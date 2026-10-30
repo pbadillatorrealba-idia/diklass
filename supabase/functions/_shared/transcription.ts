@@ -11,6 +11,49 @@ export const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 } as const satisfies Record<string, string>;
 
+/** Margen de los campos y de los límites del multipart sobre el tamaño máximo del audio. */
+const MARGEN_MULTIPART_BYTES = 64 * 1024;
+
+/** El `Content-Length` declarado ya pasa del tope: se rechaza sin leer el cuerpo (ni autenticar). */
+export function declaraDemasiado(request: Request, maxAudioBytes: number): boolean {
+  const declarado = Number(request.headers.get("Content-Length"));
+  return Number.isFinite(declarado) && declarado > maxAudioBytes + MARGEN_MULTIPART_BYTES;
+}
+
+/**
+ * Lee el multipart con tope: `formData()` bufferiza el cuerpo entero y sin `Content-Length` (cuerpo en
+ * trozos) la cabecera no protege, así que el tope se aplica leyendo y se corta al pasarlo, sin
+ * bufferizar más. La clave anónima pasa `verify_jwt`: sin esto cualquiera con ella podría obligar a
+ * bufferizar un cuerpo arbitrario.
+ */
+export async function readFormCapped(
+  request: Request,
+  maxAudioBytes: number,
+): Promise<globalThis.FormData | "too_large" | "invalid"> {
+  const max = maxAudioBytes + MARGEN_MULTIPART_BYTES;
+  if (declaraDemasiado(request, maxAudioBytes)) return "too_large";
+  const reader = request.body?.getReader();
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  let total = 0;
+  while (reader) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      void reader.cancel().catch(() => {});
+      return "too_large";
+    }
+    chunks.push(value as Uint8Array<ArrayBuffer>);
+  }
+  try {
+    return (await new Response(new Blob(chunks), {
+      headers: { "content-type": request.headers.get("content-type") ?? "" },
+    }).formData()) as unknown as globalThis.FormData;
+  } catch {
+    return "invalid";
+  }
+}
+
 // `video/webm`: el mismo contenedor WebM de solo audio; algunos runtimes y navegadores lo
 // reetiquetan así al armar el FormData.
 export const MIME_PERMITIDOS = new Set([

@@ -3,6 +3,7 @@ import {
   calidad,
   corsHeaders,
   MIME_PERMITIDOS,
+  readFormCapped,
   TranscriptionTimeoutError,
   tipoBase,
 } from "../_shared/transcription.ts";
@@ -16,7 +17,6 @@ import {
 
 /** Coincide con el límite del bucket `consultation-audio` (migración 019). */
 export const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
-const MARGEN_MULTIPART_BYTES = 64 * 1024;
 
 const sessionIdSchema = z.string().uuid();
 
@@ -63,19 +63,11 @@ export async function handleTranscribeAudio(
     return fallo("UNAUTHENTICATED", 401);
   }
 
-  // Antes de parsear: `formData()` bufferiza el cuerpo entero, así que un multipart enorme se
-  // rechaza por la cabecera declarada (el margen cubre los campos y los límites del multipart).
-  const declarado = Number(request.headers.get("Content-Length"));
-  if (Number.isFinite(declarado) && declarado > MAX_AUDIO_BYTES + MARGEN_MULTIPART_BYTES) {
-    return fallo("PAYLOAD_TOO_LARGE", 413);
-  }
-
-  let form: globalThis.FormData;
-  try {
-    form = (await request.formData()) as unknown as globalThis.FormData;
-  } catch {
-    return fallo("INVALID_INPUT", 400);
-  }
+  // `canTranscribe` necesita el id de sesión que viaja en el multipart, así que el cuerpo se lee antes,
+  // pero con tope (ver `readFormCapped`).
+  const form = await readFormCapped(request, MAX_AUDIO_BYTES);
+  if (form === "too_large") return fallo("PAYLOAD_TOO_LARGE", 413);
+  if (form === "invalid") return fallo("INVALID_INPUT", 400);
   const audio = form.get("audio");
   const sessionId = sessionIdSchema.safeParse(form.get("listeningSessionId"));
   if (!(audio instanceof Blob) || !sessionId.success) {

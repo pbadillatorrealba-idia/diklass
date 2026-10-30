@@ -1,7 +1,9 @@
 import {
   calidad,
   corsHeaders,
+  declaraDemasiado,
   MIME_PERMITIDOS,
+  readFormCapped,
   TranscriptionTimeoutError,
   tipoBase,
 } from "../_shared/transcription.ts";
@@ -21,7 +23,6 @@ import {
  * `assistant-audio`.
  */
 export const MAX_CHAT_AUDIO_BYTES = 5 * 1024 * 1024;
-const MARGEN_MULTIPART_BYTES = 64 * 1024;
 
 export type QuotaStatus = "ok" | "rate_limited" | "consent_required" | "unavailable";
 
@@ -38,34 +39,6 @@ export type TranscribeChatDependencies = {
   /** Devuelve el texto transcrito; lanza TranscriptionTimeoutError al exceder el tiempo máximo. */
   transcribe: (audio: Blob) => Promise<string>;
 };
-
-/**
- * Lee el cuerpo hasta `max` bytes: sin `Content-Length` (cuerpo en trozos) la cabecera no protege, así que
- * el tope se aplica leyendo y se corta (`null`) al pasarlo, sin bufferizar más.
- */
-async function readCapped(request: Request, max: number): Promise<Uint8Array<ArrayBuffer> | null> {
-  const reader = request.body?.getReader();
-  if (!reader) return new Uint8Array(0);
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > max) {
-      void reader.cancel().catch(() => {});
-      return null;
-    }
-    chunks.push(value);
-  }
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return bytes;
-}
 
 const respond = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
@@ -95,12 +68,7 @@ export async function handleTranscribeChatAudio(
   const authorization = request.headers.get("Authorization");
   if (!authorization) return fallo("UNAUTHENTICATED", 401);
 
-  // Antes de parsear: `formData()` bufferiza el cuerpo entero, así que un multipart enorme se
-  // rechaza por la cabecera declarada (el margen cubre los campos y los límites del multipart).
-  const declarado = Number(request.headers.get("Content-Length"));
-  if (Number.isFinite(declarado) && declarado > MAX_CHAT_AUDIO_BYTES + MARGEN_MULTIPART_BYTES) {
-    return fallo("PAYLOAD_TOO_LARGE", 413);
-  }
+  if (declaraDemasiado(request, MAX_CHAT_AUDIO_BYTES)) return fallo("PAYLOAD_TOO_LARGE", 413);
 
   // Fallo cerrado: ante cualquier error al comprobar, no se envía audio al proveedor. El acceso y la
   // cuota se comprueban ANTES de leer el cuerpo: la clave anónima pasa `verify_jwt`, así que sin esto
@@ -124,16 +92,9 @@ export async function handleTranscribeChatAudio(
   if (cuota === "rate_limited") return fallo("RATE_LIMITED", 429);
   if (cuota !== "ok") return fallo("QUOTA_UNAVAILABLE", 503);
 
-  const bytes = await readCapped(request, MAX_CHAT_AUDIO_BYTES + MARGEN_MULTIPART_BYTES);
-  if (bytes === null) return fallo("PAYLOAD_TOO_LARGE", 413);
-  let form: globalThis.FormData;
-  try {
-    form = (await new Response(new Blob([bytes]), {
-      headers: { "content-type": request.headers.get("content-type") ?? "" },
-    }).formData()) as unknown as globalThis.FormData;
-  } catch {
-    return fallo("INVALID_INPUT", 400);
-  }
+  const form = await readFormCapped(request, MAX_CHAT_AUDIO_BYTES);
+  if (form === "too_large") return fallo("PAYLOAD_TOO_LARGE", 413);
+  if (form === "invalid") return fallo("INVALID_INPUT", 400);
   const audio = form.get("audio");
   if (!(audio instanceof Blob) || !MIME_PERMITIDOS.has(tipoBase(audio))) {
     return fallo("INVALID_INPUT", 400);

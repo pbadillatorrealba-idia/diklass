@@ -155,6 +155,30 @@ describe("transcribe-audio · handler", () => {
     }
   });
 
+  test("un cuerpo en trozos (sin Content-Length) mayor al máximo responde 413 sin leerlo entero", async () => {
+    const h = harness();
+    const trozo = new Uint8Array(1024 * 1024);
+    const tope = MAX_AUDIO_BYTES / trozo.length + 4;
+    let enviados = 0;
+    const flujo = new ReadableStream<Uint8Array>({
+      pull(control) {
+        if (enviados >= tope) return control.close();
+        enviados += 1;
+        control.enqueue(trozo);
+      },
+    });
+    const request = new Request(URL_FUNCION, {
+      method: "POST",
+      headers: { Authorization: "Bearer x", "content-type": "multipart/form-data; boundary=x" },
+      body: flujo,
+      duplex: "half",
+    } as RequestInit);
+    const res = await handleTranscribeAudio(request, h.deps);
+    expect(res.status).toBe(413);
+    expect(h.llamadas.transcribir).toBe(0);
+    expect(enviados).toBeLessThan(tope);
+  });
+
   test("Principio V/IV: no registra audio ni texto ni la credencial", async () => {
     const h = harness({ falla: new Error(`fallo con ${CLAVE_SECRETA}`) });
     const res = await handleTranscribeAudio(peticion(), h.deps);
