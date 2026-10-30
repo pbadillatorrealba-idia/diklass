@@ -36,7 +36,7 @@ select set_config('request.jwt.claims',
 set local role authenticated;
 
 -- Chat: sin el aviso de voz aceptado no hay cuota ni envío al proveedor.
-select is(public.consume_assistant_audio_quota(), 'consent_required',
+select is(public.consume_assistant_audio_quota('v1'), 'consent_required',
   'sin aviso de voz aceptado, el chat exige el consentimiento');
 
 insert into public.assistant_voice_consent (version) values ('v1');
@@ -50,13 +50,13 @@ select is(
   20,
   'con el aviso aceptado, el chat admite 20 transcripciones en la ventana'
 );
-select is(public.consume_assistant_audio_quota(), 'rate_limited', 'la transcripción 21 del chat se rechaza');
+select is(public.consume_assistant_audio_quota('v1'), 'rate_limited', 'la transcripción 21 del chat se rechaza');
 
 -- La ventana es deslizante: lo gastado hace más de 10 minutos ya no cuenta.
 reset role;
 update public.assistant_audio_usage set used_at = timezone('utc', now()) - interval '11 minutes';
 set local role authenticated;
-select is(public.consume_assistant_audio_quota(), 'ok', 'el chat vuelve a admitir tras salir de la ventana');
+select is(public.consume_assistant_audio_quota('v1'), 'ok', 'el chat vuelve a admitir tras salir de la ventana');
 
 -- Dictado: cuota propia, sin exigir el aviso del chat.
 select is(
@@ -83,14 +83,14 @@ select set_config('request.jwt.claims',
   '{"sub":"b8b8b8b8-0000-4000-8000-00000000000b","role":"authenticated","session_id":"5e8b8800-0000-4000-8000-00000000000b"}',
   true);
 select is(public.consume_dictation_quota(), 'no_access', 'sin sesión activa, el dictado devuelve no_access');
-select is(public.consume_assistant_audio_quota(), 'no_access', 'sin sesión activa, el chat devuelve no_access');
+select is(public.consume_assistant_audio_quota('v1'), 'no_access', 'sin sesión activa, el chat devuelve no_access');
 
 -- El dictado no gasta la cuota del chat: ANA consumió 1 del chat tras la ventana y 121 del dictado.
 select set_config('request.jwt.claims',
   '{"sub":"a8a8a8a8-0000-4000-8000-00000000000a","role":"authenticated","session_id":"5e8a8800-0000-4000-8000-00000000000a"}',
   true);
 select is(
-  (select count(*)::int from (select public.consume_assistant_audio_quota() as r from generate_series(1, 19)) t where r = 'ok'),
+  (select count(*)::int from (select public.consume_assistant_audio_quota('v1') as r from generate_series(1, 19)) t where r = 'ok'),
   19,
   'el dictado no gasta la cuota del chat'
 );

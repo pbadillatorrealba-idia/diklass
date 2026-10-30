@@ -312,7 +312,9 @@ describe.skipIf(!enabled)("ciclo de vida en backend exclusivo (FR-134–FR-136)"
         expect(
           (await client.from("assistant_voice_consent").insert({ version: "v1" })).error,
         ).toBeNull();
-        expect((await client.rpc("consume_assistant_audio_quota")).data).toBe("ok");
+        expect((await client.rpc("consume_assistant_audio_quota", { p_version: "v1" })).data).toBe(
+          "ok",
+        );
         expect(
           (
             await client.from("assistant_messages").insert({

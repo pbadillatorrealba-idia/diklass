@@ -223,7 +223,9 @@ No hay un workflow de despliegue: el primer entorno se monta a mano, siempre en 
 staging antes que en el real. Orden:
 
 1. `supabase link --project-ref <ref>` y `supabase db push`: aplica las migraciones 001 en adelante
-   en orden. No hay migraciones de vuelta; un error se corrige con una migración nueva.
+   en orden. No hay migraciones de vuelta; un error se corrige con una migración nueva. Si el entorno ya
+   tiene datos, antes de la 028 busca tutores con RUT de cero inicial (la 028 los rechaza al editarlos):
+   `select id from clinical_records where record_type = 'tutor' and content->>'rut' ~ '^0'`.
 2. Secretos de las funciones: `supabase secrets set OPENAI_API_KEY=... PURGE_CHAT_AUDIO_SECRET=...`
    (y `PHOENIX_COLLECTOR_ENDPOINT` solo si se trazan, hacia un Phoenix en red privada).
 3. `supabase functions deploy` (`purge-chat-audio` es la única con `verify_jwt = false`; ya está en

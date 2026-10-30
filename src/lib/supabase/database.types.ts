@@ -702,7 +702,7 @@ export type Database = {
       }
       consume_agent_quota: { Args: never; Returns: string }
       consume_assistant_audio_quota: {
-        Args: { p_version?: string }
+        Args: { p_version: string }
         Returns: string
       }
       consume_client_error_quota: {

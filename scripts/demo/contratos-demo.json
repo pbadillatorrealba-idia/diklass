@@ -54,7 +54,7 @@
     "src/features/retroalimentacion/schema.ts": "b476351288871cf2dc136c3e78100d4fb2748abd5375ebe9fc8143779da373bc",
     "src/lib/attribution/clinical-mutations.ts": "b631d8ae3f55b83d8b2ae72797d3280830903000456e3dcc98e224daf0ab76ca",
     "src/lib/attribution/types.ts": "b84f10800f735e6789c98e337ca8d08722d5a06a616836c9966bb12af5ed5e87",
-    "src/lib/supabase/database.types.ts": "02e00304012eb8b3e32ba956a5e4100697602f7f57d04742a017401882502a4b",
+    "src/lib/supabase/database.types.ts": "c3914e8686ba3d8266740029581e3104659142e8baeed1c070c6adac7872062d",
     "supabase/migrations/001_identity_access.sql": "c1c63dfa830ae6799250321cf95b6dd9385955420c75bcfc7c734a20de3c1adf",
     "supabase/migrations/002_clinical_attribution.sql": "5bb000c4f3c3958e80bf1a60ce0436a00bd8d8e6bdfcb8826f3c84cd8c623ba0",
     "supabase/migrations/003_attribution_hardening.sql": "64ef68cf1e891ab7cef95ca093c7268243d9e22c12d85caf317f1c0a6b8858a1",
@@ -82,7 +82,7 @@
     "supabase/migrations/025_resumen_consulta.sql": "250592c8dd6a49389ef801f17b0edee19cf19f21a87c8e4962a601a856c5fb31",
     "supabase/migrations/026_asistencia_clinica.sql": "12a5057dff98bf5603f4bc1cc1b2787479c0bdd9f37d350c2925057310e50e22",
     "supabase/migrations/027_cuota_agente.sql": "e405518c0031e020cdaef0738baef4a8d097c53f55a6adf2014f718cee00ce58",
-    "supabase/migrations/028_endurecimiento_auditoria.sql": "2a4aba78c52a4dc97a446166ae4c2b42ee613d5b8a64189c88bb55db2a7cbacc",
-    "supabase/migrations/029_version_aviso_voz.sql": "92908ee85427b1bf1ac00aed22841ed4799b105b4436e45dc72557dd7c29a220"
+    "supabase/migrations/028_endurecimiento_auditoria.sql": "c985f325c08457a390ab3d7997b3cc0158053f1adc5004bb239ab6f234d8158e",
+    "supabase/migrations/029_version_aviso_voz.sql": "369f0a91c6624ddf964bde2b43e7ce58a74cdc0d89fcee4b2a27e1fba9181889"
   }
 }

@@ -221,7 +221,10 @@ create index access_sessions_auth_session_idx on public.access_sessions (auth_se
 
 -- ---------------------------------------------------------------------------
 -- RUT: sin cero inicial. `01234567-4` y `1234567-4` comparten dígito verificador y el índice único de
--- tutores los veía como RUT distintos. Los datos existentes no se tocan: el CHECK sigue `not valid`.
+-- tutores los veía como RUT distintos. Los datos existentes no se tocan, pero el CHECK `not valid` se revalida en
+-- cada UPDATE de la fila: un tutor ya guardado con cero inicial no podrá editarse hasta corregir su RUT. Antes de
+-- `db push` en un entorno con datos: `select id from public.clinical_records where record_type = 'tutor' and
+-- content->>'rut' ~ '^0'`.
 -- ---------------------------------------------------------------------------
 
 create or replace function public.rut_is_valid(p_rut text)
@@ -282,7 +285,7 @@ create index transcript_segments_audio_path_idx
 -- ---------------------------------------------------------------------------
 -- Cuota del dictado de la escucha clínica (`transcribe-audio`): como las demás funciones de pago, sin
 -- tope un usuario activo podía gastar el proveedor. Aparte de la del chat: el dictado manda tramos
--- seguido y no exige el aviso de voz del chat. 120 tramos en 10 minutos (uno cada 5 s, sostenido).
+-- seguido y no exige el aviso de voz del chat. 120 tramos en 10 minutos: con la ventana de 30 s del cliente son ~20, y deja margen a una ventana más corta.
 -- ---------------------------------------------------------------------------
 
 create table public.dictation_usage (

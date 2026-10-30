@@ -373,7 +373,9 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       await limpiar(veterinaria);
       const resultados: unknown[] = [];
       for (let i = 0; i < 21; i++) {
-        const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota");
+        const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota", {
+          p_version: "v1",
+        });
         resultados.push(data);
       }
       expect(resultados.filter((r) => r === "ok")).toHaveLength(20);
@@ -388,7 +390,9 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
         .upsert({ author_id: veterinaria.userId, version: "v1" });
       await limpiar(veterinaria);
       const resultados = await Promise.all(
-        Array.from({ length: 30 }, () => veterinaria.client.rpc("consume_assistant_audio_quota")),
+        Array.from({ length: 30 }, () =>
+          veterinaria.client.rpc("consume_assistant_audio_quota", { p_version: "v1" }),
+        ),
       );
       expect(resultados.filter((r) => r.data === "ok")).toHaveLength(20);
       await limpiar(veterinaria);
@@ -398,7 +402,9 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       const veterinaria = await signedInVeterinarian(BRUNO);
       const admin = adminClient();
       await admin.from("assistant_voice_consent").delete().eq("author_id", veterinaria.userId);
-      const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota");
+      const { data } = await veterinaria.client.rpc("consume_assistant_audio_quota", {
+        p_version: "v1",
+      });
       expect(data).toBe("consent_required");
       await admin
         .from("assistant_voice_consent")
@@ -410,7 +416,9 @@ describe.skipIf(!isLiveSupabase)("audio del chat (migración 023)", () => {
       await sinSesion.client.rpc("revoke_access_session", {
         p_session_id: sinSesion.accessSessionId,
       });
-      const { data } = await sinSesion.client.rpc("consume_assistant_audio_quota");
+      const { data } = await sinSesion.client.rpc("consume_assistant_audio_quota", {
+        p_version: "v1",
+      });
       expect(data).toBe("no_access");
     });
   });
