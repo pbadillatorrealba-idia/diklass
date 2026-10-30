@@ -272,7 +272,8 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     await page.getByTestId("app-tabbar").getByRole("link", { name: "Configuración" }).click();
     await expect(page).toHaveURL(/\/settings$/);
     await expect(page.getByTestId("settings-profile")).toContainText(ANA.displayName);
-    await expect(page.getByTestId("logout-button")).toBeVisible();
+    // La barra lateral de escritorio también tiene uno, oculto a este ancho.
+    await expect(page.getByTestId("logout-button").filter({ visible: true })).toBeVisible();
     await page.getByTestId("settings-theme").getByRole("radio", { name: "Oscuro" }).click();
     await expect(page.locator("html")).toHaveClass(/\bdark\b/);
     await page.getByTestId("settings-edit-profile").click();

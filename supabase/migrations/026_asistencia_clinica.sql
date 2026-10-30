@@ -1,4 +1,4 @@
--- 013_asistencia_clinica.sql — asistencia clínica proactiva.
+-- 026_asistencia_clinica.sql — asistencia clínica proactiva.
 --
 -- Cambio: openspec/changes/implementar-asistencia-clinica-proactiva (tasks.md 1.2).
 -- Implementa los invariantes D3/D7/D8 de su design.md sobre las entidades que la enumeración
