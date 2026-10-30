@@ -173,7 +173,7 @@ export function buildTools(
     {
       name: "navegar",
       description:
-        "Abre una pantalla: /home, /patients, /patients/<id>, /tutors, /tutors/<id>, /knowledge, /follow-up, /settings.",
+        "Abre una pantalla: /home, /patients, /patients/<id>, /tutors, /tutors/<id>, /knowledge, /settings.",
       schema: z.object({ ruta: z.string() }),
     },
   );

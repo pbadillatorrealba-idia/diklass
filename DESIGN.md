@@ -447,7 +447,6 @@ el desplazamiento permite acceder a todo el formulario en ventanas bajas.
 
 En web compacta, la barra inferior contiene Inicio, Pacientes, Conocimiento y Configuración,
 todos con el nombre visible debajo del icono.
-Seguimiento se conserva en escritorio y en las rutas existentes, pero se retira de esa barra.
 
 El título puede ajustarse al ancho con texto ampliado. En Perfil, avatar y datos pasan a filas
 separadas cuando no caben juntos. Cerrar sesión muestra «Cerrando sesión…», estado ocupado y

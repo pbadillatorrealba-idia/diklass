@@ -1,11 +1,10 @@
 {
   "revision": {
-    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado. Renovación por la integración del agente conversacional y de 006 (2026-10-30): cambios aditivos revisados, sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset (listPatientsByIds de lectura, tipo de registro consultation_summary, tablas de cuota y asistencia). El dataset aún no cubre consultation_summary ni missing_information/hipótesis: cobertura pendiente. Las huellas no acreditan cobertura ni aceptación clínica. Renovación por el endurecimiento de la auditoría del backend (migraciones 028 y 029, 2026-10-30): cambios revisados sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset. La auditoría se lee solo dentro de la clínica (el dataset es de una sola clínica), el sello rechaza vincular por UPDATE un borrador suelto a una consulta cerrada (el dataset vincula la consulta al insertar), el RUT rechaza el cero inicial (los RUT demo son de 7 dígitos y empiezan en 5; verificado con normalizeRut), y se añaden cuota de dictado, versión del aviso de voz, created_by sellado en knowledge_queries e índices. Las huellas no acreditan cobertura ni aceptación clínica.",
+    "reason": "Revisión inicial FR-131: inventario de contratos de registro, anamnesis, epicrisis, retroalimentación, atribución y persistencia usados por el dataset. Estas huellas registran la base revisada; la cobertura y aceptación clínica se verifican por separado. Renovación por la integración del agente conversacional y de 006 (2026-10-30): cambios aditivos revisados, sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset (listPatientsByIds de lectura, tipo de registro consultation_summary, tablas de cuota y asistencia). El dataset aún no cubre consultation_summary ni missing_information/hipótesis: cobertura pendiente. Las huellas no acreditan cobertura ni aceptación clínica. Renovación por el endurecimiento de la auditoría del backend (migraciones 028 y 029, 2026-10-30): cambios revisados sin modificar los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset. La auditoría se lee solo dentro de la clínica (el dataset es de una sola clínica), el sello rechaza vincular por UPDATE un borrador suelto a una consulta cerrada (el dataset vincula la consulta al insertar), el RUT rechaza el cero inicial (los RUT demo son de 7 dígitos y empiezan en 5; verificado con normalizeRut), y se añaden cuota de dictado, versión del aviso de voz, created_by sellado en knowledge_queries e índices. Las huellas no acreditan cobertura ni aceptación clínica. Renovación por la eliminación del módulo de seguimiento (cambio eliminar-seguimiento, 2026-10-30): se retira src/features/retroalimentacion y la retroalimentación del dataset; el comentario de summaries.ts deja de citarla y su lógica no cambia. No se modifican los contratos de paciente, tutor, consulta, anamnesis ni epicrisis que usa el dataset; la migración 012 y la BD quedan intactas. Las huellas no acreditan cobertura ni aceptación clínica. Se reconcilian el brief y el cambio dataset-clinico-trazable (spec y dataset.md) para retirar las seis retroalimentaciones del dataset; el resto del dataset no cambia.",
     "requirements": ["FR-024", "FR-063", "FR-128", "FR-129", "FR-130", "FR-131", "FR-132"]
   },
   "paths": [
     "src/features/registro",
-    "src/features/retroalimentacion",
     "src/lib/attribution/clinical-mutations.ts",
     "src/lib/attribution/types.ts",
     "src/lib/supabase/database.types.ts",
@@ -22,11 +21,11 @@
     "docs/constitution.md"
   ],
   "sha256": {
-    "docs/brief-poc-cdss.md": "713daa832df33d42eca12546e183c31e034fe112509ac3edefe708657524aa67",
+    "docs/brief-poc-cdss.md": "55adab4e98b0671ae2b9aab87eb2e6d06e2dae2ef52c8a29287dccb380783df3",
     "docs/constitution.md": "1a6c4394307c6438091251f569933b445ec044eadc12af16cb71e277e294eab5",
     "openspec/changes/catalogos-y-datos-demo/specs/catalogos-y-datos-demo/spec.md": "f37d74734962ce57babe07e0c2fe13892a1c222e89a3342f030a55bad73e80c4",
-    "openspec/changes/dataset-clinico-trazable/dataset.md": "3d9dd7edaa64ea255af6e00843eebdc34fbc0eceedffa493fa5c58a8bf7a86e9",
-    "openspec/changes/dataset-clinico-trazable/specs/dataset-clinico-trazable/spec.md": "0e9458a909aff797cf671907fe63a6e338b96d4543c1305ffb7bd88727a4fe42",
+    "openspec/changes/dataset-clinico-trazable/dataset.md": "6652d99826734a3e03264d409d3ad182b2d44d0ae6d1a5d2740d1c86a3d0081f",
+    "openspec/changes/dataset-clinico-trazable/specs/dataset-clinico-trazable/spec.md": "064b2b47216ebe01eb4236434f5fef32879d89c3724f76d985cb016800a6eb57",
     "openspec/changes/implementar-identidad-y-acceso/specs/identidad-y-acceso/spec.md": "8f3f1d101926284364e53b8a867c87f42fabc14419468a4873b7dad829b652dd",
     "openspec/specs/ficha-etologica-canina/spec.md": "75bd37e2ba7ef54bc053d1c3ba9bfd8c569f7355af89b08a869d4e143eff7710",
     "openspec/specs/ficha-paciente/spec.md": "3ec61818eb5ac533d9d67ef3dc81a3ef1d5545f01b1a743b2e7deca54105a7ce",
@@ -45,13 +44,9 @@
     "src/features/registro/query-cache.ts": "98f4ba2648cd80b08a2b4e83717c94ddbd565f000def3402e613b081ca60f740",
     "src/features/registro/read-rows.ts": "ffc89fadd51120d07470307f8ae0fed5dfc26e6e4181a2efc117b50f3b62bb41",
     "src/features/registro/schema.ts": "3fc9e2c03791b55bf4ac86c521d53e06f3aa84458ba05078e83ca15c67d856ca",
-    "src/features/registro/summaries.ts": "f1a8e43afa448606ec54c97887e3210fcd8edbff5e26178603bbedb2d232f33d",
+    "src/features/registro/summaries.ts": "82b45594f316ccbd2b02f54df6fb0263efebf5d853284c471c885540fd775435",
     "src/features/registro/tutor-search.ts": "c987a2ab4b2a1ec4d149f32c8272090398454006288082f776ae892201ed1d90",
     "src/features/registro/tutor-service.ts": "56780c0619205d11601f18d17130e8f6f76c03e1cc6226a6bce40f8baf666626",
-    "src/features/retroalimentacion/feedback-form-values.ts": "adb564d181634ada94389e7e2f55a3bf91620a0d41ab64475ebe14b412c6c4f2",
-    "src/features/retroalimentacion/feedback-service.ts": "fbd8bdc0b1feae28389f0ba68b71acc9e041cada4538bbc72d42b7a78c478abb",
-    "src/features/retroalimentacion/feedback-summary.ts": "149c15f9b97e14d778b79e91a6a14f04535b2b4809a2eee6fa03cc137d9799d4",
-    "src/features/retroalimentacion/schema.ts": "b476351288871cf2dc136c3e78100d4fb2748abd5375ebe9fc8143779da373bc",
     "src/lib/attribution/clinical-mutations.ts": "b631d8ae3f55b83d8b2ae72797d3280830903000456e3dcc98e224daf0ab76ca",
     "src/lib/attribution/types.ts": "b84f10800f735e6789c98e337ca8d08722d5a06a616836c9966bb12af5ed5e87",
     "src/lib/supabase/database.types.ts": "c3914e8686ba3d8266740029581e3104659142e8baeed1c070c6adac7872062d",

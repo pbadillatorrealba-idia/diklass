@@ -429,7 +429,7 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
       const controles = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLElement>("[data-testid]"))
           .filter((el) =>
-            /^(home-start-consultation|home-consulta-.+|patients-register|patient-open|history-open|screen-back|follow-up-open|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
+            /^(home-start-consultation|home-consulta-.+|patients-register|patient-open|history-open|screen-back|conocimiento-incorporar|ver-fuente-.+|ver-contexto-.+)$/.test(
               el.dataset.testid ?? "",
             ),
           )
@@ -456,7 +456,6 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     // depende de que la base local tenga fuentes, así que no se exige.
     expect([...encontrados]).toEqual(
       expect.arrayContaining([
-        "follow-up-open",
         "history-open",
         "home-start-consultation",
         "patient-open",

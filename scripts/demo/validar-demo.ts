@@ -5,7 +5,6 @@ import {
   patientContentSchema,
   tutorContentSchema,
 } from "@/features/registro/schema";
-import { Adherence, Evolution, feedbackContentSchema } from "@/features/retroalimentacion/schema";
 import { CONSULTAS_DEMO, type DemoDataset, PACIENTES_DEMO, TUTORES_DEMO } from "./datos-demo";
 import { DATASET_META, FIELD_COVERAGE, traceFor } from "./metadata-demo";
 
@@ -74,21 +73,11 @@ export function validateDemo(
   );
   const patientMap = new Map(pacientes.map((patient) => [patient.key, patient]));
   const entries = new Map<string, { field: string; text: string }>();
-  const feedbackKeys = new Map<string, string>();
-  // Las correcciones se validan por clave, independientemente del orden del array recibido.
-  for (const consultation of consultas)
-    for (const feedback of consultation.feedback ?? [])
-      feedbackKeys.set(feedback.key, consultation.key);
   const sections = new Set<string>();
   const values = new Set<string>();
-  const adherences = new Set<string>();
-  const evolutions = new Set<string>();
   let approved = 0,
     drafts = 0,
-    corrections = 0,
-    feedbackCount = 0,
-    feedbackCorrections = 0,
-    adverseEvents = 0;
+    corrections = 0;
   for (const consultation of consultas) {
     key(consultation.key);
     author(consultation.author, consultation.key);
@@ -181,35 +170,6 @@ export function validateDemo(
       );
       corrections++;
     }
-    check(Array.isArray(consultation.feedback), `${consultation.key}: feedback inválido`);
-    for (const feedback of consultation.feedback) {
-      key(feedback.key);
-      author(feedback.author, feedback.key);
-      schema(
-        feedbackContentSchema.safeParse({ ...feedback.content, consultationId: consultation.key }),
-        feedback.key,
-      );
-      check(
-        consultation.epicrisis?.status === "approved",
-        `${feedback.key}: evolución sin consulta cerrada`,
-      );
-      if (feedback.corrects) {
-        check(
-          feedback.corrects !== feedback.key &&
-            feedbackKeys.get(feedback.corrects) === consultation.key,
-          `${feedback.key}: original inexistente o ajeno ${feedback.corrects}`,
-        );
-        check(
-          !consultation.feedback.find((item) => item.key === feedback.corrects)?.corrects,
-          `${feedback.key}: la corrección requiere una entrada original`,
-        );
-        feedbackCorrections++;
-      }
-      feedbackCount++;
-      adherences.add(feedback.content.adherence);
-      evolutions.add(feedback.content.evolution);
-      adverseEvents += feedback.content.adverseEvents.length;
-    }
   }
   check(
     new Set(consultas.map((consultation) => consultation.paciente)).size === 6,
@@ -218,19 +178,6 @@ export function validateDemo(
   check(approved === 3, "se requieren tres consultas cerradas con epicrisis aprobadas");
   check(drafts === 1, "se requiere un borrador en las cinco consultas abiertas");
   check(corrections === 1, "se requiere una epicrisis correctiva adicional");
-  check(
-    feedbackCount === 6 && feedbackCorrections === 1,
-    "se requieren seis retroalimentaciones incluida una correctiva",
-  );
-  check(
-    Adherence.every((value) => adherences.has(value)),
-    "cobertura incompleta de adherencia",
-  );
-  check(
-    Evolution.every((value) => evolutions.has(value)),
-    "cobertura incompleta de evolución",
-  );
-  check(adverseEvents > 0, "falta evento adverso diferenciado");
   const longitudinal = [...patientMap.keys()].filter(
     (patientKey) =>
       consultas.some((c) => c.paciente === patientKey && c.epicrisis?.status === "approved") &&

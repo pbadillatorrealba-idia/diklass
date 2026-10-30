@@ -7,7 +7,6 @@ import {
   patientContentSchema,
   type TutorContent,
 } from "@/features/registro/schema";
-import type { FeedbackContent } from "@/features/retroalimentacion/schema";
 import { rutCheckDigit } from "@/lib/rut";
 
 /** Elenco editorial inventado; contactos de prueba sin notificaciones ni verificación externa. */
@@ -422,12 +421,6 @@ export type ConsultaDemo = {
   diagnosis?: { key: string; text: string; plan?: ConsultationPlanInput };
   epicrisis?: { key: string; status: "approved" | "draft"; author: number; observaciones?: string };
   correction?: { key: string; author: number; observaciones: string };
-  feedback: {
-    key: string;
-    author: number;
-    content: Omit<FeedbackContent, "consultationId">;
-    corrects?: string;
-  }[];
 };
 const entries = (
   consulta: string,
@@ -441,27 +434,6 @@ const entries = (
     provenance,
     author: entryAuthor,
   }));
-const feedback = (
-  key: string,
-  author: number,
-  adherence: FeedbackContent["adherence"],
-  evolution: FeedbackContent["evolution"],
-  evolutionNote: string,
-  extra: Partial<Omit<FeedbackContent, "consultationId">> = {},
-): ConsultaDemo["feedback"][number] => ({
-  key,
-  author,
-  content: {
-    treatmentApplied: null,
-    adherence,
-    evolution,
-    evolutionNote,
-    adverseEvents: [],
-    revisedDiagnosis: null,
-    treatmentModification: null,
-    ...extra,
-  },
-});
 /** Planes y actos de aprobación simulados por cuentas de prueba, sin recomendación clínica real. */
 export const CONSULTAS_DEMO: ConsultaDemo[] = [
   {
@@ -538,24 +510,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       observaciones:
         "Corrección editorial: la ausencia máxima reportada es de cuatro horas; la versión original consignó tres horas. Sin cambio del diagnóstico pendiente.",
     },
-    feedback: [
-      feedback(
-        "F01",
-        1,
-        "parcial",
-        "mejoriaParcial",
-        "La tutora refiere menos episodios en días registrados; faltan días de observación.",
-        { treatmentApplied: "Registro parcial de episodios" },
-      ),
-      feedback(
-        "F02",
-        0,
-        "completa",
-        "mejoria",
-        "Nuevo reporte con mejoría referida; no se establece causalidad del plan.",
-        { treatmentApplied: "Registro de episodios y revisión de contexto" },
-      ),
-    ],
   },
   {
     key: "C02",
@@ -564,7 +518,7 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
     anamnesis: entries("C02", 2, [
       [
         "motivo_consulta",
-        "Seguimiento simulado posterior a C01 y F01/F02; se consulta por duración de los episodios.",
+        "Seguimiento simulado posterior a C01; se consulta por duración de los episodios.",
       ],
       [
         "historia_problema",
@@ -572,11 +526,10 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       ],
       [
         "texto_libre",
-        "Se revisan C01 y F01/F02; siguen pendientes contexto y duración, sin diagnóstico confirmado.",
+        "Se revisa C01; siguen pendientes contexto y duración, sin diagnóstico confirmado.",
         "inferida",
       ],
     ]),
-    feedback: [],
   },
   {
     key: "C03",
@@ -599,7 +552,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       ["familia_agresion", "no"],
       ["texto_libre", "El tutor niega mordidas previas; no referido por otro profesional."],
     ]),
-    feedback: [],
   },
   {
     key: "C04",
@@ -630,31 +582,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       },
     },
     epicrisis: { key: "C04-E01", status: "approved", author: 1 },
-    feedback: [
-      feedback(
-        "F03",
-        2,
-        "ninguna",
-        "sinCambios",
-        "La tutora no aplicó las medidas acordadas y refiere episodios similares.",
-      ),
-      feedback(
-        "F04",
-        1,
-        "parcial",
-        "empeoramiento",
-        "Nuevo ruido intenso y mayor reacción referida; causalidad de las medidas no establecida.",
-        {
-          treatmentApplied: "Acceso parcial a pieza de descanso",
-          adverseEvents: [
-            {
-              severity: "leve",
-              description: "Roce cutáneo con arnés reportado; relación causal no establecida",
-            },
-          ],
-        },
-      ),
-    ],
   },
   {
     key: "C05",
@@ -663,7 +590,7 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
     anamnesis: entries("C05", 2, [
       [
         "motivo_consulta",
-        "Reconsulta simulada por nuevos episodios tras ruido intenso; se revisan C04 y F03/F04.",
+        "Reconsulta simulada por nuevos episodios tras ruido intenso; se revisa C04.",
       ],
       [
         "historia_problema",
@@ -676,7 +603,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       ],
     ]),
     epicrisis: { key: "C05-E01", status: "draft", author: 2 },
-    feedback: [],
   },
   {
     key: "C06",
@@ -696,7 +622,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
         "Convive con la gata Mía y dos adultos; no se refieren conflictos con ella.",
       ],
     ]),
-    feedback: [],
   },
   {
     key: "C07",
@@ -721,7 +646,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
         "inferida",
       ],
     ]),
-    feedback: [],
   },
   {
     key: "C08",
@@ -746,25 +670,6 @@ export const CONSULTAS_DEMO: ConsultaDemo[] = [
       },
     },
     epicrisis: { key: "C08-E01", status: "approved", author: 2 },
-    feedback: [
-      feedback(
-        "F05",
-        0,
-        "desconocida",
-        "desconocida",
-        "No se precisa evolución; sin tratamiento conductual indicado.",
-      ),
-      {
-        ...feedback(
-          "F06",
-          2,
-          "desconocida",
-          "mejoriaParcial",
-          "Corrección al completar reporte: refiere algo más de disposición al juego; se preserva el desconocimiento inicial de F05.",
-        ),
-        corrects: "F05",
-      },
-    ],
   },
 ];
 export type DemoDataset = {

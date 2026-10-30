@@ -557,19 +557,6 @@ for (const consultation of CONSULTAS_DEMO) {
         ["US20-AC3", "US20-AC5"],
       );
   }
-  for (const entry of consultation.feedback)
-    add(
-      entry.key,
-      consultation.key,
-      entry.author,
-      null,
-      "reportada",
-      "DOC-CAN",
-      [11],
-      "Seguimiento",
-      ["FR-018", "FR-024", "FR-040", "FR-041", "FR-130"],
-      ["US20-AC3", "US20-AC5"],
-    );
 }
 export function traceFor(key: string): DemoTrace {
   const trace = traces.get(key);

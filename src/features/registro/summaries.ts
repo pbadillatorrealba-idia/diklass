@@ -54,8 +54,8 @@ function instante(iso: string): number {
 }
 
 /**
- * Orden cronológico por `created_at` (servidor, UTC); el `id` desempata el determinismo.
- * Criterio único de las lecturas clínicas: la retroalimentación (005) lo reutiliza.
+ * Criterio único de las lecturas clínicas.
+ * Criterio único de las lecturas clínicas:.
  */
 export function compararFilas(a: ClinicalRecordRow, b: ClinicalRecordRow): number {
   return (

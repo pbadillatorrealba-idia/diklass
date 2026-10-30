@@ -97,13 +97,13 @@ cuentas. Los planes siguientes son guiones de prueba, no recomendaciones para an
 | Clave | Paciente | Estado al terminar la carga | Guion y datos relevantes | Autoría simulada | Trazabilidad funcional |
 |---|---|---|---|---|---|
 | C01 | P01 | Cerrada; epicrisis aprobada y correctiva | Al quedarse solo vocaliza a veces y mueve la puerta; inicio tras cambio de horario. Información incompleta; plan editorial de completar registro de episodios y revisión clínica, sin fármacos nuevos | V01 abre, V02 añade una entrada, V01 aprueba/corrige | FR-004, FR-021, FR-024, FR-110–FR-112; US2-AC6, US3-AC1/2/4 |
-| C02 | P01 | Abierta; sin epicrisis | Consulta posterior simulada; recupera C01 y F01/F02; mantiene pendientes y pregunta por duración de episodios | V03 | FR-013, FR-042, FR-045; US4-AC1/3/5, US10-AC6 |
+| C02 | P01 | Abierta; sin epicrisis | Consulta posterior simulada; recupera C01; mantiene pendientes y pregunta por duración de episodios | V03 | FR-013, FR-042, FR-045; US4-AC1/3/5, US10-AC6 |
 | C03 | P04 | Abierta; sin epicrisis | Ladra y tira de la correa al acercarse perros. Contextos y distancia registrados; sin diagnóstico por raza. Sin derivación; familiares sin agresión reportada | V02 | FR-044, FR-111; US1-AC3, US2-AC4 |
 | C04 | P07 | Cerrada; epicrisis aprobada | Se esconde y tiembla ante ruidos intensos; convive con Simón. Historia y contexto registrados; plan editorial y seguimiento sin introducir dosis | V02 | FR-004, FR-011, FR-012, FR-112; US3-AC1/2 |
-| C05 | P07 | Abierta; epicrisis en borrador | Reconsulta simulada tras nuevos episodios; incorpora F03/F04. Borrador conserva falta de confirmación, no aparece como definitivo | V03 | FR-010, FR-045; US3-AC3, US4-AC5 |
+| C05 | P07 | Abierta; epicrisis en borrador | Reconsulta simulada tras nuevos episodios; recupera C04. Borrador conserva falta de confirmación, no aparece como definitivo | V03 | FR-010, FR-045; US3-AC3, US4-AC5 |
 | C06 | P15 | Abierta; sin epicrisis | Gruñe cuando entran visitas. Contexto de aproximación, postura e inicio; no ha mordido según tutor. No convertir «gruñido» en «mordida» | V01 | FR-004, FR-021, FR-111; US2-AC2/3 |
 | C07 | P18 | Abierta; sin epicrisis | Tutor refiere que cuesta que descanse; registra paseos, descanso y juego. Inferencia editorial separada de lo reportado; no diagnóstico de «hiperactividad» | V02 | FR-021, FR-044; US2-AC3/4 |
-| C08 | P24 | Cerrada; epicrisis aprobada | Menor disposición al juego, dolor referido y chequeo pendiente. Sin tratamiento conductual indicado; evita atribuir el cambio solo a edad | V03 | FR-018, FR-057, FR-112; US10-AC12 |
+| C08 | P24 | Cerrada; epicrisis aprobada | Menor disposición al juego, dolor referido y chequeo pendiente. Sin tratamiento conductual indicado; evita atribuir el cambio solo a edad | V03 | FR-112 |
 
 Los intervalos «primera consulta», «seguimiento» y «reconsulta» pertenecen al guion. Las fechas de
 auditoría serán las reales de la carga y solo se comprueba su orden. No se simulan semanas
@@ -169,28 +169,14 @@ desconocido y edad estimada. Estas diferencias no se rellenan para uniformar las
 El catálogo tiene 14 secciones: motivo e historia del problema están en una misma sección.
 La implementación cubrirá las 14 vigentes y comprobará su inventario.
 El plan queda fuera de ese catálogo: DOC-CAN pp. 8–10 → `consultationPlanSchema`
-→ C01/C04/C08 → FR-112. Seguimiento: DOC-CAN p. 11 → retroalimentación → F01–F06 → FR-018.
+→ C01/C04/C08 → FR-112.
 El manifiesto ejecutable desglosará todos los campos como cubiertos/excluidos con motivo.
 
-### Feedback
+### Epicrisis correctiva
 
-Seis registros en total; F06 es una corrección de F05, no un séptimo registro. El motivo de esa
-corrección será precisar un reporte antes incompleto. C01 tiene además una epicrisis correctiva
-que aclara el tiempo máximo de ausencia; no toca la original. El guion de C01 ya refleja la
-lectura corregida de cuatro horas; el registro original consignará tres horas.
-
-| Clave | Consulta | Adherencia | Evolución | Contenido editorial | Autoría |
-|---|---|---|---|---|---|
-| F01 | C01 | parcial | mejoriaParcial | La tutora refiere menos episodios en días registrados; faltan días de observación | V02 |
-| F02 | C01 | completa | mejoria | Nuevo reporte con mejoría referida; no se declara causalidad del plan | V01 |
-| F03 | C04 | ninguna | sinCambios | El tutor no aplicó las medidas acordadas y refiere episodios similares | V03 |
-| F04 | C04 | parcial | empeoramiento | Nuevo ruido intenso y mayor reacción referida; roce cutáneo con arnés, evento leve reportado, causalidad no establecida | V02 |
-| F05 | C08 | desconocida | desconocida | No se precisa evolución; `treatmentApplied` vacío, sin tratamiento conductual indicado | V01 |
-| F06 | C08 | desconocida | mejoriaParcial | Correctiva de F05 al completar el reporte, sin borrar el desconocimiento inicial | V03 |
-
-Las seis entradas conservan categóricos válidos. `adverseEvents: []` se usa conforme al contrato
-actual para las entradas sin eventos registrados; no añadir eventos para completar casilleros.
-No se inventa una reacción a un fármaco que no se haya consignado en el guion.
+La retroalimentación (F01–F06) se retira del dataset con `eliminar-seguimiento`. C01 conserva su
+epicrisis correctiva, que aclara el tiempo máximo de ausencia; no toca la original. El guion de C01
+ya refleja la lectura corregida de cuatro horas; el registro original consignará tres horas.
 
 ## Traceability example
 

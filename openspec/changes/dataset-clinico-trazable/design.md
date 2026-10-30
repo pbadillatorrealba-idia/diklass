@@ -57,12 +57,12 @@ limpio sin esos archivos permite validar íntegramente el contrato versionado de
 
 ### D3 — Dos historias longitudinales dentro de ocho consultas
 
-Tres consultas cerradas, cinco abiertas (una con epicrisis en borrador), seis retroalimentaciones
-incluida una correctiva y una epicrisis correctiva adicional. El orden de operaciones respeta:
-consulta → anamnesis/plan → borrador → aprobación simulada → evolución → siguiente consulta.
+Tres consultas cerradas, cinco abiertas (una con epicrisis en borrador) y una epicrisis correctiva
+adicional, sin retroalimentación (módulo retirado por `eliminar-seguimiento`). El orden de operaciones respeta:
+consulta → anamnesis/plan → borrador → aprobación simulada → siguiente consulta.
 
 Reutilizar `recordDiagnosis`, `generateEpicrisisDraft`, `updateEpicrisisDraft`, `approveEpicrisis`,
-`correctEpicrisis`, `createFeedbackEntry` y `correctFeedbackEntry`. Los tres estados aprobados
+y `correctEpicrisis`. Los tres estados aprobados
 provienen de contenido editorial revisado como fixture y de actos simulados de cuentas de prueba;
 no son aprobación de salidas generadas por un asistente. Documentar esto al ejecutar la carga.
 No añadir acceso por service role ni atajos a triggers.
@@ -81,7 +81,7 @@ ejemplos; cada campo del catálogo figura como cubierto o excluido con motivo. L
 permiten eliminar los ejemplos exigidos por FR-130.
 
 Registrar huellas SHA-256 de los archivos vigilados: esquemas/catálogos y servicios clínicos usados,
-`clinical-mutations` y sus tipos, migraciones, specs publicadas de registro/ficha/retroalimentación
+`clinical-mutations` y sus tipos, migraciones, specs publicadas de registro/ficha
 y specs activas de identidad y catálogos. Para directorios registrar también su inventario, para
 detectar altas y bajas. Las rutas exactas se fijan al implementar y se comprueban en tests.
 

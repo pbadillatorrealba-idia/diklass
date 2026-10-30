@@ -47,12 +47,11 @@ describe("NavItem", () => {
 });
 
 describe("secciones", () => {
-  test("son las seis (D12/D17 y administracion-tutores), con icono web y SF/Material para nativo", () => {
+  test("son las cinco (D12/D17 y administracion-tutores), con icono web y SF/Material para nativo", () => {
     expect(SECTIONS.map((s) => [s.label, s.href])).toEqual([
       ["Inicio", "/home"],
       ["Pacientes", "/patients"],
       ["Tutores", "/tutors"],
-      ["Seguimiento", "/follow-up"],
       ["Conocimiento", "/knowledge"],
       ["Configuración", "/settings"],
     ]);

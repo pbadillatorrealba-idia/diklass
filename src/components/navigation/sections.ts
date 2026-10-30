@@ -24,14 +24,6 @@ export const SECTIONS = [
     md: "group",
   },
   {
-    name: "(follow-up)",
-    href: "/follow-up",
-    label: "Seguimiento",
-    icon: "clipboard-pulse-outline",
-    sf: "waveform.path.ecg",
-    md: "monitor_heart",
-  },
-  {
     name: "(knowledge)",
     href: "/knowledge",
     label: "Conocimiento",
@@ -63,6 +55,4 @@ export type Section = (typeof SECTIONS)[number];
  * apariencia y sesión). Tutores (administracion-tutores) se alcanza desde el botón «Tutores» de
  * Pacientes.
  */
-export const TABBAR_SECTIONS = SECTIONS.filter(
-  (section) => section.name !== "(tutors)" && section.name !== "(follow-up)",
-);
+export const TABBAR_SECTIONS = SECTIONS.filter((section) => section.name !== "(tutors)");

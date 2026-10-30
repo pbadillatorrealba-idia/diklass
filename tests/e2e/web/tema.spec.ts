@@ -90,9 +90,7 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     await expect(page.getByTestId("assistant-rail")).toBeVisible();
   });
 
-  test("la marca móvil deja 24 px hasta el logo y la barra inferior omite Seguimiento", async ({
-    page,
-  }) => {
+  test("la marca móvil deja 24 px hasta el logo", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 900 });
     await page.goto("/settings");
     const logo = page.getByTestId("screen-brand").locator('[role="img"]');
@@ -101,7 +99,6 @@ test.describe("tema manual, calendario de Inicio y Configuración", () => {
     if (!box) throw new Error("Falta el logo móvil");
     expect(box.y).toBe(24);
     const tabbar = page.getByTestId("app-tabbar");
-    await expect(tabbar.getByRole("link", { name: "Seguimiento" })).toHaveCount(0);
     for (const name of ["Inicio", "Pacientes", "Conocimiento", "Configuración"]) {
       await expect(tabbar.getByRole("link", { name, exact: true })).toBeVisible();
     }

@@ -53,14 +53,10 @@ test.skipIf(!live)(
     );
     expect(original?.content.observaciones).toContain("tres horas");
     expect(corrected?.content.observaciones).toContain("cuatro horas");
-    const feedback = rows.filter((row) => row.record_type === "clinical_feedback");
-    expect(feedback).toHaveLength(6);
-    expect(feedback.filter((row) => row.status === "corrective")).toHaveLength(1);
+    expect(rows.filter((row) => row.record_type === "clinical_feedback")).toHaveLength(0);
     const patients = new Set(consultations.map((row) => row.content.patientId));
     expect(patients.size).toBe(6);
-    for (const correctiva of [...epicrisis, ...feedback].filter(
-      (row) => row.status === "corrective",
-    )) {
+    for (const correctiva of epicrisis.filter((row) => row.status === "corrective")) {
       const { data: event, error: eventError } = await client
         .from("clinical_audit_events")
         .select("entity_id")

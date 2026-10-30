@@ -29,7 +29,7 @@ La revisión veterinaria especializada sigue pendiente.
   distinta, manifiesto ausente, repetición completa y registros alterados (FR-132; US20-AC9/AC10).
   Verificación: pruebas fallan por la limitación concreta y no por configuración ausente.
 - [x] 2.2 Escribir y observar fallar integración viva focalizada de las ocho consultas, tres epicrisis
-  aprobadas, un borrador, seis retroalimentaciones incluida correctiva, epicrisis correctiva,
+  aprobadas, un borrador, epicrisis correctiva (sin retroalimentación tras `eliminar-seguimiento`),
   atribución cruzada y recuperación longitudinal (FR-129/FR-130/FR-132; US20-AC3/AC5/AC10).
   Verificación: rojo documentado antes de ejecutar 2.3; las ocho consultas y los estados esperados
   todavía no se cargan, y el fallo no se debe a credenciales o configuración ausentes.

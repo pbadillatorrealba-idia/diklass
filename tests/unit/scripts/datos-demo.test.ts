@@ -64,19 +64,12 @@ test("prevalidación rechaza fechas futuras, respuestas inválidas y consultas f
   expect(() => validateDemo(cat)).toThrow(/C01.*felin/);
 });
 
-test("prevalidación protege composición, estados y categorías de evolución", async () => {
+test("prevalidación protege composición, estados y cantidades", async () => {
   const { validateDemo } = await import("../../../scripts/demo/validar-demo");
   expect(() => validateDemo()).not.toThrow();
   const status = clone();
   present(present(status.consultas[0]).epicrisis).status = "draft";
   expect(() => validateDemo(status)).toThrow(/cerrada|aprobada/);
-  const feedback = clone();
-  present(present(feedback.consultas[0]).feedback[0]).content.adherence = "completa";
-  present(present(feedback.consultas[3]).feedback[1]).content.adherence = "completa";
-  expect(() => validateDemo(feedback)).toThrow(/adherencia/);
-  const correction = clone();
-  present(present(correction.consultas[7]).feedback[1]).corrects = "F99";
-  expect(() => validateDemo(correction)).toThrow(/F06.*F99/);
   const count = clone();
   count.tutores.pop();
   expect(() => validateDemo(count)).toThrow(/15 tutores/);
@@ -96,10 +89,7 @@ test("cada campo tiene cobertura explícita y cada entrada conserva origen edito
   expect(FIELD_COVERAGE.soledad_destroza).toMatchObject({ status: "excluded" });
   const keys = [...TUTORES_DEMO, ...PACIENTES_DEMO, ...CONSULTAS_DEMO].map((item) => item.key);
   for (const consultation of CONSULTAS_DEMO) {
-    keys.push(
-      ...consultation.anamnesis.map((item) => item.key),
-      ...consultation.feedback.map((item) => item.key),
-    );
+    keys.push(...consultation.anamnesis.map((item) => item.key));
     for (const item of [consultation.diagnosis, consultation.epicrisis, consultation.correction])
       if (item) keys.push(item.key);
   }

@@ -53,7 +53,7 @@ diagnóstico, dosis, prevalencia o resultado clínico.
 ### Requirement: FR-130 Cobertura de flujos clínicos
 
 El dataset MUST cubrir las 14 secciones caninas, respuestas cerradas y ausencia de respuesta,
-derivación, plan, consultas abiertas y cerradas, borrador, seguimiento y correcciones aditivas.
+derivación, plan, consultas abiertas y cerradas, borrador y correcciones aditivas.
 Los ocho felinos MUST limitarse a ficha administrativa. Los estados cerrados MUST ser simulaciones
 editoriales explícitas mediante los servicios existentes, sin aprobación automática de salidas del asistente.
 
@@ -62,10 +62,9 @@ editoriales explícitas mediante los servicios existentes, sin aprobación autom
 - **WHEN** se completa la carga del dataset
 - **THEN** hay 8 consultas en 6 perros: 3 cerradas con epicrisis aprobada y 5 abiertas, de las cuales
   una tiene borrador de epicrisis; dos perros tienen consulta previa cerrada y consulta posterior abierta.
-- **THEN** hay 6 registros de retroalimentación, incluida una corrección, y una epicrisis correctiva
-  adicional; las versiones originales permanecen recuperables conforme a FR-024.
-- **THEN** los ejemplos cubren las 4 adherencias y las 5 evoluciones vigentes, y al menos un evento
-  adverso diferenciado, sin convertirlo en una afirmación causal demostrada.
+- **THEN** hay una epicrisis correctiva adicional; las versiones originales permanecen recuperables
+  conforme a FR-024. El dataset no incluye retroalimentación clínica (módulo retirado por
+  `eliminar-seguimiento`).
 
 #### Scenario: US20-AC6 Cobertura estructural
 

@@ -74,7 +74,8 @@ construido se ha visto en web.
 - Especie perro; idioma español; una clínica; cuentas provisionadas.
 - Siete funcionalidades (specs 001–007 en `docs/brief-poc-cdss.md`): identidad y acceso, registro
   clínico longitudinal, base de conocimiento trazable, captura de voz hacia anamnesis,
-  retroalimentación clínica, asistencia clínica proactiva, apoyo al tratamiento y farmacología.
+  retroalimentación clínica (retirada de la interfaz por `eliminar-seguimiento`; la base
+  de datos conserva su tipo de registro), asistencia clínica proactiva, apoyo al tratamiento y farmacología.
 - Requisitos transversales con impacto en la interfaz:
   - toda afirmación documental muestra fuente y fragmento (FR-007);
   - ninguna salida se vuelve decisión sin validación (FR-010);

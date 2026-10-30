@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { useThemeColors } from "@/theme/use-theme-colors";
 
 /**
- * Pila de una sección principal (Inicio, Pacientes, Seguimiento, Conocimiento; design.md D12).
+ * Pila de una sección principal (Inicio, Pacientes, Conocimiento; design.md D12).
  * Cada grupo de `src/app/(protected)/` la monta en su `_layout.tsx` con el nombre de su pantalla
  * raíz.
  *

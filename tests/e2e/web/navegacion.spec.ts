@@ -26,7 +26,7 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     await expect(sidebar).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("app-tabbar")).toBeHidden();
 
-    for (const name of ["Inicio", "Pacientes", "Seguimiento", "Conocimiento"]) {
+    for (const name of ["Inicio", "Pacientes", "Conocimiento"]) {
       await expect(sidebar.getByRole("link", { name })).toBeVisible();
     }
     await expect(sidebar.getByRole("link", { name: "Pacientes" })).toHaveAttribute(
@@ -59,7 +59,6 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
     const tabbar = page.getByTestId("app-tabbar");
     await expect(tabbar).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("app-sidebar")).toBeHidden();
-    await expect(tabbar.getByRole("link", { name: "Seguimiento" })).toHaveCount(0);
     for (const name of ["Inicio", "Pacientes", "Conocimiento", "Configuración"]) {
       await expect(tabbar.getByRole("link", { name })).toBeVisible();
     }
@@ -67,15 +66,6 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
       "aria-current",
       "page",
     );
-  });
-
-  test("a 1280 px, desde una consulta se llega a Seguimiento en 1 activación", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto(`/consultations/${caso.openConsultationId}`);
-    await expect(page.getByTestId("anamnesis-section")).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId("app-sidebar").getByRole("link", { name: "Seguimiento" }).click();
-    await expect(page).toHaveURL(/\/follow-up$/);
-    await expect(page.getByTestId("follow-up-patient-list")).toBeVisible({ timeout: 15_000 });
   });
 
   test("a 1280 px, la consulta muestra el breadcrumb Pacientes › ficha y a 375 px solo «Volver»", async ({
@@ -102,9 +92,10 @@ test.describe("navegación global adaptable (FR-082 · FR-083 · SC-054)", () =>
   test("«Volver» en un detalle abierto por URL directa lleva a la raíz de su sección", async ({
     page,
   }) => {
-    await page.goto(`/follow-up/${caso.patientId}`);
-    await expect(page.getByTestId("feedback-antecedents")).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId("screen-back").filter({ visible: true }).click();
-    await expect(page).toHaveURL(/\/follow-up$/);
+    await page.goto(`/patients/${caso.patientId}`);
+    const volver = page.getByTestId("screen-back").filter({ visible: true });
+    await expect(volver).toBeVisible({ timeout: 15_000 });
+    await volver.click();
+    await expect(page).toHaveURL(/\/patients$/);
   });
 });

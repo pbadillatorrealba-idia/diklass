@@ -15,7 +15,7 @@ requisitos hasta cada dato cargado y su prueba.
   antecedentes positivos, negativos y desconocidos. El carácter sintético se declara en metadatos
   y documentación, sin nombres como «Caso sintético». Ver [elenco y casos](dataset.md).
 - Cubrir las 14 secciones de anamnesis canina, derivación, plan, tres consultas cerradas, un
-  borrador de epicrisis, seis entradas de retroalimentación y correcciones recuperables.
+  borrador de epicrisis y correcciones recuperables. Sin retroalimentación: el módulo se retira (`eliminar-seguimiento`).
 - Identificar tutores, pacientes, consultas y entradas mediante claves estables independientes de
   nombres y posiciones; vincular versión, fuentes con SHA-256 y páginas, FR/US/SC, pruebas y
   registros/eventos creados. Separar inspiración estructural de respaldo clínico documental.
@@ -45,14 +45,14 @@ fixture al implementar, manteniendo sus cantidades y comandos.
 - Implementación prevista: `scripts/demo/datos-demo.ts`, `scripts/provision-demo-data.ts`,
   metadatos de cobertura en `scripts/demo/`, pruebas focalizadas en `tests/unit/scripts/` e
   integración viva; `package.json`, `SETUP.md` y `.github/workflows/ci.yml`.
-- Consumidores: servicios de registro y retroalimentación, listas, ficha, historial y resumen
+- Consumidores: servicios de registro, listas, ficha, historial y resumen
   longitudinal. Los fixtures mínimos de e2e y pgTap siguen aislados; no se reemplazan por el demo.
 - Documentos consultados: formularios canino y felino en `data/docs/`; inventario y README del
   ZIP canino como contexto, sin importar registros externos ni declarar sus licencias verificadas.
 - Dependencias de construcción: identidad y acceso, servicios implementados de registro,
-  ficha etológica y retroalimentación; catálogos/RUT del cambio activo `catalogos-y-datos-demo`.
+  ficha etológica; catálogos/RUT del cambio activo `catalogos-y-datos-demo`.
 - Aceptación conjunta: la atribución se verifica con identidad y acceso; el resumen longitudinal,
-  con registro y retroalimentación. No depende de implementar asistencia proactiva ni farmacología.
+  con registro. No depende de implementar asistencia proactiva ni farmacología.
 - Sin dependencias de ejecución nuevas, cambios de UI, migraciones, campos clínicos nuevos ni
   ampliación de la anamnesis a gatos. Estos se incluyen solo como fichas administrativas.
 

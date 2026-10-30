@@ -15,10 +15,6 @@ import {
 import { createPatientFicha } from "@/features/registro/ficha-service";
 import type { EpicrisisContent } from "@/features/registro/schema";
 import { createTutor } from "@/features/registro/tutor-service";
-import {
-  correctFeedbackEntry,
-  createFeedbackEntry,
-} from "@/features/retroalimentacion/feedback-service";
 import type { Database } from "@/lib/supabase/database.types";
 import { isLocalSupabaseUrl } from "../lib/provisioning";
 import { verifyContracts } from "./contratos-demo";
@@ -143,7 +139,7 @@ export async function loadDemo(input: {
   const primary = vets[0] as Vet;
   const keys = [...TUTORES_DEMO, ...PACIENTES_DEMO].map((e) => e.key);
   for (const c of CONSULTAS_DEMO) {
-    keys.push(c.key, ...c.anamnesis.map((a) => a.key), ...c.feedback.map((f) => f.key));
+    keys.push(c.key, ...c.anamnesis.map((a) => a.key));
     for (const e of [c.diagnosis, c.epicrisis, c.correction]) if (e) keys.push(e.key);
   }
   keys.forEach(traceFor);
@@ -317,13 +313,6 @@ export async function loadDemo(input: {
         );
         await remember(c.correction.key, correction.record);
       }
-    }
-    for (const f of c.feedback) {
-      const content = { ...f.content, consultationId: id(c.key) };
-      const result = f.corrects
-        ? await correctFeedbackEntry(vet(f.author).client, id(f.corrects), content)
-        : await createFeedbackEntry(vet(f.author).client, { clinicId: v.clinicId, content });
-      await remember(f.key, result.record);
     }
   }
   await snapshot(false);

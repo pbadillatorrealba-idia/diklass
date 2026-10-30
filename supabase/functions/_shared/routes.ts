@@ -8,7 +8,6 @@ const RUTAS = [
   /^\/tutors$/,
   new RegExp(`^/tutors/${UUID}$`),
   /^\/knowledge$/,
-  /^\/follow-up$/,
   /^\/settings$/,
 ];
 export const isAllowedRoute = (path: string) => RUTAS.some((r) => r.test(path));

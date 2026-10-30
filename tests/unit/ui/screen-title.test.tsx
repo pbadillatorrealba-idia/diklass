@@ -27,16 +27,16 @@ describe("Screen title/back", () => {
   test("en web, back pinta un enlace «Volver a …» antes del título", () => {
     process.env.EXPO_OS = "web";
     const html = renderToStaticMarkup(
-      <Screen back={{ href: "/follow-up", label: "Seguimiento" }} title="Luna" />,
+      <Screen back={{ href: "/patients", label: "Pacientes" }} title="Luna" />,
     );
-    expect(html).toMatch(/<a href="\/follow-up"[^>]*>.*Volver a Seguimiento/);
-    expect(html.indexOf("Volver a Seguimiento")).toBeLessThan(html.indexOf('aria-level="1"'));
+    expect(html).toMatch(/<a href="\/patients"[^>]*>.*Volver a Pacientes/);
+    expect(html.indexOf("Volver a Pacientes")).toBeLessThan(html.indexOf('aria-level="1"'));
   });
 
   test("en nativo el título va a la cabecera del Stack y no se duplica como h1", () => {
     process.env.EXPO_OS = "ios";
     const html = renderToStaticMarkup(
-      <Screen back={{ href: "/follow-up", label: "Seguimiento" }} title="Luna" />,
+      <Screen back={{ href: "/patients", label: "Pacientes" }} title="Luna" />,
     );
     expect(stackOptions).toEqual([{ title: "Luna" }]);
     expect(html).not.toContain('aria-level="1"');
