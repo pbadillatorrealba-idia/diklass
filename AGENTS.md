@@ -147,7 +147,8 @@ confirmación.
 
 ### Coordinación de la prerrevisión
 
-`requesting-code-review` se usa tal cual (copia de la skill global); lo propio del proyecto vive aquí.
+`requesting-code-review` se usa tal cual (copia de superpowers 6.4.1, MIT, con su `LICENSE`); lo propio
+del proyecto vive aquí.
 El agente coordinador, no el reviewer, es quien:
 
 - **Pasa al reviewer** `PLAN_OR_REQUIREMENTS` = la tarea de `openspec/changes/<cambio>/tasks.md`, y
