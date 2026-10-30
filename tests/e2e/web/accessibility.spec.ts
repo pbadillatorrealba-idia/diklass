@@ -125,6 +125,8 @@ async function expectNoHorizontalOverflow(page: Page, screen: SyntheticScreen) {
       }
       for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
         if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) continue;
+        // Solo para lectores de pantalla (recorte de 1 px): recortar es su función, no un desborde.
+        if (el.clientWidth <= 1) continue;
         const overflowX = getComputedStyle(el).overflowX;
         if (overflowX === "visible" || el.clientWidth === 0) continue;
         if (el.scrollWidth > el.clientWidth + 1) {
@@ -528,14 +530,12 @@ test.describe("compuerta de accesibilidad del registro clínico (D12 · tarea 5.
     expect(formulario?.width ?? 0).toBeLessThanOrEqual(720);
   });
 
-  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM.
-  test("Inicio y Configuración van a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
+  // design.md D18: paneles a dos columnas en escritorio y una en móvil, con el orden del DOM. Configuración
+  // va en una columna también en escritorio (tema.spec.ts).
+  test("Inicio va a 2 columnas a 1280 px y a 1 a 375 px", async ({ page }) => {
     await submitLogin(page, ANA);
     await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
-    const pares = [
-      { url: "/home", izquierda: "home-today", derecha: "home-agenda" },
-      { url: "/settings", izquierda: "settings-profile", derecha: "settings-appearance" },
-    ];
+    const pares = [{ url: "/home", izquierda: "home-today", derecha: "home-agenda" }];
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 900 });
       for (const par of pares) {
