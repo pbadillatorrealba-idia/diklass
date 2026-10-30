@@ -42,6 +42,13 @@ describe("checkSkills", () => {
     expect(checkSkills(root)).toEqual([]);
   });
 
+  test("ignora los archivos de agents/ de una skill generada: son propios de cada harness", () => {
+    put(".claude", "impeccable/SKILL.md", skill("/impeccable"));
+    put(".agents", "impeccable/SKILL.md", skill("$impeccable"));
+    put(".agents", "impeccable/agents/openai.yaml", "x");
+    expect(checkSkills(root)).toEqual([]);
+  });
+
   test("informa de una skill ausente en el espejo", () => {
     put(".claude", "demo/SKILL.md", skill("/demo"));
     expect(checkSkills(root)).toEqual(["demo: falta en .agents/skills"]);

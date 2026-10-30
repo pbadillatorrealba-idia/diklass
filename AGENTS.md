@@ -188,10 +188,10 @@ dentro del worktree `ln -s ../../../node_modules node_modules` y `ln -s ../../..
   y al brief; un cambio de identidad se propone por OpenSpec. No se usan `frontend-design` ni
   `expo-design-system`. Solo se usa la copia de `impeccable` del repo: el plugin global está
   desactivado (`claude plugin disable impeccable@impeccable`).
-- Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; `bolder`,
-  `colorize`, `overdrive`, `delight`, `typeset` y `shape` solo con confirmación del usuario y paso
-  por OpenSpec. Sus subagentes (`impeccable-finish-reviewer` y `-documenter`, en `.claude/agents/`)
-  se invocan solo desde esa skill.
+- Comandos de `impeccable` permitidos: `critique`, `audit`, `polish`, `harden` y `document`; cualquier
+  otro (`bolder`, `colorize`, `overdrive`, `delight`, `typeset`, `shape`, `layout`, `live`...) solo con
+  confirmación del usuario y paso por OpenSpec. Sus subagentes (`.claude/agents/impeccable-*`) se
+  invocan solo desde esa skill.
 
 ## Ponytail
 

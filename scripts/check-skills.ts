@@ -26,9 +26,10 @@ function split(text: string): { head: string; body: string } {
   return { head: `${keep("name")}|${keep("description")}`, body: m[2] };
 }
 
-function files(dir: string): string[] {
+// `agents/` de una skill generada trae los subagentes propios de cada harness (.toml de Codex...).
+function files(dir: string, generated: boolean): string[] {
   return (readdirSync(dir, { recursive: true }) as string[])
-    .filter((f) => statSync(join(dir, f)).isFile())
+    .filter((f) => statSync(join(dir, f)).isFile() && !(generated && f.startsWith("agents/")))
     .sort();
 }
 
@@ -50,11 +51,12 @@ export function checkSkills(root: string): string[] {
     if (!existsSync(b)) problems.push(`${name}: falta en .agents/skills`);
     else if (!existsSync(a)) problems.push(`${name}: falta en .claude/skills`);
     else {
-      const [fa, fb] = [files(a), files(b)];
+      const generated = GENERATED.test(name);
+      const [fa, fb] = [files(a, generated), files(b, generated)];
       for (const f of new Set([...fa, ...fb].sort())) {
         if (!fb.includes(f)) problems.push(`${name}/${f}: falta en .agents/skills`);
         else if (!fa.includes(f)) problems.push(`${name}/${f}: falta en .claude/skills`);
-        else if (!same(join(a, f), join(b, f), skills, GENERATED.test(name)))
+        else if (!same(join(a, f), join(b, f), skills, generated))
           problems.push(`${name}/${f}: contenido distinto`);
       }
     }
