@@ -1,30 +1,26 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@arizeai/openinference-instrumentation-langchain@4.1.5": "4.1.5_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
-    "npm:@langchain/anthropic@1.6.0": "1.6.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
+    "npm:@arizeai/openinference-instrumentation-langchain@4.1.5": "4.1.5_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
+    "npm:@langchain/anthropic@1.6.0": "1.6.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
     "npm:@langchain/core@1.3.1": "1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
-    "npm:@langchain/google-genai@2.3.4": "2.3.4_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
-    "npm:@langchain/openai@1.8.0": "1.8.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
+    "npm:@langchain/google-genai@2.3.4": "2.3.4_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
+    "npm:@langchain/openai@1.8.0": "1.8.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
     "npm:@opentelemetry/api@1.10.0": "1.10.0",
     "npm:@opentelemetry/context-async-hooks@2.12.0": "2.12.0_@opentelemetry+api@1.9.1",
     "npm:@opentelemetry/exporter-trace-otlp-proto@0.223.0": "0.223.0_@opentelemetry+api@1.10.0",
     "npm:@opentelemetry/resources@2.12.0": "2.12.0_@opentelemetry+api@1.10.0",
     "npm:@opentelemetry/sdk-trace-base@2.12.0": "2.12.0_@opentelemetry+api@1.10.0",
-    "npm:@supabase/supabase-js@2.116.0": "2.116.0_@opentelemetry+api@1.10.0",
-    "npm:langchain@1.6.0": "1.6.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
-    "npm:zod@4.6.1": "4.6.1"
+    "npm:@supabase/supabase-js@2.117.0": "2.117.0_@opentelemetry+api@1.10.0",
+    "npm:langchain@1.6.0": "1.6.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0",
+    "npm:zod@4.6.7": "4.6.7"
   },
   "npm": {
     "@anthropic-ai/sdk@0.129.0_zod@4.6.1": {
       "integrity": "sha512-MH7LB20kNpGLUpPTe2OG5XvL/KhX8HUO9XyBaFjgFk6TLS4Xjt0VPIuMKywe7POKKPslX+QxSlVok9e+8kG5Nw==",
       "dependencies": [
         "json-schema-to-ts",
-        "standardwebhooks",
-        "zod"
-      ],
-      "optionalPeers": [
-        "zod"
+        "standardwebhooks"
       ],
       "bin": true
     },
@@ -36,7 +32,7 @@
         "@opentelemetry/core"
       ]
     },
-    "@arizeai/openinference-instrumentation-langchain@4.1.5_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@arizeai/openinference-instrumentation-langchain@4.1.5_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-g7I5gWQXJ1idwkkSJvuHN4l+0v6ZGu87WoOt2a5YfKKUXTRLgA1n66a0qvl8fZ3/KgK8gK0FgXKrgVAWbIRmYA==",
       "dependencies": [
         "@arizeai/openinference-core",
@@ -59,7 +55,7 @@
     "@google/generative-ai@0.24.1": {
       "integrity": "sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q=="
     },
-    "@langchain/anthropic@1.6.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/anthropic@1.6.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-owIpaDngKj2LsR7TZMcfiL1bCZqGikE+YnMEijaeBoYTL9KWLUawg0GYfMupgvDBsQDqw3NNcKVDzX/g4NOl3g==",
       "dependencies": [
         "@anthropic-ai/sdk",
@@ -79,20 +75,20 @@
         "zod"
       ]
     },
-    "@langchain/google-genai@2.3.4_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/google-genai@2.3.4_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-Hq7lEtiQd5KiPquGjwKwzGg/JgbqSQia7CINLjJKoQ4FtolRuxj/mYDql0XZIMTAZJD93eeOk9wo3klEgueMYQ==",
       "dependencies": [
         "@google/generative-ai",
         "@langchain/core"
       ]
     },
-    "@langchain/langgraph-checkpoint@1.2.1_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/langgraph-checkpoint@1.2.1_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-RD01mi9fYfpIq5fWrW/j2iY7MRUoqKvh1Nj6TMRDBoTGE18E2du75zKDugNxb57N8FWCojaiWGB9Enssnx9Hyg==",
       "dependencies": [
         "@langchain/core"
       ]
     },
-    "@langchain/langgraph-sdk@1.12.8_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/langgraph-sdk@1.12.8_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-MYbACC5+l6XlcqCRZD5mz2KD01bdXxzJVEHs259g2R1pLbVEB2V+n2rk5kxGx4l2chAPjdNuNXihtwFBsFCT+Q==",
       "dependencies": [
         "@langchain/core",
@@ -102,23 +98,22 @@
         "p-retry"
       ]
     },
-    "@langchain/langgraph@1.5.3_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_zod@4.6.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/langgraph@1.5.3_@langchain+core@1.3.1_zod@4.6.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-cuqswNgfoF/J3/r9K5Qm7EnQc2f0mz7uWlAAs751KWhoK8sKfmuLABghF4b1LYq1NpK72XG1x8lWPyg45M8BOA==",
       "dependencies": [
         "@langchain/core",
         "@langchain/langgraph-checkpoint",
         "@langchain/langgraph-sdk",
         "@langchain/protocol",
-        "@standard-schema/spec",
-        "zod"
+        "@standard-schema/spec"
       ]
     },
-    "@langchain/openai@1.8.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "@langchain/openai@1.8.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-HstN9V0rUkNnOyzMSylP2e5z6VbyuZXyoliuepO2Tf59bezrhvB/sljLfREN1lAGsy4YysD5hUeCN/2ynAZKjQ==",
       "dependencies": [
         "@langchain/core",
         "js-tiktoken",
-        "openai",
+        "openai@7.45.1_zod@4.6.1",
         "zod"
       ]
     },
@@ -245,14 +240,14 @@
     "@standard-schema/spec@1.1.0": {
       "integrity": "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="
     },
-    "@supabase/auth-js@2.116.0": {
-      "integrity": "sha512-Cmosty12gyKGK9N3bQb+lMmuAFev5nmUzaR1AsmZHqKOAGzqX1VQzmp49CNPwOx/pw0H9Qqk4rs9yhwTlKpfDg==",
+    "@supabase/auth-js@2.117.0": {
+      "integrity": "sha512-mmKfXHkZ+93fJ57yxMnJ+h+psiHIEBLzqZNgNu7yE7/kNxAKXkKxz/BZO/Ht0NJiMztFICvA+7xOLbIrK723qQ==",
       "dependencies": [
         "tslib"
       ]
     },
-    "@supabase/functions-js@2.116.0": {
-      "integrity": "sha512-E+VOc2QDcni/fySqkBFiZhnoB3SGydEdZgFI6/dEAGAHx6yEhB46TN9qb2wXs+E+RSzOBV0R6dasiSlw4xlZAA==",
+    "@supabase/functions-js@2.117.0": {
+      "integrity": "sha512-RC3kdN0DZS8gyLsTDhWCc6xg5FKAyMNz/xt5KD7PSC+PB/7/NhFPo6YrMZu+3xsQMFdOWuVaBlHYdPwdmhqx/w==",
       "dependencies": [
         "tslib"
       ]
@@ -260,28 +255,28 @@
     "@supabase/phoenix@0.4.5": {
       "integrity": "sha512-aAn9H9ovVyeApKy11OWOrrOGq8DV68yWeH4ud2lN9fzn4aO8Zb5GLL9m1pUg9nLqIcT+ZDfAcsZe0E/nqdv2lw=="
     },
-    "@supabase/postgrest-js@2.116.0": {
-      "integrity": "sha512-kGpVZTDHxFTJS3tu+rU0iTAZ+4U0bcLVjxwCk8f3gRhjw3qdCZjTBlgYvc4kGH2XccmAzbkKwXL/mrNHMGSc+A==",
+    "@supabase/postgrest-js@2.117.0": {
+      "integrity": "sha512-KG2+dYIkTzOjR8f0Xza3uXzKB6bHQOIjMTJhHuNNSUK0C6zdtd4A8LBjxpPB9R5I95xuN1CCdlIEJTkZ5g8LBA==",
       "dependencies": [
         "tslib"
       ]
     },
-    "@supabase/realtime-js@2.116.0": {
-      "integrity": "sha512-MHAnlXxi2s6yiJsZsQMfs2B3RFxeVfQWxerqYhIMqcCQV/FuY3LIeouPEkXw/ah7wUWMLYwempF9MOCUScyddg==",
+    "@supabase/realtime-js@2.117.0": {
+      "integrity": "sha512-E+hovHDWTpoOQHCMWdOwahvJmD7M/Vgj8cQTwLMPlEFvTO7wV8zBhrM9iUnKReurpGpl9u6MGbbjBeQJTEE1Kg==",
       "dependencies": [
         "@supabase/phoenix",
         "tslib"
       ]
     },
-    "@supabase/storage-js@2.116.0": {
-      "integrity": "sha512-6/3hR6vccBP6oGM5B6RfbwZcTCKmQOodd/ZWQdsw8yJsU5zO/a//oBL6yLnmgxcjnHSrelW8rsO7hL5DPybyUQ==",
+    "@supabase/storage-js@2.117.0": {
+      "integrity": "sha512-jFn8MTRKhUls5yzfYogPqItNH0jwzlLvdhAO2nBKRMzQuvI9BgNM2BabcGSxcDAcyEACGEjeIBXjxRfIb8OI5Q==",
       "dependencies": [
         "iceberg-js",
         "tslib"
       ]
     },
-    "@supabase/supabase-js@2.116.0_@opentelemetry+api@1.10.0": {
-      "integrity": "sha512-YyWmKXt2NspV9iO8FPnlswUFJIRnrLd3oTCb+3ZyYRuKZtBH0xCUDgnUqoyA0fGUxpM/UhfwDjYf/dht/9bp7g==",
+    "@supabase/supabase-js@2.117.0_@opentelemetry+api@1.10.0": {
+      "integrity": "sha512-c9ASbrLEqFBTWIxF4aXuK4hVgdIH+kA6BsT6xjDkXuFYQkGBWL4OqirstgzhS30gr0Vlfbur6F8jlUfWkCy2dw==",
       "dependencies": [
         "@opentelemetry/api@1.10.0",
         "@supabase/auth-js",
@@ -378,7 +373,7 @@
         "ts-algebra"
       ]
     },
-    "langchain@1.6.0_@langchain+core@1.3.1__@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
+    "langchain@1.6.0_@langchain+core@1.3.1_@opentelemetry+exporter-trace-otlp-proto@0.223.0": {
       "integrity": "sha512-3zKLH17Baacw+MtVcKj3f6onstPzmVSI2yfmABdClqVofsifOIt/Ypw7wyMyjFkyOzJTJePVb8hUWILxYpUhKw==",
       "dependencies": [
         "@langchain/core",
@@ -388,20 +383,20 @@
         "zod"
       ]
     },
-    "langsmith@0.11.4_@opentelemetry+api@1.10.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+sdk-trace-base@2.12.0": {
+    "langsmith@0.11.4_@opentelemetry+api@1.10.0_@opentelemetry+exporter-trace-otlp-proto@0.223.0_@opentelemetry+sdk-trace-base@2.12.0_zod@4.6.7": {
       "integrity": "sha512-sasOaKuuZ3OKSE9XIXSAxBUX1/r6t2z0SUe2VgBPLQHKKyLayYzKwU38nKzz0cQoMpN4zpSxz7poQwSTt1OdoA==",
       "dependencies": [
         "@opentelemetry/api@1.10.0",
         "@opentelemetry/exporter-trace-otlp-proto",
         "@opentelemetry/sdk-trace-base",
-        "openai",
+        "openai@7.45.1_zod@4.6.7",
         "p-queue@6.6.2"
       ],
       "optionalPeers": [
         "@opentelemetry/api@1.10.0",
         "@opentelemetry/exporter-trace-otlp-proto",
         "@opentelemetry/sdk-trace-base",
-        "openai"
+        "openai@7.45.1_zod@4.6.7"
       ]
     },
     "module-details-from-path@1.0.4": {
@@ -415,6 +410,9 @@
       "bin": true
     },
     "openai@7.45.1_zod@4.6.1": {
+      "integrity": "sha512-mutrJXwhJIMZ24Lab2COFtNp44OcpZSnV4O2O7q38wAHUa2m2fQqUO5pj1XS3PqLfOTeODBUS9YoadqDnnGk5A=="
+    },
+    "openai@7.45.1_zod@4.6.7": {
       "integrity": "sha512-mutrJXwhJIMZ24Lab2COFtNp44OcpZSnV4O2O7q38wAHUa2m2fQqUO5pj1XS3PqLfOTeODBUS9YoadqDnnGk5A==",
       "dependencies": [
         "zod"
@@ -499,8 +497,8 @@
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     },
-    "zod@4.6.1": {
-      "integrity": "sha512-341aRWQsve0rvronKNTqZpjmzdbUDlFuzHaI/XLg/Ej82qffDJRRfBTCuv7+9q/rMjB6LSLyEBnW4InJeMtt/Q=="
+    "zod@4.6.7": {
+      "integrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="
     }
   },
   "workspace": {
@@ -516,9 +514,9 @@
       "npm:@opentelemetry/exporter-trace-otlp-proto@0.223.0",
       "npm:@opentelemetry/resources@2.12.0",
       "npm:@opentelemetry/sdk-trace-base@2.12.0",
-      "npm:@supabase/supabase-js@2.116.0",
+      "npm:@supabase/supabase-js@2.117.0",
       "npm:langchain@1.6.0",
-      "npm:zod@4.6.1"
+      "npm:zod@4.6.7"
     ]
   }
 }
